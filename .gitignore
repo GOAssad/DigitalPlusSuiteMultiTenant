@@ -26,3 +26,10 @@ Common/Global.Datos/App.config
 Common/Global.Controles/App.config
 Common/Global.DigitalPersona/app.config
 Common/Acceso.Clases.Datos/App.config
+
+# Archivos grandes (exceden limite GitHub 100MB)
+PortalWeb/Documentacion/*.sql
+PortalWeb/Documentacion/*.bak
+PortalWeb/IIS/*.rar
+PortalWeb/IIS/*.exe
+Instaladores/InstaladorUnificado/Prerequisites/*.exe
