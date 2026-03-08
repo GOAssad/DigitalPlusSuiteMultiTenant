@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DigitalPlusMultiTenant.Application/DigitalPlusMultiTenant.Application.csproj" />
+    <Project Path="src/DigitalPlusMultiTenant.Domain/DigitalPlusMultiTenant.Domain.csproj" />
+    <Project Path="src/DigitalPlusMultiTenant.Infrastructure/DigitalPlusMultiTenant.Infrastructure.csproj" />
+    <Project Path="src/DigitalPlusMultiTenant.Persistence/DigitalPlusMultiTenant.Persistence.csproj" />
+    <Project Path="src/DigitalPlusMultiTenant.Web/DigitalPlusMultiTenant.Web.csproj" />
+  </Folder>
+</Solution>
