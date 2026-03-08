@@ -1,0 +1,22 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# NuGet (will be restored)
+# packages/  -- keep for .NET Framework projects
+
+# IDE
+.idea/
+*.DotSettings
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Installer outputs
+Instaladores/*/Output/*.exe
+SDK/
