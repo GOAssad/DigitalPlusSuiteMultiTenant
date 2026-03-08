@@ -1,73 +1,76 @@
-﻿@implements IDisposable
-
+@implements IDisposable
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">DigitalPlusMultiTenant.Web</a>
-    </div>
+<div class="sidebar-brand">
+    <i class="bi bi-fingerprint"></i>
+    <span>DigitalPlus</span>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+<nav class="sidebar-nav">
+    <AuthorizeView>
+        <Authorized>
+            <div class="nav-section-title">Principal</div>
+            <NavLink class="sidebar-link" href="" Match="NavLinkMatch.All">
+                <i class="bi bi-speedometer2"></i> Dashboard
             </NavLink>
-        </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <div class="nav-section-title">Estructura</div>
+            <NavLink class="sidebar-link" href="sucursales">
+                <i class="bi bi-building"></i> Sucursales
             </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="sidebar-link" href="sectores">
+                <i class="bi bi-diagram-3"></i> Sectores
             </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
+            <NavLink class="sidebar-link" href="categorias">
+                <i class="bi bi-tags"></i> Categorias
             </NavLink>
-        </div>
+            <NavLink class="sidebar-link" href="horarios">
+                <i class="bi bi-clock"></i> Horarios
+            </NavLink>
+            <NavLink class="sidebar-link" href="terminales">
+                <i class="bi bi-pc-display"></i> Terminales
+            </NavLink>
 
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
+            <div class="nav-section-title">Personal</div>
+            <NavLink class="sidebar-link" href="legajos">
+                <i class="bi bi-people"></i> Legajos
+            </NavLink>
+            <NavLink class="sidebar-link" href="fichadas">
+                <i class="bi bi-card-checklist"></i> Fichadas
+            </NavLink>
+
+            <div class="nav-section-title">Operacion</div>
+            <NavLink class="sidebar-link" href="incidencias">
+                <i class="bi bi-exclamation-triangle"></i> Incidencias
+            </NavLink>
+            <NavLink class="sidebar-link" href="vacaciones">
+                <i class="bi bi-sun"></i> Vacaciones
+            </NavLink>
+            <NavLink class="sidebar-link" href="feriados">
+                <i class="bi bi-calendar-event"></i> Feriados
+            </NavLink>
+            <NavLink class="sidebar-link" href="noticias">
+                <i class="bi bi-megaphone"></i> Noticias
+            </NavLink>
+
+            <AuthorizeView Roles="SuperAdmin,AdminEmpresa" Context="adminContext">
+                <div class="nav-section-title">Administracion</div>
+                <NavLink class="sidebar-link" href="usuarios">
+                    <i class="bi bi-person-lock"></i> Usuarios
+                </NavLink>
+                <NavLink class="sidebar-link" href="configuracion">
+                    <i class="bi bi-gear"></i> Configuracion
+                </NavLink>
+            </AuthorizeView>
+        </Authorized>
+        <NotAuthorized>
+            <div class="nav-section-title">Acceso</div>
+            <NavLink class="sidebar-link" href="Account/Login">
+                <i class="bi bi-box-arrow-in-right"></i> Iniciar sesion
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</nav>
 
 @code {
     private string? currentUrl;
@@ -89,4 +92,3 @@
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
-
