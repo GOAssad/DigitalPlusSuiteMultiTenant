@@ -84,8 +84,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
         foreach (var entry in ChangeTracker.Entries())
         {
-            // Auto-set EmpresaId en entidades tenant
-            if (entry.Entity is ITenantEntity tenantEntity && entry.State == EntityState.Added)
+            // Auto-set EmpresaId en entidades tenant (solo si no fue seteado manualmente)
+            if (entry.Entity is ITenantEntity tenantEntity && entry.State == EntityState.Added
+                && tenantEntity.EmpresaId == 0 && empresaId > 0)
             {
                 tenantEntity.EmpresaId = empresaId;
             }
