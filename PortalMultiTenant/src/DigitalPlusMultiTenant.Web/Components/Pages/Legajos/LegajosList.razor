@@ -17,14 +17,16 @@
 
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-2">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre o legajo..."
-                       @bind="filtro" @bind:event="oninput" @onkeyup="Filtrar" />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Nombre, apellido o nro legajo..."
+                       @bind="filtro" @bind:event="oninput" @bind:after="BuscarDebounce" />
             </div>
             <div class="col-md-2">
-                <select class="form-select form-select-sm" @bind="filtroSector" @bind:after="Filtrar">
-                    <option value="0">Todos los sectores</option>
+                <label class="form-label small mb-1">Sector</label>
+                <select class="form-select form-select-sm" @bind="filtroSector" @bind:after="Buscar">
+                    <option value="0">Todos</option>
                     @foreach (var s in sectores)
                     {
                         <option value="@s.Id">@s.Nombre</option>
@@ -32,7 +34,18 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <select class="form-select form-select-sm" @bind="filtroActivo" @bind:after="Filtrar">
+                <label class="form-label small mb-1">Categoria</label>
+                <select class="form-select form-select-sm" @bind="filtroCategoria" @bind:after="Buscar">
+                    <option value="0">Todas</option>
+                    @foreach (var c in categorias)
+                    {
+                        <option value="@c.Id">@c.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Estado</label>
+                <select class="form-select form-select-sm" @bind="filtroActivo" @bind:after="Buscar">
                     <option value="">Todos</option>
                     <option value="true">Activos</option>
                     <option value="false">Inactivos</option>
@@ -44,68 +57,193 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Legajo</th>
-                    <th>Apellido y Nombre</th>
-                    <th>Sector</th>
-                    <th>Categoria</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (legajos == null)
-                {
-                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
-                }
-                else if (!legajos.Any())
-                {
-                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay legajos</td></tr>
-                }
-                else
-                {
-                    @foreach (var l in legajos)
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("legajo")'>
+                            Legajo @SortIcon("legajo")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("nombre")'>
+                            Apellido y Nombre @SortIcon("nombre")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("sector")'>
+                            Sector @SortIcon("sector")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("categoria")'>
+                            Categoria @SortIcon("categoria")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("horario")'>
+                            Horario @SortIcon("horario")
+                        </th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (legajos == null)
                     {
-                        <tr>
-                            <td><span class="badge bg-secondary">@l.NumeroLegajo</span></td>
-                            <td><strong>@l.Apellido</strong>, @l.Nombre</td>
-                            <td>@l.Sector.Nombre</td>
-                            <td>@l.Categoria.Nombre</td>
-                            <td><span class="badge @(l.IsActive ? "bg-success" : "bg-danger")">@(l.IsActive ? "Activo" : "Inactivo")</span></td>
-                            <td class="text-end">
-                                <a href="legajos/editar/@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(l)">
-                                    <i class="bi @(l.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        <tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
                     }
-                }
-            </tbody>
-        </table>
+                    else if (!legajos.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay legajos</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var l in legajos)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@l.NumeroLegajo</span></td>
+                                <td><strong>@l.Apellido</strong>, @l.Nombre</td>
+                                <td>@l.Sector?.Nombre</td>
+                                <td>@l.Categoria?.Nombre</td>
+                                <td>@l.Horario?.Nombre</td>
+                                <td><span class="badge @(l.IsActive ? "bg-success" : "bg-danger")">@(l.IsActive ? "Activo" : "Inactivo")</span></td>
+                                <td class="text-end">
+                                    <a href="legajos/editar/@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(l)">
+                                        <i class="bi @(l.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    @if (totalRegistros > 0)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span class="text-muted small">
+                Mostrando @((pagina - 1) * pageSize + 1)-@Math.Min(pagina * pageSize, totalRegistros) de @totalRegistros.ToString("N0")
+            </span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(pagina <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => IrPagina(1)" disabled="@(pagina <= 1)">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item @(pagina <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => IrPagina(pagina - 1)" disabled="@(pagina <= 1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+
+                    @foreach (var p in GetPaginasVisibles())
+                    {
+                        <li class="page-item @(p == pagina ? "active" : "")">
+                            <button class="page-link" @onclick="() => IrPagina(p)">@p</button>
+                        </li>
+                    }
+
+                    <li class="page-item @(pagina >= totalPaginas ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => IrPagina(pagina + 1)" disabled="@(pagina >= totalPaginas)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                    <li class="page-item @(pagina >= totalPaginas ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => IrPagina(totalPaginas)" disabled="@(pagina >= totalPaginas)">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </button>
+                    </li>
+
+                    <li class="page-item disabled ms-2">
+                        <span class="page-link bg-transparent border-0 text-muted">
+                            Pag @pagina de @totalPaginas
+                        </span>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
 </div>
 
 @code {
     private List<Legajo>? legajos;
     private List<Sector> sectores = new();
+    private List<Categoria> categorias = new();
     private string filtro = "";
     private int filtroSector;
+    private int filtroCategoria;
     private string filtroActivo = "true";
+
+    // Paginacion
+    private const int pageSize = 50;
+    private int pagina = 1;
+    private int totalRegistros;
+    private int totalPaginas;
+
+    // Ordenamiento
+    private string ordenColumna = "nombre";
+    private bool ordenDesc;
+
+    // Debounce
+    private CancellationTokenSource? _debounceToken;
 
     protected override async Task OnInitializedAsync()
     {
         sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
-        await Filtrar();
+        categorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
+        await CargarDatos();
     }
 
-    private async Task Filtrar()
+    private async Task BuscarDebounce()
+    {
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, _debounceToken.Token);
+            pagina = 1;
+            await CargarDatos();
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task Buscar()
+    {
+        pagina = 1;
+        await CargarDatos();
+    }
+
+    private async Task IrPagina(int p)
+    {
+        pagina = p;
+        await CargarDatos();
+    }
+
+    private async Task SetOrden(string columna)
+    {
+        if (ordenColumna == columna)
+            ordenDesc = !ordenDesc;
+        else
+        {
+            ordenColumna = columna;
+            ordenDesc = false;
+        }
+        pagina = 1;
+        await CargarDatos();
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
+    }
+
+    private async Task CargarDatos()
     {
         var query = Db.Legajos
             .Include(l => l.Sector)
             .Include(l => l.Categoria)
+            .Include(l => l.Horario)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filtro))
@@ -117,18 +255,49 @@
         }
         if (filtroSector > 0)
             query = query.Where(l => l.SectorId == filtroSector);
+        if (filtroCategoria > 0)
+            query = query.Where(l => l.CategoriaId == filtroCategoria);
         if (filtroActivo == "true")
             query = query.Where(l => l.IsActive);
         else if (filtroActivo == "false")
             query = query.Where(l => !l.IsActive);
 
-        legajos = await query.OrderBy(l => l.Apellido).ThenBy(l => l.Nombre).Take(200).ToListAsync();
+        totalRegistros = await query.CountAsync();
+        totalPaginas = Math.Max(1, (int)Math.Ceiling(totalRegistros / (double)pageSize));
+        if (pagina > totalPaginas) pagina = totalPaginas;
+
+        var ordered = ordenColumna switch
+        {
+            "legajo" => ordenDesc ? query.OrderByDescending(l => l.NumeroLegajo) : query.OrderBy(l => l.NumeroLegajo),
+            "sector" => ordenDesc ? query.OrderByDescending(l => l.Sector!.Nombre) : query.OrderBy(l => l.Sector!.Nombre),
+            "categoria" => ordenDesc ? query.OrderByDescending(l => l.Categoria!.Nombre) : query.OrderBy(l => l.Categoria!.Nombre),
+            "horario" => ordenDesc ? query.OrderByDescending(l => l.Horario!.Nombre) : query.OrderBy(l => l.Horario!.Nombre),
+            _ => ordenDesc ? query.OrderByDescending(l => l.Apellido).ThenByDescending(l => l.Nombre) : query.OrderBy(l => l.Apellido).ThenBy(l => l.Nombre),
+        };
+
+        legajos = await ordered
+            .Skip((pagina - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
     }
 
     private async Task ToggleActive(Legajo l)
     {
         l.IsActive = !l.IsActive;
         await Db.SaveChangesAsync();
-        await Filtrar();
+        await CargarDatos();
+    }
+
+    private IEnumerable<int> GetPaginasVisibles()
+    {
+        var start = Math.Max(1, pagina - 2);
+        var end = Math.Min(totalPaginas, pagina + 2);
+        if (end - start < 4)
+        {
+            if (start == 1) end = Math.Min(totalPaginas, start + 4);
+            else start = Math.Max(1, end - 4);
+        }
+        for (var i = start; i <= end; i++)
+            yield return i;
     }
 }
