@@ -96,16 +96,18 @@
                         <th role="button" @onclick='() => SetOrden("total")'>Horas Total @SortIcon("total")</th>
                         <th role="button" @onclick='() => SetOrden("promedio")'>Promedio Diario @SortIcon("promedio")</th>
                         <th role="button" @onclick='() => SetOrden("tardes")'>Llegadas Tarde @SortIcon("tardes")</th>
+                        <th role="button" @onclick='() => SetOrden("huella")'>Huella @SortIcon("huella")</th>
+                        <th role="button" @onclick='() => SetOrden("pin")'>PIN @SortIcon("pin")</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
+                        <tr><td colspan="10" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin resultados para el rango seleccionado</td></tr>
+                        <tr><td colspan="10" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin resultados para el rango seleccionado</td></tr>
                     }
                     else
                     {
@@ -153,6 +155,26 @@
                                         <span class="badge bg-light text-muted">0</span>
                                     }
                                 </td>
+                                <td>
+                                    @if (r.FichadasHuella > 0)
+                                    {
+                                        <span class="badge bg-primary">@r.FichadasHuella</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-muted">0</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (r.FichadasPin > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark">@r.FichadasPin</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-muted">0</span>
+                                    }
+                                </td>
                             </tr>
                         }
                     }
@@ -175,8 +197,8 @@
     private List<HorasRow>? items;
     private List<Sucursal> sucursales = new();
     private List<Sector> sectores = new();
-    private DateTime fechaDesde = DateTime.Today.AddDays(1 - DateTime.Today.Day);
-    private DateTime fechaHasta = DateTime.Today;
+    private DateTime fechaDesde = Clock.Today.AddDays(1 - Clock.Today.Day);
+    private DateTime fechaHasta = Clock.Today;
     private int filtroSucursal;
     private int filtroSector;
     private string filtroLegajo = "";
@@ -210,7 +232,7 @@
         {
             var desde = DateOnly.FromDateTime(fechaDesde);
             var hasta = DateOnly.FromDateTime(fechaHasta);
-            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            var hoy = Clock.TodayDate;
             if (hasta > hoy) hasta = hoy;
 
             var legajosQuery = Db.Legajos
@@ -303,7 +325,9 @@
                     DiasAusente = diasAusente,
                     DiasLaborables = diasLaborables,
                     HorasTotal = horasTotal,
-                    LlegadasTarde = llegadasTarde
+                    LlegadasTarde = llegadasTarde,
+                    FichadasHuella = fichadasLeg.Count(f => f.Origen == Domain.Enums.OrigenFichada.Huella),
+                    FichadasPin = fichadasLeg.Count(f => f.Origen == Domain.Enums.OrigenFichada.PIN)
                 });
             }
 
@@ -350,6 +374,8 @@
                 ? data.OrderByDescending(r => r.DiasPresente > 0 ? r.HorasTotal.TotalHours / r.DiasPresente : 0)
                 : data.OrderBy(r => r.DiasPresente > 0 ? r.HorasTotal.TotalHours / r.DiasPresente : 0),
             "tardes" => ordenDesc ? data.OrderByDescending(r => r.LlegadasTarde) : data.OrderBy(r => r.LlegadasTarde),
+            "huella" => ordenDesc ? data.OrderByDescending(r => r.FichadasHuella) : data.OrderBy(r => r.FichadasHuella),
+            "pin" => ordenDesc ? data.OrderByDescending(r => r.FichadasPin) : data.OrderBy(r => r.FichadasPin),
             _ => ordenDesc ? data.OrderByDescending(r => r.Apellido).ThenByDescending(r => r.Nombre) : data.OrderBy(r => r.Apellido).ThenBy(r => r.Nombre),
         }).ToList();
     }
@@ -374,12 +400,13 @@
             new ExcelExportConfig { Titulo = "Reporte de Horas Trabajadas", NombreEmpresa = Tenant.EmpresaNombre,
                 FechaDesde = fechaDesde.ToString("dd/MM/yyyy"), FechaHasta = fechaHasta.ToString("dd/MM/yyyy"),
                 Filtros = filtros,
-                Encabezados = ["Legajo", "Apellido", "Nombre", "Sector", "Dias Presente", "Dias Ausente", "Dias Laborables", "Horas Total", "Promedio Diario", "Llegadas Tarde"],
+                Encabezados = ["Legajo", "Apellido", "Nombre", "Sector", "Dias Presente", "Dias Ausente", "Dias Laborables", "Horas Total", "Promedio Diario", "Llegadas Tarde", "Fichadas Huella", "Fichadas PIN"],
                 Formatos = [ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto,
-                           ExcelColFormat.Numero, ExcelColFormat.Numero, ExcelColFormat.Numero, ExcelColFormat.Texto, ExcelColFormat.Decimal, ExcelColFormat.Numero] },
+                           ExcelColFormat.Numero, ExcelColFormat.Numero, ExcelColFormat.Numero, ExcelColFormat.Texto, ExcelColFormat.Decimal, ExcelColFormat.Numero, ExcelColFormat.Numero, ExcelColFormat.Numero] },
             r => [r.NumeroLegajo, r.Apellido, r.Nombre, r.Sector, r.DiasPresente, r.DiasAusente,
                   r.DiasLaborables, FormatHoras(r.HorasTotal),
-                  r.DiasPresente > 0 ? (object)Math.Round(r.HorasTotal.TotalHours / r.DiasPresente, 1) : 0.0, r.LlegadasTarde]);
+                  r.DiasPresente > 0 ? (object)Math.Round(r.HorasTotal.TotalHours / r.DiasPresente, 1) : 0.0, r.LlegadasTarde,
+                  r.FichadasHuella, r.FichadasPin]);
         await JS.InvokeVoidAsync("downloadFile", "horas_trabajadas.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
@@ -387,10 +414,11 @@
     {
         if (items == null) return;
         var bytes = CsvExporter.ToCsvBytes(items,
-            ["Legajo", "Apellido", "Nombre", "Sector", "Dias Presente", "Dias Ausente", "Dias Laborables", "Horas Total", "Promedio Diario", "Llegadas Tarde"],
+            ["Legajo", "Apellido", "Nombre", "Sector", "Dias Presente", "Dias Ausente", "Dias Laborables", "Horas Total", "Promedio Diario", "Llegadas Tarde", "Fichadas Huella", "Fichadas PIN"],
             r => [r.NumeroLegajo, r.Apellido, r.Nombre, r.Sector, r.DiasPresente.ToString(), r.DiasAusente.ToString(),
                   r.DiasLaborables.ToString(), FormatHoras(r.HorasTotal),
-                  r.DiasPresente > 0 ? $"{r.HorasTotal.TotalHours / r.DiasPresente:F1}" : "0", r.LlegadasTarde.ToString()]);
+                  r.DiasPresente > 0 ? $"{r.HorasTotal.TotalHours / r.DiasPresente:F1}" : "0", r.LlegadasTarde.ToString(),
+                  r.FichadasHuella.ToString(), r.FichadasPin.ToString()]);
         await JS.InvokeVoidAsync("downloadFile", "horas_trabajadas.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
@@ -405,5 +433,7 @@
         public int DiasLaborables { get; set; }
         public TimeSpan HorasTotal { get; set; }
         public int LlegadasTarde { get; set; }
+        public int FichadasHuella { get; set; }
+        public int FichadasPin { get; set; }
     }
 }

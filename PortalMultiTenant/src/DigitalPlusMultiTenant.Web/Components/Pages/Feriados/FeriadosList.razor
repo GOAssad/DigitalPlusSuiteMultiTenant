@@ -60,7 +60,7 @@
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                        <tr><td colspan="4" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
                     }
                     else if (!items.Any())
                     {
@@ -90,7 +90,7 @@
 @code {
     private List<Feriado>? items;
     private string filtro = "";
-    private int anio = DateTime.Today.Year;
+    private int anio = Clock.Today.Year;
     private string ordenColumna = "fecha";
     private bool ordenDesc;
     private CancellationTokenSource? _debounceToken;

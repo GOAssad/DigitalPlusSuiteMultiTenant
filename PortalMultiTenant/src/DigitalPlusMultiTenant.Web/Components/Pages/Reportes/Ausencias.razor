@@ -142,8 +142,8 @@
 @code {
     private List<AusenciaRow>? items;
     private List<Sector> sectores = new();
-    private DateTime fechaDesde = DateTime.Today.AddDays(-7);
-    private DateTime fechaHasta = DateTime.Today;
+    private DateTime fechaDesde = Clock.Today.AddDays(-7);
+    private DateTime fechaHasta = Clock.Today;
     private int filtroSector;
     private string filtroMotivo = "";
     private string filtroLegajo = "";
@@ -174,7 +174,7 @@
         {
             var desde = DateOnly.FromDateTime(fechaDesde);
             var hasta = DateOnly.FromDateTime(fechaHasta);
-            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            var hoy = Clock.TodayDate;
             if (hasta >= hoy) hasta = hoy.AddDays(-1);
 
             var legajosQuery = Db.Legajos

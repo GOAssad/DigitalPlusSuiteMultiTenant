@@ -95,17 +95,18 @@
                         <th role="button" @onclick='() => SetOrden("entrada")'>Entrada @SortIcon("entrada")</th>
                         <th role="button" @onclick='() => SetOrden("salida")'>Salida @SortIcon("salida")</th>
                         <th role="button" @onclick='() => SetOrden("horas")'>Horas @SortIcon("horas")</th>
+                        <th>Origen</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin resultados para el rango seleccionado</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin resultados para el rango seleccionado</td></tr>
                     }
                     else
                     {
@@ -127,6 +128,7 @@
                                     }
                                 </td>
                                 <td>@(r.Salida.HasValue ? r.Salida.Value.ToString("HH:mm") : "-")</td>
+                                <td>@OrigenBadge(r.OrigenEntrada)</td>
                                 <td>
                                     @if (r.HorasTrabajadas.HasValue)
                                     {
@@ -179,8 +181,8 @@
     private List<AsistenciaRow>? items;
     private List<Sucursal> sucursales = new();
     private List<Sector> sectores = new();
-    private DateTime fechaDesde = DateTime.Today.AddDays(-7);
-    private DateTime fechaHasta = DateTime.Today;
+    private DateTime fechaDesde = Clock.Today.AddDays(-7);
+    private DateTime fechaHasta = Clock.Today;
     private int filtroSucursal;
     private int filtroSector;
     private string filtroLegajo = "";
@@ -290,7 +292,7 @@
                         ? salida.FechaHora - entrada.FechaHora
                         : (TimeSpan?)null;
 
-                    var esAusente = !esCerrado && !esFeriado && entrada == null && dia < DateOnly.FromDateTime(DateTime.Today);
+                    var esAusente = !esCerrado && !esFeriado && entrada == null && dia < Clock.TodayDate;
 
                     resultado.Add(new AsistenciaRow
                     {
@@ -303,7 +305,8 @@
                         Salida = salida != null ? TimeOnly.FromDateTime(salida.FechaHora) : null,
                         HorasTrabajadas = horas,
                         LlegaTarde = llegaTarde,
-                        EsAusente = esAusente
+                        EsAusente = esAusente,
+                        OrigenEntrada = entrada?.Origen?.ToString() ?? ""
                     });
                 }
             }
@@ -352,6 +355,22 @@
         }).ToList();
     }
 
+    private MarkupString OrigenBadge(string origen)
+    {
+        var (text, css) = origen switch
+        {
+            "Huella" => ("Huella", "bg-primary"),
+            "PIN" => ("PIN", "bg-warning text-dark"),
+            "Demo" => ("Demo", "bg-secondary"),
+            "Manual" => ("Manual", "bg-info"),
+            "Web" => ("Web", "bg-dark"),
+            _ => ("", "")
+        };
+        return string.IsNullOrEmpty(text)
+            ? new MarkupString("<span class=\"text-muted\">—</span>")
+            : new MarkupString($"<span class=\"badge {css}\">{text}</span>");
+    }
+
     private MarkupString SortIcon(string columna)
     {
         if (ordenColumna != columna)
@@ -372,12 +391,13 @@
             new ExcelExportConfig { Titulo = "Reporte de Asistencia Diaria", NombreEmpresa = Tenant.EmpresaNombre,
                 FechaDesde = fechaDesde.ToString("dd/MM/yyyy"), FechaHasta = fechaHasta.ToString("dd/MM/yyyy"),
                 Filtros = filtros,
-                Encabezados = ["Fecha", "Legajo", "Apellido", "Nombre", "Sucursal", "Entrada", "Salida", "Horas", "Estado"],
+                Encabezados = ["Fecha", "Legajo", "Apellido", "Nombre", "Sucursal", "Entrada", "Salida", "Horas", "Origen", "Estado"],
                 Formatos = [ExcelColFormat.Fecha, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto,
-                           ExcelColFormat.Texto, ExcelColFormat.Hora, ExcelColFormat.Hora, ExcelColFormat.Texto, ExcelColFormat.Texto] },
+                           ExcelColFormat.Texto, ExcelColFormat.Hora, ExcelColFormat.Hora, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto] },
             r => [r.Fecha, r.NumeroLegajo, r.Apellido, r.Nombre, r.Sucursal,
                   r.Entrada.HasValue ? (object)r.Entrada.Value : "", r.Salida.HasValue ? (object)r.Salida.Value : "",
                   r.HorasTrabajadas.HasValue ? $"{(int)r.HorasTrabajadas.Value.TotalHours}:{r.HorasTrabajadas.Value.Minutes:D2}" : "",
+                  string.IsNullOrEmpty(r.OrigenEntrada) ? "—" : r.OrigenEntrada,
                   r.EsAusente ? "Ausente" : r.LlegaTarde ? "Tarde" : r.Entrada.HasValue ? "OK" : "Sin fichada"]);
         await JS.InvokeVoidAsync("downloadFile", "asistencia_diaria.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
@@ -386,10 +406,11 @@
     {
         if (items == null) return;
         var bytes = CsvExporter.ToCsvBytes(items,
-            ["Fecha", "Legajo", "Apellido", "Nombre", "Sucursal", "Entrada", "Salida", "Horas", "Estado"],
+            ["Fecha", "Legajo", "Apellido", "Nombre", "Sucursal", "Entrada", "Salida", "Horas", "Origen", "Estado"],
             r => [r.Fecha.ToString("dd/MM/yyyy"), r.NumeroLegajo, r.Apellido, r.Nombre, r.Sucursal,
                   r.Entrada?.ToString("HH:mm") ?? "", r.Salida?.ToString("HH:mm") ?? "",
                   r.HorasTrabajadas.HasValue ? $"{(int)r.HorasTrabajadas.Value.TotalHours}:{r.HorasTrabajadas.Value.Minutes:D2}" : "",
+                  string.IsNullOrEmpty(r.OrigenEntrada) ? "" : r.OrigenEntrada,
                   r.EsAusente ? "Ausente" : r.LlegaTarde ? "Tarde" : r.Entrada.HasValue ? "OK" : "Sin fichada"]);
         await JS.InvokeVoidAsync("downloadFile", "asistencia_diaria.csv", Convert.ToBase64String(bytes), "text/csv");
     }
@@ -406,5 +427,6 @@
         public TimeSpan? HorasTrabajadas { get; set; }
         public bool LlegaTarde { get; set; }
         public bool EsAusente { get; set; }
+        public string OrigenEntrada { get; set; } = "";
     }
 }

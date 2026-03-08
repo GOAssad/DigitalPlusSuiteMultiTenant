@@ -62,7 +62,7 @@
 @code {
     [Parameter] public int Id { get; set; }
     private bool IsEdit => Id > 0;
-    private Noticia model = new() { FechaDesde = DateOnly.FromDateTime(DateTime.Today), FechaHasta = DateOnly.FromDateTime(DateTime.Today.AddDays(30)) };
+    private Noticia model = new() { FechaDesde = Clock.TodayDate, FechaHasta = Clock.TodayDate.AddDays(30) };
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()

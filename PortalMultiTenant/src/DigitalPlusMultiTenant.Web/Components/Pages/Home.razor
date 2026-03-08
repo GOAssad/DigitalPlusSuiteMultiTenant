@@ -13,7 +13,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
-    <span class="text-muted">@DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-AR"))</span>
+    <span class="text-muted">@Clock.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-AR"))</span>
 </div>
 
 @* KPI Cards *@
@@ -21,64 +21,92 @@
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Presentes hoy</div>
-                        <div class="fs-3 fw-bold text-success">@presentesHoy</div>
-                        <div class="text-muted small">de @legajosActivos activos</div>
+                @if (!_kpiLoaded)
+                {
+                    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" />
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Presentes hoy</div>
+                            <div class="fs-3 fw-bold text-success">@presentesHoy</div>
+                            <div class="text-muted small">de @legajosActivos activos</div>
+                        </div>
+                        <div class="card-icon bg-success-subtle text-success">
+                            <i class="bi bi-person-check"></i>
+                        </div>
                     </div>
-                    <div class="card-icon bg-success-subtle text-success">
-                        <i class="bi bi-person-check"></i>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Ausentes hoy</div>
-                        <div class="fs-3 fw-bold text-danger">@ausentesHoy</div>
-                        <div class="text-muted small">de @legajosConHorarioHoy con horario</div>
+                @if (!_kpiLoaded)
+                {
+                    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" />
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Ausentes hoy</div>
+                            <div class="fs-3 fw-bold text-danger">@ausentesHoy</div>
+                            <div class="text-muted small">de @legajosConHorarioHoy con horario</div>
+                        </div>
+                        <div class="card-icon bg-danger-subtle text-danger">
+                            <i class="bi bi-person-x"></i>
+                        </div>
                     </div>
-                    <div class="card-icon bg-danger-subtle text-danger">
-                        <i class="bi bi-person-x"></i>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Llegadas tarde</div>
-                        <div class="fs-3 fw-bold text-warning">@tardesHoy</div>
-                        <div class="text-muted small">hoy</div>
+                @if (!_kpiLoaded)
+                {
+                    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" />
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Llegadas tarde</div>
+                            <div class="fs-3 fw-bold text-warning">@tardesHoy</div>
+                            <div class="text-muted small">hoy</div>
+                        </div>
+                        <div class="card-icon bg-warning-subtle text-warning">
+                            <i class="bi bi-alarm"></i>
+                        </div>
                     </div>
-                    <div class="card-icon bg-warning-subtle text-warning">
-                        <i class="bi bi-alarm"></i>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Fichadas hoy</div>
-                        <div class="fs-3 fw-bold text-info">@fichadasHoyCount</div>
-                        <div class="text-muted small">@fichadasEntradaHoy E / @fichadasSalidaHoy S</div>
+                @if (!_kpiLoaded)
+                {
+                    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" />
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Fichadas hoy</div>
+                            <div class="fs-3 fw-bold text-info">@fichadasHoyCount</div>
+                            <div class="text-muted small">@fichadasEntradaHoy E / @fichadasSalidaHoy S</div>
+                        </div>
+                        <div class="card-icon bg-info-subtle text-info">
+                            <i class="bi bi-card-checklist"></i>
+                        </div>
                     </div>
-                    <div class="card-icon bg-info-subtle text-info">
-                        <i class="bi bi-card-checklist"></i>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
@@ -93,7 +121,14 @@
             </div>
             <div class="card-body">
                 <div style="height: 280px;">
-                    <canvas id="chartAsistenciaSemanal"></canvas>
+                    @if (!_chartsDataLoaded)
+                    {
+                        <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Message="Calculando asistencia..." />
+                    }
+                    else
+                    {
+                        <canvas id="chartAsistenciaSemanal"></canvas>
+                    }
                 </div>
             </div>
         </div>
@@ -105,7 +140,14 @@
             </div>
             <div class="card-body">
                 <div style="height: 280px;">
-                    <canvas id="chartEstadoHoy"></canvas>
+                    @if (!_kpiLoaded)
+                    {
+                        <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Message="Procesando..." />
+                    }
+                    else
+                    {
+                        <canvas id="chartEstadoHoy"></canvas>
+                    }
                 </div>
             </div>
         </div>
@@ -121,7 +163,14 @@
             </div>
             <div class="card-body">
                 <div style="height: 250px;">
-                    <canvas id="chartFichadasHora"></canvas>
+                    @if (!_kpiLoaded)
+                    {
+                        <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Message="Agrupando fichadas..." />
+                    }
+                    else
+                    {
+                        <canvas id="chartFichadasHora"></canvas>
+                    }
                 </div>
             </div>
         </div>
@@ -132,7 +181,11 @@
                 <h6 class="mb-0"><i class="bi bi-card-checklist me-2"></i>Ultimas fichadas</h6>
             </div>
             <div class="card-body p-0">
-                @if (ultimasFichadas.Any())
+                @if (!_listasLoaded)
+                {
+                    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="Buscando fichadas..." />
+                }
+                else if (ultimasFichadas.Any())
                 {
                     <table class="table table-hover table-sm mb-0">
                         <tbody>
@@ -169,7 +222,11 @@
                 <h6 class="mb-0"><i class="bi bi-bell me-2"></i>Noticias</h6>
             </div>
             <div class="card-body">
-                @if (ultimasNoticias.Any())
+                @if (!_listasLoaded)
+                {
+                    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" />
+                }
+                else if (ultimasNoticias.Any())
                 {
                     @foreach (var n in ultimasNoticias)
                     {
@@ -216,16 +273,36 @@
     private int[] horaEntradas = [];
     private int[] horaSalidas = [];
 
+    // Loading stages
+    private bool _kpiLoaded;
+    private bool _chartsDataLoaded;
+    private bool _listasLoaded;
     private bool _chartsRendered;
     private bool _disposed;
 
     protected override async Task OnInitializedAsync()
     {
-        var hoy = DateTime.Today;
-        var hoyDateOnly = DateOnly.FromDateTime(hoy);
-        var diaSemana = (int)hoy.DayOfWeek + 1; // DiaSemana enum
+        // Stage 1: KPIs + datos del dia (se muestra rapido)
+        await CargarKPIs();
+        _kpiLoaded = true;
+        StateHasChanged();
 
-        // Legajos activos con horarios
+        // Stage 2: Ultimas fichadas y noticias
+        await CargarListas();
+        _listasLoaded = true;
+        StateHasChanged();
+
+        // Stage 3: Chart semanal (query mas pesada)
+        await CargarChartSemanal();
+        _chartsDataLoaded = true;
+        StateHasChanged();
+    }
+
+    private async Task CargarKPIs()
+    {
+        var hoy = Clock.Today;
+        var diaSemana = (int)hoy.DayOfWeek + 1;
+
         var legajos = await Db.Legajos
             .Include(l => l.Horario).ThenInclude(h => h!.Detalles)
             .Where(l => l.IsActive)
@@ -233,13 +310,11 @@
 
         legajosActivos = legajos.Count;
 
-        // Legajos que tienen horario para hoy (dia no cerrado)
         var legajosHoy = legajos
             .Where(l => l.Horario?.Detalles?.Any(d => (int)d.DiaSemana == diaSemana && !d.IsCerrado) == true)
             .ToList();
         legajosConHorarioHoy = legajosHoy.Count;
 
-        // Fichadas de hoy
         var fichadasHoy = await Db.Fichadas
             .Where(f => f.FechaHora >= hoy && f.FechaHora < hoy.AddDays(1))
             .ToListAsync();
@@ -248,18 +323,14 @@
         fichadasEntradaHoy = fichadasHoy.Count(f => f.Tipo == "E");
         fichadasSalidaHoy = fichadasHoy.Count(f => f.Tipo == "S");
 
-        // Presentes: legajos con al menos una entrada hoy
         var legajosConEntrada = fichadasHoy
             .Where(f => f.Tipo == "E")
             .Select(f => f.LegajoId)
             .Distinct()
             .ToHashSet();
         presentesHoy = legajosConEntrada.Count;
-
-        // Ausentes: legajos con horario hoy que no tienen entrada
         ausentesHoy = legajosHoy.Count(l => !legajosConEntrada.Contains(l.Id));
 
-        // Tardes: entrada despues de HoraDesde + 5min
         tardesHoy = 0;
         foreach (var leg in legajosHoy.Where(l => legajosConEntrada.Contains(l.Id)))
         {
@@ -273,12 +344,11 @@
                 tardesHoy++;
         }
 
-        // Estado hoy (doughnut)
         estadoPresentes = presentesHoy;
         estadoAusentes = ausentesHoy;
         estadoSinFichada = Math.Max(0, legajosActivos - legajosConHorarioHoy);
 
-        // Fichadas por hora (line chart)
+        // Fichadas por hora (usa datos ya en memoria)
         var horasConFichadas = fichadasHoy
             .GroupBy(f => f.FechaHora.Hour)
             .ToDictionary(g => g.Key, g => g.ToList());
@@ -292,9 +362,36 @@
         horaLabels = horas.Select(h => $"{h:D2}:00").ToArray();
         horaEntradas = horas.Select(h => horasConFichadas.ContainsKey(h) ? horasConFichadas[h].Count(f => f.Tipo == "E") : 0).ToArray();
         horaSalidas = horas.Select(h => horasConFichadas.ContainsKey(h) ? horasConFichadas[h].Count(f => f.Tipo == "S") : 0).ToArray();
+    }
 
-        // Asistencia semanal (bar chart) - ultimos 7 dias laborables
+    private async Task CargarListas()
+    {
+        var hoyDateOnly = Clock.TodayDate;
+
+        ultimasFichadas = await Db.Fichadas
+            .Include(f => f.Legajo)
+            .OrderByDescending(f => f.FechaHora)
+            .Take(8)
+            .ToListAsync();
+
+        ultimasNoticias = await Db.Noticias
+            .Where(n => n.FechaDesde <= hoyDateOnly && n.FechaHasta >= hoyDateOnly)
+            .OrderByDescending(n => n.FechaDesde)
+            .Take(5)
+            .ToListAsync();
+    }
+
+    private async Task CargarChartSemanal()
+    {
+        var hoy = Clock.Today;
+        var hoyDateOnly = Clock.TodayDate;
         var desde7 = hoy.AddDays(-6);
+
+        var legajos = await Db.Legajos
+            .Include(l => l.Horario).ThenInclude(h => h!.Detalles)
+            .Where(l => l.IsActive)
+            .ToListAsync();
+
         var fichadas7 = await Db.Fichadas
             .Where(f => f.Tipo == "E" && f.FechaHora >= desde7 && f.FechaHora < hoy.AddDays(1))
             .Select(f => new { f.LegajoId, f.FechaHora })
@@ -332,7 +429,6 @@
             var pres = entradasDia.Count;
             var aus = legajosDia.Count(l => !entradasDia.Contains(l.Id));
 
-            // Tardes del dia
             var tardeDia = 0;
             foreach (var leg in legajosDia.Where(l => entradasDia.Contains(l.Id)))
             {
@@ -346,7 +442,7 @@
             }
 
             labelsList.Add(dia.ToString("ddd dd", culture));
-            presentesList.Add(pres - tardeDia); // presentes a tiempo
+            presentesList.Add(pres - tardeDia);
             ausentesList.Add(aus);
             tardesList.Add(tardeDia);
         }
@@ -355,37 +451,39 @@
         semanaPresentes = presentesList.ToArray();
         semanaAusentes = ausentesList.ToArray();
         semanaTardes = tardesList.ToArray();
-
-        // Ultimas fichadas
-        ultimasFichadas = await Db.Fichadas
-            .Include(f => f.Legajo)
-            .OrderByDescending(f => f.FechaHora)
-            .Take(8)
-            .ToListAsync();
-
-        // Noticias vigentes
-        ultimasNoticias = await Db.Noticias
-            .Where(n => n.FechaDesde <= hoyDateOnly && n.FechaHasta >= hoyDateOnly)
-            .OrderByDescending(n => n.FechaDesde)
-            .Take(5)
-            .ToListAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !_chartsRendered && !_disposed)
+        if (_disposed) return;
+
+        // Renderizar charts cuando los datos esten listos
+        if (_kpiLoaded && !_chartsRendered)
         {
-            _chartsRendered = true;
+            // Charts del dia (dependen de _kpiLoaded)
+            try
+            {
+                await JS.InvokeVoidAsync("dashboardCharts.renderEstadoHoy",
+                    "chartEstadoHoy", estadoPresentes, estadoAusentes, estadoSinFichada);
+                await JS.InvokeVoidAsync("dashboardCharts.renderFichadasPorHora",
+                    "chartFichadasHora", horaLabels, horaEntradas, horaSalidas);
+
+                if (_chartsDataLoaded)
+                {
+                    await JS.InvokeVoidAsync("dashboardCharts.renderAsistenciaSemanal",
+                        "chartAsistenciaSemanal", semanaLabels, semanaPresentes, semanaAusentes, semanaTardes);
+                    _chartsRendered = true;
+                }
+            }
+            catch (JSDisconnectedException) { }
+        }
+        else if (_chartsDataLoaded && !_chartsRendered)
+        {
             try
             {
                 await JS.InvokeVoidAsync("dashboardCharts.renderAsistenciaSemanal",
                     "chartAsistenciaSemanal", semanaLabels, semanaPresentes, semanaAusentes, semanaTardes);
-
-                await JS.InvokeVoidAsync("dashboardCharts.renderEstadoHoy",
-                    "chartEstadoHoy", estadoPresentes, estadoAusentes, estadoSinFichada);
-
-                await JS.InvokeVoidAsync("dashboardCharts.renderFichadasPorHora",
-                    "chartFichadasHora", horaLabels, horaEntradas, horaSalidas);
+                _chartsRendered = true;
             }
             catch (JSDisconnectedException) { }
         }

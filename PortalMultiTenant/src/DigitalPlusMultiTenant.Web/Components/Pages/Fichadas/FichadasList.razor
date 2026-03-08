@@ -69,7 +69,7 @@
 
 @if (buscando)
 {
-    <div class="text-center py-4"><div class="spinner-border"></div><div class="mt-2">Buscando...</div></div>
+    <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Message="Buscando fichadas..." />
 }
 else
 {
@@ -122,7 +122,20 @@ else
                                             @(f.Tipo == "E" ? "Entrada" : "Salida")
                                         </span>
                                     </td>
-                                    <td>@f.Origen</td>
+                                    <td>
+                                        @{
+                                            var (origenText, origenCss) = f.Origen switch
+                                            {
+                                                Domain.Enums.OrigenFichada.Huella => ("Huella", "bg-primary"),
+                                                Domain.Enums.OrigenFichada.PIN => ("PIN", "bg-warning text-dark"),
+                                                Domain.Enums.OrigenFichada.Demo => ("Demo", "bg-secondary"),
+                                                Domain.Enums.OrigenFichada.Manual => ("Manual", "bg-info"),
+                                                Domain.Enums.OrigenFichada.Web => ("Web", "bg-dark"),
+                                                _ => ("—", "bg-light text-muted")
+                                            };
+                                        }
+                                        <span class="badge @origenCss">@origenText</span>
+                                    </td>
                                     <td>@f.Terminal?.Nombre</td>
                                 </tr>
                             }
@@ -184,8 +197,8 @@ else
 @code {
     private List<Fichada>? fichadas;
     private List<Sucursal> sucursales = new();
-    private DateTime fechaDesde = DateTime.Today;
-    private DateTime fechaHasta = DateTime.Today;
+    private DateTime fechaDesde = Clock.Today;
+    private DateTime fechaHasta = Clock.Today;
     private string filtro = "";
     private int filtroSucursal;
     private string filtroTipo = "";

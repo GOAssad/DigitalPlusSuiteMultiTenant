@@ -68,7 +68,7 @@
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                        <tr><td colspan="6" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
                     }
                     else if (!items.Any())
                     {
@@ -76,7 +76,7 @@
                     }
                     else
                     {
-                        var hoy = DateOnly.FromDateTime(DateTime.Today);
+                        var hoy = Clock.TodayDate;
                         @foreach (var n in items)
                         {
                             var vigente = n.FechaDesde <= hoy && n.FechaHasta >= hoy;
@@ -137,7 +137,7 @@
 
     private async Task CargarDatos()
     {
-        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var hoy = Clock.TodayDate;
         var query = Db.Noticias.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filtro))
@@ -163,7 +163,7 @@
     private async Task ExportarExcel()
     {
         if (items == null) return;
-        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var hoy = Clock.TodayDate;
         var filtros = new List<string>();
         if (!string.IsNullOrWhiteSpace(filtro)) filtros.Add($"Busqueda: {filtro}");
         if (filtroVigencia == "vigente") filtros.Add("Vigencia: Vigentes");
@@ -180,7 +180,7 @@
     private async Task ExportarCsv()
     {
         if (items == null) return;
-        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var hoy = Clock.TodayDate;
         var bytes = CsvExporter.ToCsvBytes(items,
             ["Titulo", "Desde", "Hasta", "Vigente", "Privada"],
             n => [n.Titulo, n.FechaDesde.ToString("dd/MM/yyyy"), n.FechaHasta.ToString("dd/MM/yyyy"),

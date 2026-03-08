@@ -1,0 +1,15 @@
+@* Indicador de carga con animacion de huella digital *@
+<div class="loading-indicator @(Small ? "loading-sm" : "")">
+    <div class="fingerprint-pulse">
+        <i class="bi bi-fingerprint"></i>
+    </div>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div class="loading-text">@Message</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Cargando...";
+    [Parameter] public bool Small { get; set; }
+}

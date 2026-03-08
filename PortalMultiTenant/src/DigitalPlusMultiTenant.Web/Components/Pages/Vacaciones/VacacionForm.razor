@@ -60,7 +60,7 @@
 @code {
     [Parameter] public int Id { get; set; }
     private bool IsEdit => Id > 0;
-    private Vacacion model = new() { FechaDesde = DateOnly.FromDateTime(DateTime.Today), FechaHasta = DateOnly.FromDateTime(DateTime.Today.AddDays(14)) };
+    private Vacacion model = new() { FechaDesde = Clock.TodayDate, FechaHasta = Clock.TodayDate.AddDays(14) };
     private List<Legajo> legajos = new();
     private string? errorMessage;
 

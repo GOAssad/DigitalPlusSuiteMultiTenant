@@ -194,7 +194,8 @@ namespace Acceso.uAreu
             }
             else
             {
-                Stop();
+                // No llamar Stop() para mantener el monitoreo de conexion/desconexion del lector.
+                // Solo limpiar el estado visual.
                 if (modo != ModoFichada.Huella)
                 {
                     lblEstado.Text = "";
@@ -403,6 +404,8 @@ namespace Acceso.uAreu
             oFichada.nSucursalID = oTerminal.sSucursalID.sSucursalID.ToString() != string.Empty
                 ? Convert.ToInt32(oTerminal.sSucursalID.sSucursalID.ToString()) : 0;
             oFichada.nLegajoID = nLegajoID;
+            // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2
+            oFichada.sOrigen = _modoActual == ModoFichada.Pin ? "PIN" : _modoActual.ToString();
 
             if (oFichada.Actualizar())
             {
@@ -430,6 +433,10 @@ namespace Acceso.uAreu
 
         protected virtual void Process(DPFP.Sample Sample)
         {
+            // Ignorar huellas si no estamos en modo Huella
+            if (_modoActual != ModoFichada.Huella)
+                return;
+
             ActivarSemaforo(4);
             DrawPicture(ConvertSampleToBitmap(Sample));
 
@@ -566,20 +573,24 @@ namespace Acceso.uAreu
             _lectorFisico = true;
             _lectorDisponible = true;
 
-            // Si estabamos esperando deteccion, cancelar el timer y confirmar modo huella
-            if (_timerDetectarLector != null)
+            this.Invoke(new Function(delegate ()
             {
-                this.Invoke(new Function(delegate ()
+                // Cancelar timer de deteccion inicial si todavia esta corriendo
+                if (_timerDetectarLector != null)
                 {
-                    if (_timerDetectarLector != null)
-                    {
-                        _timerDetectarLector.Stop();
-                        _timerDetectarLector.Dispose();
-                        _timerDetectarLector = null;
-                    }
+                    _timerDetectarLector.Stop();
+                    _timerDetectarLector.Dispose();
+                    _timerDetectarLector = null;
+                }
+
+                // Siempre cambiar a modo huella cuando se conecta el lector
+                if (_modoActual != ModoFichada.Huella)
+                {
                     CambiarModo(ModoFichada.Huella);
-                }));
-            }
+                    lblEstado.Text = "Lector conectado - Coloque su dedo";
+                    lblEstado.ForeColor = Color.Green;
+                }
+            }));
         }
 
         public void OnReaderDisconnect(object Capture, string ReaderSerialNumber)

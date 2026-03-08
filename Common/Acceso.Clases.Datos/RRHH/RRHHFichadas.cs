@@ -14,9 +14,11 @@ namespace Acceso.Clases.Datos.RRHH
         protected string _sLegajoID;
         protected DateTime _dRegistro;
 
+        protected string _sOrigen;
+
         public string sMensaje;
 
-        private SqlParameter[] par = new SqlParameter[5];
+        private SqlParameter[] par = new SqlParameter[6];
 
 
         #region Propiedades
@@ -54,6 +56,12 @@ namespace Acceso.Clases.Datos.RRHH
 
             set { _dRegistro = value; }
             get { return _dRegistro; }
+        }
+
+        public string sOrigen
+        {
+            set { _sOrigen = value; }
+            get { return _sOrigen; }
         }
         #endregion
 
@@ -192,6 +200,11 @@ namespace Acceso.Clases.Datos.RRHH
             par[4].ParameterName = "@EmpresaId";
             par[4].Value = Global.Datos.TenantContext.EmpresaId;
             par[4].SqlDbType = SqlDbType.Int;
+
+            par[5] = new SqlParameter();
+            par[5].ParameterName = "@Origen";
+            par[5].Value = string.IsNullOrEmpty(_sOrigen) ? (object)DBNull.Value : _sOrigen;
+            par[5].SqlDbType = SqlDbType.NVarChar;
 
         }
     }

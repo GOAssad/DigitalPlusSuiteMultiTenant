@@ -95,16 +95,17 @@
                         <th>Horario Previsto</th>
                         <th role="button" @onclick='() => SetOrden("entrada")'>Hora Entrada @SortIcon("entrada")</th>
                         <th role="button" @onclick='() => SetOrden("minutos")'>Min. Tarde @SortIcon("minutos")</th>
+                        <th>Origen</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-emoji-smile fs-3 d-block mb-2"></i>No hay llegadas tarde en el periodo</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-emoji-smile fs-3 d-block mb-2"></i>No hay llegadas tarde en el periodo</td></tr>
                     }
                     else
                     {
@@ -122,6 +123,7 @@
                                         @r.MinutosTarde min
                                     </span>
                                 </td>
+                                <td>@OrigenBadge(r.Origen)</td>
                             </tr>
                         }
                     }
@@ -144,8 +146,8 @@
     private List<TardeRow>? items;
     private List<Sucursal> sucursales = new();
     private List<Sector> sectores = new();
-    private DateTime fechaDesde = DateTime.Today.AddDays(-7);
-    private DateTime fechaHasta = DateTime.Today;
+    private DateTime fechaDesde = Clock.Today.AddDays(-7);
+    private DateTime fechaHasta = Clock.Today;
     private int filtroSucursal;
     private int filtroSector;
     private int toleranciaMin = 5;
@@ -235,7 +237,8 @@
                             Sector = leg.Sector?.Nombre ?? "",
                             HoraPrevista = horarioDia.HoraDesde,
                             HoraEntrada = horaEntrada,
-                            MinutosTarde = minutos
+                            MinutosTarde = minutos,
+                            Origen = primeraEntrada.Origen?.ToString() ?? ""
                         });
                     }
                 }
@@ -284,6 +287,22 @@
         }).ToList();
     }
 
+    private MarkupString OrigenBadge(string origen)
+    {
+        var (text, css) = origen switch
+        {
+            "Huella" => ("Huella", "bg-primary"),
+            "PIN" => ("PIN", "bg-warning text-dark"),
+            "Demo" => ("Demo", "bg-secondary"),
+            "Manual" => ("Manual", "bg-info"),
+            "Web" => ("Web", "bg-dark"),
+            _ => ("", "")
+        };
+        return string.IsNullOrEmpty(text)
+            ? new MarkupString("<span class=\"text-muted\">—</span>")
+            : new MarkupString($"<span class=\"badge {css}\">{text}</span>");
+    }
+
     private MarkupString SortIcon(string columna)
     {
         if (ordenColumna != columna)
@@ -304,11 +323,12 @@
             new ExcelExportConfig { Titulo = "Reporte de Llegadas Tarde", NombreEmpresa = Tenant.EmpresaNombre,
                 FechaDesde = fechaDesde.ToString("dd/MM/yyyy"), FechaHasta = fechaHasta.ToString("dd/MM/yyyy"),
                 Filtros = filtros,
-                Encabezados = ["Fecha", "Legajo", "Apellido", "Nombre", "Sector", "Horario Previsto", "Hora Entrada", "Min. Tarde"],
+                Encabezados = ["Fecha", "Legajo", "Apellido", "Nombre", "Sector", "Horario Previsto", "Hora Entrada", "Min. Tarde", "Origen"],
                 Formatos = [ExcelColFormat.Fecha, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto,
-                           ExcelColFormat.Texto, ExcelColFormat.Hora, ExcelColFormat.Hora, ExcelColFormat.Numero] },
+                           ExcelColFormat.Texto, ExcelColFormat.Hora, ExcelColFormat.Hora, ExcelColFormat.Numero, ExcelColFormat.Texto] },
             r => [r.Fecha, r.NumeroLegajo, r.Apellido, r.Nombre, r.Sector,
-                  (object)r.HoraPrevista, (object)r.HoraEntrada, r.MinutosTarde]);
+                  (object)r.HoraPrevista, (object)r.HoraEntrada, r.MinutosTarde,
+                  string.IsNullOrEmpty(r.Origen) ? "—" : r.Origen]);
         await JS.InvokeVoidAsync("downloadFile", "llegadas_tarde.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
@@ -316,9 +336,10 @@
     {
         if (items == null) return;
         var bytes = CsvExporter.ToCsvBytes(items,
-            ["Fecha", "Legajo", "Apellido", "Nombre", "Sector", "Horario Previsto", "Hora Entrada", "Min. Tarde"],
+            ["Fecha", "Legajo", "Apellido", "Nombre", "Sector", "Horario Previsto", "Hora Entrada", "Min. Tarde", "Origen"],
             r => [r.Fecha.ToString("dd/MM/yyyy"), r.NumeroLegajo, r.Apellido, r.Nombre, r.Sector,
-                  r.HoraPrevista.ToString("HH:mm"), r.HoraEntrada.ToString("HH:mm"), r.MinutosTarde.ToString()]);
+                  r.HoraPrevista.ToString("HH:mm"), r.HoraEntrada.ToString("HH:mm"), r.MinutosTarde.ToString(),
+                  string.IsNullOrEmpty(r.Origen) ? "" : r.Origen]);
         await JS.InvokeVoidAsync("downloadFile", "llegadas_tarde.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
@@ -332,5 +353,6 @@
         public TimeOnly HoraPrevista { get; set; }
         public TimeOnly HoraEntrada { get; set; }
         public int MinutosTarde { get; set; }
+        public string Origen { get; set; } = "";
     }
 }

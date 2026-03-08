@@ -47,7 +47,7 @@
 @code {
     [Parameter] public int Id { get; set; }
     private bool IsEdit => Id > 0;
-    private Feriado model = new() { Fecha = DateOnly.FromDateTime(DateTime.Today) };
+    private Feriado model = new() { Fecha = Clock.TodayDate };
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()

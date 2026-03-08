@@ -9,72 +9,116 @@
 <nav class="sidebar-nav">
     <AuthorizeView>
         <Authorized>
-            <div class="nav-section-title">Principal</div>
-            <NavLink class="sidebar-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="sidebar-link" href="/" Match="NavLinkMatch.All">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </NavLink>
 
-            <div class="nav-section-title">Estructura</div>
-            <NavLink class="sidebar-link" href="sucursales">
-                <i class="bi bi-building"></i> Sucursales
-            </NavLink>
-            <NavLink class="sidebar-link" href="sectores">
-                <i class="bi bi-diagram-3"></i> Sectores
-            </NavLink>
-            <NavLink class="sidebar-link" href="categorias">
-                <i class="bi bi-tags"></i> Categorias
-            </NavLink>
-            <NavLink class="sidebar-link" href="horarios">
-                <i class="bi bi-clock"></i> Horarios
-            </NavLink>
-            <NavLink class="sidebar-link" href="terminales">
-                <i class="bi bi-pc-display"></i> Terminales
-            </NavLink>
+            <div class="nav-group">
+                <button class="nav-group-toggle @(IsGroupOpen("estructura") ? "open" : "")"
+                        @onclick='() => ToggleGroup("estructura")'>
+                    <i class="bi bi-building"></i>
+                    <span>Estructura</span>
+                    <i class="bi bi-chevron-down nav-chevron"></i>
+                </button>
+                <div class="nav-group-items @(IsGroupOpen("estructura") ? "show" : "")">
+                    <NavLink class="sidebar-link sub" href="sucursales">
+                        <i class="bi bi-building"></i> Sucursales
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="sectores">
+                        <i class="bi bi-diagram-3"></i> Sectores
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="categorias">
+                        <i class="bi bi-tags"></i> Categorias
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="horarios">
+                        <i class="bi bi-clock"></i> Horarios
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="terminales">
+                        <i class="bi bi-pc-display"></i> Terminales
+                    </NavLink>
+                </div>
+            </div>
 
-            <div class="nav-section-title">Personal</div>
-            <NavLink class="sidebar-link" href="legajos">
-                <i class="bi bi-people"></i> Legajos
-            </NavLink>
-            <NavLink class="sidebar-link" href="fichadas">
-                <i class="bi bi-card-checklist"></i> Fichadas
-            </NavLink>
+            <div class="nav-group">
+                <button class="nav-group-toggle @(IsGroupOpen("personal") ? "open" : "")"
+                        @onclick='() => ToggleGroup("personal")'>
+                    <i class="bi bi-people"></i>
+                    <span>Personal</span>
+                    <i class="bi bi-chevron-down nav-chevron"></i>
+                </button>
+                <div class="nav-group-items @(IsGroupOpen("personal") ? "show" : "")">
+                    <NavLink class="sidebar-link sub" href="legajos">
+                        <i class="bi bi-person-badge"></i> Legajos
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="fichadas">
+                        <i class="bi bi-card-checklist"></i> Fichadas
+                    </NavLink>
+                </div>
+            </div>
 
-            <div class="nav-section-title">Reportes</div>
-            <NavLink class="sidebar-link" href="reportes/asistencia">
-                <i class="bi bi-calendar-check"></i> Asistencia Diaria
-            </NavLink>
-            <NavLink class="sidebar-link" href="reportes/llegadas-tarde">
-                <i class="bi bi-alarm"></i> Llegadas Tarde
-            </NavLink>
-            <NavLink class="sidebar-link" href="reportes/ausencias">
-                <i class="bi bi-person-x"></i> Ausencias
-            </NavLink>
-            <NavLink class="sidebar-link" href="reportes/horas-trabajadas">
-                <i class="bi bi-hourglass-split"></i> Horas Trabajadas
-            </NavLink>
+            <div class="nav-group">
+                <button class="nav-group-toggle @(IsGroupOpen("reportes") ? "open" : "")"
+                        @onclick='() => ToggleGroup("reportes")'>
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span>Reportes</span>
+                    <i class="bi bi-chevron-down nav-chevron"></i>
+                </button>
+                <div class="nav-group-items @(IsGroupOpen("reportes") ? "show" : "")">
+                    <NavLink class="sidebar-link sub" href="reportes/asistencia">
+                        <i class="bi bi-calendar-check"></i> Asistencia Diaria
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="reportes/llegadas-tarde">
+                        <i class="bi bi-alarm"></i> Llegadas Tarde
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="reportes/ausencias">
+                        <i class="bi bi-person-x"></i> Ausencias
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="reportes/horas-trabajadas">
+                        <i class="bi bi-hourglass-split"></i> Horas Trabajadas
+                    </NavLink>
+                </div>
+            </div>
 
-            <div class="nav-section-title">Operacion</div>
-            <NavLink class="sidebar-link" href="incidencias">
-                <i class="bi bi-exclamation-triangle"></i> Incidencias
-            </NavLink>
-            <NavLink class="sidebar-link" href="vacaciones">
-                <i class="bi bi-sun"></i> Vacaciones
-            </NavLink>
-            <NavLink class="sidebar-link" href="feriados">
-                <i class="bi bi-calendar-event"></i> Feriados
-            </NavLink>
-            <NavLink class="sidebar-link" href="noticias">
-                <i class="bi bi-megaphone"></i> Noticias
-            </NavLink>
+            <div class="nav-group">
+                <button class="nav-group-toggle @(IsGroupOpen("operacion") ? "open" : "")"
+                        @onclick='() => ToggleGroup("operacion")'>
+                    <i class="bi bi-clipboard2-data"></i>
+                    <span>Operacion</span>
+                    <i class="bi bi-chevron-down nav-chevron"></i>
+                </button>
+                <div class="nav-group-items @(IsGroupOpen("operacion") ? "show" : "")">
+                    <NavLink class="sidebar-link sub" href="incidencias">
+                        <i class="bi bi-exclamation-triangle"></i> Incidencias
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="vacaciones">
+                        <i class="bi bi-sun"></i> Vacaciones
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="feriados">
+                        <i class="bi bi-calendar-event"></i> Feriados
+                    </NavLink>
+                    <NavLink class="sidebar-link sub" href="noticias">
+                        <i class="bi bi-megaphone"></i> Noticias
+                    </NavLink>
+                </div>
+            </div>
 
             <AuthorizeView Roles="SuperAdmin,AdminEmpresa" Context="adminContext">
-                <div class="nav-section-title">Administracion</div>
-                <NavLink class="sidebar-link" href="usuarios">
-                    <i class="bi bi-person-lock"></i> Usuarios
-                </NavLink>
-                <NavLink class="sidebar-link" href="configuracion">
-                    <i class="bi bi-gear"></i> Configuracion
-                </NavLink>
+                <div class="nav-group">
+                    <button class="nav-group-toggle @(IsGroupOpen("admin") ? "open" : "")"
+                            @onclick='() => ToggleGroup("admin")'>
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Administracion</span>
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="nav-group-items @(IsGroupOpen("admin") ? "show" : "")">
+                        <NavLink class="sidebar-link sub" href="usuarios">
+                            <i class="bi bi-person-lock"></i> Usuarios
+                        </NavLink>
+                        <NavLink class="sidebar-link sub" href="configuracion">
+                            <i class="bi bi-gear"></i> Configuracion
+                        </NavLink>
+                    </div>
+                </div>
             </AuthorizeView>
         </Authorized>
         <NotAuthorized>
@@ -88,18 +132,65 @@
 
 @code {
     private string? currentUrl;
+    private HashSet<string> openGroups = new();
+
+    // Mapa de rutas a grupos para auto-expandir
+    private static readonly Dictionary<string, string> routeToGroup = new()
+    {
+        ["sucursales"] = "estructura",
+        ["sectores"] = "estructura",
+        ["categorias"] = "estructura",
+        ["horarios"] = "estructura",
+        ["terminales"] = "estructura",
+        ["legajos"] = "personal",
+        ["fichadas"] = "personal",
+        ["reportes/asistencia"] = "reportes",
+        ["reportes/llegadas-tarde"] = "reportes",
+        ["reportes/ausencias"] = "reportes",
+        ["reportes/horas-trabajadas"] = "reportes",
+        ["incidencias"] = "operacion",
+        ["vacaciones"] = "operacion",
+        ["feriados"] = "operacion",
+        ["noticias"] = "operacion",
+        ["usuarios"] = "admin",
+        ["configuracion"] = "admin",
+    };
 
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        AutoExpandGroup(currentUrl);
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        AutoExpandGroup(currentUrl);
         StateHasChanged();
     }
+
+    private void AutoExpandGroup(string? url)
+    {
+        if (url == null) return;
+        // Buscar el grupo que corresponde a la URL actual
+        foreach (var kvp in routeToGroup)
+        {
+            if (url.StartsWith(kvp.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                openGroups.Add(kvp.Value);
+                break;
+            }
+        }
+    }
+
+    private void ToggleGroup(string group)
+    {
+        if (!openGroups.Remove(group))
+            openGroups.Add(group);
+    }
+
+    private bool IsGroupOpen(string group) => openGroups.Contains(group);
 
     public void Dispose()
     {
