@@ -73,7 +73,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.Entity<Feriado>().HasQueryFilter(e => e.EmpresaId == empresaId);
         builder.Entity<Noticia>().HasQueryFilter(e => e.EmpresaId == empresaId);
         builder.Entity<VariableSistema>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<ApplicationUser>().HasQueryFilter(e => e.EmpresaId == empresaId);
+        // No filtrar ApplicationUser: Identity necesita acceso sin restriccion para login
+        // El EmpresaId del user se usa para el claim, no para filtrado
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
