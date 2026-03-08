@@ -121,6 +121,35 @@ else
             </div>
 
             <div class="card mb-3">
+                <div class="card-header">Logo de la empresa</div>
+                <div class="card-body">
+                    <div class="row align-items-center g-3">
+                        <div class="col-auto">
+                            @if (empresa.Logo != null && empresa.LogoContentType != null)
+                            {
+                                <img src="data:@empresa.LogoContentType;base64,@Convert.ToBase64String(empresa.Logo)"
+                                     alt="Logo" style="max-height:80px; max-width:200px;" class="border rounded p-1" />
+                            }
+                            else
+                            {
+                                <div class="border rounded p-3 text-muted text-center" style="width:120px;height:80px;line-height:50px;">
+                                    <i class="bi bi-image fs-3"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col">
+                            <InputFile OnChange="OnLogoSelected" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="form-control form-control-sm" />
+                            <small class="text-muted">PNG, JPG, SVG o WebP. Max 500 KB.</small>
+                            @if (empresa.Logo != null)
+                            {
+                                <button class="btn btn-sm btn-outline-danger mt-1" @onclick="QuitarLogo">Quitar logo</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
                 <div class="card-header">Notas</div>
                 <div class="card-body">
                     <textarea class="form-control" rows="3" @bind="empresa.Notas"></textarea>
@@ -267,6 +296,23 @@ else
             empresa!.TipoIdentificacionFiscalId = id;
         else
             empresa!.TipoIdentificacionFiscalId = null;
+    }
+
+    private async Task OnLogoSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var allowedTypes = new[] { "image/png", "image/jpeg", "image/svg+xml", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType) || file.Size > 512_000) return;
+        using var ms = new System.IO.MemoryStream();
+        await file.OpenReadStream(512_000).CopyToAsync(ms);
+        empresa!.Logo = ms.ToArray();
+        empresa.LogoContentType = file.ContentType;
+    }
+
+    private void QuitarLogo()
+    {
+        empresa!.Logo = null;
+        empresa.LogoContentType = null;
     }
 
     private async Task Guardar()

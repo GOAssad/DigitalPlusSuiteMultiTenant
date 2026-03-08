@@ -45,6 +45,12 @@ public class Empresa
 
     public string? Notas { get; set; }
 
+    // Logo
+    public byte[]? Logo { get; set; }
+
+    [MaxLength(100)]
+    public string? LogoContentType { get; set; }
+
     [MaxLength(50)]
     public string? CodigoActivacion { get; set; }
 

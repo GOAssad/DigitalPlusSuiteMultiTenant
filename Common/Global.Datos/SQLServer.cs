@@ -408,8 +408,45 @@ namespace Global.Datos
 			
 
 			return true;
-			
+
 		}
+
+		/// <summary>
+		/// Ejecuta un comando SQL (SP o texto) con parametros
+		/// </summary>
+		public static bool EjecutarSPInsertUpdateBool(string queryString, SqlParameter[] parametros, bool esSP)
+		{
+			ActualizarProp();
+
+			try
+			{
+				using (SqlConnection connection = new SqlConnection(SQLString))
+				{
+					SqlCommand command = new SqlCommand(queryString, connection)
+					{
+						CommandText = queryString,
+						CommandType = esSP ? CommandType.StoredProcedure : CommandType.Text
+					};
+
+					for (int i = 0; i < parametros.Length; i++)
+					{
+						command.Parameters.Add(parametros[i]);
+					}
+
+					connection.Open();
+					command.ExecuteNonQuery();
+					command.Parameters.Clear();
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Windows.Forms.MessageBox.Show(ex.Message);
+				return false;
+			}
+
+			return true;
+		}
+
 		/// <summary>
 		/// Ejecutar una transaccion SQL sin devolucion de DataTable ni nada
 		/// </summary>

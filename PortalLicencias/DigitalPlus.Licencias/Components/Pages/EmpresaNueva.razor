@@ -72,6 +72,35 @@
         </div>
 
         <div class="card mb-3">
+            <div class="card-header">Logo de la empresa</div>
+            <div class="card-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-auto">
+                        @if (logoBytes != null && logoContentType != null)
+                        {
+                            <img src="data:@logoContentType;base64,@Convert.ToBase64String(logoBytes)"
+                                 alt="Logo" style="max-height:80px; max-width:200px;" class="border rounded p-1" />
+                        }
+                        else
+                        {
+                            <div class="border rounded p-3 text-muted text-center" style="width:120px;height:80px;line-height:50px;">
+                                <i class="bi bi-image fs-3"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="col">
+                        <InputFile OnChange="OnLogoSelected" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="form-control form-control-sm" />
+                        <small class="text-muted">PNG, JPG, SVG o WebP. Max 500 KB.</small>
+                        @if (logoBytes != null)
+                        {
+                            <button class="btn btn-sm btn-outline-danger mt-1" @onclick="QuitarLogo">Quitar</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
             <div class="card-header">Contacto</div>
             <div class="card-body">
                 <div class="row g-3">
@@ -200,6 +229,8 @@
     private int duracionDias = 365;
     private int codigoExpiryHours = 72;
     private string? notas;
+    private byte[]? logoBytes;
+    private string? logoContentType;
 
     private List<DigitalPlus.Licencias.Entidades.Pais>? paises;
     private List<DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal>? tiposId;
@@ -238,6 +269,23 @@
             tipoIdFiscalId = id;
         else
             tipoIdFiscalId = null;
+    }
+
+    private async Task OnLogoSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var allowedTypes = new[] { "image/png", "image/jpeg", "image/svg+xml", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType) || file.Size > 512_000) return;
+        using var ms = new System.IO.MemoryStream();
+        await file.OpenReadStream(512_000).CopyToAsync(ms);
+        logoBytes = ms.ToArray();
+        logoContentType = file.ContentType;
+    }
+
+    private void QuitarLogo()
+    {
+        logoBytes = null;
+        logoContentType = null;
     }
 
     private void GenerarCompanyId()
@@ -289,6 +337,8 @@
             empresa.PaisId = paisId;
             empresa.TipoIdentificacionFiscalId = tipoIdFiscalId;
             empresa.IdentificacionFiscal = identificacionFiscal;
+            empresa.Logo = logoBytes;
+            empresa.LogoContentType = logoContentType;
             await Repo.ActualizarEmpresaAsync(empresa);
 
             // Paso 4: Crear licencia
