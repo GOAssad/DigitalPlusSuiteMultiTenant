@@ -49,6 +49,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     // Seguridad
     public DbSet<UsuarioSucursal> UsuarioSucursales => Set<UsuarioSucursal>();
 
+    // Propiedad para query filters - EF Core la evalua en cada query, no en OnModelCreating
+    private int CurrentEmpresaId => _tenantService.EmpresaId;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -57,24 +60,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
         // Global query filters para tenant isolation
-        var empresaId = _tenantService.EmpresaId;
-
-        builder.Entity<Sucursal>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Sector>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Categoria>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Horario>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Terminal>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Legajo>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Fichada>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Incidencia>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<IncidenciaLegajo>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Vacacion>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<EventoCalendario>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Feriado>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<Noticia>().HasQueryFilter(e => e.EmpresaId == empresaId);
-        builder.Entity<VariableSistema>().HasQueryFilter(e => e.EmpresaId == empresaId);
+        // Usan CurrentEmpresaId (propiedad del DbContext) para evaluacion diferida
+        builder.Entity<Sucursal>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Sector>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Categoria>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Horario>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Terminal>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Legajo>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Fichada>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Incidencia>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<IncidenciaLegajo>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Vacacion>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<EventoCalendario>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Feriado>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<Noticia>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<VariableSistema>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
         // No filtrar ApplicationUser: Identity necesita acceso sin restriccion para login
-        // El EmpresaId del user se usa para el claim, no para filtrado
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
