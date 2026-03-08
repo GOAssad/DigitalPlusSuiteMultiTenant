@@ -1,0 +1,104 @@
+@page "/configuracion"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa")]
+@rendermode InteractiveServer
+
+@inject IApplicationDbContext Db
+
+<PageTitle>Configuracion - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-gear me-2"></i>Configuracion</h4>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Clave</th>
+                    <th>Descripcion</th>
+                    <th>Valor</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (items == null)
+                {
+                    <tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                }
+                else if (!items.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay variables configuradas</td></tr>
+                }
+                else
+                {
+                    @foreach (var v in items)
+                    {
+                        <tr>
+                            <td><code>@v.Clave</code></td>
+                            <td>@v.Descripcion</td>
+                            <td>
+                                @if (editingId == v.Id)
+                                {
+                                    <input type="text" class="form-control form-control-sm" @bind="editValue" style="max-width:300px" />
+                                }
+                                else
+                                {
+                                    @v.Valor
+                                }
+                            </td>
+                            <td><span class="badge bg-light text-dark">@v.TipoValor</span></td>
+                            <td class="text-end">
+                                @if (editingId == v.Id)
+                                {
+                                    <button class="btn btn-sm btn-success me-1" @onclick="() => SaveVariable(v)"><i class="bi bi-check-lg"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="CancelEdit"><i class="bi bi-x-lg"></i></button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEdit(v)"><i class="bi bi-pencil"></i></button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-success") mt-3">@message</div>
+}
+
+@code {
+    private List<VariableSistema>? items;
+    private int? editingId;
+    private string? editValue;
+    private string? message;
+    private bool isError;
+
+    protected override async Task OnInitializedAsync() => items = await Db.VariablesSistema.OrderBy(v => v.Clave).ToListAsync();
+
+    private void StartEdit(VariableSistema v) { editingId = v.Id; editValue = v.Valor; message = null; }
+    private void CancelEdit() { editingId = null; editValue = null; }
+
+    private async Task SaveVariable(VariableSistema v)
+    {
+        try
+        {
+            v.Valor = editValue;
+            await Db.SaveChangesAsync();
+            editingId = null;
+            message = $"Variable '{v.Clave}' actualizada";
+            isError = false;
+        }
+        catch (Exception ex) { message = ex.Message; isError = true; }
+    }
+}

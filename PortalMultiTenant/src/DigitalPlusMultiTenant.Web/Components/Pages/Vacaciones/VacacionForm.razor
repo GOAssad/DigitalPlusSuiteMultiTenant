@@ -1,0 +1,78 @@
+@page "/vacaciones/crear"
+@page "/vacaciones/editar/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject IApplicationDbContext Db
+@inject NavigationManager Nav
+
+<PageTitle>@(IsEdit ? "Editar" : "Nueva") Vacacion - DigitalPlus</PageTitle>
+
+<div class="d-flex align-items-center mb-3">
+    <a href="vacaciones" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0">@(IsEdit ? "Editar" : "Nueva") Vacacion</h4>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <EditForm Model="model" OnValidSubmit="Save" FormName="vacacionForm">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Legajo</label>
+                    <InputSelect @bind-Value="model.LegajoId" class="form-select">
+                        <option value="0">-- Seleccionar --</option>
+                        @foreach (var l in legajos)
+                        {
+                            <option value="@l.Id">@l.NumeroLegajo - @l.Apellido, @l.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Desde</label>
+                    <InputDate @bind-Value="model.FechaDesde" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Hasta</label>
+                    <InputDate @bind-Value="model.FechaHasta" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nota</label>
+                    <InputText @bind-Value="model.Nota" class="form-control" />
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                <a href="vacaciones" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </EditForm>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private bool IsEdit => Id > 0;
+    private Vacacion model = new() { FechaDesde = DateOnly.FromDateTime(DateTime.Today), FechaHasta = DateOnly.FromDateTime(DateTime.Today.AddDays(14)) };
+    private List<Legajo> legajos = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        legajos = await Db.Legajos.Where(l => l.IsActive).OrderBy(l => l.Apellido).ThenBy(l => l.Nombre).ToListAsync();
+        if (IsEdit) { var e = await Db.Vacaciones.FindAsync(Id); if (e == null) { Nav.NavigateTo("vacaciones"); return; } model = e; }
+    }
+
+    private async Task Save()
+    {
+        try { if (!IsEdit) Db.Vacaciones.Add(model); await Db.SaveChangesAsync(); Nav.NavigateTo("vacaciones"); }
+        catch (DbUpdateException ex) { errorMessage = ex.InnerException?.Message ?? ex.Message; }
+    }
+}
