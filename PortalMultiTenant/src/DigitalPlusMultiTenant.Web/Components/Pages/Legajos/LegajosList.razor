@@ -1,0 +1,134 @@
+@page "/legajos"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject IApplicationDbContext Db
+
+<PageTitle>Legajos - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Legajos</h4>
+    <a href="legajos/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Legajo</a>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre o legajo..."
+                       @bind="filtro" @bind:event="oninput" @onkeyup="Filtrar" />
+            </div>
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" @bind="filtroSector" @bind:after="Filtrar">
+                    <option value="0">Todos los sectores</option>
+                    @foreach (var s in sectores)
+                    {
+                        <option value="@s.Id">@s.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" @bind="filtroActivo" @bind:after="Filtrar">
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Legajo</th>
+                    <th>Apellido y Nombre</th>
+                    <th>Sector</th>
+                    <th>Categoria</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (legajos == null)
+                {
+                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                }
+                else if (!legajos.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay legajos</td></tr>
+                }
+                else
+                {
+                    @foreach (var l in legajos)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@l.NumeroLegajo</span></td>
+                            <td><strong>@l.Apellido</strong>, @l.Nombre</td>
+                            <td>@l.Sector.Nombre</td>
+                            <td>@l.Categoria.Nombre</td>
+                            <td><span class="badge @(l.IsActive ? "bg-success" : "bg-danger")">@(l.IsActive ? "Activo" : "Inactivo")</span></td>
+                            <td class="text-end">
+                                <a href="legajos/editar/@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(l)">
+                                    <i class="bi @(l.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Legajo>? legajos;
+    private List<Sector> sectores = new();
+    private string filtro = "";
+    private int filtroSector;
+    private string filtroActivo = "true";
+
+    protected override async Task OnInitializedAsync()
+    {
+        sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        await Filtrar();
+    }
+
+    private async Task Filtrar()
+    {
+        var query = Db.Legajos
+            .Include(l => l.Sector)
+            .Include(l => l.Categoria)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.Trim().ToLower();
+            query = query.Where(l => l.Apellido.ToLower().Contains(f)
+                || l.Nombre.ToLower().Contains(f)
+                || l.NumeroLegajo.ToLower().Contains(f));
+        }
+        if (filtroSector > 0)
+            query = query.Where(l => l.SectorId == filtroSector);
+        if (filtroActivo == "true")
+            query = query.Where(l => l.IsActive);
+        else if (filtroActivo == "false")
+            query = query.Where(l => !l.IsActive);
+
+        legajos = await query.OrderBy(l => l.Apellido).ThenBy(l => l.Nombre).Take(200).ToListAsync();
+    }
+
+    private async Task ToggleActive(Legajo l)
+    {
+        l.IsActive = !l.IsActive;
+        await Db.SaveChangesAsync();
+        await Filtrar();
+    }
+}

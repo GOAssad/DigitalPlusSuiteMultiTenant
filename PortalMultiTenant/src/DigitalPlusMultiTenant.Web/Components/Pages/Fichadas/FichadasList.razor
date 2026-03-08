@@ -1,0 +1,117 @@
+@page "/fichadas"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject IApplicationDbContext Db
+
+<PageTitle>Fichadas - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-card-checklist me-2"></i>Fichadas</h4>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaDesde" @bind:after="Filtrar" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaHasta" @bind:after="Filtrar" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Buscar legajo</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Nombre o legajo..."
+                       @bind="filtro" @bind:event="oninput" @onkeyup="Filtrar" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Legajo</th>
+                    <th>Apellido y Nombre</th>
+                    <th>Fecha/Hora</th>
+                    <th>Tipo</th>
+                    <th>Origen</th>
+                    <th>Terminal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (fichadas == null)
+                {
+                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                }
+                else if (!fichadas.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay fichadas en el periodo</td></tr>
+                }
+                else
+                {
+                    @foreach (var f in fichadas)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@f.Legajo?.NumeroLegajo</span></td>
+                            <td>@f.Legajo?.Apellido, @f.Legajo?.Nombre</td>
+                            <td>@f.FechaHora.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                            <td>
+                                <span class="badge @(f.Tipo == "E" ? "bg-success" : "bg-danger")">
+                                    @(f.Tipo == "E" ? "Entrada" : "Salida")
+                                </span>
+                            </td>
+                            <td>@f.Origen</td>
+                            <td>@f.Terminal?.Nombre</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (fichadas?.Count >= 500)
+    {
+        <div class="card-footer text-center text-muted small">Mostrando las primeras 500 fichadas</div>
+    }
+</div>
+
+@code {
+    private List<Fichada>? fichadas;
+    private DateTime fechaDesde = DateTime.Today;
+    private DateTime fechaHasta = DateTime.Today;
+    private string filtro = "";
+
+    protected override async Task OnInitializedAsync() => await Filtrar();
+
+    private async Task Filtrar()
+    {
+        var desde = fechaDesde.Date;
+        var hasta = fechaHasta.Date.AddDays(1);
+
+        var query = Db.Fichadas
+            .Include(f => f.Legajo)
+            .Include(f => f.Terminal)
+            .Where(f => f.FechaHora >= desde && f.FechaHora < hasta);
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.Trim().ToLower();
+            query = query.Where(x => x.Legajo!.Apellido.ToLower().Contains(f)
+                || x.Legajo!.Nombre.ToLower().Contains(f)
+                || x.Legajo!.NumeroLegajo.ToLower().Contains(f));
+        }
+
+        fichadas = await query
+            .OrderByDescending(f => f.FechaHora)
+            .Take(500)
+            .ToListAsync();
+    }
+}
