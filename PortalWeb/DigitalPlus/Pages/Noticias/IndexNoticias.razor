@@ -1,0 +1,74 @@
+﻿@page "/noticias"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioNoticias repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Noticias_Noticias.png" Titulo="Noticias" />
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Noticia"></BotonAgregarEntidad>
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>
+
+    <ListadoGenerico Listado="Noticias">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Codigo</th>
+                        <th>Nombre</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Noticias)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/noticias/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                                <button @onclick="@(() => BorrarNoticias(item))" class="btn btn-danger btn-sm">Borrar</button>
+                            </td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Detalle</td>
+                            <td>@item.FechaDesde</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+
+@code {
+    public List<Noticia> Noticias { get; set; }
+    string textobusqueda;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Cargar(string.Empty);
+    }
+
+    private async Task Cargar(string texto)
+    {
+        Noticias = await repositorio.Get(texto);
+    }
+
+    private async Task BorrarNoticias(Noticia objeto)
+    {
+        var condicion = await mostrarMensajes.MostrarMensajeBorrar(objeto.Nombre);
+
+        if (condicion)
+            await repositorio.Delete(objeto.Id);
+
+        await Cargar(string.Empty);
+    }
+    private void Crear()
+    {
+        navigationManager.NavigateTo("noticias/crear");
+    }
+}

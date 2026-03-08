@@ -1,0 +1,27 @@
+﻿<div style="margin-right: 2%; margin-bottom: 10px; text-align: center;">
+    
+    <p style="max-width: 225px; height: 44px; font-size: 15px; font-weight: bold;"><a href="/legajos/editar/@Legajo.Id">@Legajo.Nombre</a></p>
+    <div>
+       
+            
+                <a class="btn btn-info" href="legajos/editar/@Legajo.Id">Editar</a>
+                <button type="button" class="btn btn-danger"
+                        @onclick="@(() => EliminarLegajo.InvokeAsync(Legajo))">
+                    Borrar
+                </button>
+            
+        
+    </div>
+</div>
+
+@code {
+    [Parameter] public Legajo Legajo { get; set; }
+    [Parameter] public bool MostrarBotones { get; set; } = false;
+    [Parameter] public EventCallback<Legajo> EliminarLegajo { get; set; }
+    private string urlLegajo = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        urlLegajo = $"legajo/{Legajo?.Id}/{Legajo?.Nombre?.Replace(" ", "-")}";
+    }
+}

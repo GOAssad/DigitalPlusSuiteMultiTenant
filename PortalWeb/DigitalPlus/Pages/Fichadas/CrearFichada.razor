@@ -1,0 +1,98 @@
+﻿@page "/fichadas/crear/{FichadaId:int}/{LegajoId:int}/{OrigenId:int}"
+@page "/fichadas/crear/{FichadaId:int}/{LegajoId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioFichadas repositorio
+@inject RepositorioLegajos repositorioLegajos
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<div class="container">
+    <div class="titulo">
+        <h3>Crear Fichada para: @Legajo.Nombre (@Legajo.LegajoId)</h3>
+    </div>
+
+    @if (Fichada == null)
+    {
+        <text>Cargando...</text>
+    }
+    else
+    {
+        <FormularioFichada OnValidSubmit="CrearEntidad" Fichada="Fichada" OrigenId="OrigenId" LegajoId="LegajoId" />
+    }
+</div>
+@code {
+
+    [Parameter] public int FichadaId { get; set; }
+    [Parameter] public int LegajoId { get; set; }
+
+    //1 = Viene de Fichadas, 2 = Viene de Control; 3 = Viende de DashBoard
+    [Parameter] public int OrigenId { get; set; } = 1;
+
+
+    private Fichada Fichada = new Fichada();
+    private Legajo Legajo = new Legajo();
+
+    private async Task Inicializar()
+    {
+
+        if (LegajoId <= 0)
+        {
+            await mostrarMensaje.MostrarMensajeError("No se encontro el Legajo para asociarle a la incidencia");
+            navigationManager.NavigateTo("/legajos");
+        }
+        else
+        {
+            Legajo = repositorioLegajos.GetLegajo(LegajoId);
+        }
+
+        if (Fichada is null)
+        {
+            await mostrarMensaje.MostrarMensajeError("no se pudo inicializar la Fichada");
+            navigationManager.NavigateTo("/legajos");
+        }
+
+
+
+
+
+        //sI FichadaId = 0 es porque no tengo fechas
+        if (FichadaId <= 0)
+        {
+            if (Fichada == null) Fichada = new Fichada();
+
+
+            Fichada.Registro = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
+            Fichada.Legajoid = LegajoId;
+            Fichada.EntraSale = "E";
+        }
+        else
+        {
+            Fichada = await repositorio.GetFichada(FichadaId);
+            //si es entrada asumo que va a ponerlo como salida asi que le hago la vida mas facil y le pongo el estado contrario
+            if (Fichada.EntraSale == "E")
+                Fichada.EntraSale = "S";
+            else
+                Fichada.EntraSale = "E";
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        await Inicializar();
+        
+
+    }
+
+    private async Task CrearEntidad()
+    {
+        await repositorio.Post(Fichada);
+        await mostrarMensaje.MostrarMensajeTemporal("Fichada", $"Legajo: {Fichada.Legajoid}: Almacendo");
+
+        if (OrigenId == 3)
+            navigationManager.NavigateTo($"/legajos/dashboard/{@Fichada.Legajoid}");
+
+        else
+            navigationManager.NavigateTo($"fichadas/{@Fichada.Legajoid}");
+    }
+}

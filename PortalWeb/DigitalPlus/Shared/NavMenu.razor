@@ -1,0 +1,120 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">DigitalPlus</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        @*<div class="nav-item px-3">
+        <NavLink class="nav-link" href="counter">
+        <span class="oi oi-plus" aria-hidden="true"></span> Counter
+        </NavLink>
+        </div>
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="fetchdata">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+        </NavLink>
+        </div>*@
+        <AuthorizeView Roles="ADMINISTRADOR">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="atributos/menu">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Atributos
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/usuarios/menu">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Usuarios
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/noticias">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Noticias
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="ADMINISTRADOR, Supervisor_Local">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="legajos/buscarLista">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Legajos
+                    </NavLink>
+                </div>
+
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="calendario" hidden="hidden">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Calendario
+                    </NavLink>
+                </div>
+                @*<div class="nav-item px-3">
+                <NavLink class="nav-link" href="migracion">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Migracion
+                </NavLink>
+                </div>*@
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="fichadas/menu">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Fichadas
+                    </NavLink>
+                </div>
+
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="ADMINISTRADOR, Admin_Telas">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="productos">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Ficha de Productos
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="https://www.kosiuko.com/" target="_blank">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Kosiuko
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="https://herenciacustomgarage.com.ar/" target="_blank">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Herencia
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="https://www.casa-chic.com/" target="_blank">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Casa Chic
+            </NavLink>
+        </div>
+
+        @*        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="prueba">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Prueba
+        </NavLink>
+        </div>
+        *@
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

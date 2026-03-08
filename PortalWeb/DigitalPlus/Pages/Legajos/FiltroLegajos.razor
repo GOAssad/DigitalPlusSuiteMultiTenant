@@ -1,0 +1,144 @@
+﻿@page "/legajos/buscar"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioLegajos repositorio
+@inject RepositorioSectores repositorioSectores
+@inject NavigationManager navigationManager
+
+<div class="form-group">
+    <LegajoSubMenu />
+    <a class="btn btn-info" href="legajos/crear">Crear Legajo</a>
+</div>
+
+
+<div class="form-inline">
+    <div class="form-group mb-2">
+        <label for="Nombre" class="sr-only">Nombre</label>
+        <input @bind-value="nombre" @bind-value:event="oninput"
+               @onkeypress="@((KeyboardEventArgs e) => NombreKeyPress(e))"
+               type="text" class="form-control" id="nombre" placeholder="Nombre" />
+    </div>
+    <div class="form-group mb-2">
+        <select class="form-control" @bind="sectorSeleccionado">
+            <option value="0">--Seleccione un Sector--</option>
+            @foreach (var item in sectores)
+            {
+                <option value="@item.Id">@item.Nombre</option>
+            }
+        </select>
+    </div>
+    
+
+    <button type="button" class="btn btn-primary mb-2 mx-sm-3" @onclick="CargarNuevasLegajos">Filtrar</button>
+    <button type="button" class="btn btn-danger mb-2" @onclick="LimpiarOnClick">Limpiar</button>
+</div>
+
+<ListadoLegajos Legajos="Legajos"></ListadoLegajos>
+
+<Paginacion PaginaActual="paginaActual" PaginasTotales="paginasTotales"
+            PaginaSeleccionada="PaginaSeleccionada" />
+
+@code {
+    private List<Legajo> Legajos;
+    string nombre = "";
+    string sectorSeleccionado = "0";
+    private List<Sector> sectores = new List<Sector>();
+    Dictionary<string, string> queryStringsDict = new Dictionary<string, string>();
+    private int paginaActual = 1;
+    private int paginasTotales;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerSectores();
+
+        var url = navigationManager.Uri;
+
+        var queries = navigationManager.ObtenerQueryStrings(url);
+
+        if (queries == null)
+        {
+            await RealizarBusqueda();
+        }
+        else
+        {
+            queryStringsDict = queries;
+            LlenarCampos();
+            await RealizarBusqueda();
+        }
+    }
+    private void LlenarCampos()
+    {
+        if (queryStringsDict.ContainsKey("sectorid"))
+        {
+            sectorSeleccionado = queryStringsDict["sectorid"];
+        }
+
+        if (queryStringsDict.ContainsKey("nombre"))
+        {
+            nombre = queryStringsDict["nombre"];
+        }
+
+        if (queryStringsDict.ContainsKey("pagina"))
+        {
+            int.TryParse(queryStringsDict["pagina"], out paginaActual);
+        }
+    }
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarNuevasLegajos();
+    }
+    private async Task ObtenerSectores()
+    {
+        sectores = await repositorioSectores.Get();
+    }
+    private async Task NombreKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await CargarNuevasLegajos();
+        }
+    }
+    private async Task CargarNuevasLegajos()
+    {
+        var queryStrings = GenerarQueryStrings();
+        navigationManager.NavigateTo("/legajos/buscar?" + queryStrings);
+        await RealizarBusqueda();
+    }
+    private async Task RealizarBusqueda()
+    {
+        var parametrosBusqueda = GenerarParametrosBusqueda();
+        var respuestaPaginada = await repositorio.Get(parametrosBusqueda);
+        paginasTotales = respuestaPaginada.TotalPaginas;
+        Legajos = respuestaPaginada.Registros;
+    }
+    private ParametrosBusquedaLegajos GenerarParametrosBusqueda()
+    {
+        var respuesta = new ParametrosBusquedaLegajos();
+        respuesta.SectorId = int.Parse(sectorSeleccionado);
+        respuesta.Nombre = nombre;
+        respuesta.Pagina = paginaActual;
+        return respuesta;
+    }
+    private string GenerarQueryStrings()
+    {
+        if (queryStringsDict == null) { queryStringsDict = new Dictionary<string, string>(); }
+        queryStringsDict["sectorid"] = sectorSeleccionado;
+        queryStringsDict["nombre"] = nombre;
+        queryStringsDict["pagina"] = paginaActual.ToString();
+
+        var valoresPorDefecto = new List<string>() { "false", "", "0" };
+
+        // sectorid=7&nombre=spider ...
+
+        return string.Join("&", queryStringsDict
+            .Where(x => !valoresPorDefecto.Contains(x.Value.ToLower()))
+            .Select(x => $"{x.Key}={System.Web.HttpUtility.UrlEncode(x.Value)}").ToArray());
+    }
+    private async Task LimpiarOnClick()
+    {
+        nombre = "";
+        sectorSeleccionado = "0";
+        paginaActual = 1;
+        await CargarNuevasLegajos();
+    }
+}

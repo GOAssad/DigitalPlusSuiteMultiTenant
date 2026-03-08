@@ -1,0 +1,69 @@
+﻿@page "/feriados"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioFeriados repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_Feriado.png" Titulo="Feriados" />
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Feriado"></BotonAgregarEntidad>
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>
+
+    <ListadoGenerico Listado="Feriados">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead class="cabeceraTabla">
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Nombre</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Feriados)
+                    {
+                        <tr>
+                            <td>
+                                <button @onclick="@(() => BorrarFeriados(item))" class="btn btn-danger btn-sm">Borrar</button>
+                            </td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Fecha.ToShortDateString()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+@code {
+    public List<Feriado> Feriados { get; set; }
+    string textobusqueda;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Cargar(string.Empty);
+    }
+
+    private async Task Cargar(string texto)
+    {
+        Feriados = await repositorio.Get(texto);
+    }
+
+    private async Task BorrarFeriados(Feriado objeto)
+    {
+        var condicion = await mostrarMensajes.MostrarMensajeBorrar(objeto.Nombre);
+
+        if (condicion)
+            await repositorio.Delete(objeto.Id);
+
+        await Cargar(string.Empty);
+    }
+    private void Crear()
+    {
+        navigationManager.NavigateTo("feriados/crear");
+    }
+}

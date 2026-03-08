@@ -1,0 +1,26 @@
+﻿@page "/noticias/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioNoticias repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Sucursales</h3>
+
+<FormularioNoticia OnValidSubmit="CrearEntidad" Noticia="Noticia" />
+
+@code {
+    private Noticia Noticia = new Noticia();
+
+    private async Task CrearEntidad()
+    {
+        try
+        {
+            await repositorio.Post(Noticia);
+            navigationManager.NavigateTo("/noticias");
+        }
+        catch (Exception ex)
+        {
+            // hacer algo...
+        }
+    }
+}

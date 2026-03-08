@@ -1,0 +1,14 @@
+﻿@page "/Productos2"
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Component</h3>
+
+<button class="btn btn-primary" @onclick="@TraerProductos">Traer</button>
+
+@code {
+
+    private void TraerProductos()
+    {
+        mostrarMensajes.MostrarMensajeTemporal("A ver si Funciona","Gustavo");
+    }
+}

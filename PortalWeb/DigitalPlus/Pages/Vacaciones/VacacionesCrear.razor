@@ -1,0 +1,173 @@
+﻿@page "/vacacioneslegajo/crear/{legajoId:int}"
+@using System.Globalization
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioVacaciones repositorio
+@inject RepositorioLegajos repositorioLegajos
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensaje
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_Feriado.png" Titulo="@Titulo" />
+
+    <EditForm Model="model" OnValidSubmit="@AgregarVacaciones">
+        <div class="card">
+            <div class="card-header">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-calendar4-event"></i>
+                    Agregar
+                </button>
+                <a type="button" class="btn btn-secondary ms-3" href="@cancelar">
+                    <i class="bi bi-box-arrow-left"></i>
+                    Legajos
+                </a>
+            </div>
+            <div class="card-body">
+                
+                <div class="card-content">
+                    <h5>Ingrese Rango de Fechas</h5>
+                    <div class="row">
+                        <div class="col-4">
+                            <InputDate class="fluent-input" @bind-Value="model.FechaDesde" @onchange="Cambio"></InputDate>
+                            <InputDate class="fluent-input" @bind-Value="model.FechaHasta" @onchange="Cambio"></InputDate>
+                        </div>
+                        <div class="col-6">
+                            <InputTextArea class="fluent-input" @bind-Value="model.Nota" placeholder="Observaciones"></InputTextArea>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+
+
+    <LineaDivisoria />
+
+
+    <table class="table table-striped">
+        <thead class="cabeceraTabla">
+            <tr>
+                <th>Acciones</th>
+                <th>Fecha Desde</th>
+                <th>Fecha Hasta</th>
+                <th>Dias</th>
+                <th>Nota</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in vacaciones)
+            {
+                TimeSpan dias = item.FechaHasta - item.FechaDesde;
+                <tr>
+                    <td>
+                        <button @onclick="@(() => Borrar(item))" class="btn btn-danger btn-sm">Borrar</button>
+                    </td>
+                    <td>@item.FechaDesde.ToString("D")</td>
+                    <td>@item.FechaHasta.ToString("D")</td>
+                    <td>@dias.Days</td>
+                    <td>@item.Nota</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+        [Parameter] public int LegajoId { get; set; }
+
+    private Vacacion model = new Vacacion();
+    private List<Vacacion> vacaciones = new List<Vacacion>();
+    private Legajo legajo = new Legajo();
+    List<DateTime> fechas = new List<DateTime>();
+
+    private string Titulo = string.Empty;
+    private TimeSpan CantDias;
+
+
+    private string cancelar = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        legajo = await repositorioLegajos.Get(LegajoId);
+        Titulo = $"Vacaciones de: {legajo.Nombre} ({legajo.LegajoId})";
+        cancelar = $"/legajos/editar/{LegajoId}";
+
+        model.FechaDesde = new DateTime(DateTime.Now.Year, DateTime.Now.AddMonths(1).Month, 1).Date;
+        model.FechaHasta = new DateTime(DateTime.Now.Year, DateTime.Now.AddMonths(2).Month, 1).Date;
+        Cambio();
+
+        //busco las vacaciones anteriores
+        await Cargar();
+
+    }
+
+    private void Cambio()
+    {
+        CantDias = model.FechaHasta - model.FechaDesde;
+
+    }
+    private async Task Cargar()
+    {
+
+        vacaciones = await repositorio.Get(LegajoId);
+    }
+
+
+    private async Task AgregarVacaciones()
+    {
+
+        //deberia recorrer las vacaciones registradas y evaluar si ya tiene vacaciones dentro de ese rango
+        foreach (var item in vacaciones)
+        {
+            if (model.FechaDesde >= model.FechaHasta)
+            {
+                await mostrarMensaje.MostrarMensajeAlerta("La fecha de Inicio no puede ser mayor que la fecha Final.");
+                return;
+            }
+            if (model.FechaDesde >= item.FechaDesde && model.FechaDesde <= item.FechaHasta)
+            {
+                await mostrarMensaje.MostrarMensajeAlerta("No se pueden pisar las fechas, identifique cual es el registro y eliminelo si quiere incluir este rango de fechas");
+                return;
+            }
+            if (model.FechaHasta >= item.FechaDesde && model.FechaHasta <= item.FechaHasta)
+            {
+                await mostrarMensaje.MostrarMensajeAlerta("No se pueden pisar las fechas, identifique cual es el registro y eliminelo si quiere incluir este rango de fechas");
+                return;
+            }
+
+
+        }
+
+        //ahora calculo la cantidad de dias para el cartel
+        TimeSpan diferencia = model.FechaHasta - model.FechaDesde;
+
+        var respuesta = await mostrarMensaje.MostrarMensajeSiNo($"Desea asignarle a {legajo.Nombre} los {diferencia.Days.ToString()} dias de Vacaciones? ");
+        if (respuesta)
+        {
+            model.LegajoId = LegajoId;
+            await repositorio.Post(model);
+            Refresh();
+        }
+
+    }
+
+    private async Task Borrar(Vacacion item)
+    {
+        var resultado = await mostrarMensaje.MostrarMensajeBorrar("Seguro que quiere eliminar el registro de vacaciones?");
+        if (resultado)
+            await repositorio.Borrar(item.Id);
+
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        string ruta = $"/vacacioneslegajo/crear/{LegajoId}";
+        navigationManager.NavigateTo(ruta, true);
+    }
+
+}
+

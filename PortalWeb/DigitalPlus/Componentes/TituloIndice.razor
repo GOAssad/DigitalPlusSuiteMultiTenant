@@ -1,0 +1,19 @@
+﻿
+<div class="titulo row">
+    <div class="col-10">
+        <h4>@Titulo</h4>
+    </div>
+    <div class="col-2 columna-imagen">
+        <img class="imagen-menu" src="/imagenes/Atributos_Incidencia.png" />
+    </div>
+</div>
+@if (LineaDivisoria)
+{
+    <div class="lineaDivisoriaTitulo mb-3"></div>
+}
+
+
+@code {
+    [Parameter] public string Titulo { get; set; }
+    [Parameter] public bool LineaDivisoria { get; set; } = false;
+}

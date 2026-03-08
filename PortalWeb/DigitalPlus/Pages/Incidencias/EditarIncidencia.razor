@@ -1,0 +1,38 @@
+﻿@page "/incidencias/editar/{IncidenciaId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioIncidencias repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Incidencia</h3>
+
+@if (Incidencia == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioIncidencia OnValidSubmit="EditarEntidad" Incidencia="Incidencia" />
+}
+
+@code {
+
+    [Parameter] public int IncidenciaId { get; set; }
+    private Incidencia Incidencia;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Incidencia = await repositorio.Get(IncidenciaId);
+        if (Incidencia == null)
+        {
+            navigationManager.NavigateTo("incidencias");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Incidencia);
+        await mostrarMensaje.MostrarMensajeTemporal("Incidencia", $"{Incidencia.Nombre}: ...Actualizada");
+        navigationManager.NavigateTo("incidencias");
+    }
+}

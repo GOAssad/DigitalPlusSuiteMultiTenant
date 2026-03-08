@@ -1,0 +1,110 @@
+﻿@page "/calendario"
+@using DigitalPlus.Data
+@using System.Globalization
+@inject DigitalPlus.Servicios.IDayEventService dayEventService
+
+<div class="container">
+    <div class="row">
+        <h3 class="col">Matutino</h3>
+    </div>
+
+    <div class="row">
+
+        <table class="table table-bordered table-striped mb-2">
+            <thead>
+                <tr style="text-align:center;">
+                    @for (var dayIndex = 0; dayIndex < days.Count; dayIndex++)
+                    {
+                        <th>
+                            @days[dayIndex]
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    @*recorro los dias de la semanana en que estoy parado*@
+                    @for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+                    {
+                        var wIndex = 0;
+                        var dIndex = dayIndex;
+
+                        @*<td @ondblclick="@(()=>OpenModal(wIndex,dIndex))">*@
+                        <td>
+
+                            <table>
+                                <tr>
+                                    <label class="me-2">Entra</label>
+                                    <td>
+                                        <input type="time" @bind-value="horaDesde[dIndex]" />
+                                    </td>
+                                </tr>
+
+                                <br />
+
+                                <tr>
+
+                                    <label class="me-2">Sale</label>
+                                    <td>
+                                        <input type="time" @bind-value="horaHasta[dIndex]" />
+                                    </td>
+                                </tr>
+                                <br />
+                            </table>
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button class="btn btn-primary" @onclick="Guardar">Guardar</button>
+</div>
+
+@code {
+
+
+    List<string> days = new List<string>();
+
+
+    int selectedWeekIndex = -1;
+    int selectedDayIndex = -1;
+
+    string cultura = "es-AR";
+
+    List<TimeOnly> horaDesde = new List<TimeOnly>();
+    List<TimeOnly> horaHasta = new List<TimeOnly>();
+
+    protected override void OnInitialized()
+    {
+
+        days = CultureInfo.CurrentCulture.DateTimeFormat.DayNames.ToList();
+        GenerarCalendario();
+
+    }
+
+
+    private void GenerarCalendario()
+    {
+
+        GenerarDiasSemana();
+    }
+    private void GenerarDiasSemana()
+    {
+
+        //gustavo inicializo la lista de horas en 0 y 23:59
+        for (int i = 0; i < 7; i++)
+        {
+            horaDesde.Add(new TimeOnly(0, 0, 0));
+            horaHasta.Add(new TimeOnly(0, 0, 0));
+        }
+
+    }
+
+    private void Guardar()
+    {
+
+    }
+
+}

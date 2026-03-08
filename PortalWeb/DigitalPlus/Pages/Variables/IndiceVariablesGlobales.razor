@@ -1,0 +1,59 @@
+﻿@page "/variables"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioVariablesGlobales repositorio
+@inject ListadoVariablesGlobales VariablesGlobales
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_VariableGlobal.png" Titulo="Variables Globales" />
+
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Variable"></BotonAgregarEntidad>
+    </div>
+
+    <ListadoGenerico Listado="VariablesGlobales.Variables">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead class="cabeceraTabla">
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Codigo</th>
+                        <th>Detalle</th>
+                        <th>Valor</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in VariablesGlobales.Variables)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/variables/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                            </td>
+                            <td>@item.sId</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Valor</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+@code {
+
+    string textobusqueda;
+
+    VariableGlobal objeto = new VariableGlobal();
+
+
+    private void Crear()
+    {
+        navigationManager.NavigateTo("variables/crear");
+    }
+
+}
+

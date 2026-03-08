@@ -1,0 +1,299 @@
+@page "/empresas/{Id:int}"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Detalle Empresa - DigitalPlus</PageTitle>
+
+@if (empresa == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">@empresa.Nombre</h3>
+        <span class="badge fs-6 @(empresa.Estado == "activa" ? "bg-success" : empresa.Estado == "suspendida" ? "bg-warning text-dark" : "bg-danger")">
+            @empresa.EstadoDisplay
+        </span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">Datos generales</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" @bind="empresa.Nombre" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company ID</label>
+                            <input type="text" class="form-control" value="@empresa.CompanyId" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Base de datos</label>
+                            <input type="text" class="form-control" value="@empresa.DatabaseName" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" @bind="empresa.Estado">
+                                <option value="activa">Activa</option>
+                                <option value="suspendida">Suspendida</option>
+                                <option value="baja">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Datos fiscales</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Pais</label>
+                            <select class="form-select" value="@selectedPaisId" @onchange="OnPaisChangedEvent">
+                                <option value="">-- Seleccionar --</option>
+                                @if (paises != null)
+                                {
+                                    @foreach (var p in paises)
+                                    {
+                                        <option value="@p.Id">@p.Nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo identificacion</label>
+                            <select class="form-select" value="@selectedTipoIdFiscalId" @onchange="OnTipoIdChanged">
+                                <option value="">-- Seleccionar --</option>
+                                @if (tiposId != null)
+                                {
+                                    @foreach (var t in tiposId)
+                                    {
+                                        <option value="@t.Id">@t.Nombre (@t.Ejemplo)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Identificacion fiscal</label>
+                            <input type="text" class="form-control" @bind="empresa.IdentificacionFiscal" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Razon Social</label>
+                            <input type="text" class="form-control" @bind="empresa.RazonSocial" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Domicilio Fiscal</label>
+                            <input type="text" class="form-control" @bind="empresa.DomicilioFiscal" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Contacto</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Contacto</label>
+                            <input type="text" class="form-control" @bind="empresa.Contacto" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" @bind="empresa.Email" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" class="form-control" @bind="empresa.Telefono" />
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Direccion</label>
+                            <input type="text" class="form-control" @bind="empresa.Direccion" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Notas</div>
+                <div class="card-body">
+                    <textarea class="form-control" rows="3" @bind="empresa.Notas"></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" @onclick="Guardar">Guardar cambios</button>
+                <a href="/empresas" class="btn btn-outline-secondary">Volver</a>
+            </div>
+            @if (mensaje != null)
+            {
+                <div class="alert alert-success mt-3">@mensaje</div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">Licencias asociadas</div>
+                <div class="card-body p-0">
+                    @if (licencias == null || licencias.Count == 0)
+                    {
+                        <p class="p-3 text-muted">Sin licencias</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Legajos</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var lic in licencias)
+                                {
+                                    <tr>
+                                        <td>@lic.Plan</td>
+                                        <td>@lic.MaxLegajos</td>
+                                        <td><span class="badge @GetBadge(lic)">@lic.EstadoDisplay</span></td>
+                                        <td><a href="/licencias/@lic.Id" class="btn btn-sm btn-outline-primary">Ver</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Codigo de Activacion</div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(empresa.CodigoActivacion))
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <code class="fs-5 flex-grow-1">@empresa.CodigoActivacion</code>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="CopiarCodigo" title="Copiar">
+                                <span class="bi bi-clipboard"></span> Copiar
+                            </button>
+                        </div>
+                        @if (codigoCopiado)
+                        {
+                            <small class="text-success">Copiado al portapapeles</small>
+                        }
+                        <hr />
+                        <button class="btn btn-sm btn-outline-warning" @onclick="RegenerarCodigo">
+                            Regenerar codigo
+                        </button>
+                        <small class="text-muted d-block mt-1">El codigo anterior dejara de funcionar.</small>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-2">Sin codigo asignado</p>
+                        <button class="btn btn-sm btn-primary" @onclick="RegenerarCodigo">
+                            Generar codigo
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Info</div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-5">Creada</dt>
+                        <dd class="col-sm-7">@empresa.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                        <dt class="col-sm-5">Actualizada</dt>
+                        <dd class="col-sm-7">@empresa.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private DigitalPlus.Licencias.Entidades.Empresa? empresa;
+    private List<DigitalPlus.Licencias.Entidades.Licencia>? licencias;
+    private List<DigitalPlus.Licencias.Entidades.Pais>? paises;
+    private List<DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal>? tiposId;
+    private string? mensaje;
+    private bool codigoCopiado;
+
+    private string selectedPaisId => empresa?.PaisId?.ToString() ?? "";
+    private string selectedTipoIdFiscalId => empresa?.TipoIdentificacionFiscalId?.ToString() ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        empresa = await Repo.GetEmpresaAsync(Id);
+        if (empresa == null) { Nav.NavigateTo("/empresas"); return; }
+
+        paises = await Repo.GetPaisesAsync();
+        if (empresa.PaisId.HasValue)
+            tiposId = await Repo.GetTiposIdentificacionAsync(empresa.PaisId.Value);
+        else
+            tiposId = [];
+
+        var todas = await Repo.GetLicenciasAsync(empresa.CompanyId);
+        licencias = todas.Where(l => l.CompanyId == empresa.CompanyId).ToList();
+    }
+
+    private async Task OnPaisChangedEvent(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            empresa!.PaisId = id;
+            tiposId = await Repo.GetTiposIdentificacionAsync(id);
+        }
+        else
+        {
+            empresa!.PaisId = null;
+            tiposId = [];
+        }
+        empresa.TipoIdentificacionFiscalId = null;
+    }
+
+    private void OnTipoIdChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            empresa!.TipoIdentificacionFiscalId = id;
+        else
+            empresa!.TipoIdentificacionFiscalId = null;
+    }
+
+    private async Task Guardar()
+    {
+        await Repo.ActualizarEmpresaAsync(empresa!);
+        mensaje = "Cambios guardados correctamente";
+    }
+
+    private async Task CopiarCodigo()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", empresa!.CodigoActivacion);
+        codigoCopiado = true;
+        _ = Task.Delay(2000).ContinueWith(_ => { codigoCopiado = false; InvokeAsync(StateHasChanged); });
+    }
+
+    private async Task RegenerarCodigo()
+    {
+        await Repo.RegenerarCodigoActivacionAsync(empresa!.Id);
+        empresa = await Repo.GetEmpresaAsync(Id);
+        mensaje = "Codigo de activacion regenerado";
+    }
+
+    private string GetBadge(DigitalPlus.Licencias.Entidades.Licencia lic) => lic.EstadoDisplay switch
+    {
+        "Activa" => "bg-success",
+        "Trial" => "bg-info",
+        "Suspendida" => "bg-warning text-dark",
+        _ => "bg-danger"
+    };
+}

@@ -1,0 +1,107 @@
+Conversation compacted (ctrl+o for history)
+
+  ⎿  Referenced file ..\InstaladorUnificado\setup.iss
+  ⎿  Read documentacionClaude\0009-Instalador-v1.2-SQLExpress-WindowsAuth.md (139 lines)
+  ⎿  Referenced file ..\..\..\..\..\..\Users\Gustavo\.claude\projects\C--apps-claude-huellas-digitalplusdesk-claude-digi
+     taloneplus-fichador\82ab6b99-6db7-493f-ac3b-60c8b0730f3d\tool-results\toolu_01AQu8EdwvwoKkn85RcAqGvk.txt
+  ⎿  Referenced file ..\..\..\..\..\..\Users\Gustavo\.claude\projects\C--apps-claude-huellas-digitalplusdesk-claude-digi
+     taloneplus-fichador\82ab6b99-6db7-493f-ac3b-60c8b0730f3d\tool-results\toolu_01EXZPqC9XZnDJrRpCjnpwcN.txt
+  ⎿  Referenced file documentacionClaude\20260304_CuelgueClaude.txt
+  ⎿  Plan file referenced (~\.claude\plans\breezy-tumbling-sunrise.md)
+
+● Continúo con la propagación de sNombreBD en el instalador. Primero leo el estado actual del archivo.
+
+● Searched for 1 pattern, read 2 files (ctrl+o to expand)
+
+● Let me read the Code section where the functions I need to fix are.
+
+● Searched for 3 patterns, read 1 file (ctrl+o to expand)
+
+● Now let me read the key sections that need fixing:
+
+● Read 1 file (ctrl+o to expand)
+
+● Ahora tengo el panorama completo. Hay 4 correcciones pendientes:
+
+  1. CurStepChanged: Falta asignar sNombreBD antes de usarlo
+  2. BuildBootstrapScript (línea 1248): Hardcoded 'DigitalPlus'
+  3. CrearBaseDeDatos (línea 1184): Mensaje de error hardcoded
+  4. CurStepChanged (línea 1444): Status label hardcoded
+
+  Aplico las 4 correcciones:
+
+● Update(C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\DigitalOnePlus\InstaladorUnificado\setup.iss)
+  ⎿  Added 3 lines
+      1424      // ========== MODO LOCAL ==========
+      1425      if bModoLocal then
+      1426      begin
+      1427 +      // Paso 0: Sanitizar nombre de empresa para nombre de BD
+      1428 +      sNombreBD := SanitizarNombreBD(Trim(edtEmpresa.Text));
+      1429 +
+      1430        // Paso 1: Detectar SQL Server (setea sNombreInstancia y sDataSource)
+      1431        bSQLInstalado := DetectarSQLServer;
+      1432
+
+● Update(C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\DigitalOnePlus\InstaladorUnificado\setup.iss)
+  ⎿  Added 1 line, removed 1 line
+      1245  begin
+      1246    PS := '$ErrorActionPreference = ''Stop''' + #13#10;
+      1247    PS := PS + '$server   = ''' + EscapePS(sDataSource) + '''' + #13#10;
+      1248 -  PS := PS + '$database = ''DigitalPlus''' + #13#10;
+      1248 +  PS := PS + '$database = ''' + EscapePS(sNombreBD) + '''' + #13#10;
+      1249    PS := PS + '' + #13#10;
+      1250
+      1251    PS := PS + 'function New-IdentityHash([string]$p) {' + #13#10;
+
+● Update(C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\DigitalOnePlus\InstaladorUnificado\setup.iss)
+  ⎿  Added 1 line, removed 1 line
+      1181    else if ResultCode = 2 then
+      1182    begin
+      1183      MsgBox(
+      1184 -      'La base de datos "DigitalPlus" no pudo ser creada.' + #13#10 +
+      1184 +      'La base de datos "' + sNombreBD + '" no pudo ser creada.' + #13#10 +
+      1185        'Revise %TEMP%\dp_crear_bd_error.txt para detalles.' + #13#10 + #13#10 +
+      1186        'Las aplicaciones fueron instaladas correctamente.' + #13#10 +
+      1187        'Solo falta la base de datos para que funcionen.',
+
+● Update(C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\DigitalOnePlus\InstaladorUnificado\setup.iss)
+  ⎿  Added 1 line, removed 1 line
+      1444        sConnectionString := GetLocalConnectionString;
+      1445
+      1446        // Paso 4: Crear BD
+      1447 -      WizardForm.StatusLabel.Caption := 'Creando base de datos DigitalPlus...';
+      1447 +      WizardForm.StatusLabel.Caption := 'Creando base de datos ' + sNombreBD + '...';
+      1448        WizardForm.Repaint;
+      1449        CrearBaseDeDatos;
+      1450
+
+● Ahora verifico que no queden más referencias hardcoded a "DigitalPlus" como nombre de BD (excluyendo las que son
+  nombres de app, paths, etc.):
+
+● Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Línea 484 es el fallback en SanitizarNombreBD cuando la empresa queda vacía — eso está bien, es el valor por defecto.
+
+  Línea 1096 es el script de creación de BD que reemplaza N'DigitalPlus' dentro del SQL script — esto es correcto porque
+   el archivo DigitalPlus_Script.sql tiene hardcoded DigitalPlus y el script lo reemplaza dinámicamente por $database
+  (que ahora es sNombreBD).
+
+  Verifico también la línea 1095 por contexto:
+
+● Read 1 file (ctrl+o to expand)
+
+● Perfecto. Las líneas 1095-1096 son el reemplazo dinámico dentro del script SQL — reemplazan [DigitalPlus] y
+  N'DigitalPlus' por el valor de $database que ahora viene de sNombreBD. Todo correcto.
+
+  Las 4 correcciones están completas:
+
+  1. sNombreBD se asigna al inicio de CurStepChanged con SanitizarNombreBD(Trim(edtEmpresa.Text))
+  2. BuildBootstrapScript ahora usa sNombreBD en vez de 'DigitalPlus'
+  3. Mensaje de error en CrearBaseDeDatos muestra el nombre real de la BD
+  4. Status label muestra el nombre real de la BD durante creación
+
+  El flujo completo ahora es: el usuario ingresa "Mi Empresa" → SanitizarNombreBD lo convierte en DP_Mi_Empresa → ese
+  nombre se usa en connection strings, creación de BD, bootstrap Identity, y mensajes al usuario.
+
+  Podés compilar y probar. La BD se debería crear con el nombre sanitizado de la empresa (ej: DP_Mi_Empresa), y si ya
+  existe, no la borra ni la recrea.

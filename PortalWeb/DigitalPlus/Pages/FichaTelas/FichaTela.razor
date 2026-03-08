@@ -1,0 +1,459 @@
+﻿@page "/productos/ficha/{codigo}/{descripcion}"
+@attribute [Authorize(Roles = "Admin_Telas")]
+@using DigitalPlus.Pages.Shared
+@inject RepositorioProductos repositorio
+@inject IMostrarMensajes mostrarMensaje
+
+
+
+<div class="container">
+    <div class="form-group">
+        <FichaSubMenu Codigo=@codigo Descripcion=@descripcion />
+    </div>
+
+</div>
+<div class="container mb-2">
+
+    <div class="tab">
+        <button @onclick="(x=>DisplayTab(1))">Plan de Produccion</button>
+        <button @onclick="(x=>DisplayTab(2))">Orden de Compra</button>
+        <button @onclick="(x=>DisplayTab(3))">Ultimas OC</button>
+        <button @onclick="(x=>DisplayTab(4))">Historial de Reservas</button>
+
+    </div>
+</div>
+<div class="container mb-2">
+    <div class="tabcontent">
+        <div class="row">
+            <div class="col-8">
+                @if (tabPlanProd)
+                {
+                    <table class="table ">
+                        <thead>
+                            <tr>
+                                <th>OrdenProd</th>
+                                <th>ItemOP</th>
+                                <th>Año</th>
+                                <th>temp</th>
+                                <th>Pend</th>
+                                <th>Utilizado</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            @foreach (var lista in ListaOP)
+                            {
+                                <tr>
+
+                                    <td>@lista.MANUFACTUREORDER_I</td>
+                                    <td>@lista.ItemOP</td>
+                                    <td>@lista.Anio</td>
+                                    <td>@lista.Temporada</td>
+                                    <td>@lista.Pendiente</td>
+                                    <td>@lista.Emitido</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+                @if (tabOrdenComp)
+                {
+                    <table class="table ">
+                        <thead>
+                            <tr>
+                                <th>FechaOC</th>
+                                <th>Proveedor</th>
+                                <th>Razon Social</th>
+                                <th>Cantidad</th>
+                                <th>Pendiente</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            @foreach (var lista in ListaOC)
+                            {
+                                <tr>
+
+                                    <td>@lista.OC</td>
+                                    <td>@lista.ProveedorID</td>
+                                    <td>@lista.RazonSocial</td>
+                                    <td>@lista.Cantidad</td>
+                                    <td>@lista.Pendiente</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+                @if (tabUltOC)
+                {
+                    <table class="table ">
+                        <thead>
+                            <tr>
+                                <th>O.C.</th>
+                                <th>Fecha</th>
+                                <th>Proveedor</th>
+                                <th>Razon Social</th>
+                                <th>Cant</th>
+                                <th>Entr.</th>
+                                <th>Pend.</th>
+                                <th>Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            @foreach (var lista in ListaOCUltimas)
+                            {
+                                <tr>
+
+                                    <td>@lista.OC</td>
+                                    <td>@lista.FechaOC.ToShortDateString()</td>
+                                    <td>@lista.ProveedorID</td>
+                                    <td>@lista.RazonSocial</td>
+                                    <td>@lista.Cantidad</td>
+                                    <td>@lista.Entregada</td>
+                                    <td>@lista.Pendiente</td>
+                                    <td>@lista.Costo.ToString("c")</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+                @if (tabHistorial)
+                {
+                    <table class="table ">
+                        <thead>
+                            <tr>
+                                <th>Codigo</th>
+                                <th>Descripcion</th>
+                                <th>Fecha</th>
+                                <th>Reserv</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            @foreach (var lista in ListaHistorial)
+                            {
+                                <tr>
+
+                                    <td>@lista.ITEMNMBR</td>
+                                    <td>@lista.sDescripcion</td>
+                                    <td>@lista.dFechaReserva.ToShortDateString()</td>
+                                    <td>@lista.nCantidad</td>
+                                    <td>@lista.sUsuarioID</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+            </div>
+            <div class="col-4">
+                <table class="table ">
+                    <tbody>
+
+                        <tr><td>STOCK</td><td>@stock</td></tr>
+                        <tr><td>Unidad Medida</td><td>@oArticulo.UOMSCHDL</td></tr>
+                        <tr><td>Costo</td><td>@oArticulo.CURRCOST.ToString("c")</td></tr>
+                        <tr><td>Total Reservado</td><td>@CantReservada</td></tr>
+                        <tr><td>Reserva Usuario</td><td>@CantReservadaUsuario</td></tr>
+                        <tr><td>OP no Emitidas</td><td>@OPPendiente</td></tr>
+                        <tr><td>OP Emitidas</td><td>@OPReservado</td></tr>
+                        <tr><td>OC Pendientes</td><td>@OCPendiente</td></tr>
+                        <tr><td>Clases</td><td>@oArticulo.ITMCLSCD</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container">
+    <div class="accordion accordion-flush" id="accordionFlushExample">
+        <div class="row">
+
+            <div class="form-group mb-2 col-6">
+                <div class="accordion-item thistle">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            <strong>Reservar</strong>
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <div class="row">
+                                <div class="form-group mb-2 col-5">
+
+                                    <label for="rangeInput">Selecciona un valor:</label>
+                                    <input type="range" class="form-range" id="rangeInput" min="1" max="@MaxValue" step="0.5" value="@RangeValue" @oninput="RangeValueChanged" />
+
+
+                                    <input type="number" class="form-control mt-2" id="maxValueInput" @bind="RangeValue" />
+
+
+
+                                </div>
+                                <div class="form-group mb-2 col-7">
+
+                                    <div style="display:block;">
+                                        <label for="Fecha">Fecha:</label>
+                                        <input type="date" class="form-date mb-2" id="Fecha" @bind="FechaVencimiento" />
+                                    </div>
+
+                                    <label for="Observaciones">Observaciones:</label>
+                                    <input type="text" class="form-control" id="Observaciones" @bind="@observaciones" />
+
+                                </div>
+                                <button type="button" class="btn btn-primary form-control" @onclick="Reservar">Reservar</button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-group mb-2 col-6">
+                <div class="accordion-item thistle">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                            <strong>Revertir</strong>
+                        </button>
+                    </h2>
+                    <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <div class="row">
+                                <div class="form-group mb-2 col-5">
+
+                                    <label for="rangeInput">Selecciona un valor:</label>
+                                    <input type="range" class="form-range" id="rangeInput" min="1" max="@MaxValue" step="0.5" value="@RangeValue" @oninput="RangeValueChanged" />
+
+
+                                    <input type="number" class="form-control mt-2" id="maxValueInput" @bind="RangeValue" />
+
+
+
+                                </div>
+                                <div class="form-group mb-2 col-7">
+
+
+                                    <div style="display:block;">
+                                        <label for="FechaVenc">Fecha:</label>
+                                        <input type="date" class="form-date mb-2" id="FechaVenc" @bind="FechaVencimiento" />
+                                    </div>
+
+                                    <label for="ObservacionesRev">Observaciones:</label>
+                                    <input type="text" class="form-control" id="ObservacionesRev" @bind="@observaciones" />
+
+                                </div>
+                                <button type="button" class="btn btn-primary form-control" @onclick="@Revertir">Revertir</button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private ClaimsPrincipal claimsPrincipal;
+    private string userId;
+
+
+    [Parameter] public string codigo { get; set; }
+    [Parameter] public string descripcion { get; set; }
+
+    List<DYGPIV00102DTO> registro = new();
+    List<DYGPPOP10110_ULTIMAS> ListaOCUltimas = new();
+    List<DYGPPOP10110DTO> ListaOC = new();
+    List<DYGPPK01033DTO> ListaOP = new();
+    List<DYGPINVEReservasArticulosDTO> ListaHistorial = new();
+    DYGPIV00101DTO oArticulo = new();
+
+
+    private decimal stock = 0;
+    private decimal OPReservado = 0;
+    private decimal OPPendiente = 0;
+    private decimal OCPendiente = 0;
+    private decimal CantReservada = 0;
+    private decimal CantReservadaUsuario = 0;
+    private bool boolReservar = true;
+    private DateTime FechaVencimiento = DateTime.Now;
+    private string observaciones = string.Empty;
+
+    //Tabs
+    private bool tabPlanProd = true;
+    private bool tabOrdenComp = false;
+    private bool tabUltOC = false;
+    private bool tabHistorial = false;
+
+    private double rangeValue = 50.0;
+    private double maxValue = 100.0;
+
+    private double RangeValue
+    {
+        get => rangeValue;
+        set
+        {
+            if (rangeValue != value)
+            {
+                rangeValue = value;
+                StateHasChanged(); // Refrescar la interfaz para reflejar el nuevo valor
+            }
+        }
+    }
+
+    private double MaxValue
+    {
+        get => maxValue;
+        set
+        {
+            if (maxValue != value)
+            {
+                maxValue = value;
+
+                // Asegurarse de que el valor actual del rango no exceda el nuevo valor máximo
+                if (rangeValue > maxValue)
+                {
+                    RangeValue = maxValue;
+                }
+                StateHasChanged(); // Refrescar la interfaz para reflejar el nuevo valor máximo
+            }
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        //Autenticacion para saber quien es el usuario logeado
+        if (AuthenticationStateTask is not null) authenticationState = await AuthenticationStateTask;
+        claimsPrincipal = authenticationState.User;
+        userId = claimsPrincipal.Identity.Name;
+
+        //userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+
+        //este se llama una vez sola
+        oArticulo = await repositorio.InfoProducto(codigo);
+
+        await Actualizartodo();
+
+
+    }
+    private async Task Actualizartodo()
+    {
+        await Stock();
+        await Compras();
+        await Produccion();
+        await Reservas();
+    }
+
+    public async Task Stock()
+
+    {
+        registro = await repositorio.TraerStock(codigo);
+        stock = 0;
+        if (registro.Count > 0)
+            stock = registro[0].Stock;
+
+        MaxValue = (double)stock;
+    }
+    public async Task Compras()
+    {
+        ListaOCUltimas = await repositorio.TraerComprasUltimas(codigo);
+        ListaOC = await repositorio.TraerCompras(codigo);
+
+        OCPendiente = (decimal)ListaOC.Sum(x => x.Pendiente);
+
+
+
+
+    }
+    public async Task Produccion()
+    {
+        ListaOP = await repositorio.TraerOrdenesProduccion(codigo);
+
+        if (ListaOP is not null)
+        {
+            OPReservado = ListaOP.Sum(x => x.Emitido).Value;
+            OPPendiente = ListaOP.Sum(x => x.Pendiente).Value;
+        }
+    }
+    public async Task Reservas()
+    {
+        ListaHistorial = await repositorio.TraerHistorialReservas(codigo);
+        CantReservada = ListaHistorial.Sum(x => x.nCantidad);
+        CantReservadaUsuario = ListaHistorial.Where(x => x.sUsuarioID == userId).Sum(x => x.nCantidad);
+    }
+
+    public void DisplayTab(int TabNumber)
+    {
+        switch (TabNumber)
+        {
+            case 1:
+                tabPlanProd = true;
+                tabOrdenComp = false;
+                tabUltOC = false;
+                tabHistorial = false;
+                break;
+            case 2:
+                tabPlanProd = false;
+                tabOrdenComp = true;
+                tabUltOC = false;
+                tabHistorial = false;
+                break;
+            case 3:
+                tabPlanProd = false;
+                tabOrdenComp = false;
+                tabUltOC = true;
+                tabHistorial = false;
+                break;
+            case 4:
+                tabPlanProd = false;
+                tabOrdenComp = false;
+                tabUltOC = false;
+                tabHistorial = true;
+                break;
+        }
+    }
+
+    public async Task Reservar()
+    {
+        decimal cantidad = (decimal)RangeValue;
+        await repositorio.Reservar(codigo, cantidad, 1, FechaVencimiento, userId, observaciones);
+        await mostrarMensaje.MostrarMensajeExitoso($"Producto {codigo} Reservado!");
+        await Actualizartodo();
+    }
+    public async Task Revertir()
+    {
+        decimal cantidad = (decimal)RangeValue;
+        await repositorio.Reservar(codigo, cantidad, -1, FechaVencimiento, userId, observaciones);
+        await mostrarMensaje.MostrarMensajeExitoso($"Producto {codigo} Revertido!");
+        await Actualizartodo();
+    }
+
+    private void RangeValueChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value.ToString(), out var newValue))
+        {
+            RangeValue = Math.Round(newValue, 2);
+        }
+    }
+
+    private void TextValueChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value.ToString(), out var newValue))
+        {
+            RangeValue = Math.Round(newValue, 2);
+        }
+    }
+
+
+}

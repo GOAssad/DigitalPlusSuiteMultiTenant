@@ -1,0 +1,35 @@
+﻿@inject RepositorioTerminales repositorioterminales
+
+<EditForm Model="Terminal" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group mb-3">
+        <label>Nombre:</label>
+        <div>
+            <InputText class="form-control" @bind-Value="@Terminal.Nombre" />
+            <ValidationMessage For="@(() => Terminal.Nombre)" />
+        </div>
+    </div>
+
+    <div class="form-group mx-sm-3 mb-2">
+        <select class="form-control" @bind="@Terminal.SucursalId">
+            <option value="0">--Seleccione una Sucursal--</option>
+            @foreach (var item in Sucursales)
+            {
+                <option value="@item.Id">@item.Nombre</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+    <a class="btn btn-secondary" href="/terminales">Cancelar</a>
+</EditForm>
+
+
+@code {
+    [Parameter] public Terminal Terminal { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public List<Sucursal> Sucursales { get; set; }
+
+
+}

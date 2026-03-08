@@ -1,0 +1,179 @@
+﻿@page "/atributos/menu"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem; ">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Categoria.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Categorias</h5>
+                    <p class="card-text">Utilice Categorias para Agrupar los legajos con diferentes criterios</p>
+                </div>
+                <div class="card-footer">
+                    <a href="categorias" class="btn btn-primary">Ir a Categorias</a>
+                </div>
+
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Sucursal.png" />
+
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Sucursales</h5>
+                    <p class="card-text">Actualice la información de los distintos puntos donde se encuentran sus empleados</p>
+                </div>
+                <div class="card-footer">
+                    <a href="sucursales" class="btn btn-primary">Ir a Sucursales</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Horario.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Horarios</h5>
+                    <p class="card-text">Actualice y cree nuevos horarios Generales para los empleados que no tengan rotación horaria, ej. Administrativos</p>
+                </div>
+                <div class="card-footer">
+                    <a href="horarios" class="btn btn-primary">Ir a Horarios</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Sector.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Sectores</h5>
+                    <p class="card-text">Categorice a sus empleados según el Sector donde desempeña sus tareas habitualmente</p>
+                </div>
+                <div class="card-footer">
+                    <a href="sectores" class="btn btn-primary">Ir a Sectores</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Incidencia.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Incidencias</h5>
+                    <p class="card-text">Registre los distintos tipos de razones por las cuales puede ausentarse un empleado.</p>
+                </div>
+                <div class="card-footer">
+                    <a href="incidencias" class="btn btn-primary">Ir a Incidencias</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Terminal.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Terminales</h5>
+                    <p class="card-text">Ingrese los distpositivos que tendran acceso al sistema</p>
+                </div>
+                <div class="card-footer">
+                    <a href="terminales" class="btn btn-primary">Ir a Terminales</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div >
+                    <img class="card-img-top" src="/imagenes/Atributos_Feriado.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Feriados</h5>
+                    <p class="card-text">Aqui tenes que ingresar cada uno de los feriados que hay en el año, inclusive los de la propia empresa.</p>
+                </div>
+                <div class="card-footer">
+                    <a href="feriados" class="btn btn-primary">Ir a Feriados</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div>
+                    <img class="card-img-top" src="/imagenes/Atributos_VariableGlobal.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Variable Global</h5>
+                    <p class="card-text">las Variables Globales son utilizadas en el sistema para personalizar el sistema acorde a las caracteristicas de la compañia..</p>
+                </div>
+                <div class="card-footer">
+                    <a href="variables" class="btn btn-primary">Ir a Variables</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    public List<ListaMenuDTO> Lista = new List<ListaMenuDTO>();
+
+
+    protected override void OnInitialized()
+    {
+
+        Lista.Add(new ListaMenuDTO
+            {
+                Id = 1,
+                Nombre = "Categorias",
+                referencia = "categorias",
+                icono = "icono bi bi-clock-history"
+            });
+        Lista.Add(new ListaMenuDTO
+            {
+                Id = 2,
+                Nombre = "Sucursales",
+                referencia = "sucursales",
+                icono = "icono bi bi-hourglass-bottom"
+            });
+        Lista.Add(new ListaMenuDTO
+            {
+                Id = 3,
+                Nombre = "Horarios",
+                referencia = "horarios",
+                icono = "icono bi-calendar2-x-fill"
+            });
+        Lista.Add(new ListaMenuDTO
+            {
+                Id = 4,
+                Nombre = "Sectores",
+                referencia = "sectores",
+                icono = "icono bi-person-rolodex"
+            });
+        Lista.Add(new ListaMenuDTO
+            {
+                Id = 5,
+                Nombre = "Terminales",
+                referencia = "terminales",
+                icono = "icono bi-person-rolodex"
+            });
+
+        Lista.Add(new ListaMenuDTO
+            {
+                Id = 6,
+                Nombre = "Incidencias",
+                referencia = "incidencias",
+                icono = "icono bi-person-rolodex"
+            });
+    }
+}

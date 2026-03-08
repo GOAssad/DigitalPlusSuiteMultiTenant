@@ -42,6 +42,13 @@ public class Program
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
         builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        // Factory for Blazor components - each component gets its own DbContext
+        builder.Services.AddScoped<IDbContextFactory<ApplicationDbContext>>(sp =>
+        {
+            var options = sp.GetRequiredService<DbContextOptions<ApplicationDbContext>>();
+            var tenantService = sp.GetRequiredService<ITenantService>();
+            return new ScopedDbContextFactory(options, tenantService);
+        });
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
         // Identity

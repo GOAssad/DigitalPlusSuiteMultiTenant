@@ -1,29 +1,34 @@
 @page "/"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
 @attribute [Authorize]
+@rendermode InteractiveServer
 
-@inject IApplicationDbContext Db
+@inject IJSRuntime JS
 
 <PageTitle>Dashboard - DigitalPlus</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0">Dashboard</h4>
+    <h4 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
     <span class="text-muted">@DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-AR"))</span>
 </div>
 
+@* KPI Cards *@
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small">Legajos</div>
-                        <div class="fs-3 fw-bold">@legajosCount</div>
+                        <div class="text-muted small">Presentes hoy</div>
+                        <div class="fs-3 fw-bold text-success">@presentesHoy</div>
+                        <div class="text-muted small">de @legajosActivos activos</div>
                     </div>
-                    <div class="card-icon bg-primary-subtle text-primary">
-                        <i class="bi bi-people"></i>
+                    <div class="card-icon bg-success-subtle text-success">
+                        <i class="bi bi-person-check"></i>
                     </div>
                 </div>
             </div>
@@ -34,11 +39,28 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small">Sucursales</div>
-                        <div class="fs-3 fw-bold">@sucursalesCount</div>
+                        <div class="text-muted small">Ausentes hoy</div>
+                        <div class="fs-3 fw-bold text-danger">@ausentesHoy</div>
+                        <div class="text-muted small">de @legajosConHorarioHoy con horario</div>
                     </div>
-                    <div class="card-icon bg-success-subtle text-success">
-                        <i class="bi bi-building"></i>
+                    <div class="card-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-person-x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Llegadas tarde</div>
+                        <div class="fs-3 fw-bold text-warning">@tardesHoy</div>
+                        <div class="text-muted small">hoy</div>
+                    </div>
+                    <div class="card-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-alarm"></i>
                     </div>
                 </div>
             </div>
@@ -50,7 +72,8 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-muted small">Fichadas hoy</div>
-                        <div class="fs-3 fw-bold">@fichadasHoyCount</div>
+                        <div class="fs-3 fw-bold text-info">@fichadasHoyCount</div>
+                        <div class="text-muted small">@fichadasEntradaHoy E / @fichadasSalidaHoy S</div>
                     </div>
                     <div class="card-icon bg-info-subtle text-info">
                         <i class="bi bi-card-checklist"></i>
@@ -59,53 +82,72 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+</div>
+
+@* Charts Row *@
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
         <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Asistencia - Ultimos 7 dias</h6>
+            </div>
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Terminales</div>
-                        <div class="fs-3 fw-bold">@terminalesCount</div>
-                    </div>
-                    <div class="card-icon bg-warning-subtle text-warning">
-                        <i class="bi bi-pc-display"></i>
-                    </div>
+                <div style="height: 280px;">
+                    <canvas id="chartAsistenciaSemanal"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h6 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Estado del dia</h6>
+            </div>
+            <div class="card-body">
+                <div style="height: 280px;">
+                    <canvas id="chartEstadoHoy"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-3">
-    <div class="col-md-8">
+@* Fichadas por hora + Ultimas fichadas + Noticias *@
+<div class="row g-3 mb-4">
+    <div class="col-md-5">
         <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Fichadas por hora - Hoy</h6>
+            </div>
+            <div class="card-body">
+                <div style="height: 250px;">
+                    <canvas id="chartFichadasHora"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom">
                 <h6 class="mb-0"><i class="bi bi-card-checklist me-2"></i>Ultimas fichadas</h6>
             </div>
             <div class="card-body p-0">
                 @if (ultimasFichadas.Any())
                 {
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Legajo</th>
-                                <th>Fecha/Hora</th>
-                                <th>Tipo</th>
-                                <th>Origen</th>
-                            </tr>
-                        </thead>
+                    <table class="table table-hover table-sm mb-0">
                         <tbody>
                             @foreach (var f in ultimasFichadas)
                             {
                                 <tr>
-                                    <td>@f.Legajo?.Apellido @f.Legajo?.Nombre</td>
-                                    <td>@f.FechaHora.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td>
+                                    <td class="ps-3">
+                                        <strong>@f.Legajo?.Apellido</strong> @f.Legajo?.Nombre
+                                    </td>
+                                    <td class="text-end text-muted small">@f.FechaHora.ToString("HH:mm")</td>
+                                    <td class="text-end pe-3">
                                         <span class="badge @(f.Tipo == "E" ? "bg-success" : "bg-danger")">
-                                            @(f.Tipo == "E" ? "Entrada" : "Salida")
+                                            @(f.Tipo == "E" ? "E" : "S")
                                         </span>
                                     </td>
-                                    <td>@f.Origen</td>
                                 </tr>
                             }
                         </tbody>
@@ -114,15 +156,15 @@
                 else
                 {
                     <div class="text-center text-muted py-4">
-                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        No hay fichadas registradas
+                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                        Sin fichadas
                     </div>
                 }
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom">
                 <h6 class="mb-0"><i class="bi bi-bell me-2"></i>Noticias</h6>
             </div>
@@ -132,8 +174,8 @@
                     @foreach (var n in ultimasNoticias)
                     {
                         <div class="mb-3 pb-3 border-bottom">
-                            <div class="fw-semibold">@n.Titulo</div>
-                            <div class="text-muted small">@n.FechaDesde.ToString("dd/MM/yyyy") - @n.FechaHasta.ToString("dd/MM/yyyy")</div>
+                            <div class="fw-semibold small">@n.Titulo</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">@n.FechaDesde.ToString("dd/MM") - @n.FechaHasta.ToString("dd/MM")</div>
                         </div>
                     }
                 }
@@ -150,33 +192,208 @@
 </div>
 
 @code {
-    private int legajosCount;
-    private int sucursalesCount;
+    // KPI
+    private int legajosActivos;
+    private int presentesHoy;
+    private int ausentesHoy;
+    private int tardesHoy;
     private int fichadasHoyCount;
-    private int terminalesCount;
-    private List<DigitalPlusMultiTenant.Domain.Entities.Fichada> ultimasFichadas = new();
-    private List<DigitalPlusMultiTenant.Domain.Entities.Noticia> ultimasNoticias = new();
+    private int fichadasEntradaHoy;
+    private int fichadasSalidaHoy;
+    private int legajosConHorarioHoy;
+
+    // Lists
+    private List<Fichada> ultimasFichadas = new();
+    private List<Noticia> ultimasNoticias = new();
+
+    // Chart data
+    private string[] semanaLabels = [];
+    private int[] semanaPresentes = [];
+    private int[] semanaAusentes = [];
+    private int[] semanaTardes = [];
+    private int estadoPresentes, estadoAusentes, estadoSinFichada;
+    private string[] horaLabels = [];
+    private int[] horaEntradas = [];
+    private int[] horaSalidas = [];
+
+    private bool _chartsRendered;
+    private bool _disposed;
 
     protected override async Task OnInitializedAsync()
     {
-        var hoy = DateTime.UtcNow.Date;
+        var hoy = DateTime.Today;
+        var hoyDateOnly = DateOnly.FromDateTime(hoy);
+        var diaSemana = (int)hoy.DayOfWeek + 1; // DiaSemana enum
 
-        legajosCount = await Db.Legajos.CountAsync();
-        sucursalesCount = await Db.Sucursales.CountAsync();
-        fichadasHoyCount = await Db.Fichadas.CountAsync(f => f.FechaHora >= hoy);
-        terminalesCount = await Db.Terminales.CountAsync();
+        // Legajos activos con horarios
+        var legajos = await Db.Legajos
+            .Include(l => l.Horario).ThenInclude(h => h!.Detalles)
+            .Where(l => l.IsActive)
+            .ToListAsync();
 
+        legajosActivos = legajos.Count;
+
+        // Legajos que tienen horario para hoy (dia no cerrado)
+        var legajosHoy = legajos
+            .Where(l => l.Horario?.Detalles?.Any(d => (int)d.DiaSemana == diaSemana && !d.IsCerrado) == true)
+            .ToList();
+        legajosConHorarioHoy = legajosHoy.Count;
+
+        // Fichadas de hoy
+        var fichadasHoy = await Db.Fichadas
+            .Where(f => f.FechaHora >= hoy && f.FechaHora < hoy.AddDays(1))
+            .ToListAsync();
+
+        fichadasHoyCount = fichadasHoy.Count;
+        fichadasEntradaHoy = fichadasHoy.Count(f => f.Tipo == "E");
+        fichadasSalidaHoy = fichadasHoy.Count(f => f.Tipo == "S");
+
+        // Presentes: legajos con al menos una entrada hoy
+        var legajosConEntrada = fichadasHoy
+            .Where(f => f.Tipo == "E")
+            .Select(f => f.LegajoId)
+            .Distinct()
+            .ToHashSet();
+        presentesHoy = legajosConEntrada.Count;
+
+        // Ausentes: legajos con horario hoy que no tienen entrada
+        ausentesHoy = legajosHoy.Count(l => !legajosConEntrada.Contains(l.Id));
+
+        // Tardes: entrada despues de HoraDesde + 5min
+        tardesHoy = 0;
+        foreach (var leg in legajosHoy.Where(l => legajosConEntrada.Contains(l.Id)))
+        {
+            var horarioDia = leg.Horario!.Detalles!.First(d => (int)d.DiaSemana == diaSemana && !d.IsCerrado);
+            var primeraEntrada = fichadasHoy
+                .Where(f => f.LegajoId == leg.Id && f.Tipo == "E")
+                .OrderBy(f => f.FechaHora)
+                .First();
+            var horaEntrada = TimeOnly.FromDateTime(primeraEntrada.FechaHora);
+            if (horaEntrada > horarioDia.HoraDesde.AddMinutes(5))
+                tardesHoy++;
+        }
+
+        // Estado hoy (doughnut)
+        estadoPresentes = presentesHoy;
+        estadoAusentes = ausentesHoy;
+        estadoSinFichada = Math.Max(0, legajosActivos - legajosConHorarioHoy);
+
+        // Fichadas por hora (line chart)
+        var horasConFichadas = fichadasHoy
+            .GroupBy(f => f.FechaHora.Hour)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var horaMin = horasConFichadas.Any() ? horasConFichadas.Keys.Min() : 6;
+        var horaMax = horasConFichadas.Any() ? horasConFichadas.Keys.Max() : 20;
+        horaMin = Math.Min(horaMin, 6);
+        horaMax = Math.Max(horaMax, 20);
+
+        var horas = Enumerable.Range(horaMin, horaMax - horaMin + 1).ToArray();
+        horaLabels = horas.Select(h => $"{h:D2}:00").ToArray();
+        horaEntradas = horas.Select(h => horasConFichadas.ContainsKey(h) ? horasConFichadas[h].Count(f => f.Tipo == "E") : 0).ToArray();
+        horaSalidas = horas.Select(h => horasConFichadas.ContainsKey(h) ? horasConFichadas[h].Count(f => f.Tipo == "S") : 0).ToArray();
+
+        // Asistencia semanal (bar chart) - ultimos 7 dias laborables
+        var desde7 = hoy.AddDays(-6);
+        var fichadas7 = await Db.Fichadas
+            .Where(f => f.Tipo == "E" && f.FechaHora >= desde7 && f.FechaHora < hoy.AddDays(1))
+            .Select(f => new { f.LegajoId, f.FechaHora })
+            .ToListAsync();
+
+        var feriados7 = await Db.Feriados
+            .Where(f => f.Fecha >= DateOnly.FromDateTime(desde7) && f.Fecha <= hoyDateOnly)
+            .Select(f => f.Fecha)
+            .ToListAsync();
+
+        var labelsList = new List<string>();
+        var presentesList = new List<int>();
+        var ausentesList = new List<int>();
+        var tardesList = new List<int>();
+        var culture = new System.Globalization.CultureInfo("es-AR");
+
+        for (var dia = desde7; dia <= hoy; dia = dia.AddDays(1))
+        {
+            var diaOnly = DateOnly.FromDateTime(dia);
+            if (feriados7.Contains(diaOnly)) continue;
+
+            var dw = (int)dia.DayOfWeek + 1;
+            var legajosDia = legajos
+                .Where(l => l.Horario?.Detalles?.Any(d => (int)d.DiaSemana == dw && !d.IsCerrado) == true)
+                .ToList();
+
+            if (legajosDia.Count == 0) continue;
+
+            var entradasDia = fichadas7
+                .Where(f => DateOnly.FromDateTime(f.FechaHora) == diaOnly)
+                .Select(f => f.LegajoId)
+                .Distinct()
+                .ToHashSet();
+
+            var pres = entradasDia.Count;
+            var aus = legajosDia.Count(l => !entradasDia.Contains(l.Id));
+
+            // Tardes del dia
+            var tardeDia = 0;
+            foreach (var leg in legajosDia.Where(l => entradasDia.Contains(l.Id)))
+            {
+                var hd = leg.Horario!.Detalles!.First(d => (int)d.DiaSemana == dw && !d.IsCerrado);
+                var pe = fichadas7
+                    .Where(f => f.LegajoId == leg.Id && DateOnly.FromDateTime(f.FechaHora) == diaOnly)
+                    .OrderBy(f => f.FechaHora)
+                    .First();
+                if (TimeOnly.FromDateTime(pe.FechaHora) > hd.HoraDesde.AddMinutes(5))
+                    tardeDia++;
+            }
+
+            labelsList.Add(dia.ToString("ddd dd", culture));
+            presentesList.Add(pres - tardeDia); // presentes a tiempo
+            ausentesList.Add(aus);
+            tardesList.Add(tardeDia);
+        }
+
+        semanaLabels = labelsList.ToArray();
+        semanaPresentes = presentesList.ToArray();
+        semanaAusentes = ausentesList.ToArray();
+        semanaTardes = tardesList.ToArray();
+
+        // Ultimas fichadas
         ultimasFichadas = await Db.Fichadas
             .Include(f => f.Legajo)
             .OrderByDescending(f => f.FechaHora)
-            .Take(10)
+            .Take(8)
             .ToListAsync();
 
-        var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
+        // Noticias vigentes
         ultimasNoticias = await Db.Noticias
             .Where(n => n.FechaDesde <= hoyDateOnly && n.FechaHasta >= hoyDateOnly)
             .OrderByDescending(n => n.FechaDesde)
             .Take(5)
             .ToListAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_chartsRendered && !_disposed)
+        {
+            _chartsRendered = true;
+            try
+            {
+                await JS.InvokeVoidAsync("dashboardCharts.renderAsistenciaSemanal",
+                    "chartAsistenciaSemanal", semanaLabels, semanaPresentes, semanaAusentes, semanaTardes);
+
+                await JS.InvokeVoidAsync("dashboardCharts.renderEstadoHoy",
+                    "chartEstadoHoy", estadoPresentes, estadoAusentes, estadoSinFichada);
+
+                await JS.InvokeVoidAsync("dashboardCharts.renderFichadasPorHora",
+                    "chartFichadasHora", horaLabels, horaEntradas, horaSalidas);
+            }
+            catch (JSDisconnectedException) { }
+        }
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        await base.DisposeAsync();
     }
 }

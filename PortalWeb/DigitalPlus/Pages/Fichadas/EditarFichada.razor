@@ -1,0 +1,41 @@
+﻿@page "/fichadas/editar/{FichadaId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioFichadas repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Fichada</h3>
+
+@if (Fichada == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioFichada OnValidSubmit="EditarEntidad" Fichada="Fichada" LegajoId="Fichada.Legajoid" />
+}
+
+@code {
+
+    [Parameter] public int FichadaId { get; set; }
+    private Fichada Fichada;
+
+ 
+    protected async override Task OnInitializedAsync()
+    {
+        Fichada = await repositorio.GetFichada(FichadaId);
+        if (Fichada == null)
+        {
+            navigationManager.NavigateTo("fichadas");
+        }
+ 
+
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Fichada);
+        await mostrarMensaje.MostrarMensajeTemporal("Fichada", $"Legajo: {Fichada.Legajoid}: Actualizado");
+        navigationManager.NavigateTo($"fichadas/{@Fichada.Legajoid}");
+    }
+}

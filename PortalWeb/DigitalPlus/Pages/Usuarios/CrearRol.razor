@@ -1,0 +1,42 @@
+﻿@page "/roles/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioUsuarios repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Rol</h3>
+
+<EditForm Model="Sector" OnValidSubmit="CrearEntidad">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Nombre:</label>
+        <div class="mb-3">
+            <InputText class="form-control" @bind-Value="@Sector.Nombre" />
+            <ValidationMessage For="@(() => Sector.Nombre)" />
+        </div>
+    </div>
+
+    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+    <a class="btn btn-secondary" href="/roles">Cancelar</a>
+</EditForm>
+
+@code {
+    private RolDTO Sector = new RolDTO();
+
+    private async Task CrearEntidad()
+    {
+        IdentityRole role = new IdentityRole();
+        role.Name = Sector.Nombre;
+        try
+        {
+                        
+            await repositorio.PostRol(role);
+            await mostrarMensajes.MostrarMensajeTemporal("Claim", $"{Sector.Nombre}: Almacendo");
+            navigationManager.NavigateTo("/roles");
+        }
+        catch (Exception ex)
+        {
+            // hacer algo...
+        }
+    }
+}

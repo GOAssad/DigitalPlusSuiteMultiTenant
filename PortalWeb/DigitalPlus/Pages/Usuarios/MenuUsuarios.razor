@@ -1,0 +1,45 @@
+﻿@page "/usuarios/menu"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem; ">
+                <div>
+                    <img class="card-img-top" src="/imagenes/Usuarios_Usuarios.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Usuarios</h5>
+                    <p class="card-text">Ingrese aqui para Asignarle permisos de Acceso y Sucursales a los Usuarios ya Registrados</p>
+                </div>
+                <div class="card-footer">
+                    <a href="usuarios" class="btn btn-primary">Ir a Usuarios</a>
+                </div>
+
+            </div>
+        </div>
+        <div class="col">
+            <div class="card ms-0" style="width: 18rem;">
+                <div>
+                    <img class="card-img-top" src="/imagenes/Usuarios_Roles.png" />
+
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Roles</h5>
+                    <p class="card-text">Ingrese aqui para crear Roles de Usuarios</p>
+                </div>
+                <div class="card-footer">
+                    <a href="roles" class="btn btn-primary">Ir a Roles</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+   
+}

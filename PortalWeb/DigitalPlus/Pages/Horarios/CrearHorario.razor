@@ -1,0 +1,77 @@
+﻿@page "/horarios/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioHorarios repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Horarios</h3>
+
+
+<EditForm Model="horario" OnValidSubmit="CrearEntidad">
+    <DataAnnotationsValidator />
+    <div class="form-group mb-3">
+        <label>Nombre:</label>
+        <div>
+            <InputText class="form-control" @bind-Value="@horario.Nombre" />
+            <ValidationMessage For="@(() => horario.Nombre)" />
+        </div>
+    </div>
+
+
+    <FormularioHorario Dias="Dias" horario="horario" />
+
+
+
+    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+    <a class="btn btn-secondary" href="/horarios">Cancelar</a>
+
+</EditForm>
+
+@code {
+    private Horario horario = new Horario();
+    private List<Dia> Dias = new List<Dia>();
+    private int numero;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Dias = await repositorio.GetDias();
+
+        //organizo el modelo
+        foreach (var item in Dias)
+        {
+            horario.HorariosDias.Add(new HorarioDia
+                {
+                    DiaId = item.Id,
+                    HoraDesde = 9,
+                    MinutoDesde = 0,
+                    HoraHasta = 18,
+                    MinutoHasta = 0,
+                    Cerrado = 0,
+                    Dia = Dias[item.Id-1]
+
+                });
+        }
+
+    }
+
+    private async Task CrearEntidad()
+    {
+        try
+        {
+            await repositorio.Post(horario);
+
+            await mostrarMensajes.MostrarMensajeTemporal("Horario", $"{horario.Nombre}: Almacendo");
+            navigationManager.NavigateTo("/horarios");
+
+
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensajes.MostrarMensajeError(ex.InnerException.Message);
+        }
+    }
+
+    
+
+}

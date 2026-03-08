@@ -1,0 +1,16 @@
+﻿@using DigitalPlus.Licencias.Components.Account.Shared
+<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
+
+@* Nota: Las paginas de Account (login, register, etc.) usan SSR estatico
+   y no deben tener rendermode interactivo. Las paginas de negocio
+   (empresas, licencias, etc.) usan @rendermode InteractiveServer
+   en cada pagina individual. *@

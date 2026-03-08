@@ -1,0 +1,76 @@
+﻿@page "/terminales"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioTerminales repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_Terminal.png" Titulo="Terminales" />
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Terminal"></BotonAgregarEntidad>
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>
+
+    <ListadoGenerico Listado="Terminales">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead class="cabeceraTabla">
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Nombre</th>
+                        <th>Descripcion</th>
+                        <th>Sucursal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Terminales)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/terminales/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                                <button @onclick="@(() => BorrarTerminales(item))" class="btn btn-danger btn-sm">Borrar</button>
+                            </td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Descripcion</td>
+                            <td>@item.Sucursal.Nombre</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+@code {
+    public List<Terminal> Terminales { get; set; }
+    string textobusqueda;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Cargar(string.Empty);
+    }
+
+    private async Task Cargar(string texto)
+    {
+        Terminales = await repositorio.Get(texto);
+    }
+
+    private async Task BorrarTerminales(Terminal objeto)
+    {
+        var condicion = await mostrarMensajes.MostrarMensajeBorrar(objeto.Nombre);
+
+        if (condicion)
+        {
+            await mostrarMensajes.MostrarMensajeTemporal("Terminal", $"{objeto.Nombre}...Borrada");
+            await repositorio.Delete(objeto.Id);
+        }
+
+
+        await Cargar(string.Empty);
+    }
+
+    private void Crear()
+    {
+        navigationManager.NavigateTo("terminales/crear");
+    }
+}

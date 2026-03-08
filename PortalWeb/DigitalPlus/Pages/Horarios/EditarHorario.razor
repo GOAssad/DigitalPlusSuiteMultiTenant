@@ -1,0 +1,62 @@
+﻿@page "/horarios/editar/{HorarioId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioHorarios repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Horario</h3>
+
+@if (horario == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <EditForm Model="horario" OnValidSubmit="EditarEntidad">
+        <DataAnnotationsValidator />
+        <div class="form-group mb-3">
+            <label>Nombre:</label>
+            <div>
+                <InputText class="form-control" @bind-Value="@horario.Nombre" />
+                <ValidationMessage For="@(() => horario.Nombre)" />
+            </div>
+        </div>
+
+
+        <FormularioHorario Dias="Dias" horario="horario" />
+
+        <button class="btn btn-success" type="submit">Guardar Cambios</button>
+        <a class="btn btn-secondary" href="/horarios">Cancelar</a>
+
+    </EditForm>
+}
+
+
+
+@code {
+
+    [Parameter] public int HorarioId { get; set; }
+    private Horario horario;
+    private List<Dia> Dias = new List<Dia>();
+
+    private List<HorarioDia> HorariosDias = new List<HorarioDia>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        horario = await repositorio.Get(HorarioId);
+        Dias = await repositorio.GetDias();
+
+        if (horario == null)
+        {
+            navigationManager.NavigateTo("horarios");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(horario);
+        navigationManager.NavigateTo("horarios");    
+
+
+    }
+}

@@ -1,0 +1,208 @@
+@page "/atributos/tipos-identificacion"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+
+<PageTitle>Tipos de Identificacion Fiscal - Atributos</PageTitle>
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/atributos">Atributos</a></li>
+        <li class="breadcrumb-item active">Tipos de Identificacion Fiscal</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Tipos de Identificacion Fiscal</h3>
+    <button class="btn btn-primary" @onclick="Nuevo">Nuevo Tipo</button>
+</div>
+
+@if (mensaje != null)
+{
+    <div class="alert @(esError ? "alert-danger" : "alert-success") alert-dismissible">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
+    </div>
+}
+
+@if (editando)
+{
+    <div class="card mb-4">
+        <div class="card-header">@(editId == 0 ? "Nuevo Tipo" : "Editar Tipo")</div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Pais</label>
+                    <select class="form-select" value="@editPaisIdStr" @onchange="OnEditPaisChanged">
+                        <option value="">-- Seleccionar --</option>
+                        @if (paises != null)
+                        {
+                            @foreach (var p in paises)
+                            {
+                                <option value="@p.Id">@p.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" @bind="editNombre" placeholder="Ej: CUIT" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Formato</label>
+                    <input type="text" class="form-control" @bind="editFormato" placeholder="Ej: ##-########-#" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ejemplo</label>
+                    <input type="text" class="form-control" @bind="editEjemplo" placeholder="Ej: 30-12345678-9" />
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button class="btn btn-success" @onclick="Guardar">Guardar</button>
+                    <button class="btn btn-outline-secondary" @onclick="Cancelar">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (tipos == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Pais</th>
+                <th>Nombre</th>
+                <th>Formato</th>
+                <th>Ejemplo</th>
+                <th>Empresas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in tipos)
+            {
+                <tr>
+                    <td>@(t.Pais?.Nombre ?? "-")</td>
+                    <td><strong>@t.Nombre</strong></td>
+                    <td><code>@(t.Formato ?? "-")</code></td>
+                    <td>@(t.Ejemplo ?? "-")</td>
+                    <td>@(empresasPorTipo.GetValueOrDefault(t.Id, 0))</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(t)">Editar</button>
+                        @if (empresasPorTipo.GetValueOrDefault(t.Id, 0) == 0)
+                        {
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(t)">Eliminar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-danger" disabled title="En uso, no se puede eliminar">Eliminar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal>? tipos;
+    private List<DigitalPlus.Licencias.Entidades.Pais>? paises;
+    private Dictionary<int, int> empresasPorTipo = new();
+
+    private bool editando;
+    private int editId;
+    private int? editPaisId;
+    private string editPaisIdStr => editPaisId?.ToString() ?? "";
+    private string editNombre = "";
+    private string? editFormato;
+    private string? editEjemplo;
+    private string? mensaje;
+    private bool esError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        paises = await Repo.GetPaisesAsync();
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        tipos = await Repo.GetTiposIdentificacionConPaisAsync();
+        empresasPorTipo = await Repo.ContarEmpresasPorTipoIdFiscalAsync();
+    }
+
+    private void Nuevo()
+    {
+        editando = true;
+        editId = 0;
+        editPaisId = null;
+        editNombre = "";
+        editFormato = null;
+        editEjemplo = null;
+    }
+
+    private void Editar(DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal t)
+    {
+        editando = true;
+        editId = t.Id;
+        editPaisId = t.PaisId;
+        editNombre = t.Nombre;
+        editFormato = t.Formato;
+        editEjemplo = t.Ejemplo;
+    }
+
+    private void Cancelar()
+    {
+        editando = false;
+        mensaje = null;
+    }
+
+    private void OnEditPaisChanged(ChangeEventArgs e)
+    {
+        editPaisId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+    }
+
+    private async Task Guardar()
+    {
+        if (!editPaisId.HasValue || string.IsNullOrWhiteSpace(editNombre))
+        {
+            mensaje = "Pais y Nombre son obligatorios.";
+            esError = true;
+            return;
+        }
+
+        try
+        {
+            await Repo.GuardarTipoIdentificacionAsync(editId, editPaisId.Value, editNombre.Trim(), editFormato?.Trim(), editEjemplo?.Trim());
+            editando = false;
+            mensaje = editId == 0 ? "Tipo creado" : "Tipo actualizado";
+            esError = false;
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+            esError = true;
+        }
+    }
+
+    private async Task Eliminar(DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal t)
+    {
+        try
+        {
+            await Repo.EliminarTipoIdentificacionAsync(t.Id);
+            mensaje = $"Tipo '{t.Nombre}' eliminado";
+            esError = false;
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"No se puede eliminar: {ex.Message}";
+            esError = true;
+        }
+    }
+}

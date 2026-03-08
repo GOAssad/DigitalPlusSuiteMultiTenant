@@ -1,0 +1,84 @@
+﻿@page "/incidencias"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioIncidencias repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_Incidencia.png" Titulo="Incidencias" />
+
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Incidencia"></BotonAgregarEntidad>
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>
+
+    <ListadoGenerico Listado="Incidencias">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead class="cabeceraTabla">
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Nombre</th>
+                        <th>Abrev</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Incidencias)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/Incidencias/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                                <button @onclick="@(() => BorrarIncidencias(item))" class="btn btn-danger btn-sm">Borrar</button>
+                            </td>
+                            <td>@item.Nombre</td>
+                            <td style="color:@item.Color">@item.Abreviatura</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+@code {
+    public List<Incidencia> Incidencias { get; set; }
+    string textobusqueda;
+
+    Incidencia objeto = new Incidencia();
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Cargar(string.Empty);
+    }
+
+    private async Task Cargar(string texto)
+    {
+        Incidencias = await repositorio.Get(texto);
+    }
+
+    private async Task BorrarIncidencias(Incidencia objeto)
+    {
+        var condicion = await mostrarMensajes.MostrarMensajeBorrar(objeto.Nombre);
+
+        if (condicion)
+        {
+            await mostrarMensajes.MostrarMensajeTemporal("Incidencia", $"{objeto.Nombre}: ...Borrada");
+            await repositorio.Delete(objeto.Id);
+        }
+
+
+        await Cargar(string.Empty);
+
+    }
+
+    private void Crear()
+    {
+        
+        navigationManager.NavigateTo("Incidencias/crear");
+    }
+
+}
+

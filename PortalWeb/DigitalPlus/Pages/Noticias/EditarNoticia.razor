@@ -1,0 +1,37 @@
+﻿@page "/noticias/editar/{Noticiaid:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioNoticias repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Noticia</h3>
+
+@if (Noticia == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioNoticia OnValidSubmit="EditarEntidad" Noticia="Noticia" />
+}
+
+@code {
+
+    [Parameter] public int Noticiaid { get; set; }
+    private Noticia Noticia;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Noticia = await repositorio.Get(Noticiaid);
+        if (Noticia == null)
+        {
+            navigationManager.NavigateTo("noticias");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Noticia);
+        navigationManager.NavigateTo("noticias");
+    }
+}

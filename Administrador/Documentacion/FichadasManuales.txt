@@ -1,0 +1,11 @@
+1 - Cuando entras te trae las fichadas del dia para que puedas modificarlas si queres.
+2 - Si queres ver algun legajo determinado pones en la cabedera legajo desde y hasta
+3 - Le das actualizar.
+
+Si el legajo tiene alguna fichada en ese rango de dias, entonces te las trae, sino ten deja un registro vacio para que pongas los datos abajo.
+
+4 - Suponiendo que no hay ningun registro en el rango de fechas de ese legajo, colocas, el legajo, la sucursal y l a fecha y hora del regitro que quere incuier.
+5 - Una vez completado el punto 4 le das modificar para que se modifique el registro de la grid.
+
+6 - le das cuardar en la barra de tareas.
+

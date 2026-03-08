@@ -1,0 +1,53 @@
+@page "/atributos"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Atributos - DigitalPlus</PageTitle>
+
+<h3 class="mb-4">Atributos del Sistema</h3>
+<p class="text-muted mb-4">Tablas de referencia utilizadas en el sistema. Seleccione una para administrar sus registros.</p>
+
+<div class="row g-4">
+    <div class="col-md-4 col-lg-3">
+        <a href="/atributos/paises" class="text-decoration-none">
+            <div class="card h-100 border-0 shadow-sm text-center atributo-card">
+                <div class="card-body py-4">
+                    <div class="mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#0d6efd" viewBox="0 0 16 16">
+                            <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a7 7 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12Q5.362 12.8 5.613 13.4c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7 7 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49a7 7 0 0 0 .656 2.5zM8.5 12v3.255c.67-.204 1.335-.82 1.887-1.855Q10.638 12.8 10.855 12zm3.68 0h.025a7 7 0 0 1-3.072 2.472c.218-.284.418-.598.597-.933A9.3 9.3 0 0 0 11.91 12zm1.27-2.5h-2.49c-.029.877-.138 1.718-.312 2.5h2.146a7 7 0 0 0 .656-2.5m-5.023-7.93A7.03 7.03 0 0 1 13.745 4h-1.834a9.3 9.3 0 0 0-.64-1.539 7 7 0 0 0-.597-.933M11.18 5c.187.765.306 1.608.338 2.5h2.49a7 7 0 0 0-.657-2.5z"/>
+                        </svg>
+                    </div>
+                    <h5 class="card-title text-dark">Paises</h5>
+                    <p class="card-text text-muted small">Paises disponibles para asignar a empresas</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <a href="/atributos/tipos-identificacion" class="text-decoration-none">
+            <div class="card h-100 border-0 shadow-sm text-center atributo-card">
+                <div class="card-body py-4">
+                    <div class="mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#198754" viewBox="0 0 16 16">
+                            <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2zM4.165 13.668c.09.18.23.343.438.419.207.075.412.04.58-.03.318-.13.635-.436.926-.786.333-.401.683-.927 1.021-1.51a11.7 11.7 0 0 1 1.997-.406c.3.383.61.713.91.95.28.22.603.403.934.417a.86.86 0 0 0 .51-.138c.155-.101.27-.247.354-.416.09-.181.145-.37.138-.563a.84.84 0 0 0-.2-.518c-.226-.27-.596-.4-.96-.465a5.8 5.8 0 0 0-1.335-.05 11 11 0 0 1-.98-1.686c.25-.66.437-1.284.52-1.794.036-.218.055-.426.048-.614a1.24 1.24 0 0 0-.127-.538.7.7 0 0 0-.477-.365c-.202-.043-.41 0-.601.077-.377.15-.576.47-.651.823-.073.34-.04.736.046 1.136.088.406.238.848.43 1.295a20 20 0 0 1-1.062 2.227 5.7 5.7 0 0 0-1.07.514c-.333.218-.578.478-.7.77z"/>
+                        </svg>
+                    </div>
+                    <h5 class="card-title text-dark">Tipos de Identificacion Fiscal</h5>
+                    <p class="card-text text-muted small">CUIT, RUC, RFC y otros tipos por pais</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<style>
+    .atributo-card {
+        transition: transform 0.15s, box-shadow 0.15s;
+        cursor: pointer;
+    }
+    .atributo-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    }
+</style>

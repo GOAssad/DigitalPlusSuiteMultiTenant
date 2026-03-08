@@ -1,0 +1,44 @@
+﻿@page "/legajos/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioLegajos repositorio
+@inject RepositorioSectores repositorioSectores
+@inject RepositorioSucursales repositorioSucursales
+@inject RepositorioCategorias repositorioCategorias
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Legajo</h3>
+
+@if (MostrarFormulario)
+{
+    <FormularioLegajo Legajo="Legajo" Sectores="Sectores" SucursalesNoSeleccionadas="SucursalesNoSeleccionadas" Categorias="Categorias" OnValidSubmit="Crear" />
+}
+
+else
+{
+    <text>Cargando...</text>
+}
+
+
+@code {
+    private bool MostrarFormulario { get; set; } = false;
+    private Legajo Legajo = new Legajo();
+    private List<Sector> Sectores = new List<Sector>();
+    private List<Categoria> Categorias = new List<Categoria>();
+    private List<Sucursal> SucursalesNoSeleccionadas = new List<Sucursal>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Sectores = await repositorioSectores.Get();
+        Categorias = await repositorioCategorias.Get();
+        SucursalesNoSeleccionadas = await repositorioSucursales.Get();
+        MostrarFormulario = true;
+    }
+
+
+    async Task Crear()
+    {
+        await repositorio.Post(Legajo);
+        navigationManager.NavigateTo("/legajos");
+    }
+}

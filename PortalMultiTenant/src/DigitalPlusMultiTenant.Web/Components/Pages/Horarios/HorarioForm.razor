@@ -1,5 +1,6 @@
 @page "/horarios/crear"
 @page "/horarios/editar/{Id:int}"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
@@ -8,7 +9,6 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
-@inject IApplicationDbContext Db
 @inject NavigationManager Nav
 
 <PageTitle>@(IsEdit ? "Editar" : "Nuevo") Horario - DigitalPlus</PageTitle>

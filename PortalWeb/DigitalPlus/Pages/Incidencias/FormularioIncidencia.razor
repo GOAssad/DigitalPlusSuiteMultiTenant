@@ -1,0 +1,53 @@
+﻿<EditForm Model="Incidencia" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Nombre:</label>
+        <div>
+            <InputText class="form-control mb-3" @bind-Value="@Incidencia.Nombre" />
+            <ValidationMessage For="@(() => Incidencia.Nombre)" />
+
+            <div>
+                <label>Abreviatura:</label>
+            </div>
+            <div>
+                <InputText class="form-control" maxlength="4" style="width:70px; height:30px;" @bind-Value="@Incidencia.Abreviatura" />
+                <ValidationMessage For="@(() => Incidencia.Abreviatura)" />
+            </div>
+
+            <div>
+                <label>Color:</label>
+            </div>
+            <div>
+                <select @onchange="@CambioColor">
+                    <option value="0">--Elegir Color--</option>
+                    @for (int i = 0; i < Colores.Length; i++)
+                    {
+                        <option value="@(i+1)">@Colores[i].ToString()</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label style="color:@Incidencia.Color;">@Incidencia.Color</label>
+            </div>
+
+
+
+        </div>
+    </div>
+
+    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+    <a class="btn btn-secondary" href="/incidencias">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter] public Incidencia Incidencia { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+    string[] Colores = Enum.GetNames(typeof(System.Drawing.KnownColor));
+
+    private void CambioColor(ChangeEventArgs e)
+    {
+        int indice = int.Parse(e.Value.ToString());
+        Incidencia.Color = Colores[indice - 1].ToString();
+    }
+}

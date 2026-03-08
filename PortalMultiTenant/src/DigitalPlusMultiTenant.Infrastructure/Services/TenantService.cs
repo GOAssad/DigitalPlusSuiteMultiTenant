@@ -53,6 +53,9 @@ public class TenantService : ITenantService
         }
     }
 
+    public string? EmpresaNombre =>
+        GetUser()?.FindFirst("EmpresaNombre")?.Value;
+
     public string? UserId =>
         GetUser()?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

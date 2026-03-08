@@ -1,0 +1,547 @@
+﻿@using DigitalPlus.Data
+@using System.Globalization
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+@inject DigitalPlus.Servicios.IHorarioDiaEventoServicio horarioDiaEventoService
+
+
+@if (displayModal)
+{
+    <div id="divModal" style="position:fixed;">
+        <div class="container">
+            <div class="panel panel-default"></div>
+            <div class="panel-heading modalHeading">@horarioDiaEvento.FromDate.ToShortDateString()</div>
+            <div class="panel-body">
+                <div class="row mb-1">
+                    <div class="col-md-4">
+                        <label>Fecha Desde:</label>
+                    </div>
+                    <div class="col-md-8">
+                        <input type="time" @bind-value="@horadesde" style="width:100%;" />
+                    </div>
+                </div>
+                <div class="row mb-1">
+                    <div class="col-md-4">
+                        <label>Fecha Hasta:</label>
+                    </div>
+                    <div class="col-md-8">
+                        <input type="time" @bind-value="@horahasta" style="width:100%;" />
+                    </div>
+                </div>
+                <div class="row mb-1">
+                    <div class="col-md-4">
+                        <label>Nota:</label>
+                    </div>
+                    <div class="col-md-8">
+                        <input type="text" @bind-value=@horarioDiaEvento.Nota placeholder="Escriba su Nota aqui..." />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                    </div>
+                    <div class="col-md-2">
+                        <a class="btn btn-success btn-sm" @onclick="SaveNote" style="float:left; margin-right:5px;">Guardar</a>
+                    </div>
+                    <div class="col-md-2 ms-2">
+                        <a class="btn btn-danger btn-sm" @onclick="Borrar" style="float:left;margin-right:5px;">Borrar</a>
+                    </div>
+                    <div class="col-md-2">
+                        <a class="btn btn-primary btn-sm" @onclick="CloseModal" style="float:left;">Cerrar</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
+<ul class="nav nav-pills nav-fill mb-3">
+    <li class="list-group list-group-item" style="width:100%;">
+        <span>
+            <label class="me-3" style="font-size:24px;">
+
+                Calendario: @Legajo.Nombre
+            </label>
+            <select @onchange="DiaaCopiar" class="me-2" style="width:150px;" value="@DiaSeleccionado">
+                @foreach (string NombreDia in days)
+                {
+                    <option>@NombreDia</option>
+                }
+            </select>
+            <label class="me-2">
+                Desde:
+                <input type="time" @bind-value="@horadesde" />
+            </label>
+            <label class="me-2">
+                Hasta:
+                <input type="time" @bind-value="@horahasta" />
+            </label>
+            <a class="btn btn-warning btn-sm me-1" @onclick="incluir">Incluir Dia</a>
+            <a class="btn btn-primary btn-sm me-1" @onclick="incluirTodos">Incluir Todos los dias</a>
+            <a class="btn btn-danger btn-sm me-1" @onclick="BorrarDias">Borrar Dia</a>
+        </span>
+    </li>
+</ul>
+
+
+
+<div class="container">
+
+
+    <div class="row">
+        <select @onchange="LocalCalender" value="@valormes">
+            @foreach (string monthName in monthNames)
+            {
+
+                <option>@monthName</option>
+            }
+
+        </select>
+       
+
+        <table class="table table-bordered table-striped col">
+            <thead>
+                <tr>
+                    @for (var dayIndex = 0; dayIndex < days.Count; dayIndex++)
+                    {
+                        <th>
+                            @days[dayIndex]
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+                {
+                    <tr>
+                        @*recorro los dias de la semanana en que estoy parado*@
+                        @for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+                        {
+                            var wIndex = weekIndex;
+                            var dIndex = dayIndex;
+                            textoNota = weeks[wIndex].Dates[dIndex].Nota;
+                            textoNotaCompleto = weeks[wIndex].Dates[dIndex].Nota;
+                            if (weeks[wIndex].Dates[dIndex].Nota.Length > 10)
+                            {
+                                textoNota = weeks[wIndex].Dates[dIndex].Nota.Substring(dayIndex, 10) + "...";
+                            }
+
+                        
+                            <td @ondblclick="@(()=>OpenModal(wIndex,dIndex))">
+                                @weeks[wIndex].Dates[dIndex].FechaValor
+                                <br />
+
+                                <span title="@textoNotaCompleto" style="color:yellow; font-weight:bold;">@textoNota</span>
+                                <br />
+                                <label style="color:white; font-weight:bold;">@(weeks[wIndex].Dates[dIndex].HoraTexto)</label>
+                                <br />
+
+                                @*Cell number : [@wIndex, @dIndex]*@
+
+                            </td>
+                        }
+                    </tr>
+
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Legajo Legajo { get; set; }
+    HorarioDiaEventoDTO horarioDiaEvento = new HorarioDiaEventoDTO()
+        {
+            FromDate = DateTime.Now,
+            ToDate = DateTime.Now,
+            Nota = string.Empty
+        };
+
+
+    //variables para bindear solo la hora
+    TimeOnly horadesde;
+    TimeOnly horahasta;
+
+    string DiaSeleccionado;
+
+
+    bool displayModal = false;
+
+    List<string> monthNames = new List<string>();
+    List<string> days = new List<string>();
+    List<Semana> weeks = new List<Semana>();
+
+    //del 1ero de Enero del corriente año hasta el 31/01
+    DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    DateTime endDate = (new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)).AddMonths(1).AddDays(-1);
+
+    int selectedWeekIndex = -1;
+    int selectedDayIndex = -1;
+
+    string cultura = "es-AR";
+
+
+    string valormes = DateTime.Now.Date.ToString("MMMM");
+    string textoNota = string.Empty;
+    string textoNotaCompleto = string.Empty;
+
+    protected override void OnInitialized()
+    {
+
+        //monthNames = CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames.ToList();
+        monthNames = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.ToList();
+        //remuevo el ultimo que viene en blanco
+        monthNames.RemoveAt(12);
+
+
+
+        GenerateCalendarHead();
+        GenerateCalendarBody();
+    }
+    private void LocalCalender(ChangeEventArgs e)
+    {
+        int monthIndex;
+        string month = e.Value.ToString();
+
+        if
+            (month == string.Empty) monthIndex = 12;
+        else
+            monthIndex = DateTime.ParseExact(month, "MMMM", CultureInfo.CreateSpecificCulture(cultura)).Month;
+
+        //Formo el primer dia y el ultimo dia del mes elegido
+        startDate = new DateTime(DateTime.Now.Year, monthIndex, 1);
+        endDate = new DateTime(DateTime.Now.Year, monthIndex, 1).AddMonths(1).AddDays(-1);
+
+        ArmarCalendario();
+
+    }
+    private void ArmarCalendario()
+    {
+        GenerateCalendarHead();
+        GenerateCalendarBody();
+    }
+    private void GenerateCalendarHead()
+    {
+        var day1 = new List<string>();
+
+        for (var dt = startDate; dt < endDate; dt = dt.AddDays(1))
+        {
+            day1.Add(dt.ToString("dddd"));
+        }
+        // Cargo los dias de la semana (con el distinct)
+        days = day1.Distinct().ToList();
+
+        DiaSeleccionado = days[0].ToString();
+    }
+
+    // lo pongo afuera para usarlo en GenerateCalendarBody y de paso en el borrarDias
+    List<HorarioDiaEvento> horarioevento = new List<HorarioDiaEvento>();
+
+    private void GenerateCalendarBody()
+    {
+        // esto seria una lista que contiene una lista de horarioDiaEvento cada elemento
+        // es decir, que va a tener el mes constituido por una lista de semanas
+        // tndria que tener 4 o 5 elementos principales con 7 elementos como max. cada uno
+        weeks = new List<Semana>();
+
+        List<HorarioDiaEventoDTO> horarioDiaEventos = new List<HorarioDiaEventoDTO>();
+        try
+        {
+            horarioevento = horarioDiaEventoService.GetEventos(startDate, endDate, Legajo.Id);
+            foreach (var item in horarioevento)
+            {
+                horarioDiaEventos.Add(new HorarioDiaEventoDTO
+                    {
+                        FechaEvento = item.FechaDesde,
+                        FromDate = item.FechaDesde,
+                        ToDate = item.FechaHasta,
+                        LegajoId = item.LegajoId,
+                        Nota = item.Nota,
+                        Id = item.Id
+                    });
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            horarioDiaEventos = new List<HorarioDiaEventoDTO>();
+        }
+
+
+        int flag = 0;
+        // week seria una lista de horarioDiaEvento
+        Semana week = new Semana();
+
+        // esto seria una lista de HorarioDiaEventoDTOs
+        List<HorarioDiaEventoDTO> dates = new List<HorarioDiaEventoDTO>();
+
+        //cantidad de dias del mes elegido
+        var totalDays = (int)(endDate - startDate).TotalDays;
+        int countdays = 0;
+
+        for (var dt = startDate; dt <= endDate; dt = dt.AddDays(1))
+        {
+            flag++;
+
+            var currentObject = horarioDiaEventos.Find(x => x.FechaEvento.ToString("dd-MMM-yyyy") == dt.ToString("dd-MMM-yyyy"));
+
+
+            dates.Add(new HorarioDiaEventoDTO()
+                {
+                    Id = currentObject == null ? 0 : currentObject.Id,
+                    FechaValor = dt.ToString("dd-MMM-yyyy"),
+                    DiaNombre = dt.ToString("dddd"),
+                    FechaEvento = currentObject == null ? dt : currentObject.FechaEvento,
+                    FromDate = currentObject == null ? dt : currentObject.FromDate,
+                    ToDate = currentObject == null ? dt : currentObject.ToDate,
+                    Nota = currentObject == null ? string.Empty : currentObject.Nota
+                });
+
+            if (flag == 7)
+            {
+                week = new Semana();
+                // le agrego la lista de una semana de horarioDiaEventos
+                week.Dates = dates;
+                weeks.Add(week);
+
+                dates = new List<HorarioDiaEventoDTO>();
+                flag = 0;
+            }
+            if (countdays == totalDays)
+            {
+                week = new Semana();
+                week.Dates = dates;
+                weeks.Add(week);
+                break;
+            }
+            countdays++;
+        }
+    }
+    private void CloseModal()
+    {
+        ResetModal();
+    }
+    private async Task OpenModal(int wIndex, int dIndex)
+    {
+        selectedWeekIndex = wIndex;
+        selectedDayIndex = dIndex;
+
+        //la fecha donde hice doble click
+        DateTime dFechaValor = Convert.ToDateTime(weeks[wIndex].Dates[dIndex].FechaValor);
+
+        HorarioDiaEventoDTO horarioDiaEventoObj = new HorarioDiaEventoDTO();
+
+        try
+        {
+
+            var horariodiaevento = await horarioDiaEventoService.GetEvento(dFechaValor, Legajo.Id);
+            horarioDiaEventoObj.FechaEvento = horariodiaevento.FechaDesde;
+            horarioDiaEventoObj.Id = horariodiaevento.Id;
+            horarioDiaEventoObj.Nota = horariodiaevento.Nota;
+            horarioDiaEventoObj.LegajoId = horariodiaevento.LegajoId;
+            horarioDiaEventoObj.ToDate = horariodiaevento.FechaHasta;
+            horarioDiaEventoObj.FromDate = horariodiaevento.FechaDesde;
+        }
+        catch (Exception ex)
+        {
+
+            horarioDiaEventoObj = new HorarioDiaEventoDTO()
+                {
+                    FromDate = dFechaValor,
+                    ToDate = dFechaValor,
+                    Nota = string.Empty,
+                    LegajoId = Legajo.Id,
+                    FechaEvento = dFechaValor,
+                    Mensaje = ex.Message
+                };
+        }
+
+        horarioDiaEvento = horarioDiaEventoObj;
+        horadesde = new TimeOnly(horarioDiaEvento.FromDate.Hour, horarioDiaEvento.FromDate.Minute);
+        horahasta = new TimeOnly(horarioDiaEvento.ToDate.Hour, horarioDiaEvento.ToDate.Minute);
+
+        //horarioDiaEvento.FromDate = new DateTime(2022, 10, 12);
+        //horarioDiaEvento.ToDate = new DateTime(2022, 10, 12);
+
+        displayModal = true;
+    }
+    private async Task SaveNote()
+    {
+        //Gustavo, le paso la fecha y la hora a ver que pasa
+        horarioDiaEvento.FechaEvento = horarioDiaEvento.FromDate;
+
+        //horarioDiaEvento = horarioDiaEventoService.SaveOrUpdate(horarioDiaEvento);
+
+        var horarioEvento = new HorarioDiaEvento();
+
+        DateTime date = new DateTime(horarioDiaEvento.FechaEvento.Year, horarioDiaEvento.FechaEvento.Month, horarioDiaEvento.FechaEvento.Day,
+                    horadesde.Hour, horadesde.Minute, 0);
+        horarioEvento.FechaDesde = date;
+
+        date = new DateTime(horarioDiaEvento.FechaEvento.Year, horarioDiaEvento.FechaEvento.Month, horarioDiaEvento.FechaEvento.Day,
+            horahasta.Hour, horahasta.Minute, 0);
+        horarioEvento.FechaHasta = date;
+
+        horarioEvento.LegajoId = horarioDiaEvento.LegajoId;
+        horarioEvento.Nota = horarioDiaEvento.Nota;
+
+        horarioEvento = await horarioDiaEventoService.Post(horarioEvento);
+        if (horarioEvento.Id > 0)
+        {
+            weeks[selectedWeekIndex].Dates[selectedDayIndex].Id = horarioDiaEvento.Id;
+            weeks[selectedWeekIndex].Dates[selectedDayIndex].FromDate = horarioDiaEvento.FromDate;
+            weeks[selectedWeekIndex].Dates[selectedDayIndex].ToDate = horarioDiaEvento.ToDate;
+            weeks[selectedWeekIndex].Dates[selectedDayIndex].Nota = horarioDiaEvento.Nota;
+
+            //await mostrarMensajes.MostrarMensajeExitoso("Horario Almacenado");
+
+            ArmarCalendario();
+            //ResetModal();
+            //navigationManager.NavigateTo($"/legajos/editar/{Legajo.Id}");
+
+
+        }
+        else
+        {
+            await mostrarMensajes.MostrarMensajeError("Hubo un error Cargando el mansaje");
+        }
+        return;
+    }
+    private void ResetModal()
+    {
+        displayModal = false;
+        selectedDayIndex = -1;
+        selectedWeekIndex = -1;
+    }
+    private async void Borrar()
+    {
+        HorarioDiaEvento diaEvento = new HorarioDiaEvento();
+        diaEvento.FechaDesde = horarioDiaEvento.FechaEvento;
+        diaEvento.FechaHasta = horarioDiaEvento.FechaEvento;
+        diaEvento.Id = horarioDiaEvento.Id;
+        diaEvento.LegajoId = horarioDiaEvento.LegajoId;
+        diaEvento.Nota = horarioDiaEvento.Nota;
+
+        await horarioDiaEventoService.Borrar(diaEvento);
+        await mostrarMensajes.MostrarMensajeExitoso("Evento Eliminado...");
+        ArmarCalendario();
+
+    }
+    private async Task incluir()
+    {
+
+        List<HorarioDiaEvento> AuxEvento = new List<HorarioDiaEvento>();
+
+        // tengo que saber en que dia estoy parado
+        // recorro dia por dia, cuando encuentro el dia que quiero
+        for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+        {
+            //recorro los dias de la semanana en que estoy parado
+            for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+            {
+
+                if (weeks[weekIndex].Dates[dayIndex].DiaNombre == DiaSeleccionado)
+                {
+
+                    AuxEvento.Add(new HorarioDiaEvento
+                        {
+                            LegajoId = Legajo.Id,
+                            Nota = weeks[weekIndex].Dates[dayIndex].Nota,
+                            FechaDesde = new DateTime(weeks[weekIndex].Dates[dayIndex].FromDate.Year,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Month,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Day,
+                                                                horadesde.Hour, horadesde.Minute, 0),
+
+                            FechaHasta = new DateTime(weeks[weekIndex].Dates[dayIndex].FromDate.Year,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Month,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Day,
+                                                                horahasta.Hour, horahasta.Minute, 0)
+
+                        });
+                }
+            }
+        }
+        // borro la info que tiene de ese legajo
+        // inserto el nuevo horario
+        await horarioDiaEventoService.BorrarYAgregar(AuxEvento, true);
+        OnInitialized();
+
+    }
+    private async Task incluirTodos()
+    {
+
+        List<HorarioDiaEvento> AuxEvento = new List<HorarioDiaEvento>();
+
+        // tengo que saber en que dia estoy parado
+        // recorro dia por dia, cuando encuentro el dia que quiero
+        for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+        {
+            //recorro los dias de la semanana en que estoy parado
+            for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+            {
+
+                AuxEvento.Add(new HorarioDiaEvento
+                    {
+                        LegajoId = Legajo.Id,
+                        Nota = weeks[weekIndex].Dates[dayIndex].Nota,
+                        FechaDesde = new DateTime(weeks[weekIndex].Dates[dayIndex].FromDate.Year,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Month,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Day,
+                                                                horadesde.Hour, horadesde.Minute, 0),
+
+                        FechaHasta = new DateTime(weeks[weekIndex].Dates[dayIndex].FromDate.Year,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Month,
+                                                                weeks[weekIndex].Dates[dayIndex].FromDate.Day,
+                                                                horahasta.Hour, horahasta.Minute, 0)
+
+                    });
+
+            }
+        }
+        // borro la info que tiene de ese legajo
+        // inserto el nuevo horario
+        await horarioDiaEventoService.BorrarYAgregar(AuxEvento, true);
+        OnInitialized();
+
+    }
+    private async Task BorrarDias()
+    {
+        List<HorarioDiaEvento> horariosaborrar = new List<HorarioDiaEvento>();
+
+        // Recorro el calendario
+        for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+        {
+            //recorro los dias de la semanana en que estoy parado
+            for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+            {
+
+                if (weeks[weekIndex].Dates[dayIndex].DiaNombre == DiaSeleccionado)
+                {
+
+                    horariosaborrar.Add(new HorarioDiaEvento
+                        {
+                            LegajoId = Legajo.Id,
+                            Nota = weeks[weekIndex].Dates[dayIndex].Nota,
+                            FechaDesde = weeks[weekIndex].Dates[dayIndex].FromDate,
+                            FechaHasta = weeks[weekIndex].Dates[dayIndex].ToDate
+
+                        });
+                }
+            }
+        }
+
+        await horarioDiaEventoService.BorrarYAgregar(horariosaborrar, false);
+        OnInitialized();
+    }
+    private void DiaaCopiar(ChangeEventArgs e)
+    {
+        DiaSeleccionado = e.Value.ToString();
+
+    }
+
+}

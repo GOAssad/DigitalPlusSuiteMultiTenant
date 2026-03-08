@@ -1,0 +1,139 @@
+﻿@inject RepositorioHorarios repositorio
+@using System.Globalization
+<div class="row">
+    <table class="table table-bordered table-striped mb-2">
+        <thead>
+            <tr style="text-align:center;">
+
+
+                @foreach (var item in horario.HorariosDias)
+                {
+                    <th>
+                        @item.Dia.Nombre
+                        <table>
+                            <tr>
+                                <th style="margin: auto;  width: 50%;  border:
+                                            2px solid #5171A5;  padding: 10px;">
+                                    <select class="form-select" size="2"
+                                        aria-label="size 3 select example"
+                                        @onchange="AbiertoCerrado">
+
+                                        <option selected="@(item.Cerrado == 0 ? true : false)"
+                                            Value=@item.Dia.Id.ToString().Trim()0>
+                                            Abierto
+                                        </option>
+
+                                        @*<option selected="selected" Value=@item.Dia.Id.ToString().Trim()0>Abierto</option>*@
+                                        <option selected="@(item.Cerrado == 1 ? true : false)"
+                                            Value=@item.Dia.Id.ToString().Trim()1>
+                                            Cerrado
+                                        </option>
+                                    </select>
+                                </th>
+                            </tr>
+
+                        </table>
+                    </th>
+                }
+
+
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                @foreach (var item in horario.HorariosDias)
+                {
+                    <td>
+                        <table>
+                            <tr>
+                                <label class="me-2">Entra</label>
+                                <td>
+                                    <div>
+                                        <input disabled="@(item.Cerrado == 1 ? true : false)"
+                                           type="number" max="23" min="0"
+                                           @bind-value=@item.HoraDesde />
+
+                                        <input disabled="@(item.Cerrado == 1 ? true : false)"
+                                           type="number" max="55" min="0" step="5"
+                                           @bind-value=@item.MinutoDesde />
+                                    </div>
+
+                                    <br />
+
+                                    <div>
+                                        Hora:
+                                        <input type="range" class="form-range"
+                                           disabled="@(item.Cerrado == 1 ? true : false)"
+                                           min="0" max="23" @bind-value="@item.HoraDesde" />
+                                    </div>
+                                    <div>
+                                        Minutos:
+                                        <input type="range" class="form-range"
+                                           disabled="@(item.Cerrado == 1 ? true : false)"
+                                           min="0" max="55" step="5"
+                                           @bind-value="@item.MinutoDesde" />
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <br />
+                            <tr>
+                                <label class="me-2">Sale</label>
+                                <td>
+                                    <div>
+                                        <input disabled="@(item.Cerrado == 1 ? true : false)"
+                                           type="number" max="23" min="0"
+                                           @bind-value=@item.HoraHasta />
+
+                                        <input disabled="@(item.Cerrado == 1 ? true : false)"
+                                           type="number" max="55" min="0" step="5"
+                                           @bind-value=@item.MinutoHasta />
+                                    </div>
+
+                                    <br />
+
+                                    <div>
+                                        Hora:
+                                        <input type="range" class="form-range"
+                                           disabled="@(item.Cerrado == 1 ? true : false)"
+                                           min="0" max="23" @bind-value="@item.HoraHasta" />
+                                    </div>
+                                    <div>
+                                        Minutos:
+                                        <input type="range" class="form-range"
+                                           disabled="@(item.Cerrado == 1 ? true : false)"
+                                           min="0" max="55" step="5"
+                                           @bind-value="@item.MinutoHasta" />
+                                    </div>
+
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                }
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+@code {
+    [Parameter] public List<Dia> Dias { get; set; } = new List<Dia>();
+    [Parameter] public Horario horario { get; set; } = new Horario();
+
+    private void AbiertoCerrado(ChangeEventArgs args)
+    {
+
+        int dia = Convert.ToInt16(args.Value.ToString().Substring(0, 1));
+        int cierra = Convert.ToInt16(args.Value.ToString().Substring(1, 1));
+
+        int encontrado = horario.HorariosDias.FindIndex(x => x.DiaId == dia);
+        if (encontrado >= 0)
+            horario.HorariosDias[dia - 1].Cerrado = cierra;
+
+
+    }
+}

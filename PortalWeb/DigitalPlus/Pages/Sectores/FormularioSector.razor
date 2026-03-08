@@ -1,0 +1,18 @@
+﻿<EditForm Model="Sector" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Nombre:</label>
+        <div>
+            <InputText class="form-control" @bind-Value="@Sector.Nombre" />
+            <ValidationMessage For="@(() => Sector.Nombre)" />
+        </div>
+    </div>
+
+    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+    <a class="btn btn-secondary" href="/sectores">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter] public Sector Sector { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+}

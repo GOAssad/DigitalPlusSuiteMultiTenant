@@ -1,0 +1,2 @@
+update RRHHTurnosDias set sDiaEntradaID = 'Mié' where sDiaEntradaID = 'Mie'
+update RRHHTurnosDias set sDiaSalidaID = 'Mié' where sDiaSalidaID = 'Mie'

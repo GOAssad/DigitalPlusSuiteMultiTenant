@@ -1,0 +1,47 @@
+﻿@page "/terminales/editar/{TerminalId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioTerminales repositorio
+@inject RepositorioSucursales repositorioSucursales
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Terminal</h3>
+
+@if (Terminal == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioTerminal OnValidSubmit="EditarEntidad" Terminal="Terminal"  Sucursales="Sucursales"/>
+}
+
+@code {
+
+    [Parameter] public int TerminalId { get; set; }
+    private Terminal Terminal;
+    List<Sucursal> Sucursales = new List<Sucursal>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        Terminal = await repositorio.Get(TerminalId);
+        if (Terminal == null)
+        {
+            navigationManager.NavigateTo("terminales");
+        }
+
+        Sucursales = await repositorioSucursales.Get(string.Empty);
+    }
+
+    private async Task EditarEntidad()
+    {
+        if (Terminal.SucursalId == 0)
+        {
+            await mostrarMensaje.MostrarMensajeError("Por favor seleccione una Sucursal");
+            return;
+        }
+        await repositorio.Put(Terminal);
+        await mostrarMensaje.MostrarMensajeTemporal("Terminal", $"{Terminal.Nombre} ...Actualizada");
+        navigationManager.NavigateTo("terminales");
+    }
+}

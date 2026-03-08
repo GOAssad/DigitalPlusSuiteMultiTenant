@@ -1,0 +1,189 @@
+﻿@page "/migracion"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject MigrarDigitalOne repositorio
+@inject RepositorioSectores repositorioSectores
+@inject IMostrarMensajes mostrarMensaje
+@using Microsoft.Data.SqlClient
+
+
+<button class="btn btn-danger" @onclick="Categoria">Categorias</button>
+<button class="btn btn-danger" @onclick="Sectores">Sectores</button>
+<button class="btn btn-danger" @onclick="Sucursal">Sucursales</button>
+<button class="btn btn-danger" @onclick="Dias">Dias</button>
+<button class="btn btn-danger" @onclick="Dedos">Dedos</button>
+<button class="btn btn-danger" @onclick="Incidencias">incidencias</button>
+<button class="btn btn-danger" @onclick="Horarios">Horarios</button>
+<button class="btn btn-danger" @onclick="HorariosDias">HorariosDias</button>
+<button class="btn btn-danger" @onclick="Terminales">Terminales</button>
+<button class="btn btn-danger" @onclick="Legajos">Legajos</button>
+<button class="btn btn-danger" @onclick="Huellas">Huellas</button>
+<button class="btn btn-danger" @onclick="Fichadas">Fichadas</button>
+
+
+@code{
+
+    private async Task Dias()
+    {
+        try
+        {
+            repositorio.Dias();
+            await mostrarMensaje.MostrarMensajeExitoso("Dias Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Dedos()
+    {
+        try
+        {
+            repositorio.Dedos();
+            await mostrarMensaje.MostrarMensajeExitoso("Dedos Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Categoria()
+    {
+        try
+        {
+            repositorio.Categorias();
+            await mostrarMensaje.MostrarMensajeExitoso("Categorias Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Terminales()
+    {
+        try
+        {
+            await repositorio.Terminales();
+            await mostrarMensaje.MostrarMensajeExitoso("Terminales Actualizadas");
+        } 
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Sectores()
+    {
+        try
+        {
+            repositorio.Sectores();
+            await mostrarMensaje.MostrarMensajeExitoso("Sectores Actualizados");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Sucursal()
+    {
+        try
+        {
+            repositorio.Sucursales();
+            await mostrarMensaje.MostrarMensajeExitoso("Sucursals Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Legajos()
+    {
+        await repositorio.Legajos();
+        await mostrarMensaje.MostrarMensajeExitoso("legajos y Sucursales de los Legajos Actualizadas");
+
+
+    }
+    private async Task Incidencias()
+    {
+        try
+        {
+            repositorio.Incidencias();
+            await mostrarMensaje.MostrarMensajeExitoso("Incidencias Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Horarios()
+    {
+        await repositorio.Horarios();
+        await mostrarMensaje.MostrarMensajeExitoso("Horarios de los Legajos Actualizados");
+
+
+    }
+    private async Task HorariosDias()
+    {
+         try
+        {
+            await repositorio.Horariosdias();
+            await mostrarMensaje.MostrarMensajeExitoso("HorarosDias Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+    private async Task Huellas()
+    {
+         try
+        {
+            await repositorio.Huellas();
+            await mostrarMensaje.MostrarMensajeExitoso("Huellas Actualizadas");
+        }
+        catch (Exception ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message + " - " + repositorio.mensaje);
+        }
+
+        return;
+    }
+    private async Task Fichadas()
+    {
+         try
+        {
+            await repositorio.Fichadas();
+            await mostrarMensaje.MostrarMensajeExitoso("Fichadas Actualizadas");
+        }
+        catch (SqlException ex)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        return;
+    }
+}

@@ -1,0 +1,26 @@
+﻿@inject IJSRuntime js
+@inject RepositorioLegajos repositorio
+@inject IMostrarMensajes mostrarMensajes
+
+<div style="display: flex; flex-wrap: wrap; align-items: center;">
+    <ListadoGenerico Listado="Legajos">
+        <HayRegistros Context="legajo">
+            <LegajoIndividual Legajo="legajo" EliminarLegajo="EliminarLegajo" @key="legajo.Id" />
+        </HayRegistros>
+    </ListadoGenerico>
+</div>
+
+
+@code {
+    [Parameter] public List<Legajo> Legajos { get; set; }
+
+    async Task EliminarLegajo(Legajo legajo)
+    {
+        var confirmar = await js.Confirm($"¿Desea borrar la película {legajo.Nombre}");
+        if (confirmar)
+        {
+            await repositorio.Delete(legajo.Id);
+            Legajos.Remove(legajo);
+        }
+    }
+}

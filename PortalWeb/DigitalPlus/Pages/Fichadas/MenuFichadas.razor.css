@@ -1,0 +1,8 @@
+﻿.card {
+    height: 350px;
+    margin-bottom: 5px;
+}
+
+.card-img, .card-img-top {
+    width: 40%;
+}

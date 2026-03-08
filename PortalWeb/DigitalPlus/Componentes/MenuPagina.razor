@@ -1,0 +1,19 @@
+﻿<TituloPrincipal Titulo="@titulo"></TituloPrincipal>
+
+<div class="d-flex flex-wrap">
+    <div class="col col-8 col-xs-12 col-sm-12" style="display:flex; flex-wrap:wrap; max-width:90%;margin:auto:">
+        @foreach (var item in Lista)
+        {
+            <div class="btnPrincipal">
+                <BotonMenuPagina Nombre="@item.Nombre" Ruteo="@item.referencia" Icono="@item.icono" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string titulo { get; set; }
+    [Parameter] public List<ListaMenuDTO> Lista { get; set; } = new List<ListaMenuDTO>();
+
+
+}

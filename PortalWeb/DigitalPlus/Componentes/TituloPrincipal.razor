@@ -1,0 +1,16 @@
+﻿<div class="titulo row">
+    <div class="col-10">
+        <h3>@Titulo</h3>
+    </div>
+    <div class="col-2 columna-imagen">
+
+        <img class="imagen-menu" src="@src" />
+
+    </div>
+</div>
+<LineaDivisoria />
+
+@code{
+    [Parameter] public string Titulo { get; set; }
+    [Parameter] public string src { get; set; }
+}

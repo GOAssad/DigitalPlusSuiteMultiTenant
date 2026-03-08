@@ -1,0 +1,106 @@
+﻿@page "/incidencialegajo/editar/{id:int}"
+
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioIncidencias repositorio
+@inject RepositorioFichadas repositorioFichadas
+@inject RepositorioLegajos repositorioLegajos
+@inject RepositorioSucursales repositorioSucursales
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+@if (IncidenciaLegajo.Legajo is null)
+{
+    <text>...Buscando</text>
+}
+else
+{
+
+
+
+    <EditForm Model="IncidenciaLegajo" OnValidSubmit="CrearEntidad">
+        <DataAnnotationsValidator />
+        <div class="row">
+            <div class="form-group mb-2 col-10">
+                <h3>Editar Incidencia para : @IncidenciaLegajo.Legajo.Nombre</h3>
+
+            </div>
+            <div class="form-group mb-2 col-1">
+                <label style="font-size:50px; color:lightgray;">@IncidenciaLegajo.Id.ToString()</label>
+            </div>
+
+            <div class="row">
+                <div class="form-group mb-2 col-6">
+                    <label>Fecha:</label>
+                    <div>
+                        <InputDate Type="InputDateType.Date" class="form-control" @bind-Value="IncidenciaLegajo.Fecha" />
+                        <ValidationMessage For="@(() => IncidenciaLegajo.Fecha)" />
+                    </div>
+                </div>
+
+
+                <div class="form-group mb-2 col-6">
+                    <label>Incidencia:</label>
+                    <select class="form-control" @bind="IncidenciaLegajo.IncidenciaId">
+                        <option value="0">--Seleccione una Incidencia --</option>
+                        @foreach (var item in Incidencias)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="form-group mb-2">
+            <label>Detalle:</label>
+
+            <InputText class="form-control" @bind-Value="@IncidenciaLegajo.Detalle" />
+            <ValidationMessage For="@(() => IncidenciaLegajo.Fecha)" />
+        </div>
+
+        <button class="btn btn-success" type="submit">Guardar Cambios</button>
+        <a class="btn btn-secondary" href="/fichadas/control/@IncidenciaLegajo.Legajo.Id">Cancelar</a>
+        <button class="btn btn-danger" type="button" @onclick="@(()=> Borrar(IncidenciaLegajo))">Borrar</button>
+
+    </EditForm>
+}
+@code {
+
+    [Parameter] public int id { get; set; }
+
+    private IncidenciaLegajo IncidenciaLegajo = new IncidenciaLegajo();
+    private List<Incidencia> Incidencias = new List<Incidencia>();
+
+
+    //    private int incidenciaSeleccionada = 0;
+    private Fichada fichada = new Fichada();
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //busco el movimiento
+        IncidenciaLegajo = await repositorio.GetIncidenciaLegajo(id);
+        Incidencias = await repositorio.Get(string.Empty);
+
+    }
+
+    private async Task Borrar(IncidenciaLegajo item)
+    {
+        if (await mostrarMensaje.MostrarMensajeBorrar("Esta seguro que desea borrar la Incidencia?"))
+        {
+            await repositorio.DeleteIncidencialegajo(item.Id);
+            await mostrarMensaje.MostrarMensajeTemporal("Incidencia-Legajos", " ...Eliminadas");
+            navigationManager.NavigateTo($"/fichadas/control/{item.LegajoId}");
+        }
+        else
+        {
+            await mostrarMensaje.MostrarMensajeAlerta("Operacion Canceada");
+        }
+    }
+    private async Task CrearEntidad()
+    {
+        //        IncidenciaLegajo.IncidenciaId = incidenciaSeleccionada;
+        await repositorio.Put(IncidenciaLegajo);
+        navigationManager.NavigateTo($"/fichadas/control/{IncidenciaLegajo.LegajoId}");
+    }
+
+}

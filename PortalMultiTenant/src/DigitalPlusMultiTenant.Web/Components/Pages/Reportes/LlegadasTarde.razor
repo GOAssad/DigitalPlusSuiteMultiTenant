@@ -1,0 +1,336 @@
+@page "/reportes/llegadas-tarde"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject IJSRuntime JS
+@inject ITenantService Tenant
+@using DigitalPlusMultiTenant.Web.Helpers
+
+<PageTitle>Llegadas Tarde - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-alarm me-2"></i>Llegadas Tarde</h4>
+    @if (items?.Any() == true)
+    {
+        <div>
+            <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        </div>
+    }
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaDesde" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaHasta" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Sucursal</label>
+                <select class="form-select form-select-sm" @bind="filtroSucursal">
+                    <option value="0">Todas</option>
+                    @foreach (var s in sucursales)
+                    {
+                        <option value="@s.Id">@s.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Sector</label>
+                <select class="form-select form-select-sm" @bind="filtroSector">
+                    <option value="0">Todos</option>
+                    @foreach (var s in sectores)
+                    {
+                        <option value="@s.Id">@s.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small mb-1">Tolerancia</label>
+                <input type="number" class="form-control form-control-sm" @bind="toleranciaMin" min="0" max="60" />
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-primary btn-sm" @onclick="Generar" disabled="@cargando">
+                    @if (cargando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    <i class="bi bi-search me-1"></i>Generar
+                </button>
+                @if (cargando)
+                {
+                    <button class="btn btn-outline-danger btn-sm" @onclick="Cancelar">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                }
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger py-1 mt-2 mb-0 small">@mensajeError</div>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("fecha")'>Fecha @SortIcon("fecha")</th>
+                        <th role="button" @onclick='() => SetOrden("legajo")'>Legajo @SortIcon("legajo")</th>
+                        <th role="button" @onclick='() => SetOrden("nombre")'>Apellido y Nombre @SortIcon("nombre")</th>
+                        <th>Sector</th>
+                        <th>Horario Previsto</th>
+                        <th role="button" @onclick='() => SetOrden("entrada")'>Hora Entrada @SortIcon("entrada")</th>
+                        <th role="button" @onclick='() => SetOrden("minutos")'>Min. Tarde @SortIcon("minutos")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items == null)
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
+                    }
+                    else if (!items.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-emoji-smile fs-3 d-block mb-2"></i>No hay llegadas tarde en el periodo</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in items)
+                        {
+                            <tr>
+                                <td>@r.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge bg-secondary">@r.NumeroLegajo</span></td>
+                                <td><strong>@r.Apellido</strong>, @r.Nombre</td>
+                                <td>@r.Sector</td>
+                                <td>@r.HoraPrevista.ToString("HH:mm")</td>
+                                <td class="text-danger fw-bold">@r.HoraEntrada.ToString("HH:mm")</td>
+                                <td>
+                                    <span class="badge @(r.MinutosTarde > 30 ? "bg-danger" : r.MinutosTarde > 15 ? "bg-warning text-dark" : "bg-info")">
+                                        @r.MinutosTarde min
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (items != null && items.Any())
+    {
+        <div class="card-footer text-muted small">
+            @items.Count llegadas tarde &mdash;
+            Promedio: @($"{items.Average(r => r.MinutosTarde):F0}") min &mdash;
+            Empleados afectados: @items.Select(r => r.NumeroLegajo).Distinct().Count()
+        </div>
+    }
+</div>
+
+@code {
+    private List<TardeRow>? items;
+    private List<Sucursal> sucursales = new();
+    private List<Sector> sectores = new();
+    private DateTime fechaDesde = DateTime.Today.AddDays(-7);
+    private DateTime fechaHasta = DateTime.Today;
+    private int filtroSucursal;
+    private int filtroSector;
+    private int toleranciaMin = 5;
+    private bool cargando;
+    private string ordenColumna = "fecha";
+    private bool ordenDesc;
+    private string mensajeError = "";
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+    }
+
+    private async Task Generar()
+    {
+        mensajeError = "";
+        if (fechaDesde > fechaHasta) { mensajeError = "La fecha Desde no puede ser posterior a Hasta."; return; }
+        if ((fechaHasta - fechaDesde).TotalDays > 366) { mensajeError = "El rango maximo permitido es de 1 ano (366 dias)."; return; }
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            var desde = DateOnly.FromDateTime(fechaDesde);
+            var hasta = DateOnly.FromDateTime(fechaHasta);
+
+            var legajosQuery = Db.Legajos
+                .Include(l => l.Horario).ThenInclude(h => h!.Detalles)
+                .Include(l => l.Sector)
+                .Where(l => l.IsActive && l.HorarioId != null);
+
+            if (filtroSector > 0)
+                legajosQuery = legajosQuery.Where(l => l.SectorId == filtroSector);
+
+            var legajos = await legajosQuery.ToListAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            var fichadas = await Db.Fichadas
+                .Where(f => f.Tipo == "E" && f.FechaHora >= fechaDesde.Date && f.FechaHora < fechaHasta.Date.AddDays(1))
+                .Where(f => filtroSucursal == 0 || f.SucursalId == filtroSucursal)
+                .ToListAsync(token);
+
+            var feriados = await Db.Feriados
+                .Where(f => f.Fecha >= desde && f.Fecha <= hasta)
+                .Select(f => f.Fecha)
+                .ToListAsync(token);
+
+            token.ThrowIfCancellationRequested();
+            var resultado = new List<TardeRow>();
+
+            for (var dia = desde; dia <= hasta; dia = dia.AddDays(1))
+            {
+                token.ThrowIfCancellationRequested();
+                if (feriados.Contains(dia)) continue;
+                var diaSemana = (int)dia.DayOfWeek + 1;
+
+                foreach (var leg in legajos)
+                {
+                    var horarioDia = leg.Horario?.Detalles?.FirstOrDefault(d => (int)d.DiaSemana == diaSemana);
+                    if (horarioDia == null || horarioDia.IsCerrado) continue;
+
+                    var primeraEntrada = fichadas
+                        .Where(f => f.LegajoId == leg.Id && DateOnly.FromDateTime(f.FechaHora) == dia)
+                        .OrderBy(f => f.FechaHora)
+                        .FirstOrDefault();
+
+                    if (primeraEntrada == null) continue;
+
+                    var horaEntrada = TimeOnly.FromDateTime(primeraEntrada.FechaHora);
+                    var limiteHora = horarioDia.HoraDesde.AddMinutes(toleranciaMin);
+
+                    if (horaEntrada > limiteHora)
+                    {
+                        var minutos = (int)(horaEntrada.ToTimeSpan() - horarioDia.HoraDesde.ToTimeSpan()).TotalMinutes;
+                        resultado.Add(new TardeRow
+                        {
+                            Fecha = dia,
+                            NumeroLegajo = leg.NumeroLegajo,
+                            Apellido = leg.Apellido,
+                            Nombre = leg.Nombre,
+                            Sector = leg.Sector?.Nombre ?? "",
+                            HoraPrevista = horarioDia.HoraDesde,
+                            HoraEntrada = horaEntrada,
+                            MinutosTarde = minutos
+                        });
+                    }
+                }
+            }
+
+            items = Ordenar(resultado);
+        }
+        catch (OperationCanceledException)
+        {
+            mensajeError = "Consulta cancelada.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        _cts?.Cancel();
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        await base.DisposeAsync();
+    }
+
+    private void SetOrden(string columna)
+    {
+        if (ordenColumna == columna) ordenDesc = !ordenDesc;
+        else { ordenColumna = columna; ordenDesc = false; }
+        if (items != null) items = Ordenar(items);
+    }
+
+    private List<TardeRow> Ordenar(List<TardeRow> data)
+    {
+        return (ordenColumna switch
+        {
+            "legajo" => ordenDesc ? data.OrderByDescending(r => r.NumeroLegajo) : data.OrderBy(r => r.NumeroLegajo),
+            "nombre" => ordenDesc ? data.OrderByDescending(r => r.Apellido) : data.OrderBy(r => r.Apellido),
+            "entrada" => ordenDesc ? data.OrderByDescending(r => r.HoraEntrada) : data.OrderBy(r => r.HoraEntrada),
+            "minutos" => ordenDesc ? data.OrderByDescending(r => r.MinutosTarde) : data.OrderBy(r => r.MinutosTarde),
+            _ => ordenDesc ? data.OrderByDescending(r => r.Fecha).ThenBy(r => r.Apellido) : data.OrderBy(r => r.Fecha).ThenBy(r => r.Apellido),
+        }).ToList();
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (items == null) return;
+        var filtros = new List<string>();
+        if (filtroSucursal > 0) filtros.Add($"Sucursal: {sucursales.FirstOrDefault(s => s.Id == filtroSucursal)?.Nombre}");
+        if (filtroSector > 0) filtros.Add($"Sector: {sectores.FirstOrDefault(s => s.Id == filtroSector)?.Nombre}");
+        filtros.Add($"Tolerancia: {toleranciaMin} min");
+        var bytes = ExcelExporter.Generar(items,
+            new ExcelExportConfig { Titulo = "Reporte de Llegadas Tarde", NombreEmpresa = Tenant.EmpresaNombre,
+                FechaDesde = fechaDesde.ToString("dd/MM/yyyy"), FechaHasta = fechaHasta.ToString("dd/MM/yyyy"),
+                Filtros = filtros,
+                Encabezados = ["Fecha", "Legajo", "Apellido", "Nombre", "Sector", "Horario Previsto", "Hora Entrada", "Min. Tarde"],
+                Formatos = [ExcelColFormat.Fecha, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto,
+                           ExcelColFormat.Texto, ExcelColFormat.Hora, ExcelColFormat.Hora, ExcelColFormat.Numero] },
+            r => [r.Fecha, r.NumeroLegajo, r.Apellido, r.Nombre, r.Sector,
+                  (object)r.HoraPrevista, (object)r.HoraEntrada, r.MinutosTarde]);
+        await JS.InvokeVoidAsync("downloadFile", "llegadas_tarde.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (items == null) return;
+        var bytes = CsvExporter.ToCsvBytes(items,
+            ["Fecha", "Legajo", "Apellido", "Nombre", "Sector", "Horario Previsto", "Hora Entrada", "Min. Tarde"],
+            r => [r.Fecha.ToString("dd/MM/yyyy"), r.NumeroLegajo, r.Apellido, r.Nombre, r.Sector,
+                  r.HoraPrevista.ToString("HH:mm"), r.HoraEntrada.ToString("HH:mm"), r.MinutosTarde.ToString()]);
+        await JS.InvokeVoidAsync("downloadFile", "llegadas_tarde.csv", Convert.ToBase64String(bytes), "text/csv");
+    }
+
+    private class TardeRow
+    {
+        public DateOnly Fecha { get; set; }
+        public string NumeroLegajo { get; set; } = "";
+        public string Apellido { get; set; } = "";
+        public string Nombre { get; set; } = "";
+        public string Sector { get; set; } = "";
+        public TimeOnly HoraPrevista { get; set; }
+        public TimeOnly HoraEntrada { get; set; }
+        public int MinutosTarde { get; set; }
+    }
+}

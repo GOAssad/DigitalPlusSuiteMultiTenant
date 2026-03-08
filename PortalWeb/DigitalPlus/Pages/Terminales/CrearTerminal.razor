@@ -1,0 +1,42 @@
+﻿@page "/terminales/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioTerminales repositorio
+@inject RepositorioSucursales repositorioSucursales
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Terminal</h3>
+
+<FormularioTerminal OnValidSubmit="Crear" Terminal="Terminal" Sucursales="Sucursales" />
+
+
+
+
+@code {
+    private Terminal Terminal = new Terminal();
+    private List<Sucursal> Sucursales = new List<Sucursal>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TraerSucursales();
+    }
+
+    private async Task TraerSucursales()
+    {
+        Sucursales = await repositorioSucursales.Get(string.Empty);
+
+    }
+
+    async Task Crear()
+    {
+        if (Terminal.SucursalId == 0)
+        {
+            await mostrarMensajes.MostrarMensajeError("Por favor seleccione una Sucursal");
+            return;
+        }
+        
+        await repositorio.Post(Terminal);
+        await mostrarMensajes.MostrarMensajeTemporal("Terminal", $"{Terminal.Nombre} ...Almacendo");
+        navigationManager.NavigateTo("/terminales");
+    }
+}

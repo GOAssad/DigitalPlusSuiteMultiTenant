@@ -1,0 +1,78 @@
+@page "/empresas"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+
+<PageTitle>Empresas - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Empresas</h3>
+    <a href="/empresas/nueva" class="btn btn-primary">Nueva Empresa</a>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <input type="text" class="form-control" placeholder="Buscar por nombre o ID..."
+               @bind="filtro" @bind:event="oninput" @onkeyup="Buscar" />
+    </div>
+</div>
+
+@if (empresas == null)
+{
+    <p>Cargando...</p>
+}
+else if (empresas.Count == 0)
+{
+    <div class="alert alert-info">No se encontraron empresas.</div>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Company ID</th>
+                <th>Pais</th>
+                <th>Contacto</th>
+                <th>Estado</th>
+                <th>Creada</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in empresas)
+            {
+                <tr>
+                    <td>@e.Nombre</td>
+                    <td><code>@e.CompanyId</code></td>
+                    <td>@(e.Pais?.Nombre ?? "-")</td>
+                    <td>@(e.Contacto ?? "-")</td>
+                    <td>
+                        <span class="badge @(e.Estado == "activa" ? "bg-success" : e.Estado == "suspendida" ? "bg-warning text-dark" : "bg-danger")">
+                            @e.EstadoDisplay
+                        </span>
+                    </td>
+                    <td>@e.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a href="/empresas/@e.Id" class="btn btn-sm btn-outline-primary">Ver</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DigitalPlus.Licencias.Entidades.Empresa>? empresas;
+    private string? filtro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        empresas = await Repo.GetEmpresasAsync();
+    }
+
+    private async Task Buscar()
+    {
+        empresas = await Repo.GetEmpresasAsync(filtro);
+    }
+}

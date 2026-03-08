@@ -1,0 +1,29 @@
+﻿<EditForm Model="Sucursal" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+
+        <label>Codigo:</label>
+        <div>
+            <InputText class="form-control" @bind-Value="@Sucursal.CodigoSucursal" />
+            <ValidationMessage For="@(() => Sucursal.CodigoSucursal)" />
+        </div>
+
+        <label>Nombre:</label>
+        <div class="mb-3">
+            <InputText class="form-control" @bind-Value="@Sucursal.Nombre" />
+            <ValidationMessage For="@(() => Sucursal.Nombre)" />
+        </div>
+
+    </div>
+
+    <div>
+        <button class="btn btn-success" type="submit">Guardar Cambios</button>
+        <a class="btn btn-secondary" href="/sucursales">Cancelar</a>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public Sucursal Sucursal { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+}

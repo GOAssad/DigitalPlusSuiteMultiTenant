@@ -1,0 +1,177 @@
+@page "/atributos/paises"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+
+<PageTitle>Paises - Atributos</PageTitle>
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/atributos">Atributos</a></li>
+        <li class="breadcrumb-item active">Paises</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Paises</h3>
+    <button class="btn btn-primary" @onclick="NuevoPais">Nuevo Pais</button>
+</div>
+
+@if (mensaje != null)
+{
+    <div class="alert @(esError ? "alert-danger" : "alert-success") alert-dismissible">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
+    </div>
+}
+
+@if (editando)
+{
+    <div class="card mb-4">
+        <div class="card-header">@(editId == 0 ? "Nuevo Pais" : "Editar Pais")</div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" @bind="editNombre" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Codigo ISO (2-3 letras)</label>
+                    <input type="text" class="form-control" @bind="editCodigo" maxlength="3" />
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button class="btn btn-success" @onclick="Guardar">Guardar</button>
+                    <button class="btn btn-outline-secondary" @onclick="Cancelar">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (paises == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Codigo ISO</th>
+                <th>Tipos ID Fiscal</th>
+                <th>Empresas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in paises)
+            {
+                <tr>
+                    <td>@p.Nombre</td>
+                    <td><code>@p.CodigoISO</code></td>
+                    <td>@(tiposPorPais.GetValueOrDefault(p.Id, 0))</td>
+                    <td>@(empresasPorPais.GetValueOrDefault(p.Id, 0))</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(p)">Editar</button>
+                        @if (empresasPorPais.GetValueOrDefault(p.Id, 0) == 0 && tiposPorPais.GetValueOrDefault(p.Id, 0) == 0)
+                        {
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(p)">Eliminar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-danger" disabled title="En uso, no se puede eliminar">Eliminar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DigitalPlus.Licencias.Entidades.Pais>? paises;
+    private Dictionary<int, int> tiposPorPais = new();
+    private Dictionary<int, int> empresasPorPais = new();
+
+    private bool editando;
+    private int editId;
+    private string editNombre = "";
+    private string editCodigo = "";
+    private string? mensaje;
+    private bool esError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        paises = await Repo.GetPaisesAsync();
+        tiposPorPais = await Repo.ContarTiposPorPaisAsync();
+        empresasPorPais = await Repo.ContarEmpresasPorPaisAsync();
+    }
+
+    private void NuevoPais()
+    {
+        editando = true;
+        editId = 0;
+        editNombre = "";
+        editCodigo = "";
+    }
+
+    private void Editar(DigitalPlus.Licencias.Entidades.Pais p)
+    {
+        editando = true;
+        editId = p.Id;
+        editNombre = p.Nombre;
+        editCodigo = p.CodigoISO;
+    }
+
+    private void Cancelar()
+    {
+        editando = false;
+        mensaje = null;
+    }
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(editNombre) || string.IsNullOrWhiteSpace(editCodigo))
+        {
+            mensaje = "Nombre y Codigo ISO son obligatorios.";
+            esError = true;
+            return;
+        }
+
+        try
+        {
+            await Repo.GuardarPaisAsync(editId, editNombre.Trim(), editCodigo.Trim().ToUpper());
+            editando = false;
+            mensaje = editId == 0 ? "Pais creado" : "Pais actualizado";
+            esError = false;
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+            esError = true;
+        }
+    }
+
+    private async Task Eliminar(DigitalPlus.Licencias.Entidades.Pais p)
+    {
+        try
+        {
+            await Repo.EliminarPaisAsync(p.Id);
+            mensaje = $"Pais '{p.Nombre}' eliminado";
+            esError = false;
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"No se puede eliminar: {ex.Message}";
+            esError = true;
+        }
+    }
+}

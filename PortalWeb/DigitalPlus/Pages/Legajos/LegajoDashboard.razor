@@ -1,0 +1,183 @@
+﻿@page "/legajos/dashboard/{legajoId:int}"
+@inject NavigationManager NavigationManager
+
+@inject RepositorioLegajos repositorio
+@inject IMostrarMensajes mostrarMensaje
+
+<div class="container">
+    <div class="titulo">
+        <div class="row">
+            <div class="col-10">
+                <h3>Dashboard</h3>
+            </div>
+            <div class="col-2">
+                <BotonMenuPagina Nombre="Volver" IconoClase="bi bi-person-bounding-box" Ruteo="@RuteoVolver" ToolTipText="Volver a la Ficha del legajo"/>
+                
+            </div>
+        </div>
+    </div>
+    <LineaDivisoria />
+</div>
+
+
+<div class="accordion accordion-flush" id="accordionFlushExample">
+    <div class="container">
+        <div class="row">
+            <div class="col-10">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            Total minutos Trabajados este mes: @TotalTrabajado.Sum(x => x.Minutos), Horas: @(TotalTrabajado.Sum(x => x.Minutos) / 60)
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <table class="table table-striped">
+                                <thead class="cabeceraTabla">
+                                    <tr>
+                                        <th>FechaDesde</th>
+                                        <th>HoraHasta</th>
+                                        <th>Sucursal</th>
+                                        <th>Minutos</th>
+                                        <th>Accion</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in TotalTrabajado)
+                                    {
+                                        <tr>
+                                            <td>@item.FechaDesde.ToString("f")</td>
+                                            <td>@item.FechaHasta.ToString("t")</td>
+                                            <td>@item.NombreSucursal</td>
+                                            <td>@item.Minutos</td>
+                                            @if(item.Minutos == 0)
+                                            {
+                                                <BotonListadoConToolTip ToolTipText="Agregar Fichada" IconoClase="bi bi-building-add" Color="fichada" Accion="AgregarFichada"  />
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <BotonListadoConToolTip ToolTipText="Excel" Accion="@Excel" IconoClase="bi bi-file-earmark-excel" Color="excel"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-10">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                            Minutos Distribuidos por Sucursales
+                        </button>
+                    </h2>
+                    <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo" data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <table class="table table-striped">
+                                <thead class="cabeceraTabla">
+                                    <tr>
+                                        <th>Sucursal</th>
+                                        <th>Minutos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in TotalTrabajado.GroupBy(p => p.NombreSucursal)
+                                    .Select(g => new { Sucursal = g.Key, Total = g.Sum(p => p.Minutos) }))
+                                    {
+                                        <tr>
+                                            <td>@item.Sucursal</td>
+                                            <td>@item.Total</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-10">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="flush-headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+                            Total Minutos del Calendario: @TotalMinutosCalendario.Sum(x => x.MinutosPorCadaDia), Horas: @(TotalMinutosCalendario.Sum(x => x.MinutosPorCadaDia) / 60)
+                        </button>
+                    </h2>
+                    <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <table class="table table-striped">
+                                <thead class="cabeceraTabla">
+                                    <tr>
+                                        <th>Dia</th>
+                                        <th>CantenElMes</th>
+                                        <th>MinutosenElMes</th>
+                                        <th>HoraDesde</th>
+                                        <th>MinDesde</th>
+                                        <th>HoraHasta</th>
+                                        <th>MinHasta</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in TotalMinutosCalendario)
+                                    {
+                                        <tr>
+                                            <td>@item.NombreDia</td>
+                                            <td>@item.CantDiasEnMes</td>
+                                            <td>@item.MinutosPorCadaDia</td>
+                                            <td>@item.HoraDesde</td>
+                                            <td>@item.MinutoDesde</td>
+                                            <td>@item.HoraHasta</td>
+                                            <td>@item.MinutoHasta</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <BotonListadoConToolTip ToolTipText="Excel" Accion="@Excel" IconoClase="bi bi-file-earmark-excel" Color="excel" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int legajoId { get; set; }
+
+    List<DashBoardMinutosTrabajadosPorDiaPorLegajo> TotalTrabajado = new List<DashBoardMinutosTrabajadosPorDiaPorLegajo>();
+    List<DashBoardMinutosMensualesCalendarioPorLegajo> TotalMinutosCalendario = new List<DashBoardMinutosMensualesCalendarioPorLegajo>();
+
+    private string RuteoVolver = string.Empty;
+    private string RuteoFichada = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        TotalTrabajado = await repositorio.MinutosMensualesTrabajadosPorLegajo(legajoId);
+        TotalMinutosCalendario = await repositorio.MinutosMensualesdelCalendarioDelLegajo(legajoId);
+
+        RuteoVolver = $"/legajos/editar/{legajoId}";
+        
+
+    }
+
+    private async Task Excel()
+    {
+        await mostrarMensaje.MostrarMensajeAlerta("Este modulo estara instalado en Breve");
+    }
+
+    private void AgregarFichada()
+    {
+        NavigationManager.NavigateTo($"/fichadas/crear/0/{legajoId}/3");        
+    }
+
+}

@@ -1,0 +1,570 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{11F84EAA-FD23-471D-AC6B-A6D054BACD8C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Global.Controles</RootNamespace>
+    <AssemblyName>Global.Controles</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FontAwesome.Sharp, Version=5.15.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Administrador\packages\FontAwesome.Sharp.5.15.3\lib\net45\FontAwesome.Sharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Botones\BotonAplicacion.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonAplicacion.Designer.cs">
+      <DependentUpon>BotonAplicacion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonBase.Designer.cs">
+      <DependentUpon>BotonBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonBaseXuXo.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonBaseXuXo.Designer.cs">
+      <DependentUpon>BotonBaseXuXo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormulario.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormulario.Designer.cs">
+      <DependentUpon>BotonCuadroFormulario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormularioCerrar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormularioCerrar.Designer.cs">
+      <DependentUpon>BotonCuadroFormularioCerrar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormularioMaximizar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormularioMaximizar.Designer.cs">
+      <DependentUpon>BotonCuadroFormularioMaximizar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormularioMinimizar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonCuadroFormularioMinimizar.Designer.cs">
+      <DependentUpon>BotonCuadroFormularioMinimizar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonEjecutaExe.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonEjecutaExe.Designer.cs">
+      <DependentUpon>BotonEjecutaExe.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonExportarDataTable_a_Excel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonExportarDataTable_a_Excel.Designer.cs">
+      <DependentUpon>BotonExportarDataTable_a_Excel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonFicha.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonFicha.Designer.cs">
+      <DependentUpon>BotonFicha.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonMenuFormulario.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonMenuFormulario.Designer.cs">
+      <DependentUpon>BotonMenuFormulario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonMenuFormularioEntidad.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonMenuFormularioEntidad.Designer.cs">
+      <DependentUpon>BotonMenuFormularioEntidad.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonMenuIndividual.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonMenuIndividual.Designer.cs">
+      <DependentUpon>BotonMenuIndividual.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonMenuVertical.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonMenuVertical.Designer.cs">
+      <DependentUpon>BotonMenuVertical.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonToolBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonToolBar.Designer.cs">
+      <DependentUpon>BotonToolBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Botones\BotonTouch.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Botones\BotonTouch.Designer.cs">
+      <DependentUpon>BotonTouch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ColorSelector.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ColorSelector.Designer.cs">
+      <DependentUpon>ColorSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ComboDesplegableEtiqueta.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ComboDesplegableEtiqueta.Designer.cs">
+      <DependentUpon>ComboDesplegableEtiqueta.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FechayHora\Calendario.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FechayHora\Calendario.Designer.cs">
+      <DependentUpon>Calendario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CheckBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CheckBox.Designer.cs">
+      <DependentUpon>CheckBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ComboDesplegable.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ComboDesplegable.Designer.cs">
+      <DependentUpon>ComboDesplegable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FechayHora\FechaDesdeHasta.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FechayHora\FechaDesdeHasta.Designer.cs">
+      <DependentUpon>FechaDesdeHasta.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Grillas\GridXuXo.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Grillas\GridXuXo.Designer.cs">
+      <DependentUpon>GridXuXo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Labels\EtiquetaLink.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Labels\EtiquetaLink.Designer.cs">
+      <DependentUpon>EtiquetaLink.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Labels\EtiquetaSimple.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Labels\EtiquetaSimple.Designer.cs">
+      <DependentUpon>EtiquetaSimple.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Labels\EtiquetaSimple365.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Labels\EtiquetaSimple365.Designer.cs">
+      <DependentUpon>EtiquetaSimple365.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Labels\EtiquetaTitulo.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Labels\EtiquetaTitulo.Designer.cs">
+      <DependentUpon>EtiquetaTitulo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FechayHora\ComboDiaSemana.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FechayHora\ComboDiaSemana.Designer.cs">
+      <DependentUpon>ComboDiaSemana.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FechayHora\HoraMinutos.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FechayHora\HoraMinutos.Designer.cs">
+      <DependentUpon>HoraMinutos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FechayHora\PickerHora.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FechayHora\PickerHora.Designer.cs">
+      <DependentUpon>PickerHora.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Grillas\Grid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Grillas\Grid.Designer.cs">
+      <DependentUpon>Grid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Imagen.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Imagen.Designer.cs">
+      <DependentUpon>Imagen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Labels\EtiquetaXuXo.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Labels\EtiquetaXuXo.Designer.cs">
+      <DependentUpon>EtiquetaXuXo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ListaconCheck.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ListaconCheck.Designer.cs">
+      <DependentUpon>ListaconCheck.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Listas\ListaBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Listas\ListaBase.Designer.cs">
+      <DependentUpon>ListaBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Listas\ListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Listas\ListView.Designer.cs">
+      <DependentUpon>ListView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Listas\ListViewPositivoNegativo.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Listas\ListViewPositivoNegativo.Designer.cs">
+      <DependentUpon>ListViewPositivoNegativo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Menu.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Menu.Designer.cs">
+      <DependentUpon>Menu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Numerico.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Numerico.Designer.cs">
+      <DependentUpon>Numerico.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Panel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Panel.Designer.cs">
+      <DependentUpon>Panel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PanelMenuVertical.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PanelMenuVertical.Designer.cs">
+      <DependentUpon>PanelMenuVertical.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PanelTituloFormulario.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PanelTituloFormulario.Designer.cs">
+      <DependentUpon>PanelTituloFormulario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FechayHora\PickerFechaHora.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FechayHora\PickerFechaHora.Designer.cs">
+      <DependentUpon>PickerFechaHora.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RadioBoton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RadioBoton.Designer.cs">
+      <DependentUpon>RadioBoton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Reloj.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Reloj.Designer.cs">
+      <DependentUpon>Reloj.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\PanelMenuCentral.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Resources\PanelMenuCentral.Designer.cs">
+      <DependentUpon>PanelMenuCentral.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TabPagina.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TabPagina.Designer.cs">
+      <DependentUpon>TabPagina.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Text\TextoEtiqueta.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Text\TextoEtiqueta.Designer.cs">
+      <DependentUpon>TextoEtiqueta.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Text\TextoEtiquetaSimple.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Text\TextoEtiquetaSimple.Designer.cs">
+      <DependentUpon>TextoEtiquetaSimple.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Text\TextoNumerico.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Text\TextoNumerico.Designer.cs">
+      <DependentUpon>TextoNumerico.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Text\TextoSimple.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Text\TextoSimple.Designer.cs">
+      <DependentUpon>TextoSimple.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Text\TextoSinFondo.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Text\TextoSinFondo.Designer.cs">
+      <DependentUpon>TextoSinFondo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TrackNumerico.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TrackNumerico.Designer.cs">
+      <DependentUpon>TrackNumerico.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Botones\BotonAplicacion.resx">
+      <DependentUpon>BotonAplicacion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonBase.resx">
+      <DependentUpon>BotonBase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonBaseXuxo.resx">
+      <DependentUpon>BotonBaseXuXo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonCuadroFormulario.resx">
+      <DependentUpon>BotonCuadroFormulario.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonCuadroFormularioCerrar.resx">
+      <DependentUpon>BotonCuadroFormularioCerrar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonCuadroFormularioMaximizar.resx">
+      <DependentUpon>BotonCuadroFormularioMaximizar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonCuadroFormularioMinimizar.resx">
+      <DependentUpon>BotonCuadroFormularioMinimizar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonExportarDataTable_a_Excel.resx">
+      <DependentUpon>BotonExportarDataTable_a_Excel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonFicha.resx">
+      <DependentUpon>BotonFicha.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonMenuFormulario.resx">
+      <DependentUpon>BotonMenuFormulario.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonMenuFormularioEntidad.resx">
+      <DependentUpon>BotonMenuFormularioEntidad.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonMenuIndividual.resx">
+      <DependentUpon>BotonMenuIndividual.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonMenuVertical.resx">
+      <DependentUpon>BotonMenuVertical.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonToolBar.resx">
+      <DependentUpon>BotonToolBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Botones\BotonTouch.resx">
+      <DependentUpon>BotonTouch.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CheckBox.resx">
+      <DependentUpon>CheckBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ColorSelector.resx">
+      <DependentUpon>ColorSelector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ComboDesplegable.resx">
+      <DependentUpon>ComboDesplegable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ComboDesplegableEtiqueta.resx">
+      <DependentUpon>ComboDesplegableEtiqueta.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FechayHora\FechaDesdeHasta.resx">
+      <DependentUpon>FechaDesdeHasta.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Grillas\GridXuXo.resx">
+      <DependentUpon>GridXuXo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Labels\EtiquetaLink.resx">
+      <DependentUpon>EtiquetaLink.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Labels\EtiquetaSimple.resx">
+      <DependentUpon>EtiquetaSimple.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Labels\EtiquetaSimple365.resx">
+      <DependentUpon>EtiquetaSimple365.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Labels\EtiquetaTitulo.resx">
+      <DependentUpon>EtiquetaTitulo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FechayHora\ComboDiaSemana.resx">
+      <DependentUpon>ComboDiaSemana.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FechayHora\HoraMinutos.resx">
+      <DependentUpon>HoraMinutos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FechayHora\PickerFechaHora.resx">
+      <DependentUpon>PickerFechaHora.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FechayHora\PickerHora.resx">
+      <DependentUpon>PickerHora.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Grillas\Grid.resx">
+      <DependentUpon>Grid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Imagen.resx">
+      <DependentUpon>Imagen.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Labels\EtiquetaXuXo.resx">
+      <DependentUpon>EtiquetaXuXo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Listas\ListaBase.resx">
+      <DependentUpon>ListaBase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Listas\ListViewPositivoNegativo.resx">
+      <DependentUpon>ListViewPositivoNegativo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Numerico.resx">
+      <DependentUpon>Numerico.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Panel.resx">
+      <DependentUpon>Panel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanelMenuVertical.resx">
+      <DependentUpon>PanelMenuVertical.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanelTituloFormulario.resx">
+      <DependentUpon>PanelTituloFormulario.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RadioBoton.resx">
+      <DependentUpon>RadioBoton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reloj.resx">
+      <DependentUpon>Reloj.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TabPagina.resx">
+      <DependentUpon>TabPagina.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Text\TextoEtiqueta.resx">
+      <DependentUpon>TextoEtiqueta.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Text\TextoEtiquetaSimple.resx">
+      <DependentUpon>TextoEtiquetaSimple.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Text\TextoNumerico.resx">
+      <DependentUpon>TextoNumerico.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Text\TextoSimple.resx">
+      <DependentUpon>TextoSimple.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TrackNumerico.resx">
+      <DependentUpon>TrackNumerico.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
+    <None Include="Resources\botonCerrar.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\botondisminuir.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\botonExpandir.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HoraMinuto-30x30-Naranja.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AgregarTurno-032x032-Color.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AgregarTurno-032x032-Color1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Global.Datos\Global.Datos.csproj">
+      <Project>{cca6aac5-a2bf-40a6-9b32-3b51fac4bbea}</Project>
+      <Name>Global.Datos</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo Solo.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

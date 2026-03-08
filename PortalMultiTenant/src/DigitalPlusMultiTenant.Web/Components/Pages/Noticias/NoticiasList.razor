@@ -1,4 +1,5 @@
 @page "/noticias"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
@@ -6,65 +7,191 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
-@inject IApplicationDbContext Db
+@inject IJSRuntime JS
+@inject ITenantService Tenant
+@using DigitalPlusMultiTenant.Web.Helpers
 
 <PageTitle>Noticias - DigitalPlus</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-megaphone me-2"></i>Noticias</h4>
-    <a href="noticias/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva Noticia</a>
+    <div>
+        @if (items?.Any() == true)
+        {
+            <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+            <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        }
+        <a href="noticias/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nueva Noticia</a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Titulo..."
+                       @bind="filtro" @bind:event="oninput" @bind:after="BuscarDebounce" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Vigencia</label>
+                <select class="form-select form-select-sm" @bind="filtroVigencia" @bind:after="Buscar">
+                    <option value="">Todas</option>
+                    <option value="vigente">Vigentes</option>
+                    <option value="novigente">No vigentes</option>
+                </select>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Titulo</th>
-                    <th>Desde</th>
-                    <th>Hasta</th>
-                    <th>Vigente</th>
-                    <th>Privada</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (items == null)
-                {
-                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
-                }
-                else if (!items.Any())
-                {
-                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay noticias</td></tr>
-                }
-                else
-                {
-                    var hoy = DateOnly.FromDateTime(DateTime.Today);
-                    @foreach (var n in items)
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("titulo")'>
+                            Titulo @SortIcon("titulo")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("desde")'>
+                            Desde @SortIcon("desde")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("hasta")'>
+                            Hasta @SortIcon("hasta")
+                        </th>
+                        <th>Vigente</th>
+                        <th>Privada</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items == null)
                     {
-                        var vigente = n.FechaDesde <= hoy && n.FechaHasta >= hoy;
-                        <tr class="@(!vigente ? "table-secondary" : "")">
-                            <td>@n.Titulo</td>
-                            <td>@n.FechaDesde.ToString("dd/MM/yyyy")</td>
-                            <td>@n.FechaHasta.ToString("dd/MM/yyyy")</td>
-                            <td><span class="badge @(vigente ? "bg-success" : "bg-secondary")">@(vigente ? "Si" : "No")</span></td>
-                            <td>@(n.IsPrivada ? "Si" : "No")</td>
-                            <td class="text-end">
-                                <a href="noticias/editar/@n.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(n)"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
                     }
-                }
-            </tbody>
-        </table>
+                    else if (!items.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay noticias</td></tr>
+                    }
+                    else
+                    {
+                        var hoy = DateOnly.FromDateTime(DateTime.Today);
+                        @foreach (var n in items)
+                        {
+                            var vigente = n.FechaDesde <= hoy && n.FechaHasta >= hoy;
+                            <tr class="@(!vigente ? "table-secondary" : "")">
+                                <td>@n.Titulo</td>
+                                <td>@n.FechaDesde.ToString("dd/MM/yyyy")</td>
+                                <td>@n.FechaHasta.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge @(vigente ? "bg-success" : "bg-secondary")">@(vigente ? "Si" : "No")</span></td>
+                                <td>@(n.IsPrivada ? "Si" : "No")</td>
+                                <td class="text-end">
+                                    <a href="noticias/editar/@n.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(n)"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 @code {
     private List<Noticia>? items;
+    private string filtro = "";
+    private string filtroVigencia = "";
+    private string ordenColumna = "desde";
+    private bool ordenDesc = true;
+    private CancellationTokenSource? _debounceToken;
 
-    protected override async Task OnInitializedAsync() => items = await Db.Noticias.OrderByDescending(n => n.FechaDesde).ToListAsync();
+    protected override async Task OnInitializedAsync() => await CargarDatos();
 
-    private async Task Eliminar(Noticia n) { Db.Noticias.Remove(n); await Db.SaveChangesAsync(); items = await Db.Noticias.OrderByDescending(x => x.FechaDesde).ToListAsync(); }
+    private async Task BuscarDebounce()
+    {
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try { await Task.Delay(300, _debounceToken.Token); await CargarDatos(); }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task Buscar() => await CargarDatos();
+
+    private async Task SetOrden(string columna)
+    {
+        if (ordenColumna == columna) ordenDesc = !ordenDesc;
+        else { ordenColumna = columna; ordenDesc = false; }
+        await CargarDatos();
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
+    }
+
+    private async Task CargarDatos()
+    {
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var query = Db.Noticias.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.Trim().ToLower();
+            query = query.Where(n => n.Titulo.ToLower().Contains(f));
+        }
+        if (filtroVigencia == "vigente")
+            query = query.Where(n => n.FechaDesde <= hoy && n.FechaHasta >= hoy);
+        else if (filtroVigencia == "novigente")
+            query = query.Where(n => n.FechaDesde > hoy || n.FechaHasta < hoy);
+
+        var ordered = ordenColumna switch
+        {
+            "titulo" => ordenDesc ? query.OrderByDescending(n => n.Titulo) : query.OrderBy(n => n.Titulo),
+            "hasta" => ordenDesc ? query.OrderByDescending(n => n.FechaHasta) : query.OrderBy(n => n.FechaHasta),
+            _ => ordenDesc ? query.OrderByDescending(n => n.FechaDesde) : query.OrderBy(n => n.FechaDesde),
+        };
+
+        items = await ordered.ToListAsync();
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (items == null) return;
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var filtros = new List<string>();
+        if (!string.IsNullOrWhiteSpace(filtro)) filtros.Add($"Busqueda: {filtro}");
+        if (filtroVigencia == "vigente") filtros.Add("Vigencia: Vigentes");
+        else if (filtroVigencia == "novigente") filtros.Add("Vigencia: No vigentes");
+        var bytes = ExcelExporter.Generar(items,
+            new ExcelExportConfig { Titulo = "Noticias", NombreEmpresa = Tenant.EmpresaNombre, Filtros = filtros,
+                Encabezados = ["Titulo", "Desde", "Hasta", "Vigente", "Privada"],
+                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Fecha, ExcelColFormat.Fecha, ExcelColFormat.Texto, ExcelColFormat.Texto] },
+            n => [n.Titulo, n.FechaDesde, n.FechaHasta,
+                  (n.FechaDesde <= hoy && n.FechaHasta >= hoy) ? "Si" : "No", n.IsPrivada ? "Si" : "No"]);
+        await JS.InvokeVoidAsync("downloadFile", "noticias.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (items == null) return;
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var bytes = CsvExporter.ToCsvBytes(items,
+            ["Titulo", "Desde", "Hasta", "Vigente", "Privada"],
+            n => [n.Titulo, n.FechaDesde.ToString("dd/MM/yyyy"), n.FechaHasta.ToString("dd/MM/yyyy"),
+                  (n.FechaDesde <= hoy && n.FechaHasta >= hoy) ? "Si" : "No", n.IsPrivada ? "Si" : "No"]);
+        await JS.InvokeVoidAsync("downloadFile", "noticias.csv", Convert.ToBase64String(bytes), "text/csv");
+    }
+
+    private async Task Eliminar(Noticia n)
+    {
+        Db.Noticias.Remove(n);
+        await Db.SaveChangesAsync();
+        await CargarDatos();
+    }
 }

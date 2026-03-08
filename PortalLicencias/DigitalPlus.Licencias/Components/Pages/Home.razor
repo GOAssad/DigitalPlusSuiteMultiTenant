@@ -1,0 +1,156 @@
+@page "/"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+
+<PageTitle>Dashboard - DigitalPlus Licencias</PageTitle>
+
+<h3 class="mb-4">Dashboard</h3>
+
+@if (stats == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card text-bg-primary">
+                <div class="card-body text-center">
+                    <h2>@stats.TotalLicencias</h2>
+                    <small>Total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-bg-success">
+                <div class="card-body text-center">
+                    <h2>@stats.Activas</h2>
+                    <small>Activas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-bg-info">
+                <div class="card-body text-center">
+                    <h2>@stats.Trials</h2>
+                    <small>Trials</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-bg-danger">
+                <div class="card-body text-center">
+                    <h2>@stats.Vencidas</h2>
+                    <small>Vencidas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-bg-warning">
+                <div class="card-body text-center">
+                    <h2>@stats.Suspendidas</h2>
+                    <small>Suspendidas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-bg-secondary">
+                <div class="card-body text-center">
+                    <h2>@stats.PorVencer7d</h2>
+                    <small>Por vencer (7d)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Actividad reciente</div>
+                <div class="card-body p-0">
+                    @if (logs == null || logs.Count == 0)
+                    {
+                        <p class="p-3 text-muted">Sin actividad registrada</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Accion</th>
+                                    <th>Empresa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in logs)
+                                {
+                                    <tr>
+                                        <td>@log.Timestamp.ToString("dd/MM HH:mm")</td>
+                                        <td>@log.Action</td>
+                                        <td>@(log.Licencia?.CompanyId ?? "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Proximas a vencer (30 dias)</div>
+                <div class="card-body p-0">
+                    @if (porVencer == null || porVencer.Count == 0)
+                    {
+                        <p class="p-3 text-muted">Ninguna licencia por vencer</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Plan</th>
+                                    <th>Vence</th>
+                                    <th>Dias</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var lic in porVencer)
+                                {
+                                    <tr class="@(lic.DiasRestantes <= 7 ? "table-danger" : "")">
+                                        <td>@lic.CompanyId</td>
+                                        <td>@lic.Plan</td>
+                                        <td>@lic.ExpiresAt?.ToString("dd/MM/yyyy")</td>
+                                        <td>@lic.DiasRestantes</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private DigitalPlus.Licencias.Repositorios.DashboardStats? stats;
+    private List<DigitalPlus.Licencias.Entidades.LicenciaLog>? logs;
+    private List<DigitalPlus.Licencias.Entidades.Licencia>? porVencer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stats = await Repo.GetDashboardStatsAsync();
+        logs = await Repo.GetLogsAsync(cantidad: 10);
+
+        var todas = await Repo.GetLicenciasAsync();
+        var now = DateTime.UtcNow;
+        porVencer = todas
+            .Where(l => l.LicenseType == "active" && l.ExpiresAt.HasValue && l.ExpiresAt > now && l.ExpiresAt < now.AddDays(30))
+            .OrderBy(l => l.ExpiresAt)
+            .ToList();
+    }
+}

@@ -1,0 +1,74 @@
+﻿@page "/categorias"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioCategorias repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_Categoria.png" Titulo="Cartegorias" />
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Categoria"></BotonAgregarEntidad>
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>
+
+    <ListadoGenerico Listado="Categorias">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead class="cabeceraTabla">
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Nombre</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Categorias)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/categorias/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                                <button @onclick="@(() => BorrarCategorias(item))" class="btn btn-danger btn-sm">Borrar</button>
+                            </td>
+                            <td>@item.Nombre</td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+
+@code {
+    public List<Categoria> Categorias { get; set; }
+    string textobusqueda;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Cargar(string.Empty);
+    }
+
+    private async Task Cargar(string texto)
+    {
+        Categorias = await repositorio.Get(texto);
+    }
+
+    private async Task BorrarCategorias(Categoria objeto)
+    {
+        var condicion = await mostrarMensajes.MostrarMensajeBorrar(objeto.Nombre);
+        if (condicion)
+        {
+            await repositorio.Delete(objeto.Id);
+            await mostrarMensajes.MostrarMensajeTemporal("Categoria", $"{objeto.Nombre}: ... borrado");
+        }
+        
+
+        await Cargar(string.Empty);
+    }
+
+    private void Crear()
+    {
+        navigationManager.NavigateTo("categorias/crear");
+    }
+}

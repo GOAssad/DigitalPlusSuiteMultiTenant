@@ -1,0 +1,50 @@
+﻿@page "/feriados/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioFeriados repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Feriados</h3>
+
+<FormularioFeriado OnValidSubmit="CrearEntidad" Feriado="Feriado" />
+
+@code {
+    private FeriadoDTO Feriado = new FeriadoDTO();
+
+    private async Task CrearEntidad()
+    {
+        if (Feriado.Fecha > Feriado.FechaHasta)
+        {
+            await mostrarMensajes.MostrarMensajeError("La Fecha Desde no puede ser mayor a la Fecha Hasta");
+            return;
+        }
+
+
+        try
+        {
+            DateTime fd = Feriado.Fecha;
+            DateTime fh = Feriado.FechaHasta;
+            
+
+            while (true)
+            {
+                Feriado feriado = new Feriado();
+                feriado.Nombre = Feriado.Nombre;
+                feriado.Fecha = fd;
+                await repositorio.Post(feriado);
+
+                fd = fd.AddDays(1);
+
+                if(fd > fh)
+                      break;
+
+            }
+            await mostrarMensajes.MostrarMensajeTemporal("Feriados", $"{Feriado.Nombre}...Almacendo");
+            navigationManager.NavigateTo("/feriados");
+        }
+        catch (Exception ex)
+        {
+            await mostrarMensajes.MostrarMensajeError(ex.Message);
+        }
+    }
+}

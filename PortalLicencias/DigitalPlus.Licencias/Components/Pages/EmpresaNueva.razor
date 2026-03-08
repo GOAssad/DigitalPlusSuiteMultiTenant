@@ -1,0 +1,324 @@
+@page "/empresas/nueva"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+@inject DigitalPlus.Licencias.Services.DatabaseProvisioningService Provisioning
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>Nueva Empresa - DigitalPlus</PageTitle>
+
+<h3 class="mb-4">Alta de Empresa</h3>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">Datos de la Empresa</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de la empresa *</label>
+                        <input type="text" class="form-control" @bind="nombre" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Company ID *</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" @bind="companyId" />
+                            <button class="btn btn-outline-secondary" @onclick="GenerarCompanyId" type="button">Auto</button>
+                        </div>
+                        <small class="text-muted">Identificador unico (sin espacios, minusculas)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Datos fiscales</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Pais</label>
+                        <select class="form-select" value="@selectedPaisId" @onchange="OnPaisChangedEvent">
+                            <option value="">-- Seleccionar --</option>
+                            @if (paises != null)
+                            {
+                                @foreach (var p in paises)
+                                {
+                                    <option value="@p.Id">@p.Nombre</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo identificacion</label>
+                        <select class="form-select" value="@selectedTipoIdFiscalId" @onchange="OnTipoIdChangedEvent">
+                            <option value="">-- Seleccionar --</option>
+                            @if (tiposId != null)
+                            {
+                                @foreach (var t in tiposId)
+                                {
+                                    <option value="@t.Id">@t.Nombre (@t.Ejemplo)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Identificacion fiscal</label>
+                        <input type="text" class="form-control" @bind="identificacionFiscal" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Contacto</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Contacto</label>
+                        <input type="text" class="form-control" @bind="contacto" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" @bind="email" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Telefono</label>
+                        <input type="text" class="form-control" @bind="telefono" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Licencia</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Plan</label>
+                        <select class="form-select" @bind="plan">
+                            <option value="basic">Basic</option>
+                            <option value="premium">Premium</option>
+                            <option value="enterprise">Enterprise</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Max Legajos</label>
+                        <input type="number" class="form-control" @bind="maxLegajos" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Duracion (dias)</label>
+                        <input type="number" class="form-control" @bind="duracionDias" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Codigo de Activacion</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Validez del codigo (horas)</label>
+                        <input type="number" class="form-control" @bind="codigoExpiryHours" />
+                        <small class="text-muted">Tiempo que tiene el cliente para usar el codigo</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Notas</label>
+                        <input type="text" class="form-control" @bind="notas" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (error != null)
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+
+        @if (resultado != null)
+        {
+            <div class="alert alert-success">
+                <h5>Empresa creada exitosamente</h5>
+                <p><strong>Base de datos:</strong> @resultado.DatabaseName</p>
+                <p><strong>Codigo de activacion:</strong> <code class="fs-5">@resultado.Codigo</code></p>
+                <p class="mb-0"><small class="text-muted">Este codigo queda asociado a la empresa y puede consultarse desde el detalle.</small></p>
+            </div>
+            <a href="/empresas" class="btn btn-outline-primary">Volver a Empresas</a>
+        }
+        else
+        {
+            <button class="btn btn-primary btn-lg" @onclick="Crear" disabled="@procesando">
+                @if (procesando)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    <span>@pasoActual</span>
+                }
+                else
+                {
+                    <span>Crear Empresa</span>
+                }
+            </button>
+            <a href="/empresas" class="btn btn-outline-secondary ms-2">Cancelar</a>
+        }
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Resumen</div>
+            <div class="card-body">
+                <p>Al crear la empresa se ejecutaran los siguientes pasos:</p>
+                <ol class="small">
+                    <li>Crear base de datos <code>@DatabaseName</code> en el servidor</li>
+                    <li>Ejecutar schema completo (tablas, funciones, SPs, datos iniciales)</li>
+                    <li>Crear licencia en el sistema</li>
+                    <li>Generar codigo de activacion</li>
+                </ol>
+                <hr />
+                <p class="small text-muted mb-0">
+                    El cliente debera instalar el software con el instalador liviano e ingresar el codigo de activacion.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string nombre = "";
+    private string companyId = "";
+    private int? paisId;
+    private int? tipoIdFiscalId;
+    private string? identificacionFiscal;
+    private string selectedPaisId => paisId?.ToString() ?? "";
+    private string selectedTipoIdFiscalId => tipoIdFiscalId?.ToString() ?? "";
+    private string? contacto;
+    private string? email;
+    private string? telefono;
+    private string plan = "basic";
+    private int maxLegajos = 25;
+    private int duracionDias = 365;
+    private int codigoExpiryHours = 72;
+    private string? notas;
+
+    private List<DigitalPlus.Licencias.Entidades.Pais>? paises;
+    private List<DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal>? tiposId;
+
+    private bool procesando;
+    private string? pasoActual;
+    private string? error;
+    private ResultadoAlta? resultado;
+
+    private string DatabaseName => string.IsNullOrWhiteSpace(companyId)
+        ? "DP_..." : $"DP_{companyId.Replace("-", "_").Replace(" ", "_")}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        paises = await Repo.GetPaisesAsync();
+    }
+
+    private async Task OnPaisChangedEvent(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            paisId = id;
+            tiposId = await Repo.GetTiposIdentificacionAsync(id);
+        }
+        else
+        {
+            paisId = null;
+            tiposId = [];
+        }
+        tipoIdFiscalId = null;
+    }
+
+    private void OnTipoIdChangedEvent(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            tipoIdFiscalId = id;
+        else
+            tipoIdFiscalId = null;
+    }
+
+    private void GenerarCompanyId()
+    {
+        if (!string.IsNullOrWhiteSpace(nombre))
+        {
+            companyId = nombre
+                .ToLowerInvariant()
+                .Replace(" ", "-")
+                .Replace(".", "")
+                .Replace(",", "");
+        }
+    }
+
+    private async Task Crear()
+    {
+        error = null;
+        resultado = null;
+
+        if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(companyId))
+        {
+            error = "Nombre y Company ID son obligatorios.";
+            return;
+        }
+
+        var dbName = $"DP_{companyId.Replace("-", "_").Replace(" ", "_")}";
+
+        procesando = true;
+        try
+        {
+            // Paso 1: Verificar que no existe
+            pasoActual = "Verificando...";
+            StateHasChanged();
+            if (await Provisioning.DatabaseExistsAsync(dbName))
+            {
+                error = $"Ya existe una base de datos con el nombre '{dbName}'.";
+                return;
+            }
+
+            // Paso 2: Crear base de datos
+            pasoActual = "Creando base de datos...";
+            StateHasChanged();
+            await Provisioning.CreateDatabaseAsync(dbName);
+
+            // Paso 3: Crear empresa
+            pasoActual = "Registrando empresa...";
+            StateHasChanged();
+            var empresa = await Repo.CrearEmpresaAsync(nombre, companyId, dbName, contacto, email, telefono);
+            empresa.PaisId = paisId;
+            empresa.TipoIdentificacionFiscalId = tipoIdFiscalId;
+            empresa.IdentificacionFiscal = identificacionFiscal;
+            await Repo.ActualizarEmpresaAsync(empresa);
+
+            // Paso 4: Crear licencia
+            pasoActual = "Creando licencia...";
+            StateHasChanged();
+            await Repo.CrearLicenciaParaEmpresaAsync(companyId, plan, maxLegajos, duracionDias);
+
+            // Paso 5: Generar codigo de activacion
+            pasoActual = "Generando codigo de activacion...";
+            StateHasChanged();
+            var codigoActivacion = Repo.GenerarCodigoActivacion();
+            empresa.CodigoActivacion = codigoActivacion;
+            await Repo.ActualizarEmpresaAsync(empresa);
+
+            resultado = new ResultadoAlta { DatabaseName = dbName, Codigo = codigoActivacion };
+        }
+        catch (Exception ex)
+        {
+            error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+            pasoActual = null;
+        }
+    }
+
+    private class ResultadoAlta
+    {
+        public string DatabaseName { get; set; } = "";
+        public string Codigo { get; set; } = "";
+    }
+}

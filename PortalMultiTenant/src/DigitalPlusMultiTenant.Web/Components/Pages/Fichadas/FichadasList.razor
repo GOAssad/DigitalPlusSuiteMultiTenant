@@ -1,4 +1,5 @@
 @page "/fichadas"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
@@ -6,12 +7,21 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
-@inject IApplicationDbContext Db
+@inject IJSRuntime JS
+@inject ITenantService Tenant
+@using DigitalPlusMultiTenant.Web.Helpers
 
 <PageTitle>Fichadas - DigitalPlus</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-card-checklist me-2"></i>Fichadas</h4>
+    @if (fichadas?.Any() == true)
+    {
+        <div>
+            <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        </div>
+    }
 </div>
 
 <div class="card border-0 shadow-sm mb-3">
@@ -282,6 +292,37 @@ else
         {
             buscando = false;
         }
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (fichadas == null) return;
+        var filtros = new List<string>();
+        if (filtroSucursal > 0) filtros.Add($"Sucursal: {sucursales.FirstOrDefault(s => s.Id == filtroSucursal)?.Nombre}");
+        if (!string.IsNullOrWhiteSpace(filtroTipo)) filtros.Add($"Tipo: {(filtroTipo == "E" ? "Entrada" : "Salida")}");
+        if (!string.IsNullOrWhiteSpace(filtro)) filtros.Add($"Busqueda: {filtro}");
+        var bytes = ExcelExporter.Generar(fichadas,
+            new ExcelExportConfig { Titulo = "Fichadas", NombreEmpresa = Tenant.EmpresaNombre,
+                FechaDesde = fechaDesde.ToString("dd/MM/yyyy"), FechaHasta = fechaHasta.ToString("dd/MM/yyyy"),
+                Filtros = filtros,
+                Encabezados = ["Legajo", "Apellido", "Nombre", "Sucursal", "Fecha", "Hora", "Tipo", "Origen", "Terminal"],
+                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto,
+                           ExcelColFormat.Fecha, ExcelColFormat.Hora, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto] },
+            f => [f.Legajo?.NumeroLegajo ?? "", f.Legajo?.Apellido ?? "", f.Legajo?.Nombre ?? "",
+                  f.Sucursal?.Nombre ?? "", (object)f.FechaHora.Date, TimeOnly.FromDateTime(f.FechaHora),
+                  f.Tipo == "E" ? "Entrada" : "Salida", f.Origen.ToString(), f.Terminal?.Nombre ?? ""]);
+        await JS.InvokeVoidAsync("downloadFile", "fichadas.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (fichadas == null) return;
+        var bytes = CsvExporter.ToCsvBytes(fichadas,
+            ["Legajo", "Apellido", "Nombre", "Sucursal", "Fecha", "Hora", "Tipo", "Origen", "Terminal"],
+            f => [f.Legajo?.NumeroLegajo ?? "", f.Legajo?.Apellido ?? "", f.Legajo?.Nombre ?? "",
+                  f.Sucursal?.Nombre ?? "", f.FechaHora.ToString("dd/MM/yyyy"), f.FechaHora.ToString("HH:mm:ss"),
+                  f.Tipo == "E" ? "Entrada" : "Salida", f.Origen.ToString(), f.Terminal?.Nombre ?? ""]);
+        await JS.InvokeVoidAsync("downloadFile", "fichadas.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
     private IEnumerable<int> GetPaginasVisibles()

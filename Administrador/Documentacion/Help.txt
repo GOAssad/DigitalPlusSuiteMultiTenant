@@ -1,0 +1,13 @@
+Los turnos no son otra cosa que agrupadores
+Los agrupadores nos van a permitir sacar informacion general y de ser necesaria mas detallada por calendario.
+Lo turnos pertenecen a un calendario y muchos calendarios pueden pertenecer a un solo turno.
+Ej.
+Turno Mañana - Calendario: Laboratorio
+Turno Mañana - Calendario: Fabica
+
+
+Calendarios
+Los parametros minismos de control para la carga es lo que se ingreso en el turno.
+Por lo tanto, cada vez que se crea un nuevo Calendario, se le debe asociar un turno para que el sistema sepa en que rango horario ubicarse.
+En los calendarios vamos a incluir no solo la rutina de trabajo del personal, sino que tambien vamos a agregar los feriados y demas dias no laborables.
+En esta parte del sistema, solo lo ingresaremos de manera general, es decir, con el formato por default para que luego, cuando necesitemos modificar un legajo en particular, tengamos la posibiliad de contar con la mayoria de las rutinas que seguramente el legajo tendra.

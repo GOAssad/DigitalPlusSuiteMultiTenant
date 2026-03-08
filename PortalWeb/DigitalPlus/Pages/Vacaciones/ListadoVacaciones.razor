@@ -1,0 +1,110 @@
+﻿@page "/vacaciones/listado"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioVacaciones repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <div class="titulo">
+        <div class="row">
+            <div class="col-5">
+                <h4 class="p-2 flex-grow-1">Vacaciones</h4>
+            </div>
+
+            <div class="col">
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="fechadesde" placeholder="Fecha Desde" @bind-value="fDesde">
+                    <label for="fechadesde">Fecha Desde</label>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="fechahasta" placeholder="Fecha Desde" @bind-value="fHasta">
+                    <label for="fechahasta">Fecha Hasta</label>
+                </div>
+            </div>
+            <div class="col">
+
+                <BotonListadoConToolTip Color="yellow-green" IconoClase="bi bi-search" ToolTipText="Buscar" Accion="@Cargar" />
+                <BotonListadoConToolTip Color="excel" IconoClase="bi bi-file-earmark-excel" ToolTipText="Pasar a Excel" Accion="@DownloadExcel" />
+                <BotonListadoConToolTip Color="legajo" IconoClase="bi bi-person-lines-fill" ToolTipText="Volver a la Ficha" Accion="@Volver" />
+            </div>
+        </div>
+    </div>
+</div>
+<div class="lineaDivisoriaTitulo"></div>
+
+
+@if (Listado == null)
+{
+    <text>Cargando...</text>
+}
+else if (Listado.Count == 0)
+{
+    <text>No se encontraron Listado para este legajo</text>
+}
+else
+{
+    <table class="table table-hover">
+        <thead class="cabeceraTabla">
+            <tr>
+                <th>Nombre</th>
+                <th>Sector</th>
+                <th>Fecha Desde</th>
+                <th>Fecha Hasta</th>
+                <th>Nota</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Listado)
+            {
+                <tr>
+                    <td>@item.Nombre</td>
+                    <td>@item.NombreSector</td>
+                    <td>@item.FechaDesde.ToString("D", new CultureInfo("es-ES"))</td>
+                    <td>@item.FechaHasta.ToString("D", new CultureInfo("es-ES"))</td>
+                    <td>@item.Nota</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@code {
+    private DateTime fDesde = DateTime.Now;
+    private DateTime fHasta = DateTime.Now;
+
+    private List<ListadoVacacionesPorRangodeFechasDTO> Listado = new List<ListadoVacacionesPorRangodeFechasDTO>();
+    protected override async Task OnInitializedAsync()
+    {
+
+        int diasdescontar = (DateTime.Now.Day - 1);
+
+        fDesde = DateTime.Now.AddDays(-diasdescontar); // esto deberia dar uno (no hago el new datetime porque no se ve la fecha en el control)
+        fHasta = fDesde.AddMonths(1).AddDays(-1);
+
+        await Cargar();
+
+    }
+
+    private async Task Cargar()
+    {
+        Listado = await repositorio.ListadoVacaciones(fDesde, fHasta);
+    }
+
+    private void DownloadExcel()
+    {
+        mostrarMensaje.MostrarMensajeAlerta("Modulo aun no instalado");
+        
+    }
+
+    private void Volver()
+    {
+        navigationManager.NavigateTo("/fichadas/menu");
+    }
+}

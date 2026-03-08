@@ -1,0 +1,48 @@
+﻿@inject IJSRuntime js
+@inject RepositorioLegajos repositorio
+@inject IMostrarMensajes mostrarMensajes
+
+<div class="container">
+    <ListadoGenerico Listado="Legajos">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Legajo</th>
+                        <th>Nombre</th>
+                        <th>Activo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Legajos)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/legajos/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                            </td>
+                            <td>@item.LegajoId</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Activo</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+
+
+@code {
+    [Parameter] public List<Legajo> Legajos { get; set; }
+
+    async Task EliminarLegajo(Legajo legajo)
+    {
+        var confirmar = await js.Confirm($"¿Desea borrar la película {legajo.Nombre}");
+        if (confirmar)
+        {
+            await repositorio.Delete(legajo.Id);
+            Legajos.Remove(legajo);
+        }
+    }
+}

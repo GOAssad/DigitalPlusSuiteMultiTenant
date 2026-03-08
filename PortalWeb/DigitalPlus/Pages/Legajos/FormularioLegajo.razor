@@ -1,0 +1,243 @@
+﻿@inject RepositorioSectores repositoriosectores
+
+<div class="container">
+    <LineaDivisoria />
+    <EditForm Model="Legajo" OnValidSubmit="OnDataAnnonationsValidated">
+        <DataAnnotationsValidator />
+
+
+        <div class="accordion accordion-flush" id="accordionFlushExample">
+            <div class="container">
+                <div class="accordion-item thistle">
+                    <h2 class="accordion-header" id="flush-headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            <strong>Legajos</strong>
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse show" aria-labelledby="flush-headingOne">
+                        <div class="accordion-body">
+                            <div class="row">
+                                <div class="form-group mb-2 col-5">
+                                    <label>Nombre:</label>
+                                    <div>
+                                        <InputText class="form-control" @bind-Value="@Legajo.Nombre" />
+                                        <ValidationMessage For="@(() => Legajo.Nombre)" />
+                                    </div>
+                                </div>
+                                <div class="form-group mb-2 col-4">
+                                    <label>Legajo</label>
+                                    <div>
+                                        <InputText class="form-control" @bind-Value="@Legajo.LegajoId" />
+                                        <ValidationMessage For="@(() => Legajo.LegajoId)" />
+                                    </div>
+                                </div>
+                                <div class="form-group mb-2 col-2">
+                                    <label>Activo:</label>
+                                    <div>
+                                        <InputCheckbox style="width: 37px; height: 37px;" @bind-Value="@Legajo.Activo" />
+                                        <ValidationMessage For="@(() => Legajo.Activo)" />
+                                    </div>
+                                </div>
+                                <div class="form-group mb-2 col-1">
+                                    <label style="font-size:50px; color:lightgray;">@Legajo.Id.ToString()</label>
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="row">
+                                <div class="form-group mb-2 col-5">
+                                    <label>Sector:</label>
+                                    <select class="form-control" @bind="@Legajo.SectorId">
+                                        <option value="0">-- Seleccione un Sector --</option>
+                                        @foreach (var item in Sectores)
+                                        {
+                                            <option value="@item.Id">@item.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group mb-2 col-5">
+                                    <label>Categoria:</label>
+                                    <select class="form-control" @bind="@Legajo.CategoriaId">
+                                        <option value="0">--Seleccione una Categoria--</option>
+                                        @foreach (var item in Categorias)
+                                        {
+                                            <option value="@item.Id">@item.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <LineaDivisoria />
+
+                    <div class="accordion-item thistle">
+                        <h2 class="accordion-header" id="flush-headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                                <strong>Sucursales y Huellas</strong>
+                            </button>
+                        </h2>
+                        <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo">
+                            <div class="accordion-body">
+
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <label>Suc. No Seleccionadas:</label>
+                                            </div>
+                                            <div class="col-3">
+                                                <label>Suc. Seleccionadas:</label>
+                                            </div>
+
+                                            <div class="col-3">
+                                                <label>No Seleccionados:</label>
+                                            </div>
+                                            <div class="col-3">
+                                                <label>Seleccionados:</label>
+                                            </div>
+
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group mb-2 col-6">
+
+                                                <div>
+                                                    <SelectorMultiple Seleccionados="Seleccionados"
+                                                                      NoSeleccionados="NoSeleccionados"></SelectorMultiple>
+                                                </div>
+                                            </div>
+                                            <div class="form-group mb-2 col-6">
+                                                <div>
+                                                    <LegajosDedos Seleccionados="DedoSeleccionados"
+                                                                  NoSeleccionados="DedoNoSeleccionados"></LegajosDedos>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <LineaDivisoria />
+                    </div>
+                </div>
+
+
+                <br />
+                <div class="row">
+
+                    @*Calendario Personalizado*@
+                    <div class="form-group mb-2 col-1">
+                        <label>Personalizar:</label>
+                    </div>
+                    <div class="form-group mb-2 col-1">
+                        <InputCheckbox style="width: 37px; height: 37px;" @bind-Value="@Legajo.CalendarioPersonalizado" />
+                        <ValidationMessage For="@(() => @Legajo.CalendarioPersonalizado)" />
+                    </div>
+
+                    @if (!Legajo.CalendarioPersonalizado)
+                    {
+
+                        <div class="form-group mb-2 col-2">
+                            <label style="display: inline-block; text-align: right;" for="idhorario">Horario General:</label>
+                        </div>
+                        <div class="form-group mb-2 col">
+                            <select class="form-control" id="idhorario" @bind="@Legajo.HorarioId">
+                                <option value="0">--Seleccione un Horario--</option>
+                                @foreach (var item in Horarios)
+                                {
+                                    <option value="@item.Id">@item.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                    }
+
+                </div>
+                <div class="mb-3">
+                    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+                    <a class="btn btn-secondary" href="/legajos">Cancelar</a>
+                </div>
+                <LineaDivisoria />
+
+
+
+                @if (Legajo.CalendarioPersonalizado)
+                {
+
+                    <div class="accordion-item thistle">
+                        <h2 class="accordion-header" id="flush-headingTres">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTres" aria-expanded="false" aria-controls="flush-collapseTres">
+                                <strong>Calendario Personalizado</strong>
+                            </button>
+                        </h2>
+                        <div id="flush-collapseTres" class="accordion-collapse collapse show" aria-labelledby="flush-headingOne">
+                            <div class="accordion-body">
+                                <CalendarioHorarioDiaEvento Legajo="Legajo" />
+                            </div>
+                        </div>
+                    </div>
+                }
+                <br />
+                <LineaDivisoria />
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+
+@code {
+    [Parameter] public Legajo Legajo { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public List<Sector> Sectores { get; set; }
+    [Parameter] public List<Categoria> Categorias { get; set; }
+    [Parameter] public List<Horario> Horarios { get; set; }
+    [Parameter] public List<Sucursal> SucursalesSeleccionadas { get; set; } = new List<Sucursal>();
+    [Parameter] public List<Sucursal> SucursalesNoSeleccionadas { get; set; } = new List<Sucursal>();
+    [Parameter] public List<Dedo> DedosSeleccionadas { get; set; } = new List<Dedo>();
+    [Parameter] public List<Dedo> DedosNoSeleccionadas { get; set; } = new List<Dedo>();
+    [Parameter] public bool CalendarioPersonal { get; set; }
+
+
+
+    private List<SelectorMultipleModel> Seleccionados { get; set; } = new List<SelectorMultipleModel>();
+    private List<SelectorMultipleModel> NoSeleccionados { get; set; } = new List<SelectorMultipleModel>();
+
+    private List<SelectorMultipleModel> DedoSeleccionados { get; set; } = new List<SelectorMultipleModel>();
+    private List<SelectorMultipleModel> DedoNoSeleccionados { get; set; } = new List<SelectorMultipleModel>();
+
+
+
+
+    protected override void OnInitialized()
+    {
+        Seleccionados = SucursalesSeleccionadas
+            .Select(x => new SelectorMultipleModel(x.Id.ToString(), x.Nombre)).ToList();
+
+        NoSeleccionados = SucursalesNoSeleccionadas
+            .Select(h => new SelectorMultipleModel(h.Id.ToString(), h.Nombre)).ToList();
+
+
+        DedoSeleccionados = DedosSeleccionadas
+            .Select(x => new SelectorMultipleModel(x.Id.ToString(), x.Nombre)).ToList();
+
+        DedoNoSeleccionados = DedosNoSeleccionadas
+        .Select(x => new SelectorMultipleModel(x.Id.ToString(), x.Nombre)).ToList();
+
+
+    }
+
+
+
+    private async Task OnDataAnnonationsValidated()
+    {
+        Legajo.LegajoSucursal = Seleccionados
+            .Select(x => new LegajoSucursal { LegajoId = Legajo.Id, SucursalId = int.Parse(x.Llave) }).ToList();
+
+        await OnValidSubmit.InvokeAsync();
+    }
+
+}

@@ -1,0 +1,65 @@
+﻿@page "/roles"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioUsuarios repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+<h3>Indice Roles</h3>
+
+<div class="form-group">
+    <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Rol"></BotonAgregarEntidad>
+</div>
+
+<ListadoGenerico Listado="Roles">
+    <HayRegistrosCompleto>
+        <table class="table">
+            <thead>
+                <tr>
+                    @*<th></th>*@
+                    <th>Rol</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var rol in Roles)
+                {
+                    <tr>
+                        @*<td>
+                            <a href="/roles/editar/@rol.RoleId" class="btn btn-success">Editar</a>
+                        </td>*@
+                        <td>
+                            @rol.Nombre
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </HayRegistrosCompleto>
+</ListadoGenerico>
+
+@code {
+    List<RolDTO> Roles;
+
+    private int paginaActual = 1;
+    private int paginasTotales;
+
+    private async Task paginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await Cargar(pagina);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar(int pagina = 1)
+    {
+
+        Roles = await repositorio.GetRoles();
+    }
+    private void Crear()
+    {
+        navigationManager.NavigateTo("roles/crear");
+    }
+}

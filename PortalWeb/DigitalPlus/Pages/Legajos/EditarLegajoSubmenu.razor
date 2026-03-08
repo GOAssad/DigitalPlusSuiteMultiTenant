@@ -1,0 +1,52 @@
+﻿<div class="container ">
+    <TituloPrincipal src="/imagenes/legajos_editar.png" Titulo="Legajos" />
+
+
+    <ul class="nav nav-pills nav-fill mb-3">
+        <li class="list-group-item">
+            <span>
+                <a class="btn-primary btn" href="/fichadas/@LegajoId">
+                    <i class="bi bi-clock-history"></i>
+                    Fichadas
+                </a>
+                <a class="btn-primary btn" href="/fichadas/control/@LegajoId">
+                    <i class="bi bi-calendar2-check"></i>
+                    Control
+                </a>
+                <a class="btn-primary btn" href="/fichadas/consolidado/@LegajoId">
+                    <i class="bi bi-boxes"></i>
+                    Consolidado
+                </a>
+                <a class="btn-primary btn" href="/fichadas/tarde/@LegajoId">
+                    <i class="bi bi-alarm-fill"></i>
+                    Tarde
+                </a>
+                <a class="btn-primary btn" href="/fichadas/extras/@LegajoId">
+                    <i class="bi bi-stopwatch"></i>
+                    Hs. Extras
+                </a>
+                <a class="btn-secondary btn btn-sm p-2 fichada" style="width:100px;" href="fichadas/crear/0/@LegajoId">
+                    <i class="bi bi-person-check"></i>
+                    + Fichada
+                </a>
+                <a class="btn btn-secondary btnCrearIncidencia" href="/incidencialegajo/crear/@LegajoId/@Fechastr">
+                    <i class="bi bi-person-fill-gear"></i>
+                    + Incid
+                </a>
+                <a class="btn btn-secondary btnCrearVacaciones" href="/vacacioneslegajo/crear/@LegajoId">
+                    <i class="bi bi-emoji-sunglasses-fill"></i>
+                    + Vacaciones
+                </a>
+                <a class="btn-primary btn" href="/legajos/dashboard/@LegajoId">
+                    <i class="bi bi-emoji-sunglasses-fill"></i>
+                    Estadisticas
+                </a>
+            </span>
+        </li>
+    </ul>
+</div>
+@code {
+    [Parameter] public int LegajoId { get; set; }
+
+    private string Fechastr = DateTime.Today.ToString("yyyyMMdd");
+}

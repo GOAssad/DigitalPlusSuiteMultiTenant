@@ -1,0 +1,151 @@
+﻿@page "/legajos/editar/{LegajoId:int}"
+@using System.Globalization
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioLegajos repositorio
+@inject RepositorioSectores repositorioSectores
+@inject RepositorioCategorias repositorioCategorias
+@inject RepositorioSucursales repositorioSucursales
+@inject RepositorioHorarios repositorioHorarios
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+@inject IHorarioDiaEventoServicio horarioDiaEventoService
+@inject IHttpContextAccessor httpContext
+@inject IJSRuntime js
+
+
+
+
+<EditarLegajoSubmenu LegajoId="LegajoId" />
+
+
+    @if (Legajo == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioLegajo Legajo="Legajo"
+                  OnValidSubmit="EditarEntidad"
+                  Sectores="Sectores"
+                  SucursalesSeleccionadas="SucursalesSeleccionadas"
+                  SucursalesNoSeleccionadas="SucursalesNoSeleccionadas"
+                  Categorias="Categorias"
+                  Horarios="Horarios"
+                  DedosNoSeleccionadas="DedosNoSeleccionados"
+                  DedosSeleccionadas="DedosSeleccionados">
+    </FormularioLegajo>
+
+}
+
+
+
+@code {
+    [Parameter] public int LegajoId { get; set; }
+
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private ClaimsPrincipal claimsPrincipal;
+    private string userId;
+
+    private Legajo Legajo = new Legajo();
+    private List<Sector> Sectores = new List<Sector>();
+    private List<Categoria> Categorias = new List<Categoria>();
+    private List<Horario> Horarios = new List<Horario>();
+    private List<Sucursal> SucursalesNoSeleccionadas = new List<Sucursal>();
+    private List<Sucursal> SucursalesSeleccionadas = new List<Sucursal>();
+
+    private List<Dedo> DedosSeleccionados = new List<Dedo>();
+    private List<Dedo> DedosNoSeleccionados = new List<Dedo>();
+
+
+    private string UsuarioId = string.Empty;
+
+
+    protected override async void OnInitialized()
+    {
+        //5/2/2023
+        if (AuthenticationStateTask is not null) authenticationState = await AuthenticationStateTask;
+
+
+        Legajo = repositorio.GetLegajo(LegajoId);
+
+        var legajovisualizacionDTO = repositorio.PutGet(LegajoId);
+        if (legajovisualizacionDTO == null)
+        {
+            navigationManager.NavigateTo("legajos");
+        }
+
+        var SucursalesSeleccionadasIds = legajovisualizacionDTO.Sucursales.Select(x => x.Id).ToList();
+        var DedosSeleccionadosIds = legajovisualizacionDTO.Dedos.Select(x => x.Id).ToList();
+
+
+        //List<Sucursal> NoSeleccionadas = repositorioSucursales.GetLista();
+
+
+        // 05/02/2023 - Obtengo el ID del usuario logueado
+        claimsPrincipal = authenticationState.User;
+        userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+
+        List<Sucursal> NoSeleccionadas = repositorioSucursales.GetUsuarioSucursalesSQL(userId);
+        NoSeleccionadas = NoSeleccionadas.Where(x => !SucursalesSeleccionadasIds.Contains(x.Id)).ToList();
+
+
+        List<Dedo> DNoSeleccionados = repositorio.GetDedos();
+        DNoSeleccionados = DNoSeleccionados.Where(x => !DedosSeleccionadosIds.Contains(x.Id)).ToList();
+
+
+
+        Sectores = repositorioSectores.GetLista();
+        Legajo = legajovisualizacionDTO.Legajo;
+        Categorias = repositorioCategorias.GetLista();
+        Horarios = repositorioHorarios.GetLista();
+
+
+        SucursalesSeleccionadas = legajovisualizacionDTO.Sucursales; ;
+
+        // Gustavo 05/02/2023 - sucursales que el usuaro logeado tiene
+        //SucursalesNoSeleccionadas = legajovisualizacionDTO.SucursalesNoSeleccionadas;
+        SucursalesNoSeleccionadas = NoSeleccionadas;
+        //////////////////////////////////////////////////////////////////////////////////////////
+
+        DedosSeleccionados = legajovisualizacionDTO.Dedos;
+        DedosNoSeleccionados = legajovisualizacionDTO.DedosNoSeleccionados;
+
+
+
+    }
+
+    private async Task EditarEntidad()
+    {
+
+        //borro LegajosSucursales
+        // await repositorio.BorrarLegajoSucursal(Legajo.Id);
+
+
+        if (Legajo.Horario is null && Legajo.HorarioId ==0)
+        {
+            await mostrarMensaje.MostrarMensajeError("Por favor, seleccione un Horario para el legajo");
+            return;
+        }
+
+        // esto lo hago sino ningun Select se actualiza ///////////////////////////////////
+        if (Legajo.Categoria is null) Legajo.Categoria = new Categoria();
+        if (Legajo.Horario is null) Legajo.Horario = new Horario();
+        if (Legajo.Sector is null) Legajo.Sector = new Sector();
+
+        Legajo.Categoria.Id = Legajo.CategoriaId;
+        Legajo.Horario.Id = Legajo.HorarioId.Value;
+        Legajo.Sector.Id = Legajo.SectorId;
+        //////////////////////////////////////////////////////////////////////////////////
+
+        await repositorio.Put(Legajo);
+        //await repositorio.Actualizar(objeto);
+        navigationManager.NavigateTo("legajos");
+    }
+
+
+
+}

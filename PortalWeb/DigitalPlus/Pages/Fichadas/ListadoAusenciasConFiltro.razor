@@ -1,0 +1,233 @@
+﻿@page "/fichadas/ausencias"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioFichadas repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject RepositorioSucursales repositorioSucursales
+@inject RepositorioLegajos repositorioLegajos
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS;
+
+
+<div class="d-flex titulo">
+    <h3 class="p-2 flex-grow-1">Fichadas </h3>
+
+    <ul class="nav nav-pills nav-fill mb-3">
+        <li class="list-group list-group-item" style="width:100%;">
+            <span>
+
+                <label class="me-2">
+                    Desde:
+                    <input type="date" @bind-value="fDesde" />
+                </label>
+                <label class="me-2">
+                    Hasta:
+                    <input type="date" @bind-value="fHasta" />
+                </label>
+
+
+                <select class="me-2" @bind="@LegajoElegido">
+                    <option value="0">--Legajo--</option>
+                    @foreach (var item in Legajos)
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                </select>
+
+                <select class="me-2" @bind="@SucursalElegida">
+                    <option value="0">--Sucursal--</option>
+                    @foreach (var item in Sucursales)
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                </select>
+
+                
+            </span>
+        </li>
+    </ul>
+</div>
+
+<div class="float-end">
+    <BotonListadoConToolTip Color="yellow-green" IconoClase="bi bi-search" ToolTipText="Buscar" Accion="@Cargar" />
+    <BotonListadoConToolTip Color="excel" IconoClase="bi bi-file-earmark-excel" ToolTipText="Pasar a Excel" Accion="@DownloadExcel" />
+    <BotonListadoConToolTip Color="legajo" IconoClase="bi bi-person-lines-fill" ToolTipText="Volver a la Ficha" Accion="@Volver" />
+</div>
+
+
+
+
+@if (Fichadas == null)
+{
+    <text>Cargando...</text>
+}
+else if (Fichadas.Count == 0)
+{
+    <text>No se encontraron Fichadas...</text>
+}
+else
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Legajo</th>
+                <th>Nombre</th>
+                <th>Fecha</th>
+                <th>Sector</th>
+                <th>CodSuc</th>
+                <th>Sucursal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Fichadas)
+            {
+                <tr>
+                    <td>@item.LegajoId</td>
+                    <td><a href="/legajos/editar/@item.Id">@item.Nombre</a></td>
+                    <td>@item.Fecha.ToShortDateString()</td>
+                    <td>@item.Sector</td>
+                    <td>@item.CodigoSucursal</td>
+                    <td>@item.NombreSucursal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string userId;
+
+
+    // Sacar esto cuando hagas los reportes.
+    private bool MostrarModal = true;
+
+
+    List<FichadaAusenciasDTO> Fichadas;
+    private DateTime fDesde = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Today.Day);
+    private DateTime fHasta = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Today.Day).AddDays(1);
+
+    //para el filtro
+    List<Legajo> Legajos = new List<Legajo>();
+    List<Sucursal> Sucursales = new List<Sucursal>();
+    private int LegajoElegido = 0;
+    private int SucursalElegida = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (AuthenticationStateTask is not null)
+        {
+            authenticationState = await AuthenticationStateTask;
+            var claimsPrincipal = authenticationState.User;
+            userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier).Value;
+            Legajos = await repositorioLegajos.GetLegajoSegunUsuario(userId, string.Empty);
+            Sucursales =  repositorioSucursales.GetUsuarioSucursalesSQL(userId);
+        }
+        else
+        {
+            Legajos = await repositorioLegajos.Get(string.Empty);
+            Sucursales = await repositorioSucursales.Get();
+        }
+       
+
+        await Cargar();
+    }
+
+
+    private async Task Cargar()
+    {
+        Fichadas = new List<FichadaAusenciasDTO>();
+        if (AuthenticationStateTask is not null)
+        {
+            //Fichadas = await repositorio.GetAusencias(userId, fDesde, fHasta, LegajoElegido);
+            Fichadas = await repositorio.GetAusenciasSuc(fDesde, fHasta, SucursalElegida, LegajoElegido, userId);
+            
+           
+        }
+        else
+        {
+            NavigationManager.NavigateTo("fichadas/ausencias");
+        }
+    }
+
+    private void DownloadExcel()
+    {
+        //anda a buscarlo a IndiceFichardas.razor
+
+        string archivo = DateTime.Now.ToString(@$"yyyy-MM-dd-HH-mm-ss");
+        archivo = " Ausencias - " + archivo + ".xlsx";
+
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        using (var package = new ExcelPackage(archivo))
+        {
+            try
+            {
+                int regD = 3;
+                int regH = regD;
+
+                package.Workbook.Properties.Title = "Digital Plus - Kosiuko";
+                package.Workbook.Properties.Author = "Digital One";
+                package.Workbook.Properties.Subject = $"Ausencias";
+                package.Workbook.Properties.Keywords = "Ausencias - Kosiuko";
+
+                var worksheet = package.Workbook.Worksheets.Add("Ausencias");
+
+                worksheet.Cells["C1"].Value = DateTime.Today.ToString("dd-MMMM-yyyy hh:mm");
+
+                worksheet.Cells[2, 1].Value = $"Ausencias Historica ";
+                worksheet.Cells[2, 1, 2, 3].Merge = true;
+
+                // Headers
+                worksheet.Cells[regD, 1].Value = "Legajo";
+                worksheet.Cells[regD, 2].Value = "Nombre";
+                worksheet.Cells[regD, 3].Value = "Fecha";
+
+
+
+                foreach (var item in Fichadas)
+                {
+                    regH++;
+                    worksheet.Cells[regH, 1].Value = item.LegajoId;
+                    worksheet.Cells[regH, 2].Value = item.Nombre;
+                    worksheet.Cells[regH, 3].Value = item.Fecha.ToShortDateString();
+
+                }
+
+
+                /// agrego una tabla
+                var tbl = worksheet.Tables.Add(new ExcelAddressBase(fromRow: regD, fromCol: 1, toRow: regH, toColumn: 3), "Data");
+                tbl.ShowHeader = true;
+                tbl.TableStyle = OfficeOpenXml.Table.TableStyles.Light15;
+
+                ////tbl.ShowTotal = true;
+                ////tbl.Columns[5].DataCellStyleName = dataCellStyleName;
+                ////tbl.Columns[5].TotalsRowFunction = OfficeOpenXml.Table.RowFunctions.Sum;
+                ////worksheet.Cells[5, 4].Style.Numberformat.Format = numberFormat;
+
+                ////autofit
+                worksheet.Cells[regD, 1, regH, 3].AutoFitColumns();
+
+                JS.GuardarComo(archivo, package.GetAsByteArray());
+                // Save to file
+                //package.Save();
+                mostrarMensaje.MostrarMensajeExitoso("Archivo Creado...");
+            }
+            catch (Exception ex)
+            {
+
+                mostrarMensaje.MostrarMensajeError(ex.Message);
+            }
+
+        }
+    }
+
+    private void Volver()
+    {
+        NavigationManager.NavigateTo("fichadas/menu");
+    }
+}

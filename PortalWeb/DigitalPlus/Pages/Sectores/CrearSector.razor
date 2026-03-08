@@ -1,0 +1,27 @@
+﻿@page "/sectores/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioSectores repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Sectores</h3>
+
+<FormularioSector OnValidSubmit="CrearEntidad" Sector="Sector" />
+
+@code {
+    private Sector Sector = new Sector();
+
+    private async Task CrearEntidad()
+    {
+        try
+        {
+            await repositorio.Post(Sector);
+            await mostrarMensajes.MostrarMensajeTemporal("Sector", $"{Sector.Nombre}: Almacendo");
+            navigationManager.NavigateTo("/sectores");
+        }
+        catch (Exception ex)
+        {
+            // hacer algo...
+        }
+    }
+}

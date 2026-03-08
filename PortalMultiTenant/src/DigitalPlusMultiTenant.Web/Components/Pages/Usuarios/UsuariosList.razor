@@ -17,65 +17,149 @@
     <a href="usuarios/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Usuario</a>
 </div>
 
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Email o nombre..."
+                       @bind="filtro" @bind:event="oninput" @bind:after="BuscarDebounce" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Estado</label>
+                <select class="form-select form-select-sm" @bind="filtroActivo" @bind:after="Buscar">
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Email</th>
-                    <th>Nombre</th>
-                    <th>Rol</th>
-                    <th>Activo</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (items == null)
-                {
-                    <tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
-                }
-                else if (!items.Any())
-                {
-                    <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay usuarios</td></tr>
-                }
-                else
-                {
-                    @foreach (var u in items)
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("email")'>
+                            Email @SortIcon("email")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("nombre")'>
+                            Nombre @SortIcon("nombre")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("rol")'>
+                            Rol @SortIcon("rol")
+                        </th>
+                        <th>Activo</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items == null)
                     {
-                        <tr class="@(!u.User.IsActive ? "table-secondary" : "")">
-                            <td>@u.User.Email</td>
-                            <td>@u.User.NombreCompleto</td>
-                            <td><span class="badge bg-info">@u.Role</span></td>
-                            <td>
-                                @if (u.User.IsActive)
-                                { <span class="badge bg-success">Si</span> }
-                                else
-                                { <span class="badge bg-secondary">No</span> }
-                            </td>
-                            <td class="text-end">
-                                <a href="usuarios/editar/@u.User.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                            </td>
-                        </tr>
+                        <tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
                     }
-                }
-            </tbody>
-        </table>
+                    else if (!items.Any())
+                    {
+                        <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay usuarios</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var u in items)
+                        {
+                            <tr class="@(!u.User.IsActive ? "table-secondary" : "")">
+                                <td>@u.User.Email</td>
+                                <td>@u.User.NombreCompleto</td>
+                                <td><span class="badge bg-info">@u.Role</span></td>
+                                <td>
+                                    @if (u.User.IsActive)
+                                    { <span class="badge bg-success">Si</span> }
+                                    else
+                                    { <span class="badge bg-secondary">No</span> }
+                                </td>
+                                <td class="text-end">
+                                    <a href="usuarios/editar/@u.User.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 @code {
     private List<UserViewModel>? items;
+    private List<UserViewModel> allItems = new();
+    private string filtro = "";
+    private string filtroActivo = "true";
+    private string ordenColumna = "email";
+    private bool ordenDesc;
+    private CancellationTokenSource? _debounceToken;
 
     protected override async Task OnInitializedAsync()
     {
         var empresaId = Tenant.EmpresaId;
-        var users = await UserManager.Users.Where(u => u.EmpresaId == empresaId).OrderBy(u => u.Email).ToListAsync();
-        items = new List<UserViewModel>();
+        var users = await UserManager.Users.Where(u => u.EmpresaId == empresaId).ToListAsync();
+        allItems = new List<UserViewModel>();
         foreach (var u in users)
         {
             var roles = await UserManager.GetRolesAsync(u);
-            items.Add(new UserViewModel { User = u, Role = roles.FirstOrDefault() ?? "Sin rol" });
+            allItems.Add(new UserViewModel { User = u, Role = roles.FirstOrDefault() ?? "Sin rol" });
         }
+        AplicarFiltros();
+    }
+
+    private async Task BuscarDebounce()
+    {
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try { await Task.Delay(300, _debounceToken.Token); AplicarFiltros(); }
+        catch (TaskCanceledException) { }
+    }
+
+    private Task Buscar() { AplicarFiltros(); return Task.CompletedTask; }
+
+    private async Task SetOrden(string columna)
+    {
+        if (ordenColumna == columna) ordenDesc = !ordenDesc;
+        else { ordenColumna = columna; ordenDesc = false; }
+        AplicarFiltros();
+    }
+
+    private void AplicarFiltros()
+    {
+        var query = allItems.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.Trim().ToLower();
+            query = query.Where(u => (u.User.Email?.ToLower().Contains(f) ?? false)
+                || (u.User.NombreCompleto?.ToLower().Contains(f) ?? false));
+        }
+        if (filtroActivo == "true") query = query.Where(u => u.User.IsActive);
+        else if (filtroActivo == "false") query = query.Where(u => !u.User.IsActive);
+
+        var ordered = ordenColumna switch
+        {
+            "nombre" => ordenDesc ? query.OrderByDescending(u => u.User.NombreCompleto) : query.OrderBy(u => u.User.NombreCompleto),
+            "rol" => ordenDesc ? query.OrderByDescending(u => u.Role) : query.OrderBy(u => u.Role),
+            _ => ordenDesc ? query.OrderByDescending(u => u.User.Email) : query.OrderBy(u => u.User.Email),
+        };
+
+        items = ordered.ToList();
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
     }
 
     private class UserViewModel

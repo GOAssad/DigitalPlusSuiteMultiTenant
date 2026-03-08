@@ -1,0 +1,35 @@
+KSK
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=192.168.0.11;initial catalog=Accesos;persist security info=True;user id=sa;password=Soporte1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="AccesoXuXo" connectionString="Data Source=192.168.0.11;Initial Catalog=PRD01;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+<add name="AccesoXuXoHuella" connectionString="Data Source=192.168.0.11;Initial Catalog=Accesos;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+
+
+Chobet
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=192.168.0.10;initial catalog=Accesos;persist security info=True;user id=sa;password=sa1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="AccesoXuXo" connectionString="Data Source=192.168.0.10;Initial Catalog=PRD01;User ID=sa;Password=sa1;" providerName="System.Data.SqlClient"/>
+<add name="AccesoXuXoHuella" connectionString="Data Source=192.168.0.10;Initial Catalog=Accesos;User ID=sa;Password=sa1;" providerName="System.Data.SqlClient"/>
+
+
+Local - Accesos
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=NOTE\SQL2014;initial catalog=Accesos;persist security info=True;user id=sa;password=Soporte1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="AccesoXuXo" connectionString="Data Source=NOTE\SQL2014;Initial Catalog=TWO;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+<add name="AccesoXuXoHuella" connectionString="Data Source=NOTE\SQL2014;Initial Catalog=Accesos;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+
+Local - TocayAnda
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=NOTE\SQL2014;initial catalog=Tocayanda;persist security info=True;user id=sa;password=Soporte1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="AccesoXuXo" connectionString="Data Source=NOTE\SQL2014;Initial Catalog=TWO;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+<add name="AccesoXuXoHuella" connectionString="Data Source=NOTE\SQL2014;Initial Catalog=Tocayanda;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+
+Gramon
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=10.0.0.8;initial catalog=Accesos;persist security info=True;user id=sa;password=Soporte1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="AccesoXuXo" connectionString="Data Source=10.0.0.8;Initial Catalog=PRD01;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+<add name="AccesoXuXoHuella" connectionString="Data Source=10.0.0.8;Initial Catalog=Accesos;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+
+Gramon Test
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=10.0.0.8;initial catalog=AccesosTest;persist security info=True;user id=sa;password=Soporte1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="AccesoXuXo" connectionString="Data Source=10.0.0.8;Initial Catalog=PRD01;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+<add name="AccesoXuXoHuella" connectionString="Data Source=10.0.0.8;Initial Catalog=AccesosTest;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>
+
+Local - TocayAnda 2021
+<add name="AccesosEntidades" connectionString="metadata=res://*/AccesoDataModel.csdl|res://*/AccesoDataModel.ssdl|res://*/AccesoDataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=NOTE\SQL2014;initial catalog=Tocayanda;persist security info=True;user id=sa;password=Soporte1;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+<add name="ConTocayAnda" connectionString="Data Source=NOTE\SQL2014;Initial Catalog=Tocayanda;User ID=sa;Password=Soporte1;" providerName="System.Data.SqlClient"/>

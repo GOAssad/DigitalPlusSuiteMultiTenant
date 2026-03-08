@@ -1,0 +1,179 @@
+﻿@page "/legajos/buscarLista"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioLegajos repositorio
+@inject RepositorioSectores repositorioSectores
+@inject NavigationManager navigationManager
+
+<div class="form-group">
+    <LegajoSubMenu />
+</div>
+
+
+<div class="row g-3 align-items-center mb-3">
+    <div class="col-sm-6">
+
+        <input type="text" class="form-control" id="nombre" placeholder="Nombre"
+               @bind-value="nombre" @bind-value:event="oninput"
+               @onkeypress="@((KeyboardEventArgs e) => NombreKeyPress(e))" />
+
+    </div>
+    <div class="col-sm-3">
+        <select class="form-select" @bind="sectorSeleccionado">
+            <option value="0">--Seleccione un Sector--</option>
+            @foreach (var item in sectores)
+            {
+                <option value="@item.Id">@item.Nombre</option>
+            }
+        </select>
+    </div>
+
+        
+
+    <div class="col-12">
+        <button type="button" class="btn btn-primary" @onclick="CargarNuevasLegajos">Filtrar</button>
+        <button type="button" class="btn btn-danger" @onclick="LimpiarOnClick">Limpiar</button>
+    </div>
+</div>
+
+<ListadoLegajosksk Legajos="Legajos"></ListadoLegajosksk>
+
+<Paginacion PaginaActual="paginaActual" PaginasTotales="paginasTotales"
+            PaginaSeleccionada="PaginaSeleccionada" />
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    //------------------------------------------------------------------------
+
+    private List<Legajo> Legajos;
+    string nombre = "";
+    string sectorSeleccionado = "0";
+    private List<Sector> sectores = new List<Sector>();
+    Dictionary<string, string> queryStringsDict = new Dictionary<string, string>();
+    private int paginaActual = 1;
+    private int paginasTotales;
+
+    private bool activos = true;
+    private string userId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerSectores();
+
+        var url = navigationManager.Uri;
+
+        var queries = navigationManager.ObtenerQueryStrings(url);
+
+
+        //7/3/2024
+        if (AuthenticationStateTask is not null)
+        {
+            authenticationState = await AuthenticationStateTask;
+            var claimsPrincipal = authenticationState.User;
+            //Obtengo el ID del usuario
+            userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier).Value;
+        }
+
+        if (queries == null)
+        {
+
+            await RealizarBusqueda();
+        }
+        else
+        {
+            queryStringsDict = queries;
+            LlenarCampos();
+            await RealizarBusqueda();
+        }
+    }
+    private void LlenarCampos()
+    {
+        if (queryStringsDict.ContainsKey("sectorid"))
+        {
+            sectorSeleccionado = queryStringsDict["sectorid"];
+        }
+
+        if (queryStringsDict.ContainsKey("nombre"))
+        {
+            nombre = queryStringsDict["nombre"];
+        }
+
+        if (queryStringsDict.ContainsKey("pagina"))
+        {
+            int.TryParse(queryStringsDict["pagina"], out paginaActual);
+        }
+
+
+
+    }
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarNuevasLegajos();
+    }
+    private async Task ObtenerSectores()
+    {
+        sectores = await repositorioSectores.Get();
+    }
+    private async Task NombreKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await CargarNuevasLegajos();
+        }
+    }
+
+    private async Task CargarNuevasLegajos()
+    {
+
+        var queryStrings = GenerarQueryStrings();
+        navigationManager.NavigateTo("/legajos/buscarlista?" + queryStrings);
+        await RealizarBusqueda();
+    }
+    private async Task RealizarBusqueda()
+    {
+        var parametrosBusqueda = GenerarParametrosBusqueda();
+        var respuestaPaginada = await repositorio.GetLegajoSegunUsuario(parametrosBusqueda);
+        paginasTotales = respuestaPaginada.TotalPaginas;
+        Legajos = respuestaPaginada.Registros;
+    }
+    private ParametrosBusquedaLegajos GenerarParametrosBusqueda()
+    {
+        var respuesta = new ParametrosBusquedaLegajos();
+        respuesta.SectorId = int.Parse(sectorSeleccionado);
+        respuesta.Nombre = nombre;
+        respuesta.Pagina = paginaActual;
+        respuesta.UsuarioId = userId;
+        //respuesta.Activo = activos;
+        return respuesta;
+    }
+    private string GenerarQueryStrings()
+    {
+        if (queryStringsDict == null) { queryStringsDict = new Dictionary<string, string>(); }
+        queryStringsDict["sectorid"] = sectorSeleccionado;
+        queryStringsDict["nombre"] = nombre;
+        queryStringsDict["pagina"] = paginaActual.ToString();
+        queryStringsDict["usuario"] = userId;
+        //queryStringsDict["activo"] = activos.ToString();
+
+        var valoresPorDefecto = new List<string>() { "false", "", "0" };
+
+        // sectorid=7&nombre=spider ...
+
+        return string.Join("&", queryStringsDict
+            .Where(x => !valoresPorDefecto.Contains(x.Value.ToLower()))
+            .Select(x => $"{x.Key}={System.Web.HttpUtility.UrlEncode(x.Value)}").ToArray());
+    }
+    private async Task LimpiarOnClick()
+    {
+        nombre = "";
+        sectorSeleccionado = "0";
+        paginaActual = 1;
+        await CargarNuevasLegajos();
+    }
+    private void cambioCombo()
+    {
+
+    }
+}

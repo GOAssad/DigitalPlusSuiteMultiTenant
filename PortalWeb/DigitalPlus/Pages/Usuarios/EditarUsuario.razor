@@ -1,0 +1,203 @@
+﻿@page "/usuarios/editar/{UserId}"
+@using DigitalPlus.Areas.Identity.Pages.Account;
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+@inject RepositorioUsuarios repositorio
+@inject RepositorioLegajos repositorioLegajos
+@inject RepositorioSucursales repositorioSucursales
+@inject IMostrarMensajes mostrarMensajes
+
+
+
+<TituloIndice Titulo="@Titulo" LineaDivisoria="true" />
+
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="form-inline">
+
+            <select class="form-control mb-2 mr-sm-2" @bind="rolSeleccionado">
+                <option value="0">--Seleccione un rol--</option>
+                @foreach (var rol in roles)
+                {
+                    <option value="@rol.Nombre">@rol.Nombre</option>
+                }
+            </select>
+
+            <button class="btn btn-primary mb-2 mr-sm-2" @onclick="AsignarRol">Asignar Rol</button>
+            <button class="btn btn-danger mb-2 mr-sm-2" @onclick="RemoverRol">Remover Rol</button>
+
+            <br />
+
+
+
+            <ListadoGenerico Listado="UsuariosRoles">
+                <HayRegistrosCompleto>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Rol</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var usuario in UsuariosRoles)
+                            {
+                                <tr>
+                                    <td>
+                                        @usuario.NombreRol
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </HayRegistrosCompleto>
+            </ListadoGenerico>
+
+        </div>
+    </div>
+</div>
+<LineaDivisoria />
+
+<TituloIndice Titulo="Sucursales" />
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="form-inline">
+            <div class="row">
+
+                <div class="form-group mb-2 col-6">
+
+                    <div>
+                        <SelectorMultiple Seleccionados="Seleccionados"
+                                          NoSeleccionados="NoSeleccionados"></SelectorMultiple>
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="btn btn-primary mb-2 mr-sm-2" @onclick="AsignarSucursales">Guardar Sucursales</button>
+
+
+            <br />
+
+        </div>
+    </div>
+</div>
+
+<LineaDivisoria />
+<a class="btn btn-danger" href="@HrefcambioPass">Cambiar Password</a>
+
+@code {
+    [Parameter] public string UserId { get; set; }
+
+
+    private List<RolDTO> roles = new List<RolDTO>();
+    private string rolSeleccionado = "0";
+
+
+    IdentityUser Usuario = new IdentityUser();
+
+    private List<UsuarioRolesDTO> UsuariosRoles = new List<UsuarioRolesDTO>();
+
+
+    private List<UsuarioSucursal> usuariosucursal = new List<UsuarioSucursal>();
+
+    private string Titulo;
+
+    private List<SelectorMultipleModel> Seleccionados { get; set; } = new List<SelectorMultipleModel>();
+    private List<SelectorMultipleModel> NoSeleccionados { get; set; } = new List<SelectorMultipleModel>();
+
+
+    private string HrefcambioPass = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+
+        roles = await repositorio.GetRoles();
+        Usuario = await repositorio.Get(UserId);
+        await CargarRoles();
+
+
+        //Busco el UsuarioSucursal del usuario logeado
+        usuariosucursal = await repositorio.GetUsuarioSucursal(UserId);
+
+
+
+        Seleccionados = usuariosucursal
+            .Select(x => new SelectorMultipleModel(x.SucursalId.ToString(), x.Sucursal.Nombre)).ToList();
+
+        List<Sucursal> NoSeleccionadas = repositorioSucursales.GetLista();
+        var SucursalesSeleccionadasIds = usuariosucursal.Select(x => x.SucursalId).ToList();
+
+        NoSeleccionadas = NoSeleccionadas.Where(x => !SucursalesSeleccionadasIds.Contains(x.Id)).ToList();
+
+        NoSeleccionados = NoSeleccionadas
+            .Select(h => new SelectorMultipleModel(h.Id.ToString(), h.Nombre)).ToList();
+
+
+        Titulo = "Editar Usuario " + Usuario.Email;
+        HrefcambioPass = $"/usuarios/resetpassword/{UserId}/{Usuario.Email}";
+
+    }
+    private async Task AsignarSucursales()
+    {
+        if (Seleccionados.Count() == 0)
+        {
+            await mostrarMensajes.MostrarMensajeAlerta("Incluya al menos una Sucursal");
+            return;
+        }
+
+        List<int> sucursales = new List<int>();
+        sucursales = Seleccionados.Select(x => int.Parse(x.Llave)).ToList();
+
+        await repositorio.GuardarUsuarioSucursales(UserId, sucursales);
+        await mostrarMensajes.MostrarMensajeTemporal("Usuario/Sucursales", "...Sucursales Actualizadas");
+
+
+    }
+    private async Task CargarRoles()
+    {
+        UsuariosRoles = await repositorio.GetRolesPorUsuario(UserId);
+    }
+    private async Task AsignarRol()
+    {
+        var esValido = await ValidarEditarRol();
+        if (!esValido)
+        {
+            return;
+        }
+
+        var rolDTO = new EditarRolDTO() { RoleId = rolSeleccionado, UserId = UserId };
+        await repositorio.AsignarRolUsuario(rolDTO);
+        await mostrarMensajes.MostrarMensajeTemporal("Rol", "...Actualizado");
+        await CargarRoles();
+
+    }
+    private async Task RemoverRol()
+    {
+        var esValido = await ValidarEditarRol();
+        if (!esValido)
+        {
+            return;
+        }
+
+        var rolDTO = new EditarRolDTO() { RoleId = rolSeleccionado, UserId = UserId };
+        await repositorio.RemoverUsuarioRol(rolDTO);
+        await mostrarMensajes.MostrarMensajeTemporal("Rol", "...Eliminado");
+        await CargarRoles();
+    }
+    private async Task<bool> ValidarEditarRol()
+    {
+        if (rolSeleccionado == "0")
+        {
+            await mostrarMensajes.MostrarMensajeError("Debe seleccionar un rol");
+            return false;
+        }
+
+        return true;
+    }
+
+
+    
+
+}

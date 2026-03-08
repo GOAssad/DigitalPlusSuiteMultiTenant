@@ -1,0 +1,132 @@
+@page "/codigos"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>Codigos de Licencia - DigitalPlus</PageTitle>
+
+<h3 class="mb-4">Codigos de Licencia</h3>
+
+<div class="card mb-4">
+    <div class="card-header">Generar nuevo codigo</div>
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Plan</label>
+                <select class="form-select" @bind="newPlan">
+                    <option value="basic">Basic</option>
+                    <option value="premium">Premium</option>
+                    <option value="enterprise">Enterprise</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Max Legajos</label>
+                <input type="number" class="form-control" @bind="newMaxLegajos" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Duracion (dias)</label>
+                <input type="number" class="form-control" @bind="newDuration" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Expira en (horas)</label>
+                <input type="number" class="form-control" @bind="newExpiry" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Notas</label>
+                <input type="text" class="form-control" @bind="newNotes" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" @onclick="Generar">Generar</button>
+            </div>
+        </div>
+        @if (codigoGenerado != null)
+        {
+            <div class="alert alert-success mt-3">
+                <strong>Codigo generado:</strong>
+                <code class="fs-5 ms-2">@codigoGenerado</code>
+                <br /><small class="text-muted">Copie este codigo, no se mostrara nuevamente.</small>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="mb-3">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" @bind="mostrarUsados" @bind:after="Cargar" id="chkUsados" />
+        <label class="form-check-label" for="chkUsados">Mostrar codigos usados/expirados</label>
+    </div>
+</div>
+
+@if (codigos == null)
+{
+    <p>Cargando...</p>
+}
+else if (codigos.Count == 0)
+{
+    <div class="alert alert-info">No hay codigos disponibles.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Hash (parcial)</th>
+                <th>Plan</th>
+                <th>Max Legajos</th>
+                <th>Duracion</th>
+                <th>Estado</th>
+                <th>Creado</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in codigos)
+            {
+                <tr>
+                    <td><code>@c.CodeHash[..12]...</code></td>
+                    <td>@c.Plan</td>
+                    <td>@c.MaxLegajos</td>
+                    <td>@c.DurationDays dias</td>
+                    <td>
+                        <span class="badge @(c.IsAvailable ? "bg-success" : c.UsedAt.HasValue ? "bg-secondary" : "bg-danger")">
+                            @c.EstadoDisplay
+                        </span>
+                    </td>
+                    <td>@c.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td><small>@c.Notes</small></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DigitalPlus.Licencias.Entidades.LicenseCode>? codigos;
+    private bool mostrarUsados;
+    private string newPlan = "basic";
+    private int newMaxLegajos = 25;
+    private int newDuration = 365;
+    private int newExpiry = 48;
+    private string? newNotes;
+    private string? codigoGenerado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        codigos = await Repo.GetCodigosAsync(mostrarUsados);
+    }
+
+    private async Task Generar()
+    {
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        var user = auth.User.Identity?.Name ?? "unknown";
+        codigoGenerado = await Repo.GenerarCodigoAsync(newPlan, newMaxLegajos, newDuration, newExpiry, user, newNotes);
+        await Cargar();
+    }
+}

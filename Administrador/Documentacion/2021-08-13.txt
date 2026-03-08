@@ -1,0 +1,52 @@
+mandame las pantallas
+
+ficha del empleado es el dashboard
+
+5 botones
+	encontrar la ficha
+	listados
+		fichadas
+llegadas tardes
+ausencias
+almuerzos
+
+apretas y llegas a lo del dia
+luego los filtros
+
+quien llego tarde?
+sale el listado, se para en la grilla y de ahi lo puede modificar, agregar incidencia, modificar horario etc.
+
+a ver quien no vino hoy?
+con un click modifica o agrega incidencia
+
+Esta persona no ficho, se fijaba, miraba los movimientos, y de ahi puede agregar, eliminar o modificar un movimiento.
+
+
+Solapa de informacion que estan los listados, no va.
+
+la ultima solapa se llama turnos, la podemos dejar, se llama francos, saco el calendario que esta abajo.
+El boton que agrega a la grilla ponelo al contasdo.
+
+pestaña que toma las huellas, esta bien, el baner que puse abajo que esta
+
+
+Movimientos masivos no tienen que ser por rango, sector.
+Quedan todos seleccionados
+Todos los sleccionadios le pongo la fecha y hora
+los legajos son texto
+
+en un listado que te calcula las horas trabajados te sale un dia adelante.
+
+Feiman
+52194760
+
+Si descubris que tu pareja te mintio toda la vida, que haces? Te separas? y cuando descubris que tu presidente te mintio antes de asumir para que lo votes, que haces? Lo volves a votar? Basta, busquemos otra cosa Argentinos. 
+
+
+
+Comedores consulte precio, que quede en el medio igual que gourment, con el telefono, mail
+mercado pago, medios de pago
+cuando tocas vas para mercado pago y pones aceptamos todas las tarjetas
+
+
+Como va! Te van a llegar algunos emial de prueba porque estoy probando el formulario que te puse en la pagina para que te puedan hacer consultas y te lleguen a tu email. Es mejor que al usuario le pongas todo a mano para que te hagan la primer consulta, el resto que me pediste creo que quedo. Fijate si te llegaron los formularios, tal vez te lleguen en la parte de promociones si tenes Gmail. Bueno fijate todo cuando puedas y avisame cualquier cosa. 

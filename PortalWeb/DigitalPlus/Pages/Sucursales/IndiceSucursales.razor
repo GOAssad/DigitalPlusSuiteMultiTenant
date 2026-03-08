@@ -1,0 +1,78 @@
+﻿@page "/sucursales"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioSucursales repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject NavigationManager navigationManager
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Atributos_Sucursal.png" Titulo="Sucursales" />
+
+    <div class="form-group">
+        <BotonAgregarEntidad CrearEntidad="Crear" TextoBoton="Crear Sucursal"></BotonAgregarEntidad>
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>
+
+    <ListadoGenerico Listado="Sucursales">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Codigo</th>
+                        <th>Nombre</th>
+                        <th>Id</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Sucursales)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/sucursales/editar/@item.Id" class="btn btn-success btn-sm">Editar</a>
+                                <button @onclick="@(() => BorrarSucursales(item))" class="btn btn-danger btn-sm">Borrar</button>
+                            </td>
+                            <td>@item.CodigoSucursal</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Id</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+
+@code {
+    public List<Sucursal> Sucursales { get; set; }
+    string textobusqueda;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Cargar(string.Empty);
+    }
+
+    private async Task Cargar(string texto)
+    {
+        Sucursales = await repositorio.Get(texto);
+    }
+
+    private async Task BorrarSucursales(Sucursal objeto)
+    {
+        var condicion = await mostrarMensajes.MostrarMensajeBorrar(objeto.Nombre);
+
+        if (condicion)
+        {
+            await repositorio.Delete(objeto.Id);
+            await mostrarMensajes.MostrarMensajeTemporal("Sucursal", $"{objeto.Nombre}: ... borrada");
+        }
+        
+
+        await Cargar(string.Empty);
+    }
+    private void Crear()
+    {
+        navigationManager.NavigateTo("sucursales/crear");
+    }
+}

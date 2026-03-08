@@ -1,0 +1,25 @@
+﻿<span title="@ToolTipText" class="me-1">
+    <a class="btn btn-secondary @Color" onclick="@Accion">
+        <i class="@IconoClase"></i>
+    </a>
+</span>
+
+@code {
+    /// <summary>
+    /// Cuando te paras arriba sale el texto que tiene el parametro almacenado como para que tenga una breve ayuda el usuario
+    /// </summary>
+    [Parameter] public string ToolTipText { get; set; } = string.Empty;
+
+    [Parameter] public EventCallback Accion { get; set; }
+
+    /// <summary>
+    /// Formato Ejemplo de String a pasar:  bi bi-file-earmark-excel
+    /// </summary>
+    [Parameter] public string IconoClase { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Revisar en el css site y agrega el color que quieras con el nombre que lo identifique
+    /// si no usas este parametro el color es Primary (Verde)
+    /// </summary>
+    [Parameter] public string Color { get; set; } = string.Empty;
+}

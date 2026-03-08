@@ -20,3 +20,9 @@ Desktop.ini
 # Installer outputs
 Instaladores/*/Output/*.exe
 SDK/
+
+# Library App.config con connection strings legacy (contienen credenciales)
+Common/Global.Datos/App.config
+Common/Global.Controles/App.config
+Common/Global.DigitalPersona/app.config
+Common/Acceso.Clases.Datos/App.config

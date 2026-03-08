@@ -1,0 +1,53 @@
+﻿@page "/"
+@inject RepositorioNoticias repositorio
+@inject ListadoVariablesGlobales VariablesGlobales
+
+
+<div class="container">
+    <TituloPrincipal src="/imagenes/Noticias_Noticias.png" Titulo="Noticias" />
+
+    @*<div class="form-group">
+        <FiltroIndice Cargar="Cargar" textobusqueda="@textobusqueda"></FiltroIndice>
+    </div>*@
+
+    <ListadoGenerico Listado="Noticias">
+        <HayRegistrosCompleto>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Titulo</th>
+                        <th>Descripcion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Noticias)
+                    {
+                        <tr>
+                            <td>@item.FechaDesde.ToShortDateString()</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Nombre</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+@code {
+    private List<Noticia> Noticias = new List<Noticia>();
+    private string textobusqueda = string.Empty;
+    private string empresa = string.Empty;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Noticias = await repositorio.GetPublicos();
+
+     }
+
+    private void Cargar()
+    {
+        
+    }
+
+}

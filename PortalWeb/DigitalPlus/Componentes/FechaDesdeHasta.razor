@@ -1,0 +1,51 @@
+﻿@inject IMostrarMensajes mostrarMensaje
+
+
+<ul class="nav nav-pills nav-fill mb-3">
+    <li class="list-group list-group-item" style="width:100%;">
+        <span>
+
+
+            <label class="me-2">
+                Desde:
+                <input type="date" value="@fDesde" @onchange="UpdateFechaDesde" />
+            </label>
+            <label class="me-2">
+                Hasta:
+                <input type="date" value="@fHasta" @onchange="UpdateFechaHasta" />
+            </label>
+            <a class="btn btn-primary me-1" @onclick="Cargar">Buscar</a>
+        </span>
+    </li>
+</ul>
+
+
+
+@code {
+    [Parameter] public DateTime fDesde { get; set; }
+    [Parameter] public DateTime fHasta { get; set; }
+
+    [Parameter] public EventCallback<DateTime> FechaDesdeChanged { get; set; }
+    [Parameter] public EventCallback<DateTime> FechaHastaChanged { get; set; }
+
+    [Parameter] public EventCallback Cargar { get; set; }
+
+    protected override void OnInitialized()
+    {
+        //fDesde = DateTime.Parse(fDesde.ToShortDateString());
+        //DateTime fd = DateTime.Now;
+    }
+
+    private async Task UpdateFechaDesde(ChangeEventArgs args)
+    {
+        fDesde = DateTime.Parse(args.Value.ToString());
+        await FechaDesdeChanged.InvokeAsync(fDesde);
+
+    }
+    private async Task UpdateFechaHasta(ChangeEventArgs args)
+    {
+        fHasta = DateTime.Parse(args.Value.ToString());
+        await FechaHastaChanged.InvokeAsync(fHasta);
+
+    }
+}

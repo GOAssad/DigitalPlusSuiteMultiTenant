@@ -1,0 +1,27 @@
+﻿@page "/categorias/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioCategorias repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensaje
+
+<h3>Crear Categorias</h3>
+
+<FormularioCategoria OnValidSubmit="CrearEntidad" Categoria="Categoria" />
+
+@code {
+    private Categoria Categoria = new Categoria();
+
+    private async Task CrearEntidad()
+    {
+        try
+        {
+            await repositorio.Post(Categoria);
+            await mostrarMensaje.MostrarMensajeTemporal("Categoria", $"{Categoria.Nombre}: Almacendo");
+            navigationManager.NavigateTo("/categorias");
+        }
+        catch (Exception ex)
+        {
+            // hacer algo...
+        }
+    }
+}

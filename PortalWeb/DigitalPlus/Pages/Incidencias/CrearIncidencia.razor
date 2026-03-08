@@ -1,0 +1,31 @@
+﻿@page "/incidencias/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioIncidencias repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<div class="container">
+    <div class="titulo">
+        <h3>Crear Incidencias</h3>
+    </div>
+
+    <FormularioIncidencia OnValidSubmit="CrearEntidad" Incidencia="Incidencia" />
+
+</div>
+@code {
+    private Incidencia Incidencia = new Incidencia();
+
+    private async Task CrearEntidad()
+    {
+        try
+        {
+            await repositorio.Post(Incidencia);
+            await mostrarMensajes.MostrarMensajeTemporal("Incidencia", $"{Incidencia.Nombre}: ...Almacenda");
+            navigationManager.NavigateTo("/incidencias");
+        }
+        catch (Exception ex)
+        {
+            // hacer algo...
+        }
+    }
+}

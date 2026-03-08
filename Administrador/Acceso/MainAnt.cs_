@@ -1,0 +1,758 @@
+﻿using System.Windows.Forms;
+using System;
+using Guifreaks.NavigationBar;
+using System.IO;
+using Microsoft.Xml.Serialization.GeneratedAssembly;
+using Altiora.Formularios;
+using System.Linq;
+using System.Collections.Generic;
+using Acceso.Datos.Model;
+using Acceso.Dispositivos.Formularios;
+
+namespace Acceso
+{
+	public partial class Main : Form
+	{
+		
+
+		public SDKHelper SDK = new SDKHelper();
+		//Gustavo Conexiones sql
+		public string SQLServidor { get; set; }
+		public string SQLDataBase { get; set; }
+		public string SQLUsuario { get; set; }
+		public string SQLClave { get; set; }
+		public string TERIp { get; set; }
+		public string XMLFolder { get; set; }
+		public string XMLArchivo { get; set; }
+
+		private string tituloformulario;
+
+		int nCantBotones;
+
+		public Main()
+		{
+			InitializeComponent();
+
+
+			string ver = null;
+			SDK.axCZKEM1.GetSDKVersion(ref ver);
+
+            //12/11/2018 - para cuando maximiza
+            tabControl1.Left = naviBarXuXo.Width;
+
+            ///Gustavo
+            ///
+            checkBoxBandaVisible.DataBindings.Add(new Binding("Checked", naviBandRRHH, "Visible", true, DataSourceUpdateMode.OnPropertyChanged));
+			checkBoxMasOpciones.DataBindings.Add(new Binding("Checked", naviBarXuXo, "ShowMoreOptionsButton", true, DataSourceUpdateMode.OnPropertyChanged));
+			checkBoxColapsar.DataBindings.Add(new Binding("Checked", naviBarXuXo, "Collapsed", true, DataSourceUpdateMode.OnPropertyChanged));
+			checkBoxMostrarColapsar.DataBindings.Add(new Binding("Checked", naviBarXuXo, "ShowCollapseButton", true, DataSourceUpdateMode.OnPropertyChanged));
+			numericoAlturaImagenesChicas.DataBindings.Add(new Binding("Value", naviBarXuXo, "MinimizedPanelHeight", true, DataSourceUpdateMode.OnPropertyChanged));
+			numericoImagenGrandeVisible.DataBindings.Add(new Binding("Text", naviBarXuXo, "VisibleLargeButtons", true, DataSourceUpdateMode.OnPropertyChanged));
+			numericoAturaBotones.DataBindings.Add(new Binding("Value", naviBarXuXo, "ButtonHeight", true, DataSourceUpdateMode.OnPropertyChanged));
+			numericoAlturaHeader.DataBindings.Add(new Binding("Value", naviBarXuXo, "HeaderHeight", true, DataSourceUpdateMode.OnPropertyChanged));
+
+			// Verificar modulos activados, todos tienen que estar invisibles de entrada menos el configurador
+			ModulosAtivados();
+			TraerFeriados();
+			CargarPerfil();
+		}
+
+
+		private void ModulosAtivados()
+		{
+			using (Acceso.Datos.Model.AccesosEntidades db = new Datos.Model.AccesosEntidades())
+			{
+				List<METAModulos> lmod = db.METAModulos.ToList();
+				foreach (METAModulos item in lmod)
+				{
+					if (item.sCodigoActivacion != string.Empty)
+					{
+					//	naviBarXuXo.ActiveBand = this.naviBandInicio;
+
+						//activado
+						switch (item.sDescripcion)
+						{
+							case "RRHH":
+								naviBandRRHH.Visible = true;
+								if (item.bEsInicio)
+									naviBarXuXo.ActiveBand = this.naviBandRRHH;
+								break;
+							case "INVENTARIO":
+								naviBandInventario.Visible = true;
+								if (item.bEsInicio)
+									naviBarXuXo.ActiveBand = this.naviBandInventario;
+								break;
+							case "DISPOSITIVOS":
+								naviBandDispositivos.Visible = true;
+								if (item.bEsInicio)
+									naviBarXuXo.ActiveBand = this.naviBandDispositivos;
+								break;
+							default:
+								break;
+						}
+						this.naviBarXuXo.Refresh();
+					}
+				}
+			}
+		}
+
+		private void TraerFeriados()
+		{
+			
+		}
+
+		private void CargarPerfil()
+		{
+			nCantBotones = 
+			int.Parse(Acceso.Clases.Datos.Generales.GRALVariablesGlobalesServicios.TraerValor("GRALCantidadBotonesMenu"));
+
+			for (int i = 0; i < nCantBotones; i++)
+			{
+				SumarBotones();
+			}
+		}
+
+		#region AnuladoParaRevisar
+		private void naviBar1_BandAdded(object sender, ControlEventArgs e)
+		{
+			//textBoxBarLog.AppendText("BandAdded" + Environment.NewLine);
+		}
+
+		private void naviBar1_ActiveBandChanging(object sender, NaviBandEventArgs e)
+		{
+			////textBoxBarLog.AppendText("BandChanging" + Environment.NewLine);
+			//if (e.NewActiveBand == naviBand2)
+			//{
+			//   if (MessageBox.Show("Do you want to change to Band 2?", "Confirm",
+			//      MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.No)
+			//   {
+			//      e.Canceled = true;
+			//   }
+			//}
+		}
+
+		//private void naviBar1_ActiveBandChanged(object sender, EventArgs e)
+		//{
+		//   textBoxBarLog.AppendText("BandChanged" + Environment.NewLine);
+		//}
+
+		//private void button1_Click(object sender, EventArgs e)	//////// Lito
+		//{
+		//   if (naviBar1.NaviLayout is NaviLayoutOff)
+		//   {
+		//      naviBar1.VisibleLargeButtons++;
+		//   }
+		//}
+
+		//private void button2_Click(object sender, EventArgs e)  //////// Listo
+		//{
+		//   if (naviBar1.NaviLayout is NaviLayoutOff)
+		//   {
+		//      naviBar1.VisibleLargeButtons--;
+		//   }
+		//}
+
+		//private void checkBoxRightToLeft_CheckedChanged(object sender, EventArgs e)
+		//{
+		//   if (checkBoxRightToLeft.Checked)
+		//      RightToLeft = RightToLeft.Yes;
+		//   else
+		//      RightToLeft = RightToLeft.No;
+		//}
+
+		//private void ComboBoxLayoutBar_SelectedIndexChanged(object sender, EventArgs e)	/////// Listo
+		//{
+		//   switch (ComboBoxLayoutBar.SelectedItem.ToString())
+		//   {
+		//      case "Office 2003 Blue":
+		//         naviBar1.LayoutStyle = NaviLayoutStyle.Office2003Blue;
+		//         break;
+		//      case "Office 2003 Green":
+		//         naviBar1.LayoutStyle = NaviLayoutStyle.Office2003Green;
+		//         break;
+		//      case "Office 2003 Silver":
+		//         naviBar1.LayoutStyle = NaviLayoutStyle.Office2003Silver;
+		//         break;
+		//      case "Office 2007 Blue":
+		//         naviBar1.LayoutStyle = NaviLayoutStyle.Office2007Blue;
+		//         break;
+		//      case "Office 2007 Black":
+		//         naviBar1.LayoutStyle = NaviLayoutStyle.Office2007Black;
+		//         break;
+		//      case "Office 2007 Silver":
+		//         naviBar1.LayoutStyle = NaviLayoutStyle.Office2007Silver;
+		//         break;
+		//      case "Office 2010":
+		//         break;
+		//      case "Office Guifreaks":
+		//         break;
+		//   }
+		//}
+
+		//private void ButtonAddBand_Click(object sender, EventArgs e)			/////// Listo
+		//{
+		//   NaviBand band = new NaviBand();
+
+		//   band.Text = "NaviBand" + (naviBar1.Bands.Count + 1).ToString();
+		////   band.SmallImage = Properties.Resources.bookmark1;
+		// //  band.LargeImage = Properties.Resources.bookmark;
+
+		//   naviBar1.Bands.Add(band);
+		//}
+
+		//private void buttonSaveSettings_Click(object sender, EventArgs e)
+		//{
+		//   if (saveFileDialogSettings.ShowDialog() == DialogResult.OK)
+		//   {
+		//      try
+		//      {
+		//         string fileName = saveFileDialogSettings.FileName;
+		//         NaviBarSettingsSerializer serial = new NaviBarSettingsSerializer();
+		//         using (TextWriter w = new StreamWriter(fileName))
+		//         {
+		//            serial.Serialize(w, naviBar1.Settings);
+		//         }
+		//      }
+		//      catch (Exception ex)
+		//      {
+		//         MessageBox.Show(ex.Message);
+		//      }
+		//   }
+		//}
+
+		//private void buttonLoadSettings_Click(object sender, EventArgs e)
+		//{
+		//   if (openFileDialogSettings.ShowDialog() == DialogResult.OK)
+		//   {
+		//      try
+		//      {
+		//         string fileName = openFileDialogSettings.FileName;
+		//         NaviBarSettingsSerializer serial = new NaviBarSettingsSerializer();
+		//         using (StreamReader reader = new StreamReader(fileName))
+		//         {
+		//            NaviBarSettings settings = serial.Deserialize(reader) as NaviBarSettings;
+		//            if (settings != null)
+		//            {
+		//               naviBar1.Settings = settings;
+		//               naviBar1.ApplySettings();
+		//            }
+		//         }
+		//      }
+		//      catch (Exception ex)
+		//      {
+		//         MessageBox.Show(ex.Message);
+		//      }
+		//   }
+		//}
+
+		#endregion
+
+
+		private void ButtonActivateBand_Click(object sender, EventArgs e)		/////Listo
+      {
+         naviBarXuXo.ActiveBand = naviBarXuXo.Bands[0];
+      }
+
+     
+
+      private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+      {
+
+      }
+
+    
+		#region XuXo
+			private void botonAplicacionMasBotones_Click(object sender, EventArgs e)
+		{
+			SumarBotones();
+			ActualizarVariablesGlobales();
+			
+		}
+
+		private void SumarBotones()
+		{
+			if (naviBarXuXo.NaviLayout is NaviLayoutOff)
+			{
+				naviBarXuXo.VisibleLargeButtons++;
+			}
+		}
+
+		private void RestarBotones()
+		{
+			if (naviBarXuXo.NaviLayout is NaviLayoutOff)
+			{
+				naviBarXuXo.VisibleLargeButtons--;
+			}
+		}
+		
+		private void ActualizarVariablesGlobales()
+		{
+			using (Acceso.Datos.Model.AccesosEntidades db = new AccesosEntidades())
+			{
+				GRALVariablesGlobales oVar = db.GRALVariablesGlobales.Where(x => x.sVariableGlobalID == "GRALCantidadBotonesMenu").FirstOrDefault();
+				oVar.sValor = naviBarXuXo.VisibleLargeButtons.ToString();
+				db.GRALVariablesGlobales.Attach(oVar);
+				db.Entry(oVar).State = System.Data.Entity.EntityState.Modified;
+				db.SaveChanges();
+			}
+		}
+		private void botonAplicacionActivarBanda_Click(object sender, EventArgs e)
+		{
+			naviBarXuXo.ActiveBand = naviBarXuXo.Bands[0];
+		}
+
+		private void botonAplicacionMenosBotones_Click(object sender, EventArgs e)
+		{
+			RestarBotones();
+			ActualizarVariablesGlobales();
+		}
+
+			private void botonAplicacionAgregarBanda_Click(object sender, EventArgs e)
+			{
+				NaviBand band = new NaviBand();
+
+				band.Text = "NaviBand" + (naviBarXuXo.Bands.Count + 1).ToString();
+			//	band.SmallImage = Properties.Resources.bookmark1;
+			//	band.LargeImage = Properties.Resources.bookmark;
+
+				naviBarXuXo.Bands.Add(band);
+			}
+
+		private void comboBoxLayOut_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			switch (comboBoxLayOut.SelectedItem.ToString())
+			{
+				case "Office 2003 Blue":
+					naviBarXuXo.LayoutStyle = NaviLayoutStyle.Office2003Blue;
+					break;
+				case "Office 2003 Green":
+					naviBarXuXo.LayoutStyle = NaviLayoutStyle.Office2003Green;
+					break;
+				case "Office 2003 Silver":
+					naviBarXuXo.LayoutStyle = NaviLayoutStyle.Office2003Silver;
+					break;
+				case "Office 2007 Blue":
+					naviBarXuXo.LayoutStyle = NaviLayoutStyle.Office2007Blue;
+					break;
+				case "Office 2007 Black":
+					naviBarXuXo.LayoutStyle = NaviLayoutStyle.Office2007Black;
+					break;
+				case "Office 2007 Silver":
+					naviBarXuXo.LayoutStyle = NaviLayoutStyle.Office2007Silver;
+					break;
+				case "Office 2010":
+					break;
+				case "Office Guifreaks":
+					break;
+			}
+		}
+		#endregion
+
+
+
+
+
+		private void checkBox1_CheckedChanged(object sender, EventArgs e)
+		{
+
+		}
+
+		private void checkBoxBandaVisible_CheckedChanged(object sender, EventArgs e)
+		{
+
+		}
+
+		private void botonConfigMenuGuardar_Click(object sender, EventArgs e)
+		{
+			if (saveFileDialogSettings.ShowDialog() == DialogResult.OK)
+			{
+				try
+				{
+					string fileName = saveFileDialogSettings.FileName;
+					NaviBarSettingsSerializer serial = new NaviBarSettingsSerializer();
+					using (TextWriter w = new StreamWriter(fileName))
+					{
+						serial.Serialize(w, naviBarXuXo.Settings);
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(ex.Message);
+				}
+			}
+		}
+
+		private void botonConfigMenuCargar_Click(object sender, EventArgs e)
+		{
+			if (openFileDialogSettings.ShowDialog() == DialogResult.OK)
+			{
+				try
+				{
+					string fileName = openFileDialogSettings.FileName;
+					NaviBarSettingsSerializer serial = new NaviBarSettingsSerializer();
+					using (StreamReader reader = new StreamReader(fileName))
+					{
+						NaviBarSettings settings = serial.Deserialize(reader) as NaviBarSettings;
+						if (settings != null)
+						{
+							naviBarXuXo.Settings = settings;
+							naviBarXuXo.ApplySettings();
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(ex.Message);
+				}
+			}
+		}
+
+
+		protected void AbrirFormEF(object formhijo)
+		{
+			if (this.panelContenedor.Controls.Count > 0)
+				this.panelContenedor.Controls.RemoveAt(0);
+
+			Form fh = formhijo as FrmEntidadesBase;
+			fh.TopLevel = false;
+			fh.Dock = DockStyle.Fill;
+			this.panelContenedor.Controls.Add(fh);
+			this.panelContenedor.Tag = fh;
+			 
+			
+			if ((VerificarActivacion((FrmEntidadesBase)fh) || Acceso.Clases.Datos.Generales.sysGlobales.oUsuario.nUsuarioCategoriaID == 1))
+			{
+				fh.Show();
+			}
+				
+
+			else
+			{
+				string empresa = Acceso.Clases.Datos.Generales.GRALVariablesGlobalesServicios.TraerValor("GRALEmpresaRazonSocial");
+				MessageBox.Show("Esta aplicación se encuentra desactivada");
+				return;
+			}
+				
+		}
+
+		private bool VerificarActivacion(FrmEntidadesBase frm)
+		{
+			// me fijo si el usuario tiene privilegios para entrar al formulario
+
+
+
+			//31/07/2018
+			//Leer las propiedades del Formulario desde la base de datos.
+			using (AccesosEntidades db = new AccesosEntidades())
+			{
+				
+				var oProp = db.METAFormularios.Where(x => x.sFormularioID == frm.Name.Trim()).FirstOrDefault();
+
+				if (oProp == null) return false;
+				if (!oProp.nActivar) return false;
+			}
+
+			return true;
+		}
+
+		private void botonIncidencias_Click(object sender, EventArgs e)
+		{
+			RRHH.Formularios.frmIncidenciasCompleto oForm = new RRHH.Formularios.frmIncidenciasCompleto();
+			oForm.etiquetaTitulo.Text = "Incidencias";
+			AbrirFormEF(oForm);
+			
+		}
+
+		private void botonTurnos_Click(object sender, EventArgs e)
+		{
+			RRHH.Formularios.FrmTurnosDias oForm = new RRHH.Formularios.FrmTurnosDias();
+			oForm.etiquetaTitulo.Text = "Turnos";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuFeriados_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new RRHH.Formularios.FrmRRHHFeriados());
+			RRHH.Formularios.FrmRRHHFeriados oForm = new RRHH.Formularios.FrmRRHHFeriados();
+			oForm.etiquetaTitulo.Text = "Actualizar Feriados";
+			AbrirFormEF(oForm);
+		}
+
+        private void botonCalendarios_Click(object sender, EventArgs e)
+        {
+        //    Altiora.DigitalPersona.MainForm oForm = new Altiora.DigitalPersona.MainForm();
+        //    oForm.etiquetaTitulo.Text = "Registrar y Reconocer Huella";
+        //    AbrirFormEF(oForm);
+
+
+        }
+
+		private void botonEventos_Click(object sender, EventArgs e)
+		{
+			RRHH.Formularios.FrmIncidenciasLegajos oForm = new RRHH.Formularios.FrmIncidenciasLegajos();
+			oForm.etiquetaTitulo.Text = "Registrar Incidencia";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonCalendariosLegajos_Click(object sender, EventArgs e)
+		{
+			RRHH.Formularios.FrmRRHHLegajosDynamics oForm = new RRHH.Formularios.FrmRRHHLegajosDynamics();
+			oForm.etiquetaTitulo.Text = "Legajos Compatiblidad Dynamics";
+			AbrirFormEF(oForm);
+
+		}
+
+		private void botonPersonalizar_Click(object sender, EventArgs e)
+		{
+			//AbrirFormEF(new RRHH.Formularios.FrmCalendariosLegajosDias());
+			//RRHH.Formularios.FrmCalendariosLegajosDias oForm = new RRHH.Formularios.FrmCalendariosLegajosDias();
+			//oForm.etiquetaTitulo.Text = "Personalizar Calendarios";
+			//AbrirFormEF(oForm);
+		}
+
+		private void botonMenuVertical2_Click(object sender, EventArgs e)
+		{
+
+			ZkTerminalForm terminalForm = new ZkTerminalForm(this);
+			terminalForm.TopLevel = false;
+			if (this.panelContenedor.Controls.Count > 0)
+				this.panelContenedor.Controls.RemoveAt(0);
+
+			this.panelContenedor.Controls.Add(terminalForm);
+			this.panelContenedor.Tag = terminalForm;
+			terminalForm.Show();
+		}
+
+
+
+		//protected void AbrirFormEF(object formhijo)
+		//{
+		//	if (this.panelContenedor.Controls.Count > 0)
+		//		this.panelContenedor.Controls.RemoveAt(0);
+
+		//	Form fh = formhijo as FrmEntidadesBase;
+		//	fh.TopLevel = false;
+		//	fh.Dock = DockStyle.Fill;
+		//	this.panelContenedor.Controls.Add(fh);
+		//	this.panelContenedor.Tag = fh;
+		//	fh.Show();
+		//}
+
+
+
+
+		private void botonBrowser_Click(object sender, EventArgs e)
+		{
+			
+		}
+
+		private void Navigate(string direccion)
+		{
+			if (string.IsNullOrEmpty(direccion)) return;
+			if (direccion.Equals("about:blank")) return;
+			if (!direccion.StartsWith("http://") && !direccion.StartsWith("https://"))
+				{
+					direccion = "http://" + direccion;
+				}
+			try
+			{
+				webBrowser1.Navigate(new Uri(direccion));
+			}
+			catch (System.UriFormatException)
+			{
+
+				return;
+			}
+		}
+
+		private void botonbrowserAtras_Click(object sender, EventArgs e)
+		{
+			webBrowser1.GoBack();
+		}
+
+		private void botonBrowserAdelante_Click(object sender, EventArgs e)
+		{
+			webBrowser1.GoForward();
+		}
+
+		private void webBrowser1_Navigating(object sender, WebBrowserNavigatingEventArgs e)
+		{
+		}
+
+
+		
+
+		private void botonMenuDispositivosUsuarios_Click(object sender, EventArgs e)
+		{
+			ZkUserMngForm oForm = new ZkUserMngForm(this);
+			oForm.TopLevel = false;
+			if (this.panelContenedor.Controls.Count > 0)
+				this.panelContenedor.Controls.RemoveAt(0);
+			this.panelContenedor.Controls.Add(oForm);
+			this.panelContenedor.Tag = oForm;
+			oForm.Show();
+
+
+		}
+
+		private void botonMenuImprimirCheques_Click(object sender, EventArgs e)
+		{
+			//Inventario.FrmINVEEtiquetas oForm = new Inventario.FrmINVEEtiquetas();
+			//oForm.TopLevel = false;
+			//if (this.panelContenedor.Controls.Count > 0)
+			//	this.panelContenedor.Controls.RemoveAt(0);
+			//this.panelContenedor.Controls.Add(oForm);
+			//this.panelContenedor.Tag = oForm;
+			//oForm.etiquetaTitulo.Text = "Etiquetas";
+			//oForm.Show();
+
+			AbrirFormEF(new Inventario.FrmINVEEtiquetas());
+			Inventario.FrmINVEEtiquetas oForm = new Inventario.FrmINVEEtiquetas();
+			oForm.etiquetaTitulo.Text = "Etiquetas";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonUsuarios_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Generales.FrmUsuarios());
+			Generales.FrmUsuarios oForm = new Generales.FrmUsuarios();
+			oForm.etiquetaTitulo.Text = "Usuarios";
+			AbrirFormEF(oForm);
+		}
+
+		private void Main_Load(object sender, EventArgs e)
+		{
+			Generales.FrmLoginInicio00 oLogin = new Generales.FrmLoginInicio00();
+			oLogin.ShowDialog();
+			//Generales.FrmLoginInicio01 oLogin = new Generales.FrmLoginInicio01();
+			//oLogin.ShowDialog();
+			if (oLogin.Entro)
+				return;
+
+			//Application.Exit();
+
+
+		}
+
+		private void btnConfiguracion_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Generales.FrmConfigurador());
+			Generales.FrmConfigurador oForm = new Generales.FrmConfigurador();
+			oForm.etiquetaTitulo.Text = "Configuración";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuInventario_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Inventario.FrmINVEArticulos());
+			Inventario.FrmINVEArticulos oForm = new Inventario.FrmINVEArticulos();
+			oForm.etiquetaTitulo.Text = "Articulos";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuTurnosLegajos_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new RRHH.Formularios.FrmTurnosLegajos());
+			RRHH.Formularios.FrmTurnosLegajos oForm = new RRHH.Formularios.FrmTurnosLegajos();
+			oForm.etiquetaTitulo.Text = "Turnos / Legajos";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuClasesArticulos_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Inventario.FrmINVEClasesArticulos());
+			Inventario.FrmINVEClasesArticulos oForm = new Inventario.FrmINVEClasesArticulos();
+			oForm.etiquetaTitulo.Text = "Clases de Articulos";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuTiposMovimientos_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Inventario.FrmINVETiposMovimientos());
+			Inventario.FrmINVETiposMovimientos oForm = new Inventario.FrmINVETiposMovimientos();
+			oForm.etiquetaTitulo.Text = "Tipos de Movimiento";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuMovimientos_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Inventario.FrmINVEMovimientos());
+			Inventario.FrmINVEMovimientos oForm = new Inventario.FrmINVEMovimientos();
+			oForm.etiquetaTitulo.Text = "Movimientos de Invenario";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuTempAno_Click(object sender, EventArgs e)
+		{
+			AbrirFormEF(new Inventario.FrmINVEMovimientos());
+			Inventario.FrmINVEMovimientos oForm = new Inventario.FrmINVEMovimientos();
+			oForm.etiquetaTitulo.Text = "Movimientos de Invenario";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonEventosMasivos_Click(object sender, EventArgs e)
+		{
+			RRHH.Formularios.FrmIncidenciasLegajosMasivas oForm = new RRHH.Formularios.FrmIncidenciasLegajosMasivas();
+			oForm.etiquetaTitulo.Text = "Incidencias por Rango";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonFichaProduccion_Click(object sender, EventArgs e)
+		{
+			
+		}
+
+		private void botonMenuDepositos_Click(object sender, EventArgs e)
+		{
+			Inventario.FrmINVEDepositos oForm = new Inventario.FrmINVEDepositos();
+			oForm.etiquetaTitulo.Text = "Depositos";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuSucursales_Click(object sender, EventArgs e)
+		{
+			Generales.FrmGRALSucursales oForm = new Generales.FrmGRALSucursales();
+			oForm.etiquetaTitulo.Text = "Sucursales";
+			AbrirFormEF(oForm);
+		}
+
+		private void botonMenuModificarAsientos_Click(object sender, EventArgs e)
+		{
+			Contabilidad.FrmCONTAAsientosModificarDynamics oForm = new Contabilidad.FrmCONTAAsientosModificarDynamics();
+			oForm.etiquetaTitulo.Text = "Modificar Asientos Contables";
+			AbrirFormEF(oForm);
+		}
+
+        private void botonFichar_Click(object sender, EventArgs e)
+        {
+        //    Altiora.DigitalPersona.UareUAcceso oForm = new Altiora.DigitalPersona.UareUAcceso();
+        //    oForm.etiquetaTitulo.Text = "Acceso";
+        //    AbrirFormEF(oForm);
+        }
+
+        private void botonMenuDispositivosDatos_Click(object sender, EventArgs e)
+        {
+            ZKDataMngForm oForm = new ZKDataMngForm(this);
+            oForm.TopLevel = false;
+            if (this.panelContenedor.Controls.Count > 0)
+                this.panelContenedor.Controls.RemoveAt(0);
+            this.panelContenedor.Controls.Add(oForm);
+            this.panelContenedor.Tag = oForm;
+            oForm.Show();
+        }
+
+        private void botonMenuAusencias_Click(object sender, EventArgs e)
+        {
+            RRHH.Formularios.FrmRRHHAusencias oForm = new RRHH.Formularios.FrmRRHHAusencias();
+            oForm.etiquetaTitulo.Text = "Ausencias";
+            AbrirFormEF(oForm);
+        }
+
+        private void botonMenuRRHHTiposLegajos_Click(object sender, EventArgs e)
+        {
+            RRHH.Formularios.FrmRRHHLegajosTipos oForm = new RRHH.Formularios.FrmRRHHLegajosTipos();
+            oForm.etiquetaTitulo.Text = "Tipos de Legajos";
+            AbrirFormEF(oForm);
+        }
+	}
+}

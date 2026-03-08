@@ -1,0 +1,11 @@
+13/06/2018
+Agregue el proyecto Datos y saque la dll porque lo sigo cambiando
+Ahora puedo leer el app.config para sacar la cadena de conexion
+lo que falta ahora es poner en el configurador el nombre de la cadena de conexion para el entityFramework y para conectarse con el sql por afuera (si es que es necesario) Esto me va a servir mas que nada para el GP cuando se quiera conectar a una base de datos distinta.
+
+02/07/2018
+Agregr la variable global DYGPModuloProduccionInstalado en el formulario de Configuracion
+En la ficha del pruducto pregunatr si es true esta variable global para el caso que tengas el gp con produccion
+
+14/08/2018
+buscar la manera de hacer un menu dinamico de tal forma en que por sql cargue la estructura del menu y dinamicamente se arme en el sistema

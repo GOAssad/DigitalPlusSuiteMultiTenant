@@ -1,0 +1,75 @@
+﻿@page "/registro"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioUsuarios repositorio
+@inject NavigationManager navigation
+@inject IMostrarMensajes mostrarMensaje
+
+<h3>Registro de Usuario</h3>
+
+<form role="form">
+    <div class="text-danger" asp-validation-sumary="All"></div>
+
+
+    <div class="form-group">
+        <label class="col-md-2">Nombre Usuario</label>
+        <div class="col-md-10">
+            <input type="text" @bind-value="user.Nombre" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-md-2">Email</label>
+        <div class="col-md-10">
+            <input type="email" @bind-value="user.Email" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-md-2">Password</label>
+        <div class="col-md-10">
+            <input type="password" @bind-value="user.Password" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-md-2">Confirmar Password</label>
+        <div class="col-md-10">
+            <input type="password" @bind-value="user.ConfirmPassword" />
+        </div>
+    </div>
+
+
+    <div class="form-group mt-2">
+        <div class="col-md-10">
+            <button class="btn btn-success" @onclick="Registrar">Registrarse</button>
+        </div>
+    </div>
+
+</form>
+
+
+@code {
+
+    IdentityRegistroDTO user = new IdentityRegistroDTO();
+
+    private async Task Registrar()
+    {
+        IdentityUser usuario = new IdentityUser();
+        usuario.UserName = user.Nombre;
+        usuario.Email = user.Email;
+
+        try
+        {
+            await repositorio.Post(usuario, user.Password);
+            await mostrarMensaje.MostrarMensajeExitoso("Registro Almacenado");
+        }
+        catch (Exception ex)
+        {
+
+           await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+        navigation.NavigateTo("/");
+
+    }
+}

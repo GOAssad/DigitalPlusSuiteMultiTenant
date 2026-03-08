@@ -1,0 +1,60 @@
+﻿<EditForm Model="Variable" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Codigo:</label>
+        <div>
+            <InputText class="form-control mb-2" @bind-Value="@Variable.sId" disabled="true" />
+            <ValidationMessage For="@(() => Variable.sId)" />
+        </div>
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Nombre:</label>
+        <div>
+            <InputText class="form-control mb-2" @bind-Value="@Variable.Nombre" disabled="true" />
+            <ValidationMessage For="@(() => Variable.Nombre)" />
+        </div>
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Detalle:</label>
+        <div>
+            <InputTextArea class="form-control mb-2" @bind-Value="@Variable.Detalle" />
+            <ValidationMessage For="@(() => Variable.Detalle)" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group mb-2 col-6">
+            <label>Tipo Valor:</label>
+            <select class="form-select" @bind="Variable.TipoValor">
+                <option value="string">Texto</option>
+                <option value="int">Numero Entero</option>
+                <option value="DateTime">Fecha</option>
+            </select>
+        </div>
+        <div class="form-group mb-2 col-6">
+            <label>Reiniciar:</label>
+            <div>
+                <InputCheckbox class="form-check mb-2" style="width: 37px; height: 37px;" @bind-Value="@Variable.Reiniciar" disabled="true" />
+                <ValidationMessage For="@(() => Variable.Reiniciar)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group mb-2 col-6">
+        <label>Valor:</label>
+        <div>
+            <InputText class="form-control mb-2" @bind-Value="@Variable.Valor" />
+            <ValidationMessage For="@(() => Variable.Valor)" />
+        </div>
+    </div>
+
+
+    <button class="btn btn-success" type="submit">Guardar Cambios</button>
+    <a class="btn btn-secondary" href="/variables">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter] public VariableGlobal Variable { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+}

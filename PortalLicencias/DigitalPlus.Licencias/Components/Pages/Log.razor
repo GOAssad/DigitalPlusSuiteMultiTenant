@@ -1,0 +1,54 @@
+@page "/log"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+
+<PageTitle>Log de Actividad - DigitalPlus</PageTitle>
+
+<h3 class="mb-4">Log de Actividad</h3>
+
+@if (logs == null)
+{
+    <p>Cargando...</p>
+}
+else if (logs.Count == 0)
+{
+    <div class="alert alert-info">Sin actividad registrada.</div>
+}
+else
+{
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Accion</th>
+                <th>Empresa</th>
+                <th>App</th>
+                <th>IP</th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in logs)
+            {
+                <tr>
+                    <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                    <td>@log.Action</td>
+                    <td>@(log.Licencia?.CompanyId ?? "-")</td>
+                    <td>@(log.App ?? "-")</td>
+                    <td><small>@(log.IP ?? "-")</small></td>
+                    <td><small>@(log.Details ?? "-")</small></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DigitalPlus.Licencias.Entidades.LicenciaLog>? logs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        logs = await Repo.GetLogsAsync(cantidad: 200);
+    }
+}

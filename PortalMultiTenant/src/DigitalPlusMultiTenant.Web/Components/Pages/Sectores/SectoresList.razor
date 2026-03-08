@@ -1,4 +1,5 @@
 @page "/sectores"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
@@ -6,74 +7,177 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
-@inject IApplicationDbContext Db
+@inject IJSRuntime JS
+@inject ITenantService Tenant
+@using DigitalPlusMultiTenant.Web.Helpers
 
 <PageTitle>Sectores - DigitalPlus</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Sectores</h4>
-    <a href="sectores/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Sector</a>
+    <div>
+        @if (items?.Any() == true)
+        {
+            <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+            <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        }
+        <a href="sectores/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Sector</a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Nombre..."
+                       @bind="filtro" @bind:event="oninput" @bind:after="BuscarDebounce" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Estado</label>
+                <select class="form-select form-select-sm" @bind="filtroActivo" @bind:after="Buscar">
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Nombre</th>
-                    <th>Legajos</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (sectores == null)
-                {
-                    <tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
-                }
-                else if (!sectores.Any())
-                {
-                    <tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay sectores</td></tr>
-                }
-                else
-                {
-                    @foreach (var s in sectores)
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("nombre")'>
+                            Nombre @SortIcon("nombre")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("legajos")'>
+                            Legajos @SortIcon("legajos")
+                        </th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items == null)
                     {
-                        <tr>
-                            <td>@s.Nombre</td>
-                            <td><span class="badge bg-info">@s.Legajos.Count</span></td>
-                            <td><span class="badge @(s.IsActive ? "bg-success" : "bg-danger")">@(s.IsActive ? "Activo" : "Inactivo")</span></td>
-                            <td class="text-end">
-                                <a href="sectores/editar/@s.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(s)">
-                                    <i class="bi @(s.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        <tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
                     }
-                }
-            </tbody>
-        </table>
+                    else if (!items.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay sectores</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var s in items)
+                        {
+                            <tr>
+                                <td>@s.Nombre</td>
+                                <td><span class="badge bg-info">@s.Legajos.Count</span></td>
+                                <td><span class="badge @(s.IsActive ? "bg-success" : "bg-danger")">@(s.IsActive ? "Activo" : "Inactivo")</span></td>
+                                <td class="text-end">
+                                    <a href="sectores/editar/@s.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(s)">
+                                        <i class="bi @(s.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 @code {
-    private List<Sector>? sectores;
+    private List<Sector>? items;
+    private string filtro = "";
+    private string filtroActivo = "true";
+    private string ordenColumna = "nombre";
+    private bool ordenDesc;
+    private CancellationTokenSource? _debounceToken;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await CargarDatos();
+
+    private async Task BuscarDebounce()
     {
-        await LoadData();
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try { await Task.Delay(300, _debounceToken.Token); await CargarDatos(); }
+        catch (TaskCanceledException) { }
     }
 
-    private async Task LoadData()
+    private async Task Buscar() => await CargarDatos();
+
+    private async Task SetOrden(string columna)
     {
-        sectores = await Db.Sectores.Include(s => s.Legajos).OrderBy(s => s.Nombre).ToListAsync();
+        if (ordenColumna == columna) ordenDesc = !ordenDesc;
+        else { ordenColumna = columna; ordenDesc = false; }
+        await CargarDatos();
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
+    }
+
+    private async Task CargarDatos()
+    {
+        var query = Db.Sectores.Include(s => s.Legajos).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.Trim().ToLower();
+            query = query.Where(s => s.Nombre.ToLower().Contains(f));
+        }
+        if (filtroActivo == "true") query = query.Where(s => s.IsActive);
+        else if (filtroActivo == "false") query = query.Where(s => !s.IsActive);
+
+        var ordered = ordenColumna switch
+        {
+            "legajos" => ordenDesc ? query.OrderByDescending(s => s.Legajos.Count) : query.OrderBy(s => s.Legajos.Count),
+            _ => ordenDesc ? query.OrderByDescending(s => s.Nombre) : query.OrderBy(s => s.Nombre),
+        };
+
+        items = await ordered.ToListAsync();
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (items == null) return;
+        var filtros = new List<string>();
+        if (!string.IsNullOrWhiteSpace(filtro)) filtros.Add($"Busqueda: {filtro}");
+        if (filtroActivo == "true") filtros.Add("Estado: Activos");
+        else if (filtroActivo == "false") filtros.Add("Estado: Inactivos");
+        var bytes = ExcelExporter.Generar(items,
+            new ExcelExportConfig { Titulo = "Sectores", NombreEmpresa = Tenant.EmpresaNombre, Filtros = filtros,
+                Encabezados = ["Nombre", "Legajos", "Estado"],
+                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Numero, ExcelColFormat.Texto] },
+            s => [s.Nombre, s.Legajos.Count, s.IsActive ? "Activo" : "Inactivo"]);
+        await JS.InvokeVoidAsync("downloadFile", "sectores.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (items == null) return;
+        var bytes = CsvExporter.ToCsvBytes(items,
+            ["Nombre", "Legajos", "Estado"],
+            s => [s.Nombre, s.Legajos.Count.ToString(), s.IsActive ? "Activo" : "Inactivo"]);
+        await JS.InvokeVoidAsync("downloadFile", "sectores.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
     private async Task ToggleActive(Sector s)
     {
         s.IsActive = !s.IsActive;
         await Db.SaveChangesAsync();
-        await LoadData();
+        await CargarDatos();
     }
 }

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95 d18.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPlus.Licencias", "DigitalPlus.Licencias.csproj", "{D86B85DA-A0AA-9986-5D88-EF4F325000F0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D86B85DA-A0AA-9986-5D88-EF4F325000F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D86B85DA-A0AA-9986-5D88-EF4F325000F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D86B85DA-A0AA-9986-5D88-EF4F325000F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D86B85DA-A0AA-9986-5D88-EF4F325000F0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8FD9FC1D-7679-4C75-A315-9E5D0B8A2D95}
+	EndGlobalSection
+EndGlobal

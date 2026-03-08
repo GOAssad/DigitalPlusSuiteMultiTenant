@@ -1,0 +1,38 @@
+﻿@page "/categorias/editar/{CategoriaId:int}"
+@attribute [Authorize (Roles ="ADMINISTRADOR")]
+@inject RepositorioCategorias repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Categoria</h3>
+
+@if (Categoria == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioCategoria OnValidSubmit="EditarEntidad" Categoria="Categoria" />
+}
+
+@code {
+
+    [Parameter] public int CategoriaId { get; set; }
+    private Categoria Categoria;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Categoria = await repositorio.Get(CategoriaId);
+        if (Categoria == null)
+        {
+            navigationManager.NavigateTo("categorias");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Categoria);
+        await mostrarMensaje.MostrarMensajeTemporal("Categoria", $"{Categoria.Nombre}: Almacendo");
+        navigationManager.NavigateTo("categorias");
+    }
+}

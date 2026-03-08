@@ -1,0 +1,45 @@
+﻿<EditForm Model="Noticia" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+
+        <label>Titulo:</label>
+        <div>
+            <InputText class="form-control" @bind-Value="@Noticia.Nombre" />
+            <ValidationMessage For="@(() => Noticia.Nombre)" />
+        </div>
+
+        <label>Detalle:</label>
+        <div class="mb-3">
+            <InputTextArea class="form-control" @bind-Value="@Noticia.Detalle" />
+            <ValidationMessage For="@(() => Noticia.Detalle)" />
+        </div>
+
+        <label>Fecha Desde:</label>
+        <div class="mb-3">
+            <InputDate class="form-control" @bind-Value="@Noticia.FechaDesde" />
+            <ValidationMessage For="@(() => Noticia.FechaDesde)" />
+        </div>
+
+        <label>Fecha Hasta:</label>
+        <div class="mb-3">
+            <InputDate class="form-control" @bind-Value="@Noticia.FechaHasta" />
+            <ValidationMessage For="@(() => Noticia.FechaHasta)" />
+        </div>
+        <label>Privado:</label>
+        <div class="mb-3">
+            <InputCheckbox class="form-check" @bind-Value="@Noticia.Privado" />
+            <ValidationMessage For="@(() => Noticia.Privado)" />
+        </div>
+    </div>
+
+    <div>
+        <button class="btn btn-success" type="submit">Guardar Cambios</button>
+        <a class="btn btn-secondary" href="/noticias">Cancelar</a>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public Noticia Noticia { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+}

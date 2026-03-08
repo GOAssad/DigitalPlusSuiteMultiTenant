@@ -1,0 +1,22 @@
+﻿
+<tr>
+    <td>
+        <a href="/legajos/editar/@Legajo.Id" class="btn btn-success btn-sm">Editar</a>
+    </td>
+    <td>@Legajo.LegajoId</td>
+    <td>@Legajo.Nombre</td>
+    <td>@Legajo.Activo</td>
+
+</tr>
+
+@code {
+    [Parameter] public Legajo Legajo { get; set; }
+    [Parameter] public bool MostrarBotones { get; set; } = false;
+    [Parameter] public EventCallback<Legajo> EliminarLegajo { get; set; }
+    private string urlLegajo = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        urlLegajo = $"legajo/{Legajo?.Id}/{Legajo?.Nombre?.Replace(" ", "-")}";
+    }
+}

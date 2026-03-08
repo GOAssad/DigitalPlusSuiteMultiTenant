@@ -1,0 +1,95 @@
+﻿@page "/incidencialegajo/crear/{legajoId:int}/{Fechastr}"
+
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioIncidencias repositorio
+@inject RepositorioFichadas repositorioFichadas
+@inject RepositorioLegajos repositorioLegajos
+@inject RepositorioSucursales repositorioSucursales
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<div class="container">
+    <div class="titulo">
+        <h3>Crear Incidencia para : @legajo.Nombre</h3>
+    </div>
+
+    <EditForm Model="IncidenciaLegajo" OnValidSubmit="CrearEntidad">
+        <DataAnnotationsValidator />
+        <div class="row">
+            <div class="form-group mb-2 col-3">
+                <label>Fecha:</label>
+                <div>
+                    <InputDate Type="InputDateType.Date" class="form-control" @bind-Value="IncidenciaLegajo.Fecha" />
+                    <ValidationMessage For="@(() => IncidenciaLegajo.Fecha)" />
+                </div>
+            </div>
+
+            <div class="form-group mb-2 col-5">
+                <label>Incidencia:</label>
+                <select class="form-control" @bind="@incidenciaSeleccionada">
+                    <option value="0">--Seleccione una Incidencia --</option>
+                    @foreach (var item in Incidencias)
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group mb-2">
+                <label>Detalle:</label>
+
+                <InputText class="form-control" @bind-Value="@IncidenciaLegajo.Detalle" />
+                <ValidationMessage For="@(() => IncidenciaLegajo.Fecha)" />
+            </div>
+        </div>
+
+        <button class="btn btn-success" type="submit">Guardar Cambios</button>
+        <a class="btn btn-secondary" href="/fichadas/control/@legajoId">Cancelar</a>
+
+    </EditForm>
+
+</div>
+
+@code {
+
+    [Parameter] public int legajoId { get; set; }
+    [Parameter] public string Fechastr { get; set; }
+
+    private IncidenciaLegajo IncidenciaLegajo = new IncidenciaLegajo();
+    private Legajo legajo = new Legajo();
+    private List<Incidencia> Incidencias = new List<Incidencia>();
+
+
+    private int incidenciaSeleccionada = 0;
+    private Fichada fichada = new Fichada();
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        // busco el legajo
+        legajo = await repositorioLegajos.Get(legajoId);
+        //        IncidenciaLegajo.Fecha = DateTime.Now;
+
+        int dia = int.Parse(Fechastr.Substring(6, 2));
+        int mes = int.Parse(Fechastr.Substring(4, 2));
+        int ano = int.Parse(Fechastr.Substring(0, 4));
+        IncidenciaLegajo.Fecha = new DateTime(ano, mes, dia);
+
+        IncidenciaLegajo.LegajoId = legajoId;
+
+
+        //para el combo de las incidencias
+        Incidencias = await repositorio.Get(string.Empty);
+
+
+    }
+
+    private async Task CrearEntidad()
+    {
+        IncidenciaLegajo.IncidenciaId = incidenciaSeleccionada;
+        await repositorio.Post(IncidenciaLegajo);
+        await mostrarMensaje.MostrarMensajeTemporal("Incidencia-Legajo", "Incidencia Asociadas...");
+        navigationManager.NavigateTo($"/fichadas/control/{IncidenciaLegajo.LegajoId}");
+    }
+
+}
+

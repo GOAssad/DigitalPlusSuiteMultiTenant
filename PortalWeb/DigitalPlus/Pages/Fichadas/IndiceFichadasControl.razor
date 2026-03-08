@@ -1,0 +1,254 @@
+﻿@page "/fichadas/control/{LegajoId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+@inject RepositorioFichadas repositorio
+@inject RepositorioLegajos repositorioLegajos
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+@inject IJSRuntime JSRuntime
+
+
+<div class="container-fluid">
+    <div class="titulo">
+        <div class="row">
+            <div class="col-4">
+                <h4 class="p-2 flex-grow-1">Control: @legajo.Nombre (@legajo.LegajoId)</h4>
+            </div>
+
+            <div class="col-2">
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="fechadesde" placeholder="Fecha Desde" style="max-width:150px;" @bind-value="fDesde">
+                    <label for="fechadesde">Fecha Desde</label>
+                </div>
+            </div>
+
+            <div class="col-2">
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="fechahasta" placeholder="Fecha Desde" style="max-width:150px;"@bind-value="fHasta">
+                    <label for="fechahasta">Fecha Hasta</label>
+                </div>
+            </div>
+            <div class="col">
+
+                <BotonListadoConToolTip Color="yellow-green" IconoClase="bi bi-search" ToolTipText="Buscar" Accion="@Cargar" />
+                <BotonListadoConToolTip Color="excel" IconoClase="bi bi-file-earmark-excel" ToolTipText="Pasar a Excel" Accion="@DownloadExcel" />
+                <button class="btn btn-secondary" @onclick="@Volver"><i class="bi bi-person-lines-fill"></i>Volver</button>
+                <span title="Solo Fichadas" class="me-1">
+                    <input type="checkbox" style="width:20px; height:20px;" @onchange="@SoloFichadas" />
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="lineaDivisoriaTitulo"></div>
+
+@if (Fichadas == null)
+{
+    <text>Cargando...</text>
+}
+else if (Fichadas.Count == 0)
+{
+    <text>No se encontraron Fichadas para este legajo</text>
+}
+else
+{
+    <table class="table table-hover">
+        <thead class="cabeceraTabla">
+            <tr>
+                <th>Fecha</th>
+                <th>Dia</th>
+                <th>Sucursal</th>
+                <th>E/S</th>
+                <th>Fichada</th>
+                <th>HorarioCalendario</th>
+                <th>Auditoria</th>
+                <th>Controles</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Fichadas)
+            {
+                <tr>
+                    <td>@item.Fecha.ToShortDateString()</td>
+                    <td>@item.Fecha.ToString("ddd", new CultureInfo("es-ES"))</td>
+                    <td>@item.Sucursal</td>
+                    <td>@item.EntraSale</td>
+                    <td>@item.Registro.ToString("HH:mm")</td>
+                    <td>@item.HorarioCalendario.ToString("HH:mm")</td>
+                    <td>@item.Auditoria</td>
+
+                    @if (item.Sucursal == string.Empty)
+                    {
+                        <td>
+                            <a href="fichadas/crear/0/@item.LegajoId/2" class="btn btn-success btn-sm  btnCrearFichada">Crear</a>
+                            @*En vez de legajo paso la fichada para despues hacer un select y tener todos los datos*@
+                            @if (item.IncidenciaId == 0)
+                            {
+                                @if (item.Tipo != "F" && item.Tipo != "N" && item.Tipo != "V") //es FERIAO O FRANCO O VACACIONES
+                                {
+                                    <a href="/incidencialegajo/crear/@LegajoId/@item.Fecha.ToString("yyyyMMdd")" class="btn btn-secondary btn-sm btnCrearIncidencia">Agr Incid</a>
+                                }
+
+                            }
+                            else
+                            {
+                                <a href="/incidencialegajo/editar/@item.IncidenciaId" class="btn btn-secondary btn-sm btnEditarIncidencia">Mod Incid</a>
+                            }
+
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            <a href="fichadas/editar/@item.id" class="btn btn-warning btn-sm">Editar</a>
+                            <button @onclick="@(() => BorrarFichada(@item))" class="btn btn-danger btn-sm">Borrar</button>
+                        </td>
+                    }
+
+
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
+
+@code {
+    [Parameter] public int LegajoId { get; set; }
+    Legajo legajo = new Legajo();
+    List<FichadaControlDTO> Fichadas;
+
+    private string EntraSaleOpuesto;
+
+    private DateTime fDesde;
+    private DateTime fHasta;
+
+
+    //private DateTime fHasta = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddDays(-1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        legajo = await repositorioLegajos.Get(LegajoId);
+
+        int diasdescontar = (DateTime.Now.Day - 1);
+
+        //fDesde = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Today.Day);
+        fDesde = DateTime.Now.AddDays(-diasdescontar); // esto deberia dar uno (no hago el new datetime porque no se ve la fecha en el control)
+        fHasta = fDesde.AddMonths(1).AddDays(-1);
+        //fHasta = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Today.Day).AddDays(1);
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        Fichadas = new List<FichadaControlDTO>();
+        Fichadas = await repositorio.GetControl(LegajoId, fDesde, fHasta);
+
+    }
+
+    private async Task SoloFichadas(ChangeEventArgs e)
+    {
+        bool valor = (bool)e.Value;
+
+        if (valor)
+            Fichadas = Fichadas.Where(x => x.Sucursal != string.Empty).ToList();
+        else
+            await Cargar();
+
+
+    }
+
+    private void DownloadExcel()
+    {
+
+        string archivo = DateTime.Now.ToString(@$"yyyy-MM-dd-HH-mm-ss");
+        archivo = DateTime.Today.ToString("yyyy-MM-dd") + "-" + legajo.LegajoId.Trim() + "Fichadas.xlsx";
+
+        using (var package = new ExcelPackage(archivo))
+        {
+            try
+            {
+                int regD = 3;
+                int regH = regD;
+
+                package.Workbook.Properties.Title = "Digital Plus - Kosiuko";
+                package.Workbook.Properties.Author = "Digital One";
+                package.Workbook.Properties.Subject = $"Control de Fichadas Legajo {legajo.Nombre}";
+                package.Workbook.Properties.Keywords = "Control de Fichadas - Kosiuko";
+
+                var worksheet = package.Workbook.Worksheets.Add("ControlFichada");
+
+                worksheet.Cells["C1"].Value = DateTime.Today.ToString("dd-MMMM-yyyy hh:mm");
+
+                worksheet.Cells[2, 1].Value = $"Fichada Control - {legajo.Nombre} ";
+                worksheet.Cells[2, 1, 2, 7].Merge = true;
+
+                // Headers
+                worksheet.Cells[regD, 1].Value = "Fecha";
+                worksheet.Cells[regD, 2].Value = "Hora";
+                worksheet.Cells[regD, 3].Value = "Dia";
+                worksheet.Cells[regD, 4].Value = "E/S";
+                worksheet.Cells[regD, 5].Value = "Sucursal";
+                worksheet.Cells[regD, 6].Value = "Hora Calendario";
+                worksheet.Cells[regD, 7].Value = "Accion";
+
+
+
+                foreach (var item in Fichadas)
+                {
+                    regH++;
+                    worksheet.Cells[regH, 1].Value = item.Registro.ToShortDateString();
+                    worksheet.Cells[regH, 2].Value = item.Registro.ToShortTimeString();
+                    worksheet.Cells[regH, 3].Value = item.Registro.ToString("dddd");
+                    worksheet.Cells[regH, 4].Value = item.EntraSale;
+                    worksheet.Cells[regH, 5].Value = item.Sucursal;
+                    worksheet.Cells[regH, 6].Value = item.HorarioCalendario.ToString("HH:mm");
+                    worksheet.Cells[regH, 7].Value = item.Auditoria;
+
+                }
+
+
+
+                /// agrego una tabla
+                var tbl = worksheet.Tables.Add(new ExcelAddressBase(fromRow: regD, fromCol: 1, toRow: regH, toColumn: 7), "Data");
+                tbl.ShowHeader = true;
+                tbl.TableStyle = OfficeOpenXml.Table.TableStyles.Light15;
+
+
+                ////autofit
+                worksheet.Cells[regD, 1, regH, 7].AutoFitColumns();
+
+
+                JSRuntime.GuardarComo(archivo, package.GetAsByteArray());
+                //mostrarMensaje.MostrarMensajeExitoso("Archivo Creado...");
+
+            }
+            catch (Exception ex)
+            {
+
+                mostrarMensaje.MostrarMensajeError(ex.Message);
+            }
+
+        }
+    }
+    private void Volver()
+    {
+        navigationManager.NavigateTo($"/legajos/editar/{legajo.Id}");
+    }
+    private async void BorrarFichada(FichadaControlDTO fichada)
+    {
+        bool resultado = await mostrarMensaje.MostrarMensajeBorrar("Esta seguro que desea Borrar este registro");
+        if (resultado)
+        {
+            await repositorio.Delete(fichada.id);
+            await mostrarMensaje.MostrarMensajeExitoso("Registro Eliminado");
+
+            //no se porque mierda no refresca
+            StateHasChanged();
+            await Cargar();
+        }
+
+        return;
+    }
+}

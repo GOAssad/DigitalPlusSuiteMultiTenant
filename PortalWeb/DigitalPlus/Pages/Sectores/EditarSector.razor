@@ -1,0 +1,38 @@
+﻿@page "/sectores/editar/{SectorId:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioSectores repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Sector</h3>
+
+@if (Sector == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioSector OnValidSubmit="EditarEntidad" Sector="Sector" />
+}
+
+@code {
+
+    [Parameter] public int SectorId { get; set; }
+    private Sector Sector;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Sector = await repositorio.Get(SectorId);
+        if (Sector == null)
+        {
+            navigationManager.NavigateTo("sectores");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Sector);
+        await mostrarMensaje.MostrarMensajeTemporal("Sector", $"{Sector.Nombre}: Actualizado");
+        navigationManager.NavigateTo("sectores");
+    }
+}

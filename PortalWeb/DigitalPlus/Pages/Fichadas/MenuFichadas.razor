@@ -1,0 +1,94 @@
+﻿@page "/fichadas/menu"
+@inject IMostrarMensajes mostrarMensajes
+
+@attribute [Authorize(Roles = "ADMINISTRADOR, Supervisor_Local")]
+
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div class="card" style="width: 18rem; ">
+                <div class="ms-3">
+                    <img class="card-img-top" src="/imagenes/usuarios_fichada.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Fichadas</h5>
+                    <p class="card-text">Reporte de Fichadas con Filtro</p>
+                </div>
+                <div class="card-footer">
+                    <a href="/fichadas/generales" class="btn btn-primary">Ir a Fichadas</a>
+                    @*<button class="btn btn-primary" @onclick="Mensaje">Ir a Fichadas</button>*@
+                </div>
+
+            </div>
+        </div>
+        <div class="col">
+            <div class="card" style="width: 18rem;">
+                <div class="ms-3">
+                    <img class="card-img-top" src="/imagenes/usuarios_llegadatarde.png" />
+
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">LLegadas Tarde</h5>
+                    <p class="card-text">Reporte de Analisis de Legadas Tarde segun Calendario asociado a cada Legajo</p>
+                </div>
+                <div class="card-footer">
+                    <a href="/fichadas/tarde" class="btn btn-primary">Ir a Llegadas Tarde</a>
+                    @*<button class="btn btn-primary" @onclick="Mensaje">Ir a Llegadas Tarde</button>*@
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card" style="width: 18rem;">
+                <div class="ms-3">
+                    <img class="card-img-top" src="/imagenes/usuarios_ausencia.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Ausencias</h5>
+                    <p class="card-text">Reporte de Analisis de Ausencias segun Calendario asociado a cada Legajo</p>
+                </div>
+                <div class="card-footer">
+                    @*<a href="#" class="btn btn-primary">Ir a Llegadas Ausencias</a>*@
+                    <a href="/fichadas/ausencias" class="btn btn-primary">Ir a Llegadas Ausencias</a>
+                  
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card" style="width: 18rem;">
+                <div class="ms-3">
+                    <img class="card-img-top" src="/imagenes/usuarios_consolidado.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Consolidado</h5>
+                    <p class="card-text">Reporte que resume el estatus de cada legajo por cada dia</p>
+                </div>
+                <div class="card-footer">
+                    @*<a href="#" class="btn btn-primary">Ir a Consolidado</a>*@
+                    <button class="btn btn-primary" @onclick="Mensaje">Ir a Consolidado</button>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card" style="width: 18rem;">
+                <div class="ms-3">
+                    <img class="card-img-top" src="/imagenes/Atributos_Feriado.png" />
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Vacaciones</h5>
+                    <p class="card-text">Obtenga un reporte de todos los legajos que se encontraran de vacaciones en un rango de fechas.</p>
+                </div>
+                <div class="card-footer">
+                    <a class="btn btn-primary" href="/vacaciones/listado">Ir a Vacaciones</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void Mensaje()
+    {
+        mostrarMensajes.MostrarMensajeAlerta("Estos reportes se encuentran en desarrollo y serán incluidos en el sisteme en breve.");
+    }
+}

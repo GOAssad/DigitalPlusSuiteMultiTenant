@@ -1,0 +1,27 @@
+﻿@page "/sucursales/crear"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioSucursales repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+
+<h3>Crear Sucursales</h3>
+
+<FormularioSucursal OnValidSubmit="CrearEntidad" Sucursal="Sucursal" />
+
+@code {
+    private Sucursal Sucursal = new Sucursal();
+
+    private async Task CrearEntidad()
+    {
+        try
+        {
+            await repositorio.Post(Sucursal);
+            await mostrarMensajes.MostrarMensajeTemporal("Sucursal", $"{Sucursal.Nombre}: ... creada");
+            navigationManager.NavigateTo("/sucursales");
+        }
+        catch (Exception ex)
+        {
+            // hacer algo...
+        }
+    }
+}

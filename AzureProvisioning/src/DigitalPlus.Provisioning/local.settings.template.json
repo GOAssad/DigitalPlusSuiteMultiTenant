@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ProvisioningDb": "Server=REPLACE_SERVER;Database=REPLACE_DB;User Id=REPLACE_USER;Password=REPLACE_PASSWORD;Encrypt=True;TrustServerCertificate=True;",
+    "CloudSqlServer": "REPLACE_SERVER",
+    "CloudSqlUser": "REPLACE_USER",
+    "CloudSqlPassword": "REPLACE_PASSWORD",
+    "ProvisioningApiKey": "REPLACE_WITH_RANDOM_KEY"
+  }
+}

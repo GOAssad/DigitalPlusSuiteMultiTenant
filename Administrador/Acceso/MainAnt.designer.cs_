@@ -1,0 +1,1340 @@
+﻿namespace Acceso
+{
+   partial class Main
+   {
+      /// <summary>
+      /// Required designer variable.
+      /// </summary>
+      private System.ComponentModel.IContainer components = null;
+
+      /// <summary>
+      /// Clean up any resources being used.
+      /// </summary>
+      /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+      protected override void Dispose(bool disposing)
+      {
+         if (disposing && (components != null))
+         {
+            components.Dispose();
+         }
+         base.Dispose(disposing);
+      }
+
+      #region Windows Form Designer generated code
+
+      /// <summary>
+      /// Required method for Designer support - do not modify
+      /// the contents of this method with the code editor.
+      /// </summary>
+      private void InitializeComponent()
+      {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.openFileDialogSettings = new System.Windows.Forms.OpenFileDialog();
+            this.saveFileDialogSettings = new System.Windows.Forms.SaveFileDialog();
+            this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.toolStripButtonConfigurarMenu = new System.Windows.Forms.ToolStripButton();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.etiquetaSimple4 = new Altiora.Controles.EtiquetaSimple();
+            this.etiquetaSimple3 = new Altiora.Controles.EtiquetaSimple();
+            this.etiquetaSimple2 = new Altiora.Controles.EtiquetaSimple();
+            this.etiquetaSimple1 = new Altiora.Controles.EtiquetaSimple();
+            this.numericoAlturaHeader = new Altiora.Controles.Numerico();
+            this.numericoAturaBotones = new Altiora.Controles.Numerico();
+            this.numericoImagenGrandeVisible = new Altiora.Controles.Numerico();
+            this.numericoAlturaImagenesChicas = new Altiora.Controles.Numerico();
+            this.comboBoxLayOut = new System.Windows.Forms.ComboBox();
+            this.checkBoxMostrarColapsar = new Altiora.Controles.CheckBox();
+            this.checkBoxColapsar = new Altiora.Controles.CheckBox();
+            this.checkBoxMasOpciones = new Altiora.Controles.CheckBox();
+            this.checkBoxBandaVisible = new Altiora.Controles.CheckBox();
+            this.botonAplicacionAgregarBanda = new Altiora.Controles.BotonAplicacion();
+            this.botonConfigMenuGuardar = new Altiora.Controles.BotonAplicacion();
+            this.botonAplicacionActivarBanda = new Altiora.Controles.BotonAplicacion();
+            this.botonConfigMenuCargar = new Altiora.Controles.BotonAplicacion();
+            this.botonAplicacionMenosBotones = new Altiora.Controles.BotonAplicacion();
+            this.botonAplicacionMasBotones = new Altiora.Controles.BotonAplicacion();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabApp = new System.Windows.Forms.TabPage();
+            this.panelContenedor = new Altiora.Controles.Panel();
+            this.tabBrowser = new System.Windows.Forms.TabPage();
+            this.webBrowser1 = new System.Windows.Forms.WebBrowser();
+            this.botonMenuVertical1 = new Altiora.Controles.BotonMenuVertical();
+            this.naviBarXuXo = new Guifreaks.NavigationBar.NaviBar(this.components);
+            this.naviBandRRHH = new Guifreaks.NavigationBar.NaviBand(this.components);
+            this.botonMenuRRHHTiposLegajos = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuAusencias = new Altiora.Controles.BotonMenuVertical();
+            this.botonPersonalizar = new Altiora.Controles.BotonMenuVertical();
+            this.botonCalendariosLegajos = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuFeriados = new Altiora.Controles.BotonMenuVertical();
+            this.botonEventosMasivos = new Altiora.Controles.BotonMenuVertical();
+            this.botonEventos = new Altiora.Controles.BotonMenuVertical();
+            this.botonFichar = new Altiora.Controles.BotonMenuVertical();
+            this.botonCalendarios = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuTurnosLegajos = new Altiora.Controles.BotonMenuVertical();
+            this.botonTurnos = new Altiora.Controles.BotonMenuVertical();
+            this.botonIncidencias = new Altiora.Controles.BotonMenuVertical();
+            this.naviBandDispositivos = new Guifreaks.NavigationBar.NaviBand(this.components);
+            this.botonMenuDispositivosDatos = new Altiora.Controles.BotonMenuVertical();
+            this.PrgSTA = new System.Windows.Forms.ProgressBar();
+            this.lbSysOutputInfo = new System.Windows.Forms.ListBox();
+            this.botonMenuDispositivosUsuarios = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuVertical2 = new Altiora.Controles.BotonMenuVertical();
+            this.naviBandContable = new Guifreaks.NavigationBar.NaviBand(this.components);
+            this.botonMenuModificarAsientos = new Altiora.Controles.BotonMenuVertical();
+            this.naviBandInventario = new Guifreaks.NavigationBar.NaviBand(this.components);
+            this.botonMenuTiposMovimientos = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuClasesArticulos = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuDepositos = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuInventario = new Altiora.Controles.BotonMenuVertical();
+            this.botonFichaProduccion = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuMovimientos = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuImprimirCheques = new Altiora.Controles.BotonMenuVertical();
+            this.naviBandConfig = new Guifreaks.NavigationBar.NaviBand(this.components);
+            this.btnConfiguracion = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuSucursales = new Altiora.Controles.BotonMenuVertical();
+            this.botonMenuTempAno = new Altiora.Controles.BotonMenuVertical();
+            this.botonUsuarios = new Altiora.Controles.BotonMenuVertical();
+            this.ClientArea = new Guifreaks.NavigationBar.NaviBandClientArea(this.components);
+            this.toolStrip.SuspendLayout();
+            this.tabPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoAlturaHeader)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoAturaBotones)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoImagenGrandeVisible)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoAlturaImagenesChicas)).BeginInit();
+            this.tabControl1.SuspendLayout();
+            this.tabApp.SuspendLayout();
+            this.tabBrowser.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.naviBarXuXo)).BeginInit();
+            this.naviBarXuXo.SuspendLayout();
+            this.naviBandRRHH.ClientArea.SuspendLayout();
+            this.naviBandRRHH.SuspendLayout();
+            this.naviBandDispositivos.ClientArea.SuspendLayout();
+            this.naviBandDispositivos.SuspendLayout();
+            this.naviBandContable.ClientArea.SuspendLayout();
+            this.naviBandContable.SuspendLayout();
+            this.naviBandInventario.ClientArea.SuspendLayout();
+            this.naviBandInventario.SuspendLayout();
+            this.naviBandConfig.ClientArea.SuspendLayout();
+            this.naviBandConfig.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(291, 90);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(70, 13);
+            this.label2.TabIndex = 10;
+            this.label2.Text = "Button height";
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(378, 87);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(128, 22);
+            this.textBox2.TabIndex = 9;
+            // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(294, 64);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(92, 17);
+            this.checkBox2.TabIndex = 8;
+            this.checkBox2.Text = "Band 1 visible";
+            this.checkBox2.UseVisualStyleBackColor = true;
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(290, 35);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(101, 23);
+            this.button3.TabIndex = 7;
+            this.button3.Text = "Less buttons";
+            this.button3.UseVisualStyleBackColor = true;
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(290, 6);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(101, 23);
+            this.button4.TabIndex = 6;
+            this.button4.Text = "More buttons";
+            this.button4.UseVisualStyleBackColor = true;
+            // 
+            // textBox3
+            // 
+            this.textBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox3.Location = new System.Drawing.Point(290, 313);
+            this.textBox3.Multiline = true;
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(296, 116);
+            this.textBox3.TabIndex = 5;
+            // 
+            // openFileDialogSettings
+            // 
+            this.openFileDialogSettings.DefaultExt = "xml";
+            this.openFileDialogSettings.FileName = "settings.xml";
+            this.openFileDialogSettings.Filter = "XML Files|*.xml";
+            this.openFileDialogSettings.Title = "Select a settings file";
+            // 
+            // saveFileDialogSettings
+            // 
+            this.saveFileDialogSettings.DefaultExt = "xml";
+            this.saveFileDialogSettings.FileName = "settings.xml";
+            this.saveFileDialogSettings.Filter = "XML Files|*.xml";
+            this.saveFileDialogSettings.Title = "Save settings file as:";
+            // 
+            // toolStrip
+            // 
+            this.toolStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButtonConfigurarMenu});
+            this.toolStrip.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip.Name = "toolStrip";
+            this.toolStrip.Size = new System.Drawing.Size(1352, 27);
+            this.toolStrip.TabIndex = 1;
+            this.toolStrip.Text = "toolStrip1";
+            // 
+            // toolStripButtonConfigurarMenu
+            // 
+            this.toolStripButtonConfigurarMenu.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonConfigurarMenu.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonConfigurarMenu.Image")));
+            this.toolStripButtonConfigurarMenu.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonConfigurarMenu.Name = "toolStripButtonConfigurarMenu";
+            this.toolStripButtonConfigurarMenu.Size = new System.Drawing.Size(24, 24);
+            this.toolStripButtonConfigurarMenu.Text = "Configurar Menu";
+            // 
+            // tabPage3
+            // 
+            this.tabPage3.Controls.Add(this.etiquetaSimple4);
+            this.tabPage3.Controls.Add(this.etiquetaSimple3);
+            this.tabPage3.Controls.Add(this.etiquetaSimple2);
+            this.tabPage3.Controls.Add(this.etiquetaSimple1);
+            this.tabPage3.Controls.Add(this.numericoAlturaHeader);
+            this.tabPage3.Controls.Add(this.numericoAturaBotones);
+            this.tabPage3.Controls.Add(this.numericoImagenGrandeVisible);
+            this.tabPage3.Controls.Add(this.numericoAlturaImagenesChicas);
+            this.tabPage3.Controls.Add(this.comboBoxLayOut);
+            this.tabPage3.Controls.Add(this.checkBoxMostrarColapsar);
+            this.tabPage3.Controls.Add(this.checkBoxColapsar);
+            this.tabPage3.Controls.Add(this.checkBoxMasOpciones);
+            this.tabPage3.Controls.Add(this.checkBoxBandaVisible);
+            this.tabPage3.Controls.Add(this.botonAplicacionAgregarBanda);
+            this.tabPage3.Controls.Add(this.botonConfigMenuGuardar);
+            this.tabPage3.Controls.Add(this.botonAplicacionActivarBanda);
+            this.tabPage3.Controls.Add(this.botonConfigMenuCargar);
+            this.tabPage3.Controls.Add(this.botonAplicacionMenosBotones);
+            this.tabPage3.Controls.Add(this.botonAplicacionMasBotones);
+            this.tabPage3.Location = new System.Drawing.Point(4, 25);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Size = new System.Drawing.Size(1115, 720);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "Configuracion";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // etiquetaSimple4
+            // 
+            this.etiquetaSimple4.AutoSize = true;
+            this.etiquetaSimple4.Font = new System.Drawing.Font("Century Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.etiquetaSimple4.ForeColor = System.Drawing.Color.Black;
+            this.etiquetaSimple4.Location = new System.Drawing.Point(26, 248);
+            this.etiquetaSimple4.Name = "etiquetaSimple4";
+            this.etiquetaSimple4.Size = new System.Drawing.Size(211, 23);
+            this.etiquetaSimple4.TabIndex = 24;
+            this.etiquetaSimple4.Text = "Altura de Cabecera";
+            // 
+            // etiquetaSimple3
+            // 
+            this.etiquetaSimple3.AutoSize = true;
+            this.etiquetaSimple3.Font = new System.Drawing.Font("Century Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.etiquetaSimple3.ForeColor = System.Drawing.Color.Black;
+            this.etiquetaSimple3.Location = new System.Drawing.Point(26, 215);
+            this.etiquetaSimple3.Name = "etiquetaSimple3";
+            this.etiquetaSimple3.Size = new System.Drawing.Size(185, 23);
+            this.etiquetaSimple3.TabIndex = 24;
+            this.etiquetaSimple3.Text = "Altura de Botones";
+            // 
+            // etiquetaSimple2
+            // 
+            this.etiquetaSimple2.AutoSize = true;
+            this.etiquetaSimple2.Font = new System.Drawing.Font("Century Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.etiquetaSimple2.ForeColor = System.Drawing.Color.Black;
+            this.etiquetaSimple2.Location = new System.Drawing.Point(26, 182);
+            this.etiquetaSimple2.Name = "etiquetaSimple2";
+            this.etiquetaSimple2.Size = new System.Drawing.Size(244, 23);
+            this.etiquetaSimple2.TabIndex = 24;
+            this.etiquetaSimple2.Text = "Altura Imagenes Chicas";
+            // 
+            // etiquetaSimple1
+            // 
+            this.etiquetaSimple1.AutoSize = true;
+            this.etiquetaSimple1.Font = new System.Drawing.Font("Century Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.etiquetaSimple1.ForeColor = System.Drawing.Color.Black;
+            this.etiquetaSimple1.Location = new System.Drawing.Point(26, 148);
+            this.etiquetaSimple1.Name = "etiquetaSimple1";
+            this.etiquetaSimple1.Size = new System.Drawing.Size(244, 23);
+            this.etiquetaSimple1.TabIndex = 24;
+            this.etiquetaSimple1.Text = "Altura Imagenes Chicas";
+            // 
+            // numericoAlturaHeader
+            // 
+            this.numericoAlturaHeader.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericoAlturaHeader.Location = new System.Drawing.Point(365, 239);
+            this.numericoAlturaHeader.Name = "numericoAlturaHeader";
+            this.numericoAlturaHeader.Size = new System.Drawing.Size(71, 27);
+            this.numericoAlturaHeader.TabIndex = 23;
+            // 
+            // numericoAturaBotones
+            // 
+            this.numericoAturaBotones.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericoAturaBotones.Location = new System.Drawing.Point(365, 206);
+            this.numericoAturaBotones.Name = "numericoAturaBotones";
+            this.numericoAturaBotones.Size = new System.Drawing.Size(71, 27);
+            this.numericoAturaBotones.TabIndex = 23;
+            // 
+            // numericoImagenGrandeVisible
+            // 
+            this.numericoImagenGrandeVisible.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericoImagenGrandeVisible.Location = new System.Drawing.Point(365, 173);
+            this.numericoImagenGrandeVisible.Name = "numericoImagenGrandeVisible";
+            this.numericoImagenGrandeVisible.Size = new System.Drawing.Size(71, 27);
+            this.numericoImagenGrandeVisible.TabIndex = 23;
+            // 
+            // numericoAlturaImagenesChicas
+            // 
+            this.numericoAlturaImagenesChicas.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericoAlturaImagenesChicas.Location = new System.Drawing.Point(365, 139);
+            this.numericoAlturaImagenesChicas.Name = "numericoAlturaImagenesChicas";
+            this.numericoAlturaImagenesChicas.Size = new System.Drawing.Size(71, 27);
+            this.numericoAlturaImagenesChicas.TabIndex = 23;
+            // 
+            // comboBoxLayOut
+            // 
+            this.comboBoxLayOut.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBoxLayOut.FormattingEnabled = true;
+            this.comboBoxLayOut.Items.AddRange(new object[] {
+            "Office 2003 Blue",
+            "Office 2003 Green",
+            "Office 2003 Silver",
+            "Office 2007 Blue",
+            "Office 2007 Black",
+            "Office 2007 Silver",
+            "Office 2010",
+            "Office Guifreaks"});
+            this.comboBoxLayOut.Location = new System.Drawing.Point(30, 108);
+            this.comboBoxLayOut.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxLayOut.Name = "comboBoxLayOut";
+            this.comboBoxLayOut.Size = new System.Drawing.Size(194, 24);
+            this.comboBoxLayOut.TabIndex = 22;
+            this.comboBoxLayOut.SelectedIndexChanged += new System.EventHandler(this.comboBoxLayOut_SelectedIndexChanged);
+            // 
+            // checkBoxMostrarColapsar
+            // 
+            this.checkBoxMostrarColapsar.AutoSize = true;
+            this.checkBoxMostrarColapsar.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxMostrarColapsar.ForeColor = System.Drawing.Color.Black;
+            this.checkBoxMostrarColapsar.Location = new System.Drawing.Point(465, 117);
+            this.checkBoxMostrarColapsar.Name = "checkBoxMostrarColapsar";
+            this.checkBoxMostrarColapsar.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkBoxMostrarColapsar.Size = new System.Drawing.Size(147, 24);
+            this.checkBoxMostrarColapsar.TabIndex = 1;
+            this.checkBoxMostrarColapsar.Text = "Boton Colapsar";
+            this.checkBoxMostrarColapsar.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxColapsar
+            // 
+            this.checkBoxColapsar.AutoSize = true;
+            this.checkBoxColapsar.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxColapsar.ForeColor = System.Drawing.Color.Black;
+            this.checkBoxColapsar.Location = new System.Drawing.Point(513, 87);
+            this.checkBoxColapsar.Name = "checkBoxColapsar";
+            this.checkBoxColapsar.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkBoxColapsar.Size = new System.Drawing.Size(98, 24);
+            this.checkBoxColapsar.TabIndex = 1;
+            this.checkBoxColapsar.Text = "Colapsar";
+            this.checkBoxColapsar.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxMasOpciones
+            // 
+            this.checkBoxMasOpciones.AutoSize = true;
+            this.checkBoxMasOpciones.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxMasOpciones.ForeColor = System.Drawing.Color.Black;
+            this.checkBoxMasOpciones.Location = new System.Drawing.Point(472, 57);
+            this.checkBoxMasOpciones.Name = "checkBoxMasOpciones";
+            this.checkBoxMasOpciones.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkBoxMasOpciones.Size = new System.Drawing.Size(139, 24);
+            this.checkBoxMasOpciones.TabIndex = 1;
+            this.checkBoxMasOpciones.Text = "Mas Opciones";
+            this.checkBoxMasOpciones.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxBandaVisible
+            // 
+            this.checkBoxBandaVisible.AutoSize = true;
+            this.checkBoxBandaVisible.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxBandaVisible.ForeColor = System.Drawing.Color.Black;
+            this.checkBoxBandaVisible.Location = new System.Drawing.Point(463, 27);
+            this.checkBoxBandaVisible.Name = "checkBoxBandaVisible";
+            this.checkBoxBandaVisible.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkBoxBandaVisible.Size = new System.Drawing.Size(148, 24);
+            this.checkBoxBandaVisible.TabIndex = 1;
+            this.checkBoxBandaVisible.Text = "Banda 1 Visible";
+            this.checkBoxBandaVisible.UseVisualStyleBackColor = true;
+            this.checkBoxBandaVisible.CheckedChanged += new System.EventHandler(this.checkBoxBandaVisible_CheckedChanged);
+            // 
+            // botonAplicacionAgregarBanda
+            // 
+            this.botonAplicacionAgregarBanda.BackColor = System.Drawing.SystemColors.Info;
+            this.botonAplicacionAgregarBanda.Location = new System.Drawing.Point(236, 66);
+            this.botonAplicacionAgregarBanda.Name = "botonAplicacionAgregarBanda";
+            this.botonAplicacionAgregarBanda.Size = new System.Drawing.Size(200, 35);
+            this.botonAplicacionAgregarBanda.TabIndex = 0;
+            this.botonAplicacionAgregarBanda.Text = "Agregar Banda";
+            this.botonAplicacionAgregarBanda.UseVisualStyleBackColor = false;
+            this.botonAplicacionAgregarBanda.Click += new System.EventHandler(this.botonAplicacionAgregarBanda_Click);
+            // 
+            // botonConfigMenuGuardar
+            // 
+            this.botonConfigMenuGuardar.BackColor = System.Drawing.SystemColors.Info;
+            this.botonConfigMenuGuardar.Location = new System.Drawing.Point(236, 407);
+            this.botonConfigMenuGuardar.Name = "botonConfigMenuGuardar";
+            this.botonConfigMenuGuardar.Size = new System.Drawing.Size(200, 35);
+            this.botonConfigMenuGuardar.TabIndex = 0;
+            this.botonConfigMenuGuardar.Text = "Guardar Configuracion";
+            this.botonConfigMenuGuardar.UseVisualStyleBackColor = false;
+            this.botonConfigMenuGuardar.Click += new System.EventHandler(this.botonConfigMenuGuardar_Click);
+            // 
+            // botonAplicacionActivarBanda
+            // 
+            this.botonAplicacionActivarBanda.BackColor = System.Drawing.SystemColors.Info;
+            this.botonAplicacionActivarBanda.Location = new System.Drawing.Point(236, 25);
+            this.botonAplicacionActivarBanda.Name = "botonAplicacionActivarBanda";
+            this.botonAplicacionActivarBanda.Size = new System.Drawing.Size(200, 35);
+            this.botonAplicacionActivarBanda.TabIndex = 0;
+            this.botonAplicacionActivarBanda.Text = "Activar Banda";
+            this.botonAplicacionActivarBanda.UseVisualStyleBackColor = false;
+            this.botonAplicacionActivarBanda.Click += new System.EventHandler(this.botonAplicacionActivarBanda_Click);
+            // 
+            // botonConfigMenuCargar
+            // 
+            this.botonConfigMenuCargar.BackColor = System.Drawing.SystemColors.Info;
+            this.botonConfigMenuCargar.Location = new System.Drawing.Point(30, 407);
+            this.botonConfigMenuCargar.Name = "botonConfigMenuCargar";
+            this.botonConfigMenuCargar.Size = new System.Drawing.Size(200, 35);
+            this.botonConfigMenuCargar.TabIndex = 0;
+            this.botonConfigMenuCargar.Text = "Cargar Configuracion";
+            this.botonConfigMenuCargar.UseVisualStyleBackColor = false;
+            this.botonConfigMenuCargar.Click += new System.EventHandler(this.botonConfigMenuCargar_Click);
+            // 
+            // botonAplicacionMenosBotones
+            // 
+            this.botonAplicacionMenosBotones.BackColor = System.Drawing.SystemColors.Info;
+            this.botonAplicacionMenosBotones.Location = new System.Drawing.Point(30, 66);
+            this.botonAplicacionMenosBotones.Name = "botonAplicacionMenosBotones";
+            this.botonAplicacionMenosBotones.Size = new System.Drawing.Size(200, 35);
+            this.botonAplicacionMenosBotones.TabIndex = 0;
+            this.botonAplicacionMenosBotones.Text = "Menos Botones";
+            this.botonAplicacionMenosBotones.UseVisualStyleBackColor = false;
+            this.botonAplicacionMenosBotones.Click += new System.EventHandler(this.botonAplicacionMenosBotones_Click);
+            // 
+            // botonAplicacionMasBotones
+            // 
+            this.botonAplicacionMasBotones.BackColor = System.Drawing.SystemColors.Info;
+            this.botonAplicacionMasBotones.Location = new System.Drawing.Point(30, 25);
+            this.botonAplicacionMasBotones.Name = "botonAplicacionMasBotones";
+            this.botonAplicacionMasBotones.Size = new System.Drawing.Size(200, 35);
+            this.botonAplicacionMasBotones.TabIndex = 0;
+            this.botonAplicacionMasBotones.Text = "Mas Botones";
+            this.botonAplicacionMasBotones.UseVisualStyleBackColor = false;
+            this.botonAplicacionMasBotones.Click += new System.EventHandler(this.botonAplicacionMasBotones_Click);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabApp);
+            this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.tabBrowser);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(4);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(1352, 749);
+            this.tabControl1.TabIndex = 0;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
+            // 
+            // tabApp
+            // 
+            this.tabApp.Controls.Add(this.panelContenedor);
+            this.tabApp.Location = new System.Drawing.Point(4, 25);
+            this.tabApp.Name = "tabApp";
+            this.tabApp.Size = new System.Drawing.Size(1344, 720);
+            this.tabApp.TabIndex = 3;
+            this.tabApp.Text = "Aplicacion";
+            this.tabApp.UseVisualStyleBackColor = true;
+            // 
+            // panelContenedor
+            // 
+            this.panelContenedor.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panelContenedor.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.panelContenedor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelContenedor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelContenedor.Location = new System.Drawing.Point(0, 0);
+            this.panelContenedor.Name = "panelContenedor";
+            this.panelContenedor.Size = new System.Drawing.Size(1344, 720);
+            this.panelContenedor.TabIndex = 0;
+            // 
+            // tabBrowser
+            // 
+            this.tabBrowser.Controls.Add(this.webBrowser1);
+            this.tabBrowser.Location = new System.Drawing.Point(4, 25);
+            this.tabBrowser.Name = "tabBrowser";
+            this.tabBrowser.Padding = new System.Windows.Forms.Padding(3);
+            this.tabBrowser.Size = new System.Drawing.Size(1115, 720);
+            this.tabBrowser.TabIndex = 4;
+            this.tabBrowser.Text = "Browser";
+            this.tabBrowser.UseVisualStyleBackColor = true;
+            // 
+            // webBrowser1
+            // 
+            this.webBrowser1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.webBrowser1.Location = new System.Drawing.Point(3, 3);
+            this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
+            this.webBrowser1.Name = "webBrowser1";
+            this.webBrowser1.Size = new System.Drawing.Size(1109, 714);
+            this.webBrowser1.TabIndex = 6;
+            this.webBrowser1.Url = new System.Uri("http://www.implementacionesi.com/soporte/login_page.php", System.UriKind.Absolute);
+            this.webBrowser1.Navigating += new System.Windows.Forms.WebBrowserNavigatingEventHandler(this.webBrowser1_Navigating);
+            // 
+            // botonMenuVertical1
+            // 
+            this.botonMenuVertical1.AutoEllipsis = true;
+            this.botonMenuVertical1.BackColor = System.Drawing.Color.Snow;
+            this.botonMenuVertical1.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuVertical1.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuVertical1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuVertical1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuVertical1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuVertical1.ForeColor = System.Drawing.Color.White;
+            this.botonMenuVertical1.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuVertical1.Location = new System.Drawing.Point(7, 49);
+            this.botonMenuVertical1.Name = "botonMenuVertical1";
+            this.botonMenuVertical1.Size = new System.Drawing.Size(125, 35);
+            this.botonMenuVertical1.TabIndex = 25;
+            this.botonMenuVertical1.Text = "Ìncidencia";
+            this.botonMenuVertical1.UseVisualStyleBackColor = false;
+            // 
+            // naviBarXuXo
+            // 
+            this.naviBarXuXo.ActiveBand = this.naviBandRRHH;
+            this.naviBarXuXo.ButtonHeight = 45;
+            this.naviBarXuXo.Controls.Add(this.naviBandRRHH);
+            this.naviBarXuXo.Controls.Add(this.naviBandDispositivos);
+            this.naviBarXuXo.Controls.Add(this.naviBandContable);
+            this.naviBarXuXo.Controls.Add(this.naviBandInventario);
+            this.naviBarXuXo.Controls.Add(this.naviBandConfig);
+            this.naviBarXuXo.Location = new System.Drawing.Point(0, 27);
+            this.naviBarXuXo.Name = "naviBarXuXo";
+            this.naviBarXuXo.Size = new System.Drawing.Size(224, 722);
+            this.naviBarXuXo.TabIndex = 2;
+            this.naviBarXuXo.Text = "naviBar2";
+            // 
+            // naviBandRRHH
+            // 
+            // 
+            // naviBandRRHH.ClientArea
+            // 
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonMenuRRHHTiposLegajos);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonMenuAusencias);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonPersonalizar);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonCalendariosLegajos);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonMenuFeriados);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonEventosMasivos);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonEventos);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonFichar);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonCalendarios);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonMenuTurnosLegajos);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonTurnos);
+            this.naviBandRRHH.ClientArea.Controls.Add(this.botonIncidencias);
+            this.naviBandRRHH.ClientArea.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.naviBandRRHH.ClientArea.Location = new System.Drawing.Point(0, 0);
+            this.naviBandRRHH.ClientArea.Name = "ClientArea";
+            this.naviBandRRHH.ClientArea.Size = new System.Drawing.Size(222, 655);
+            this.naviBandRRHH.ClientArea.TabIndex = 0;
+            this.naviBandRRHH.LargeImage = global::Acceso.Properties.Resources.Legajo_022x022_Azul;
+            this.naviBandRRHH.Location = new System.Drawing.Point(1, 27);
+            this.naviBandRRHH.Name = "naviBandRRHH";
+            this.naviBandRRHH.Size = new System.Drawing.Size(222, 655);
+            this.naviBandRRHH.SmallImage = global::Acceso.Properties.Resources.Legajo_016x016_Azul;
+            this.naviBandRRHH.TabIndex = 3;
+            this.naviBandRRHH.Text = "RRHH";
+            // 
+            // botonMenuRRHHTiposLegajos
+            // 
+            this.botonMenuRRHHTiposLegajos.AutoEllipsis = true;
+            this.botonMenuRRHHTiposLegajos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuRRHHTiposLegajos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuRRHHTiposLegajos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuRRHHTiposLegajos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuRRHHTiposLegajos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuRRHHTiposLegajos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuRRHHTiposLegajos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuRRHHTiposLegajos.Image = global::Acceso.Properties.Resources.Feriado_0302x030_negro;
+            this.botonMenuRRHHTiposLegajos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuRRHHTiposLegajos.Location = new System.Drawing.Point(1, 508);
+            this.botonMenuRRHHTiposLegajos.Name = "botonMenuRRHHTiposLegajos";
+            this.botonMenuRRHHTiposLegajos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuRRHHTiposLegajos.TabIndex = 27;
+            this.botonMenuRRHHTiposLegajos.Text = "Tipos de Legajos";
+            this.botonMenuRRHHTiposLegajos.UseVisualStyleBackColor = false;
+            this.botonMenuRRHHTiposLegajos.Click += new System.EventHandler(this.botonMenuRRHHTiposLegajos_Click);
+            // 
+            // botonMenuAusencias
+            // 
+            this.botonMenuAusencias.AutoEllipsis = true;
+            this.botonMenuAusencias.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuAusencias.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuAusencias.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuAusencias.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuAusencias.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuAusencias.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuAusencias.ForeColor = System.Drawing.Color.White;
+            this.botonMenuAusencias.Image = global::Acceso.Properties.Resources.Feriado_0302x030_negro;
+            this.botonMenuAusencias.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuAusencias.Location = new System.Drawing.Point(2, 462);
+            this.botonMenuAusencias.Name = "botonMenuAusencias";
+            this.botonMenuAusencias.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuAusencias.TabIndex = 26;
+            this.botonMenuAusencias.Text = "Ausencias";
+            this.botonMenuAusencias.UseVisualStyleBackColor = false;
+            this.botonMenuAusencias.Click += new System.EventHandler(this.botonMenuAusencias_Click);
+            // 
+            // botonPersonalizar
+            // 
+            this.botonPersonalizar.AutoEllipsis = true;
+            this.botonPersonalizar.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonPersonalizar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonPersonalizar.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonPersonalizar.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonPersonalizar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonPersonalizar.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonPersonalizar.ForeColor = System.Drawing.Color.White;
+            this.botonPersonalizar.Image = global::Acceso.Properties.Resources.personalizado_032x032_BlancoyNegro;
+            this.botonPersonalizar.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonPersonalizar.Location = new System.Drawing.Point(2, 416);
+            this.botonPersonalizar.Name = "botonPersonalizar";
+            this.botonPersonalizar.Size = new System.Drawing.Size(215, 40);
+            this.botonPersonalizar.TabIndex = 25;
+            this.botonPersonalizar.Text = "Personalizar";
+            this.botonPersonalizar.UseVisualStyleBackColor = false;
+            this.botonPersonalizar.Visible = false;
+            this.botonPersonalizar.Click += new System.EventHandler(this.botonPersonalizar_Click);
+            // 
+            // botonCalendariosLegajos
+            // 
+            this.botonCalendariosLegajos.AutoEllipsis = true;
+            this.botonCalendariosLegajos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonCalendariosLegajos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonCalendariosLegajos.Enabled = false;
+            this.botonCalendariosLegajos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonCalendariosLegajos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonCalendariosLegajos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonCalendariosLegajos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonCalendariosLegajos.ForeColor = System.Drawing.Color.White;
+            this.botonCalendariosLegajos.Image = global::Acceso.Properties.Resources.Legajo_030x030_Blanco;
+            this.botonCalendariosLegajos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonCalendariosLegajos.Location = new System.Drawing.Point(2, 3);
+            this.botonCalendariosLegajos.Name = "botonCalendariosLegajos";
+            this.botonCalendariosLegajos.Size = new System.Drawing.Size(215, 40);
+            this.botonCalendariosLegajos.TabIndex = 25;
+            this.botonCalendariosLegajos.Text = "Legajos";
+            this.botonCalendariosLegajos.UseVisualStyleBackColor = false;
+            this.botonCalendariosLegajos.Click += new System.EventHandler(this.botonCalendariosLegajos_Click);
+            // 
+            // botonMenuFeriados
+            // 
+            this.botonMenuFeriados.AutoEllipsis = true;
+            this.botonMenuFeriados.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuFeriados.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuFeriados.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuFeriados.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuFeriados.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuFeriados.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuFeriados.ForeColor = System.Drawing.Color.White;
+            this.botonMenuFeriados.Image = global::Acceso.Properties.Resources.Feriado_030x030_negro1;
+            this.botonMenuFeriados.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuFeriados.Location = new System.Drawing.Point(3, 278);
+            this.botonMenuFeriados.Name = "botonMenuFeriados";
+            this.botonMenuFeriados.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuFeriados.TabIndex = 25;
+            this.botonMenuFeriados.Text = "Feriados";
+            this.botonMenuFeriados.UseVisualStyleBackColor = false;
+            this.botonMenuFeriados.Click += new System.EventHandler(this.botonMenuFeriados_Click);
+            // 
+            // botonEventosMasivos
+            // 
+            this.botonEventosMasivos.AutoEllipsis = true;
+            this.botonEventosMasivos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonEventosMasivos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonEventosMasivos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonEventosMasivos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonEventosMasivos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonEventosMasivos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonEventosMasivos.ForeColor = System.Drawing.Color.White;
+            this.botonEventosMasivos.Image = global::Acceso.Properties.Resources.IncidenciaLegajo_30x30_blanco;
+            this.botonEventosMasivos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonEventosMasivos.Location = new System.Drawing.Point(4, 232);
+            this.botonEventosMasivos.Name = "botonEventosMasivos";
+            this.botonEventosMasivos.Size = new System.Drawing.Size(215, 40);
+            this.botonEventosMasivos.TabIndex = 25;
+            this.botonEventosMasivos.Text = "Eventos Masivos";
+            this.botonEventosMasivos.UseVisualStyleBackColor = false;
+            this.botonEventosMasivos.Click += new System.EventHandler(this.botonEventosMasivos_Click);
+            // 
+            // botonEventos
+            // 
+            this.botonEventos.AutoEllipsis = true;
+            this.botonEventos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonEventos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonEventos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonEventos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonEventos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonEventos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonEventos.ForeColor = System.Drawing.Color.White;
+            this.botonEventos.Image = global::Acceso.Properties.Resources.IncidenciaLegajo_30x30_blanco;
+            this.botonEventos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonEventos.Location = new System.Drawing.Point(2, 186);
+            this.botonEventos.Name = "botonEventos";
+            this.botonEventos.Size = new System.Drawing.Size(215, 40);
+            this.botonEventos.TabIndex = 25;
+            this.botonEventos.Text = "Eventos por Legajo";
+            this.botonEventos.UseVisualStyleBackColor = false;
+            this.botonEventos.Click += new System.EventHandler(this.botonEventos_Click);
+            // 
+            // botonFichar
+            // 
+            this.botonFichar.AutoEllipsis = true;
+            this.botonFichar.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonFichar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonFichar.Enabled = false;
+            this.botonFichar.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonFichar.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonFichar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonFichar.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonFichar.ForeColor = System.Drawing.Color.White;
+            this.botonFichar.Image = global::Acceso.Properties.Resources.AgregarTurno_30x30_Negro;
+            this.botonFichar.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonFichar.Location = new System.Drawing.Point(3, 370);
+            this.botonFichar.Name = "botonFichar";
+            this.botonFichar.Size = new System.Drawing.Size(215, 40);
+            this.botonFichar.TabIndex = 25;
+            this.botonFichar.Text = "Controles";
+            this.botonFichar.UseVisualStyleBackColor = false;
+            this.botonFichar.Click += new System.EventHandler(this.botonFichar_Click);
+            // 
+            // botonCalendarios
+            // 
+            this.botonCalendarios.AutoEllipsis = true;
+            this.botonCalendarios.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonCalendarios.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonCalendarios.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonCalendarios.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonCalendarios.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonCalendarios.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonCalendarios.ForeColor = System.Drawing.Color.White;
+            this.botonCalendarios.Image = global::Acceso.Properties.Resources.Dispositivos_032_027_Color;
+            this.botonCalendarios.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonCalendarios.Location = new System.Drawing.Point(3, 324);
+            this.botonCalendarios.Name = "botonCalendarios";
+            this.botonCalendarios.Size = new System.Drawing.Size(215, 40);
+            this.botonCalendarios.TabIndex = 25;
+            this.botonCalendarios.Text = "Reconocer Huella";
+            this.botonCalendarios.UseVisualStyleBackColor = false;
+            this.botonCalendarios.Click += new System.EventHandler(this.botonCalendarios_Click);
+            // 
+            // botonMenuTurnosLegajos
+            // 
+            this.botonMenuTurnosLegajos.AutoEllipsis = true;
+            this.botonMenuTurnosLegajos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuTurnosLegajos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuTurnosLegajos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuTurnosLegajos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuTurnosLegajos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuTurnosLegajos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuTurnosLegajos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuTurnosLegajos.Image = global::Acceso.Properties.Resources.Turnos_30x30_blanco;
+            this.botonMenuTurnosLegajos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuTurnosLegajos.Location = new System.Drawing.Point(3, 140);
+            this.botonMenuTurnosLegajos.Name = "botonMenuTurnosLegajos";
+            this.botonMenuTurnosLegajos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuTurnosLegajos.TabIndex = 25;
+            this.botonMenuTurnosLegajos.Text = "Turnos / Legajos";
+            this.botonMenuTurnosLegajos.UseVisualStyleBackColor = false;
+            this.botonMenuTurnosLegajos.Click += new System.EventHandler(this.botonMenuTurnosLegajos_Click);
+            // 
+            // botonTurnos
+            // 
+            this.botonTurnos.AutoEllipsis = true;
+            this.botonTurnos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonTurnos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonTurnos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonTurnos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonTurnos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonTurnos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonTurnos.ForeColor = System.Drawing.Color.White;
+            this.botonTurnos.Image = global::Acceso.Properties.Resources.Turnos_30x30_blanco;
+            this.botonTurnos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonTurnos.Location = new System.Drawing.Point(3, 94);
+            this.botonTurnos.Name = "botonTurnos";
+            this.botonTurnos.Size = new System.Drawing.Size(215, 40);
+            this.botonTurnos.TabIndex = 25;
+            this.botonTurnos.Text = "Turnos";
+            this.botonTurnos.UseVisualStyleBackColor = false;
+            this.botonTurnos.Click += new System.EventHandler(this.botonTurnos_Click);
+            // 
+            // botonIncidencias
+            // 
+            this.botonIncidencias.AutoEllipsis = true;
+            this.botonIncidencias.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonIncidencias.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonIncidencias.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonIncidencias.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonIncidencias.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonIncidencias.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonIncidencias.ForeColor = System.Drawing.Color.White;
+            this.botonIncidencias.Image = global::Acceso.Properties.Resources.Incidencia_30x30_blanco;
+            this.botonIncidencias.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonIncidencias.Location = new System.Drawing.Point(3, 48);
+            this.botonIncidencias.Name = "botonIncidencias";
+            this.botonIncidencias.Size = new System.Drawing.Size(215, 40);
+            this.botonIncidencias.TabIndex = 25;
+            this.botonIncidencias.Text = "Incidencias";
+            this.botonIncidencias.UseVisualStyleBackColor = false;
+            this.botonIncidencias.Click += new System.EventHandler(this.botonIncidencias_Click);
+            // 
+            // naviBandDispositivos
+            // 
+            // 
+            // naviBandDispositivos.ClientArea
+            // 
+            this.naviBandDispositivos.ClientArea.Controls.Add(this.botonMenuDispositivosDatos);
+            this.naviBandDispositivos.ClientArea.Controls.Add(this.PrgSTA);
+            this.naviBandDispositivos.ClientArea.Controls.Add(this.lbSysOutputInfo);
+            this.naviBandDispositivos.ClientArea.Controls.Add(this.botonMenuDispositivosUsuarios);
+            this.naviBandDispositivos.ClientArea.Controls.Add(this.botonMenuVertical2);
+            this.naviBandDispositivos.ClientArea.Location = new System.Drawing.Point(0, 0);
+            this.naviBandDispositivos.ClientArea.Name = "ClientArea";
+            this.naviBandDispositivos.ClientArea.Size = new System.Drawing.Size(222, 655);
+            this.naviBandDispositivos.ClientArea.TabIndex = 0;
+            this.naviBandDispositivos.LargeImage = global::Acceso.Properties.Resources.Dispositivo_022x022_Color;
+            this.naviBandDispositivos.Location = new System.Drawing.Point(1, 27);
+            this.naviBandDispositivos.Name = "naviBandDispositivos";
+            this.naviBandDispositivos.Size = new System.Drawing.Size(222, 655);
+            this.naviBandDispositivos.SmallImage = global::Acceso.Properties.Resources.Dispositivo_016x016_Color;
+            this.naviBandDispositivos.TabIndex = 5;
+            this.naviBandDispositivos.Text = "Dispositivos";
+            this.naviBandDispositivos.Visible = false;
+            // 
+            // botonMenuDispositivosDatos
+            // 
+            this.botonMenuDispositivosDatos.AutoEllipsis = true;
+            this.botonMenuDispositivosDatos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuDispositivosDatos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuDispositivosDatos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuDispositivosDatos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuDispositivosDatos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuDispositivosDatos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuDispositivosDatos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuDispositivosDatos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuDispositivosDatos.Location = new System.Drawing.Point(3, 94);
+            this.botonMenuDispositivosDatos.Name = "botonMenuDispositivosDatos";
+            this.botonMenuDispositivosDatos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuDispositivosDatos.TabIndex = 84;
+            this.botonMenuDispositivosDatos.Text = "Datos";
+            this.botonMenuDispositivosDatos.UseVisualStyleBackColor = false;
+            this.botonMenuDispositivosDatos.Click += new System.EventHandler(this.botonMenuDispositivosDatos_Click);
+            // 
+            // PrgSTA
+            // 
+            this.PrgSTA.Location = new System.Drawing.Point(1, 604);
+            this.PrgSTA.Margin = new System.Windows.Forms.Padding(4);
+            this.PrgSTA.Name = "PrgSTA";
+            this.PrgSTA.Size = new System.Drawing.Size(220, 23);
+            this.PrgSTA.TabIndex = 83;
+            // 
+            // lbSysOutputInfo
+            // 
+            this.lbSysOutputInfo.ItemHeight = 16;
+            this.lbSysOutputInfo.Items.AddRange(new object[] {
+            "Prueba..."});
+            this.lbSysOutputInfo.Location = new System.Drawing.Point(2, 141);
+            this.lbSysOutputInfo.Name = "lbSysOutputInfo";
+            this.lbSysOutputInfo.Size = new System.Drawing.Size(218, 452);
+            this.lbSysOutputInfo.TabIndex = 78;
+            // 
+            // botonMenuDispositivosUsuarios
+            // 
+            this.botonMenuDispositivosUsuarios.AutoEllipsis = true;
+            this.botonMenuDispositivosUsuarios.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuDispositivosUsuarios.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuDispositivosUsuarios.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuDispositivosUsuarios.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuDispositivosUsuarios.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuDispositivosUsuarios.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuDispositivosUsuarios.ForeColor = System.Drawing.Color.White;
+            this.botonMenuDispositivosUsuarios.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuDispositivosUsuarios.Location = new System.Drawing.Point(2, 48);
+            this.botonMenuDispositivosUsuarios.Name = "botonMenuDispositivosUsuarios";
+            this.botonMenuDispositivosUsuarios.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuDispositivosUsuarios.TabIndex = 0;
+            this.botonMenuDispositivosUsuarios.Text = "Usuarios";
+            this.botonMenuDispositivosUsuarios.UseVisualStyleBackColor = false;
+            this.botonMenuDispositivosUsuarios.Click += new System.EventHandler(this.botonMenuDispositivosUsuarios_Click);
+            // 
+            // botonMenuVertical2
+            // 
+            this.botonMenuVertical2.AutoEllipsis = true;
+            this.botonMenuVertical2.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuVertical2.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuVertical2.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuVertical2.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuVertical2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuVertical2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuVertical2.ForeColor = System.Drawing.Color.White;
+            this.botonMenuVertical2.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuVertical2.Location = new System.Drawing.Point(3, 3);
+            this.botonMenuVertical2.Name = "botonMenuVertical2";
+            this.botonMenuVertical2.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuVertical2.TabIndex = 0;
+            this.botonMenuVertical2.Text = "Dispositivos";
+            this.botonMenuVertical2.UseVisualStyleBackColor = false;
+            this.botonMenuVertical2.Click += new System.EventHandler(this.botonMenuVertical2_Click);
+            // 
+            // naviBandContable
+            // 
+            // 
+            // naviBandContable.ClientArea
+            // 
+            this.naviBandContable.ClientArea.Controls.Add(this.botonMenuModificarAsientos);
+            this.naviBandContable.ClientArea.Location = new System.Drawing.Point(0, 0);
+            this.naviBandContable.ClientArea.Name = "ClientArea";
+            this.naviBandContable.ClientArea.Size = new System.Drawing.Size(222, 655);
+            this.naviBandContable.ClientArea.TabIndex = 0;
+            this.naviBandContable.LargeImage = global::Acceso.Properties.Resources.Contabilidad_022x036_Color;
+            this.naviBandContable.Location = new System.Drawing.Point(1, 27);
+            this.naviBandContable.Name = "naviBandContable";
+            this.naviBandContable.Size = new System.Drawing.Size(222, 655);
+            this.naviBandContable.SmallImage = global::Acceso.Properties.Resources.Contabilidad_022x036_Color;
+            this.naviBandContable.TabIndex = 16;
+            this.naviBandContable.Text = "Contabilidad";
+            // 
+            // botonMenuModificarAsientos
+            // 
+            this.botonMenuModificarAsientos.AutoEllipsis = true;
+            this.botonMenuModificarAsientos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuModificarAsientos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuModificarAsientos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuModificarAsientos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuModificarAsientos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuModificarAsientos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuModificarAsientos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuModificarAsientos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuModificarAsientos.Location = new System.Drawing.Point(4, 3);
+            this.botonMenuModificarAsientos.Name = "botonMenuModificarAsientos";
+            this.botonMenuModificarAsientos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuModificarAsientos.TabIndex = 0;
+            this.botonMenuModificarAsientos.Text = "Modificar Asientos";
+            this.botonMenuModificarAsientos.UseVisualStyleBackColor = false;
+            this.botonMenuModificarAsientos.Click += new System.EventHandler(this.botonMenuModificarAsientos_Click);
+            // 
+            // naviBandInventario
+            // 
+            // 
+            // naviBandInventario.ClientArea
+            // 
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonMenuTiposMovimientos);
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonMenuClasesArticulos);
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonMenuDepositos);
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonMenuInventario);
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonFichaProduccion);
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonMenuMovimientos);
+            this.naviBandInventario.ClientArea.Controls.Add(this.botonMenuImprimirCheques);
+            this.naviBandInventario.ClientArea.Location = new System.Drawing.Point(0, 0);
+            this.naviBandInventario.ClientArea.Name = "ClientArea";
+            this.naviBandInventario.ClientArea.Size = new System.Drawing.Size(222, 655);
+            this.naviBandInventario.ClientArea.TabIndex = 0;
+            this.naviBandInventario.LargeImage = global::Acceso.Properties.Resources.Inventario_022x022_Color;
+            this.naviBandInventario.Location = new System.Drawing.Point(1, 27);
+            this.naviBandInventario.Name = "naviBandInventario";
+            this.naviBandInventario.Size = new System.Drawing.Size(222, 655);
+            this.naviBandInventario.SmallImage = global::Acceso.Properties.Resources.Inventario_016x016_Color;
+            this.naviBandInventario.TabIndex = 6;
+            this.naviBandInventario.Text = "Inventario";
+            this.naviBandInventario.Visible = false;
+            // 
+            // botonMenuTiposMovimientos
+            // 
+            this.botonMenuTiposMovimientos.AutoEllipsis = true;
+            this.botonMenuTiposMovimientos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuTiposMovimientos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuTiposMovimientos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuTiposMovimientos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuTiposMovimientos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuTiposMovimientos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuTiposMovimientos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuTiposMovimientos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuTiposMovimientos.Location = new System.Drawing.Point(3, 48);
+            this.botonMenuTiposMovimientos.Name = "botonMenuTiposMovimientos";
+            this.botonMenuTiposMovimientos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuTiposMovimientos.TabIndex = 0;
+            this.botonMenuTiposMovimientos.Text = "Tipos Movimiento";
+            this.botonMenuTiposMovimientos.UseVisualStyleBackColor = false;
+            this.botonMenuTiposMovimientos.Click += new System.EventHandler(this.botonMenuTiposMovimientos_Click);
+            // 
+            // botonMenuClasesArticulos
+            // 
+            this.botonMenuClasesArticulos.AutoEllipsis = true;
+            this.botonMenuClasesArticulos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuClasesArticulos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuClasesArticulos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuClasesArticulos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuClasesArticulos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuClasesArticulos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuClasesArticulos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuClasesArticulos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuClasesArticulos.Location = new System.Drawing.Point(4, 3);
+            this.botonMenuClasesArticulos.Name = "botonMenuClasesArticulos";
+            this.botonMenuClasesArticulos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuClasesArticulos.TabIndex = 0;
+            this.botonMenuClasesArticulos.Text = "Clases";
+            this.botonMenuClasesArticulos.UseVisualStyleBackColor = false;
+            this.botonMenuClasesArticulos.Click += new System.EventHandler(this.botonMenuClasesArticulos_Click);
+            // 
+            // botonMenuDepositos
+            // 
+            this.botonMenuDepositos.AutoEllipsis = true;
+            this.botonMenuDepositos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuDepositos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuDepositos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuDepositos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuDepositos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuDepositos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuDepositos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuDepositos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuDepositos.Location = new System.Drawing.Point(2, 94);
+            this.botonMenuDepositos.Name = "botonMenuDepositos";
+            this.botonMenuDepositos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuDepositos.TabIndex = 0;
+            this.botonMenuDepositos.Text = "Depositos";
+            this.botonMenuDepositos.UseVisualStyleBackColor = false;
+            this.botonMenuDepositos.Click += new System.EventHandler(this.botonMenuDepositos_Click);
+            // 
+            // botonMenuInventario
+            // 
+            this.botonMenuInventario.AutoEllipsis = true;
+            this.botonMenuInventario.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuInventario.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuInventario.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuInventario.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuInventario.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuInventario.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuInventario.ForeColor = System.Drawing.Color.White;
+            this.botonMenuInventario.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuInventario.Location = new System.Drawing.Point(4, 142);
+            this.botonMenuInventario.Name = "botonMenuInventario";
+            this.botonMenuInventario.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuInventario.TabIndex = 0;
+            this.botonMenuInventario.Text = "Articulos";
+            this.botonMenuInventario.UseVisualStyleBackColor = false;
+            this.botonMenuInventario.Click += new System.EventHandler(this.botonMenuInventario_Click);
+            // 
+            // botonFichaProduccion
+            // 
+            this.botonFichaProduccion.AutoEllipsis = true;
+            this.botonFichaProduccion.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.botonFichaProduccion.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonFichaProduccion.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonFichaProduccion.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonFichaProduccion.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonFichaProduccion.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonFichaProduccion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonFichaProduccion.ForeColor = System.Drawing.Color.White;
+            this.botonFichaProduccion.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonFichaProduccion.Location = new System.Drawing.Point(4, 188);
+            this.botonFichaProduccion.Name = "botonFichaProduccion";
+            this.botonFichaProduccion.Size = new System.Drawing.Size(215, 40);
+            this.botonFichaProduccion.TabIndex = 0;
+            this.botonFichaProduccion.Text = "Ficha de Produccion";
+            this.botonFichaProduccion.UseVisualStyleBackColor = false;
+            this.botonFichaProduccion.Click += new System.EventHandler(this.botonFichaProduccion_Click);
+            // 
+            // botonMenuMovimientos
+            // 
+            this.botonMenuMovimientos.AutoEllipsis = true;
+            this.botonMenuMovimientos.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuMovimientos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuMovimientos.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuMovimientos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuMovimientos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuMovimientos.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuMovimientos.ForeColor = System.Drawing.Color.White;
+            this.botonMenuMovimientos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuMovimientos.Location = new System.Drawing.Point(4, 232);
+            this.botonMenuMovimientos.Name = "botonMenuMovimientos";
+            this.botonMenuMovimientos.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuMovimientos.TabIndex = 0;
+            this.botonMenuMovimientos.Text = "Movimientos";
+            this.botonMenuMovimientos.UseVisualStyleBackColor = false;
+            this.botonMenuMovimientos.Click += new System.EventHandler(this.botonMenuMovimientos_Click);
+            // 
+            // botonMenuImprimirCheques
+            // 
+            this.botonMenuImprimirCheques.AutoEllipsis = true;
+            this.botonMenuImprimirCheques.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuImprimirCheques.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuImprimirCheques.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuImprimirCheques.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuImprimirCheques.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuImprimirCheques.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuImprimirCheques.ForeColor = System.Drawing.Color.White;
+            this.botonMenuImprimirCheques.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuImprimirCheques.Location = new System.Drawing.Point(4, 282);
+            this.botonMenuImprimirCheques.Name = "botonMenuImprimirCheques";
+            this.botonMenuImprimirCheques.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuImprimirCheques.TabIndex = 0;
+            this.botonMenuImprimirCheques.Text = "Impresion de Etiquetas";
+            this.botonMenuImprimirCheques.UseVisualStyleBackColor = false;
+            this.botonMenuImprimirCheques.Click += new System.EventHandler(this.botonMenuImprimirCheques_Click);
+            // 
+            // naviBandConfig
+            // 
+            // 
+            // naviBandConfig.ClientArea
+            // 
+            this.naviBandConfig.ClientArea.Controls.Add(this.btnConfiguracion);
+            this.naviBandConfig.ClientArea.Controls.Add(this.botonMenuSucursales);
+            this.naviBandConfig.ClientArea.Controls.Add(this.botonMenuTempAno);
+            this.naviBandConfig.ClientArea.Controls.Add(this.botonUsuarios);
+            this.naviBandConfig.ClientArea.Location = new System.Drawing.Point(0, 0);
+            this.naviBandConfig.ClientArea.Name = "ClientArea";
+            this.naviBandConfig.ClientArea.Size = new System.Drawing.Size(222, 655);
+            this.naviBandConfig.ClientArea.TabIndex = 0;
+            this.naviBandConfig.LargeImage = global::Acceso.Properties.Resources.Config_022X022__color;
+            this.naviBandConfig.Location = new System.Drawing.Point(1, 27);
+            this.naviBandConfig.Margin = new System.Windows.Forms.Padding(4);
+            this.naviBandConfig.Name = "naviBandConfig";
+            this.naviBandConfig.Size = new System.Drawing.Size(222, 655);
+            this.naviBandConfig.SmallImage = global::Acceso.Properties.Resources.Config_016X016__color;
+            this.naviBandConfig.TabIndex = 9;
+            this.naviBandConfig.Text = "Configurar";
+            // 
+            // btnConfiguracion
+            // 
+            this.btnConfiguracion.AutoEllipsis = true;
+            this.btnConfiguracion.BackColor = System.Drawing.Color.SlateBlue;
+            this.btnConfiguracion.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnConfiguracion.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.btnConfiguracion.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.btnConfiguracion.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnConfiguracion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnConfiguracion.ForeColor = System.Drawing.Color.White;
+            this.btnConfiguracion.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnConfiguracion.Location = new System.Drawing.Point(4, 3);
+            this.btnConfiguracion.Name = "btnConfiguracion";
+            this.btnConfiguracion.Size = new System.Drawing.Size(215, 40);
+            this.btnConfiguracion.TabIndex = 0;
+            this.btnConfiguracion.Text = "Configurador";
+            this.btnConfiguracion.UseVisualStyleBackColor = false;
+            this.btnConfiguracion.Click += new System.EventHandler(this.btnConfiguracion_Click);
+            // 
+            // botonMenuSucursales
+            // 
+            this.botonMenuSucursales.AutoEllipsis = true;
+            this.botonMenuSucursales.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuSucursales.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuSucursales.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuSucursales.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuSucursales.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuSucursales.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuSucursales.ForeColor = System.Drawing.Color.White;
+            this.botonMenuSucursales.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuSucursales.Location = new System.Drawing.Point(4, 140);
+            this.botonMenuSucursales.Name = "botonMenuSucursales";
+            this.botonMenuSucursales.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuSucursales.TabIndex = 0;
+            this.botonMenuSucursales.Text = "Sucursales";
+            this.botonMenuSucursales.UseVisualStyleBackColor = false;
+            this.botonMenuSucursales.Click += new System.EventHandler(this.botonMenuSucursales_Click);
+            // 
+            // botonMenuTempAno
+            // 
+            this.botonMenuTempAno.AutoEllipsis = true;
+            this.botonMenuTempAno.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonMenuTempAno.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonMenuTempAno.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonMenuTempAno.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonMenuTempAno.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonMenuTempAno.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonMenuTempAno.ForeColor = System.Drawing.Color.White;
+            this.botonMenuTempAno.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonMenuTempAno.Location = new System.Drawing.Point(4, 94);
+            this.botonMenuTempAno.Name = "botonMenuTempAno";
+            this.botonMenuTempAno.Size = new System.Drawing.Size(215, 40);
+            this.botonMenuTempAno.TabIndex = 0;
+            this.botonMenuTempAno.Text = "Temporada y Año";
+            this.botonMenuTempAno.UseVisualStyleBackColor = false;
+            this.botonMenuTempAno.Click += new System.EventHandler(this.botonMenuTempAno_Click);
+            // 
+            // botonUsuarios
+            // 
+            this.botonUsuarios.AutoEllipsis = true;
+            this.botonUsuarios.BackColor = System.Drawing.Color.SlateBlue;
+            this.botonUsuarios.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.botonUsuarios.FlatAppearance.BorderColor = System.Drawing.Color.SteelBlue;
+            this.botonUsuarios.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSkyBlue;
+            this.botonUsuarios.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.botonUsuarios.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.botonUsuarios.ForeColor = System.Drawing.Color.White;
+            this.botonUsuarios.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.botonUsuarios.Location = new System.Drawing.Point(4, 48);
+            this.botonUsuarios.Name = "botonUsuarios";
+            this.botonUsuarios.Size = new System.Drawing.Size(215, 40);
+            this.botonUsuarios.TabIndex = 0;
+            this.botonUsuarios.Text = "Usuarios";
+            this.botonUsuarios.UseVisualStyleBackColor = false;
+            this.botonUsuarios.Click += new System.EventHandler(this.botonUsuarios_Click);
+            // 
+            // ClientArea
+            // 
+            this.ClientArea.Location = new System.Drawing.Point(0, 0);
+            this.ClientArea.Name = "ClientArea";
+            this.ClientArea.Size = new System.Drawing.Size(241, 147);
+            this.ClientArea.TabIndex = 0;
+            // 
+            // Main
+            // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+            this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            this.ClientSize = new System.Drawing.Size(1352, 749);
+            this.Controls.Add(this.naviBarXuXo);
+            this.Controls.Add(this.toolStrip);
+            this.Controls.Add(this.tabControl1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(800, 600);
+            this.Name = "Main";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Accesos ver 1.0.0";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Load += new System.EventHandler(this.Main_Load);
+            this.toolStrip.ResumeLayout(false);
+            this.toolStrip.PerformLayout();
+            this.tabPage3.ResumeLayout(false);
+            this.tabPage3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoAlturaHeader)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoAturaBotones)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoImagenGrandeVisible)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericoAlturaImagenesChicas)).EndInit();
+            this.tabControl1.ResumeLayout(false);
+            this.tabApp.ResumeLayout(false);
+            this.tabBrowser.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.naviBarXuXo)).EndInit();
+            this.naviBarXuXo.ResumeLayout(false);
+            this.naviBandRRHH.ClientArea.ResumeLayout(false);
+            this.naviBandRRHH.ResumeLayout(false);
+            this.naviBandDispositivos.ClientArea.ResumeLayout(false);
+            this.naviBandDispositivos.ResumeLayout(false);
+            this.naviBandContable.ClientArea.ResumeLayout(false);
+            this.naviBandContable.ResumeLayout(false);
+            this.naviBandInventario.ClientArea.ResumeLayout(false);
+            this.naviBandInventario.ResumeLayout(false);
+            this.naviBandConfig.ClientArea.ResumeLayout(false);
+            this.naviBandConfig.ResumeLayout(false);
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+		}
+
+		
+	  #endregion
+      private System.Windows.Forms.Label label2;
+      private System.Windows.Forms.TextBox textBox2;
+      private System.Windows.Forms.CheckBox checkBox2;
+      private System.Windows.Forms.Button button3;
+      private System.Windows.Forms.Button button4;
+      private System.Windows.Forms.TextBox textBox3;
+      private System.Windows.Forms.OpenFileDialog openFileDialogSettings;
+      private System.Windows.Forms.SaveFileDialog saveFileDialogSettings;
+		private System.Windows.Forms.ToolStrip toolStrip;
+		private System.Windows.Forms.ToolStripButton toolStripButtonConfigurarMenu;
+		private Guifreaks.NavigationBar.NaviBand naviBandRRHH;
+		private Guifreaks.NavigationBar.NaviBand naviBandInventario;
+		private Guifreaks.NavigationBar.NaviBand naviBandDispositivos;
+		private Guifreaks.NavigationBar.NaviBand naviBandConfig;
+		private Guifreaks.NavigationBar.NaviBar naviBarXuXo;
+		private System.Windows.Forms.TabPage tabPage3;
+		private Altiora.Controles.EtiquetaSimple etiquetaSimple4;
+		private Altiora.Controles.EtiquetaSimple etiquetaSimple3;
+		private Altiora.Controles.EtiquetaSimple etiquetaSimple2;
+		private Altiora.Controles.EtiquetaSimple etiquetaSimple1;
+		private Altiora.Controles.Numerico numericoAlturaHeader;
+		private Altiora.Controles.Numerico numericoAturaBotones;
+		private Altiora.Controles.Numerico numericoImagenGrandeVisible;
+		private Altiora.Controles.Numerico numericoAlturaImagenesChicas;
+		private System.Windows.Forms.ComboBox comboBoxLayOut;
+		private Altiora.Controles.CheckBox checkBoxMostrarColapsar;
+		private Altiora.Controles.CheckBox checkBoxColapsar;
+		private Altiora.Controles.CheckBox checkBoxMasOpciones;
+		private Altiora.Controles.CheckBox checkBoxBandaVisible;
+		private Altiora.Controles.BotonAplicacion botonAplicacionAgregarBanda;
+		private Altiora.Controles.BotonAplicacion botonConfigMenuGuardar;
+		private Altiora.Controles.BotonAplicacion botonAplicacionActivarBanda;
+		private Altiora.Controles.BotonAplicacion botonConfigMenuCargar;
+		private Altiora.Controles.BotonAplicacion botonAplicacionMenosBotones;
+		private Altiora.Controles.BotonAplicacion botonAplicacionMasBotones;
+		private System.Windows.Forms.TabControl tabControl1;
+		private System.Windows.Forms.TabPage tabApp;
+		private Altiora.Controles.Panel panelContenedor;
+		private Altiora.Controles.BotonMenuVertical botonMenuVertical1;
+		private Altiora.Controles.BotonMenuVertical botonIncidencias;
+		private Altiora.Controles.BotonMenuVertical botonTurnos;
+		private Altiora.Controles.BotonMenuVertical botonCalendarios;
+		private Altiora.Controles.BotonMenuVertical botonEventos;
+		private Altiora.Controles.BotonMenuVertical botonCalendariosLegajos;
+		private Altiora.Controles.BotonMenuVertical botonPersonalizar;
+		private System.Windows.Forms.TabPage tabBrowser;
+		private System.Windows.Forms.WebBrowser webBrowser1;
+		private Altiora.Controles.BotonMenuVertical botonMenuDispositivosUsuarios;
+		private Altiora.Controles.BotonMenuVertical botonMenuVertical2;
+		public System.Windows.Forms.ListBox lbSysOutputInfo;
+		public System.Windows.Forms.ProgressBar PrgSTA;
+		private Altiora.Controles.BotonMenuVertical botonMenuImprimirCheques;
+		private Altiora.Controles.BotonMenuVertical botonUsuarios;
+		private Guifreaks.NavigationBar.NaviBandClientArea ClientArea;
+		private Altiora.Controles.BotonMenuVertical btnConfiguracion;
+		private Altiora.Controles.BotonMenuVertical botonMenuInventario;
+		private Guifreaks.NavigationBar.NaviBand naviBandContable;
+		private Altiora.Controles.BotonMenuVertical botonMenuTurnosLegajos;
+		private Altiora.Controles.BotonMenuVertical botonMenuClasesArticulos;
+		private Altiora.Controles.BotonMenuVertical botonMenuTiposMovimientos;
+		private Altiora.Controles.BotonMenuVertical botonMenuMovimientos;
+		private Altiora.Controles.BotonMenuVertical botonMenuTempAno;
+		private Altiora.Controles.BotonMenuVertical botonMenuFeriados;
+		private Altiora.Controles.BotonMenuVertical botonEventosMasivos;
+		private Altiora.Controles.BotonMenuVertical botonFichaProduccion;
+		private Altiora.Controles.BotonMenuVertical botonMenuDepositos;
+		private Altiora.Controles.BotonMenuVertical botonMenuSucursales;
+		private Altiora.Controles.BotonMenuVertical botonMenuModificarAsientos;
+		private Altiora.Controles.BotonMenuVertical botonFichar;
+        private Altiora.Controles.BotonMenuVertical botonMenuDispositivosDatos;
+        private Altiora.Controles.BotonMenuVertical botonMenuAusencias;
+        private Altiora.Controles.BotonMenuVertical botonMenuRRHHTiposLegajos;
+	}
+}

@@ -1,0 +1,41 @@
+﻿@page "/variables/editar/{VariableId:int}"
+@attribute [Authorize (Roles ="ADMINISTRADOR")]
+@inject RepositorioVariablesGlobales repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Variable</h3>
+
+@if (Variable == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioVariablesGlobales OnValidSubmit="EditarEntidad" Variable="Variable" />
+}
+
+@code {
+
+    [Parameter] public int VariableId { get; set; }
+    private VariableGlobal Variable;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Variable = await repositorio.Get(VariableId);
+        if (Variable == null)
+        {
+            navigationManager.NavigateTo("variables");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Variable);
+        await mostrarMensaje.MostrarMensajeTemporal("Terminal", $"{Variable.Nombre} ...Actualizada");
+        if(Variable.Reiniciar)
+            await mostrarMensaje.MostrarMensajeAlerta("Para que los cambios surjan efecto es necesario volver a logearse");
+
+        navigationManager.NavigateTo("variables");
+    }
+}

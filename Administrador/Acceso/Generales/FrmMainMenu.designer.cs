@@ -1,0 +1,434 @@
+﻿
+namespace Acceso.Ventas
+{
+    partial class FrmMainMenu
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMainMenu));
+            this.panelMenu = new System.Windows.Forms.Panel();
+            this.btnLogout = new FontAwesome.Sharp.IconButton();
+            this.btnLegajos = new FontAwesome.Sharp.IconButton();
+            this.btnDigitalPlusWeb = new FontAwesome.Sharp.IconButton();
+            this.btnKosiuko = new FontAwesome.Sharp.IconButton();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.btnHome = new System.Windows.Forms.PictureBox();
+            this.panelTitleBar = new System.Windows.Forms.Panel();
+            this.lblUsuario = new System.Windows.Forms.Label();
+            this.panelBotonesWindos = new System.Windows.Forms.Panel();
+            this.iconMinimize = new FontAwesome.Sharp.IconPictureBox();
+            this.iconClose = new FontAwesome.Sharp.IconPictureBox();
+            this.iconMaximize = new FontAwesome.Sharp.IconPictureBox();
+            this.lblTitleChildForm = new System.Windows.Forms.Label();
+            this.iconCurrentChildForm = new FontAwesome.Sharp.IconPictureBox();
+            this.panelShadow = new System.Windows.Forms.Panel();
+            this.panelDesktop = new System.Windows.Forms.Panel();
+            this.reloj1 = new Global.Controles.Reloj();
+            this.panelMenu.SuspendLayout();
+            this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.btnHome)).BeginInit();
+            this.panelTitleBar.SuspendLayout();
+            this.panelBotonesWindos.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.iconMinimize)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.iconClose)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.iconMaximize)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.iconCurrentChildForm)).BeginInit();
+            this.panelDesktop.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // panelMenu
+            // 
+            this.panelMenu.AutoScroll = true;
+            this.panelMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(30)))), ((int)(((byte)(68)))));
+            this.btnConfiguracion = new FontAwesome.Sharp.IconButton();
+            this.btnLicencias = new FontAwesome.Sharp.IconButton();
+            this.lblLicenciaStatus = new System.Windows.Forms.Label();
+            this.panelMenu.Controls.Add(this.btnLogout);
+            this.panelMenu.Controls.Add(this.btnKosiuko);
+            this.panelMenu.Controls.Add(this.btnDigitalPlusWeb);
+            this.panelMenu.Controls.Add(this.btnLicencias);
+            this.panelMenu.Controls.Add(this.btnConfiguracion);
+            this.panelMenu.Controls.Add(this.btnLegajos);
+            this.panelMenu.Controls.Add(this.panel1);
+            this.panelMenu.Dock = System.Windows.Forms.DockStyle.Left;
+            this.panelMenu.Location = new System.Drawing.Point(0, 0);
+            this.panelMenu.Name = "panelMenu";
+            this.panelMenu.Size = new System.Drawing.Size(190, 800);
+            this.panelMenu.TabIndex = 0;
+            //
+            // btnLogout
+            // 
+            this.btnLogout.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.btnLogout.FlatAppearance.BorderSize = 0;
+            this.btnLogout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLogout.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnLogout.IconChar = FontAwesome.Sharp.IconChar.SignOutAlt;
+            this.btnLogout.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnLogout.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnLogout.IconSize = 32;
+            this.btnLogout.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLogout.Location = new System.Drawing.Point(0, 821);
+            this.btnLogout.Name = "btnLogout";
+            this.btnLogout.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnLogout.Size = new System.Drawing.Size(173, 60);
+            this.btnLogout.TabIndex = 6;
+            this.btnLogout.Text = "Cerrar Sesion";
+            this.btnLogout.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLogout.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnLogout.UseVisualStyleBackColor = true;
+            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
+            // 
+            // btnLegajos
+            // 
+            this.btnLegajos.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnLegajos.FlatAppearance.BorderSize = 0;
+            this.btnLegajos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLegajos.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnLegajos.IconChar = FontAwesome.Sharp.IconChar.IdCard;
+            this.btnLegajos.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnLegajos.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnLegajos.IconSize = 32;
+            this.btnLegajos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLegajos.Location = new System.Drawing.Point(0, 200);
+            this.btnLegajos.Name = "btnLegajos";
+            this.btnLegajos.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnLegajos.Size = new System.Drawing.Size(173, 60);
+            this.btnLegajos.TabIndex = 3;
+            this.btnLegajos.Text = "Legajos";
+            this.btnLegajos.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLegajos.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnLegajos.UseVisualStyleBackColor = true;
+            this.btnLegajos.Click += new System.EventHandler(this.btnLegajos_Click);
+            //
+            // btnDigitalPlusWeb
+            //
+            this.btnDigitalPlusWeb.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnDigitalPlusWeb.FlatAppearance.BorderSize = 0;
+            this.btnDigitalPlusWeb.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDigitalPlusWeb.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnDigitalPlusWeb.IconChar = FontAwesome.Sharp.IconChar.Globe;
+            this.btnDigitalPlusWeb.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnDigitalPlusWeb.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnDigitalPlusWeb.IconSize = 32;
+            this.btnDigitalPlusWeb.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnDigitalPlusWeb.Name = "btnDigitalPlusWeb";
+            this.btnDigitalPlusWeb.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnDigitalPlusWeb.Size = new System.Drawing.Size(173, 60);
+            this.btnDigitalPlusWeb.TabIndex = 7;
+            this.btnDigitalPlusWeb.Text = "DigitalPlusWeb";
+            this.btnDigitalPlusWeb.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnDigitalPlusWeb.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnDigitalPlusWeb.UseVisualStyleBackColor = true;
+            this.btnDigitalPlusWeb.Click += new System.EventHandler(this.btnDigitalPlusWeb_Click);
+            //
+            // btnKosiuko
+            //
+            this.btnKosiuko.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnKosiuko.FlatAppearance.BorderSize = 0;
+            this.btnKosiuko.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnKosiuko.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnKosiuko.IconChar = FontAwesome.Sharp.IconChar.Store;
+            this.btnKosiuko.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnKosiuko.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnKosiuko.IconSize = 32;
+            this.btnKosiuko.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnKosiuko.Name = "btnKosiuko";
+            this.btnKosiuko.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnKosiuko.Size = new System.Drawing.Size(173, 60);
+            this.btnKosiuko.TabIndex = 8;
+            this.btnKosiuko.Text = "Kosiuko";
+            this.btnKosiuko.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnKosiuko.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnKosiuko.UseVisualStyleBackColor = true;
+            this.btnKosiuko.Click += new System.EventHandler(this.btnKosiuko_Click);
+            //
+            // btnConfiguracion
+            //
+            this.btnConfiguracion.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnConfiguracion.FlatAppearance.BorderSize = 0;
+            this.btnConfiguracion.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnConfiguracion.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnConfiguracion.IconChar = FontAwesome.Sharp.IconChar.Cog;
+            this.btnConfiguracion.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnConfiguracion.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnConfiguracion.IconSize = 32;
+            this.btnConfiguracion.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnConfiguracion.Name = "btnConfiguracion";
+            this.btnConfiguracion.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnConfiguracion.Size = new System.Drawing.Size(173, 60);
+            this.btnConfiguracion.TabIndex = 9;
+            this.btnConfiguracion.Text = "Configuracion";
+            this.btnConfiguracion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnConfiguracion.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnConfiguracion.UseVisualStyleBackColor = true;
+            this.btnConfiguracion.Click += new System.EventHandler(this.btnConfiguracion_Click);
+            //
+            // btnLicencias
+            //
+            this.btnLicencias.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnLicencias.FlatAppearance.BorderSize = 0;
+            this.btnLicencias.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLicencias.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnLicencias.IconChar = FontAwesome.Sharp.IconChar.Key;
+            this.btnLicencias.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnLicencias.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnLicencias.IconSize = 32;
+            this.btnLicencias.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLicencias.Name = "btnLicencias";
+            this.btnLicencias.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnLicencias.Size = new System.Drawing.Size(173, 60);
+            this.btnLicencias.TabIndex = 10;
+            this.btnLicencias.Text = "Licencias";
+            this.btnLicencias.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLicencias.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnLicencias.UseVisualStyleBackColor = true;
+            this.btnLicencias.Click += new System.EventHandler(this.btnLicencias_Click);
+            //
+            // lblLicenciaStatus
+            //
+            this.lblLicenciaStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblLicenciaStatus.Font = new System.Drawing.Font("Segoe UI", 7.5F);
+            this.lblLicenciaStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(120)))));
+            this.lblLicenciaStatus.Location = new System.Drawing.Point(0, 780);
+            this.lblLicenciaStatus.Name = "lblLicenciaStatus";
+            this.lblLicenciaStatus.Size = new System.Drawing.Size(991, 20);
+            this.lblLicenciaStatus.TabIndex = 10;
+            this.lblLicenciaStatus.Text = "";
+            this.lblLicenciaStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblLicenciaStatus.Padding = new System.Windows.Forms.Padding(0, 0, 10, 0);
+            //
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.btnHome);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(173, 140);
+            this.panel1.TabIndex = 0;
+            // 
+            // btnHome
+            // 
+            this.btnHome.Image = global::Acceso.Properties.Resources.Logo;
+            this.btnHome.Location = new System.Drawing.Point(28, 11);
+            this.btnHome.Name = "btnHome";
+            this.btnHome.Size = new System.Drawing.Size(109, 113);
+            this.btnHome.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.btnHome.TabIndex = 0;
+            this.btnHome.TabStop = false;
+            this.btnHome.Click += new System.EventHandler(this.btnHome_Click);
+            // 
+            // panelTitleBar
+            // 
+            this.panelTitleBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
+            this.panelTitleBar.Controls.Add(this.lblUsuario);
+            this.panelTitleBar.Controls.Add(this.panelBotonesWindos);
+            this.panelTitleBar.Controls.Add(this.lblTitleChildForm);
+            this.panelTitleBar.Controls.Add(this.iconCurrentChildForm);
+            this.panelTitleBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelTitleBar.Location = new System.Drawing.Point(159, 0);
+            this.panelTitleBar.Name = "panelTitleBar";
+            this.panelTitleBar.Size = new System.Drawing.Size(991, 75);
+            this.panelTitleBar.TabIndex = 1;
+            this.panelTitleBar.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelTitleBar_MouseDown);
+            // 
+            // lblUsuario
+            // 
+            this.lblUsuario.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblUsuario.AutoSize = true;
+            this.lblUsuario.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblUsuario.ForeColor = System.Drawing.Color.DarkCyan;
+            this.lblUsuario.Location = new System.Drawing.Point(675, 38);
+            this.lblUsuario.Name = "lblUsuario";
+            this.lblUsuario.Size = new System.Drawing.Size(12, 17);
+            this.lblUsuario.TabIndex = 4;
+            this.lblUsuario.Text = ".";
+            // 
+            // panelBotonesWindos
+            // 
+            this.panelBotonesWindos.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelBotonesWindos.Controls.Add(this.iconMinimize);
+            this.panelBotonesWindos.Controls.Add(this.iconClose);
+            this.panelBotonesWindos.Controls.Add(this.iconMaximize);
+            this.panelBotonesWindos.Location = new System.Drawing.Point(897, 12);
+            this.panelBotonesWindos.Name = "panelBotonesWindos";
+            this.panelBotonesWindos.Size = new System.Drawing.Size(82, 30);
+            this.panelBotonesWindos.TabIndex = 3;
+            // 
+            // iconMinimize
+            // 
+            this.iconMinimize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
+            this.iconMinimize.ForeColor = System.Drawing.Color.Coral;
+            this.iconMinimize.IconChar = FontAwesome.Sharp.IconChar.WindowMinimize;
+            this.iconMinimize.IconColor = System.Drawing.Color.Coral;
+            this.iconMinimize.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconMinimize.IconSize = 20;
+            this.iconMinimize.Location = new System.Drawing.Point(3, 11);
+            this.iconMinimize.Name = "iconMinimize";
+            this.iconMinimize.Size = new System.Drawing.Size(20, 20);
+            this.iconMinimize.TabIndex = 2;
+            this.iconMinimize.TabStop = false;
+            this.iconMinimize.Click += new System.EventHandler(this.iconMinimize_Click);
+            // 
+            // iconClose
+            // 
+            this.iconClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
+            this.iconClose.ForeColor = System.Drawing.Color.Coral;
+            this.iconClose.IconChar = FontAwesome.Sharp.IconChar.WindowClose;
+            this.iconClose.IconColor = System.Drawing.Color.Coral;
+            this.iconClose.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconClose.IconSize = 20;
+            this.iconClose.Location = new System.Drawing.Point(55, 11);
+            this.iconClose.Name = "iconClose";
+            this.iconClose.Size = new System.Drawing.Size(20, 20);
+            this.iconClose.TabIndex = 2;
+            this.iconClose.TabStop = false;
+            this.iconClose.Click += new System.EventHandler(this.iconClose_Click);
+            // 
+            // iconMaximize
+            // 
+            this.iconMaximize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
+            this.iconMaximize.ForeColor = System.Drawing.Color.Coral;
+            this.iconMaximize.IconChar = FontAwesome.Sharp.IconChar.WindowMaximize;
+            this.iconMaximize.IconColor = System.Drawing.Color.Coral;
+            this.iconMaximize.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconMaximize.IconSize = 20;
+            this.iconMaximize.Location = new System.Drawing.Point(29, 11);
+            this.iconMaximize.Name = "iconMaximize";
+            this.iconMaximize.Size = new System.Drawing.Size(20, 20);
+            this.iconMaximize.TabIndex = 2;
+            this.iconMaximize.TabStop = false;
+            this.iconMaximize.Click += new System.EventHandler(this.iconMaximize_Click);
+            // 
+            // lblTitleChildForm
+            // 
+            this.lblTitleChildForm.AutoSize = true;
+            this.lblTitleChildForm.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblTitleChildForm.Location = new System.Drawing.Point(56, 41);
+            this.lblTitleChildForm.Name = "lblTitleChildForm";
+            this.lblTitleChildForm.Size = new System.Drawing.Size(32, 13);
+            this.lblTitleChildForm.TabIndex = 1;
+            this.lblTitleChildForm.Text = "Inicio";
+            // 
+            // iconCurrentChildForm
+            // 
+            this.iconCurrentChildForm.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
+            this.iconCurrentChildForm.ForeColor = System.Drawing.Color.MediumPurple;
+            this.iconCurrentChildForm.IconChar = FontAwesome.Sharp.IconChar.Home;
+            this.iconCurrentChildForm.IconColor = System.Drawing.Color.MediumPurple;
+            this.iconCurrentChildForm.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconCurrentChildForm.Location = new System.Drawing.Point(17, 23);
+            this.iconCurrentChildForm.Name = "iconCurrentChildForm";
+            this.iconCurrentChildForm.Size = new System.Drawing.Size(32, 32);
+            this.iconCurrentChildForm.TabIndex = 0;
+            this.iconCurrentChildForm.TabStop = false;
+            // 
+            // panelShadow
+            // 
+            this.panelShadow.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(24)))), ((int)(((byte)(58)))));
+            this.panelShadow.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelShadow.Location = new System.Drawing.Point(159, 75);
+            this.panelShadow.Name = "panelShadow";
+            this.panelShadow.Size = new System.Drawing.Size(991, 8);
+            this.panelShadow.TabIndex = 2;
+            // 
+            // panelDesktop
+            // 
+            this.panelDesktop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.panelDesktop.Controls.Add(this.reloj1);
+            this.panelDesktop.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelDesktop.Location = new System.Drawing.Point(159, 83);
+            this.panelDesktop.Name = "panelDesktop";
+            this.panelDesktop.Size = new System.Drawing.Size(991, 717);
+            this.panelDesktop.TabIndex = 3;
+            this.panelDesktop.Paint += new System.Windows.Forms.PaintEventHandler(this.panelDesktop_Paint);
+            // 
+            // reloj1
+            // 
+            this.reloj1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.reloj1.Location = new System.Drawing.Point(756, 591);
+            this.reloj1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.reloj1.Name = "reloj1";
+            this.reloj1.Size = new System.Drawing.Size(223, 108);
+            this.reloj1.TabIndex = 0;
+            // 
+            // FrmMainMenu
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1150, 800);
+            this.Controls.Add(this.lblLicenciaStatus);
+            this.Controls.Add(this.panelDesktop);
+            this.Controls.Add(this.panelShadow);
+            this.Controls.Add(this.panelTitleBar);
+            this.Controls.Add(this.panelMenu);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(1166, 698);
+            this.Name = "FrmMainMenu";
+            this.Text = " ";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Load += new System.EventHandler(this.FrmMainMenu_Load);
+            this.panelMenu.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.btnHome)).EndInit();
+            this.panelTitleBar.ResumeLayout(false);
+            this.panelTitleBar.PerformLayout();
+            this.panelBotonesWindos.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.iconMinimize)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.iconClose)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.iconMaximize)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.iconCurrentChildForm)).EndInit();
+            this.panelDesktop.ResumeLayout(false);
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Panel panelMenu;
+        private System.Windows.Forms.Panel panel1;
+        private FontAwesome.Sharp.IconButton btnLegajos;
+        private System.Windows.Forms.PictureBox btnHome;
+        private System.Windows.Forms.Panel panelTitleBar;
+        private FontAwesome.Sharp.IconPictureBox iconCurrentChildForm;
+        private System.Windows.Forms.Label lblTitleChildForm;
+        private System.Windows.Forms.Panel panelShadow;
+        private System.Windows.Forms.Panel panelDesktop;
+        private FontAwesome.Sharp.IconPictureBox iconClose;
+        private FontAwesome.Sharp.IconPictureBox iconMinimize;
+        private FontAwesome.Sharp.IconPictureBox iconMaximize;
+        private System.Windows.Forms.Panel panelBotonesWindos;
+        private FontAwesome.Sharp.IconButton btnLogout;
+        private FontAwesome.Sharp.IconButton btnDigitalPlusWeb;
+        private FontAwesome.Sharp.IconButton btnKosiuko;
+        private FontAwesome.Sharp.IconButton btnConfiguracion;
+        private FontAwesome.Sharp.IconButton btnLicencias;
+        private System.Windows.Forms.Label lblLicenciaStatus;
+        private Global.Controles.Reloj reloj1;
+        private System.Windows.Forms.Label lblUsuario;
+    }
+}
+

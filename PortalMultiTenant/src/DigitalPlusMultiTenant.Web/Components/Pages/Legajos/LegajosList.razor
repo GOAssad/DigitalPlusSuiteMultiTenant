@@ -1,4 +1,5 @@
 @page "/legajos"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
@@ -6,13 +7,22 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
-@inject IApplicationDbContext Db
+@inject IJSRuntime JS
+@inject ITenantService Tenant
+@using DigitalPlusMultiTenant.Web.Helpers
 
 <PageTitle>Legajos - DigitalPlus</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-people me-2"></i>Legajos</h4>
-    <a href="legajos/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Legajo</a>
+    <div>
+        @if (legajos?.Any() == true)
+        {
+            <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+            <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        }
+        <a href="legajos/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Legajo</a>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm mb-3">
@@ -279,6 +289,33 @@
             .Skip((pagina - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (legajos == null) return;
+        var filtros = new List<string>();
+        if (!string.IsNullOrWhiteSpace(filtro)) filtros.Add($"Busqueda: {filtro}");
+        if (filtroSector > 0) filtros.Add($"Sector: {sectores.FirstOrDefault(s => s.Id == filtroSector)?.Nombre}");
+        if (filtroCategoria > 0) filtros.Add($"Categoria: {categorias.FirstOrDefault(c => c.Id == filtroCategoria)?.Nombre}");
+        if (filtroActivo == "true") filtros.Add("Estado: Activos");
+        else if (filtroActivo == "false") filtros.Add("Estado: Inactivos");
+        var bytes = ExcelExporter.Generar(legajos,
+            new ExcelExportConfig { Titulo = "Legajos", NombreEmpresa = Tenant.EmpresaNombre, Filtros = filtros,
+                Encabezados = ["Legajo", "Apellido", "Nombre", "Sector", "Categoria", "Horario", "Estado"] },
+            l => [l.NumeroLegajo, l.Apellido, l.Nombre, l.Sector?.Nombre ?? "", l.Categoria?.Nombre ?? "",
+                  l.Horario?.Nombre ?? "", l.IsActive ? "Activo" : "Inactivo"]);
+        await JS.InvokeVoidAsync("downloadFile", "legajos.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (legajos == null) return;
+        var bytes = CsvExporter.ToCsvBytes(legajos,
+            ["Legajo", "Apellido", "Nombre", "Sector", "Categoria", "Horario", "Estado"],
+            l => [l.NumeroLegajo, l.Apellido, l.Nombre, l.Sector?.Nombre ?? "", l.Categoria?.Nombre ?? "",
+                  l.Horario?.Nombre ?? "", l.IsActive ? "Activo" : "Inactivo"]);
+        await JS.InvokeVoidAsync("downloadFile", "legajos.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
     private async Task ToggleActive(Legajo l)

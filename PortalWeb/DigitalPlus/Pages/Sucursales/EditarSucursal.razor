@@ -1,0 +1,38 @@
+﻿@page "/sucursales/editar/{Sucursalid:int}"
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+@inject RepositorioSucursales repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+<h3>Editar Sucursal</h3>
+
+@if (Sucursal == null)
+{
+    <text>Cargando...</text>
+}
+else
+{
+    <FormularioSucursal OnValidSubmit="EditarEntidad" Sucursal="Sucursal" />
+}
+
+@code {
+
+    [Parameter] public int Sucursalid { get; set; }
+    private Sucursal Sucursal;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Sucursal = await repositorio.Get(Sucursalid);
+        await mostrarMensaje.MostrarMensajeTemporal("Sucursal", $"{Sucursal.Nombre}: ... Actualizada");
+        if (Sucursal == null)
+        {
+            navigationManager.NavigateTo("sucursales");
+        }
+    }
+
+    private async Task EditarEntidad()
+    {
+        await repositorio.Put(Sucursal);
+        navigationManager.NavigateTo("sucursales");
+    }
+}
