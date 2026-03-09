@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 3.0
-**Fecha:** 2026-03-07
+**Version:** 4.0
+**Fecha:** 2026-03-08
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -52,7 +52,18 @@ APLICACIONES DE ESCRITORIO (Windows)
               | (Local o Ferozo)  |
               +-------------------+
 
-APLICACION WEB
+PORTAL MULTI-TENANT (Web)
++---------------------+
+| PORTAL MULTI-TENANT |
+| Blazor Server       |
+| .NET 10 / EF Core   |
+| (Ferozo hosting)    |
++----------+----------+
+           |
+           v
+  BD DigitalPlusMultiTenant (Ferozo / Local)
+
+DIGITALPLUSWEB - LEGACY (obsoleto)
 +---------------------+
 |  DIGITALPLUSWEB     |
 |  Blazor Server      |
@@ -110,7 +121,10 @@ INFRAESTRUCTURA CLOUD
 - Semaforo visual (verde/amarillo/rojo) como feedback
 - Registro automatico de entrada o salida
 - Identificacion de terminal por nombre de maquina
-- Sistema de licencias integrado (trial 14 dias, activacion por codigo)
+- Cambio voluntario de PIN (link "Cambiar mi PIN" en pantalla de fichada, formulario FrmCambiarPinVoluntario)
+- Si el admin fuerza cambio de PIN (PinMustChange), al ingresar legajo va directo a pedir nuevo PIN sin requerir el actual
+- Si el admin resetea el PIN (lo elimina), al ingresar legajo ofrece crear uno nuevo
+- Sistema de licencias integrado (trial 14 dias, activacion por codigo). En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 
 **Modos de fichada:**
 1. **Huella:** Requiere lector DigitalPersona conectado
@@ -131,33 +145,50 @@ INFRAESTRUCTURA CLOUD
 - ABM de Legajos (empleados) con foto por camara web
 - Enrolamiento de huellas digitales
 - Gestion de PIN por empleado (asignar, resetear, forzar cambio)
+- Tab "PINs" muestra TODOS los legajos (no solo vencidos)
+- Filtro combo en tab PINs: Todos, Con PIN activo, Sin PIN, Vencidos, Cambio pendiente
+- Boton "Resetear PIN" para borrar PINs olvidados
+- Boton "Forzar cambio" marca PinMustChange=1 para que el empleado cambie su PIN en el proximo fichaje
 - Gestion de Sucursales, Categorias, Horarios, Sectores
 - Gestion de Incidencias (permisos, ausencias, vacaciones)
 - Configuracion del sistema (modo PIN, modo Demo, expiracion de PIN)
-- PINs vencidos: listado y forzar cambio masivo
 - Reportes con Microsoft ReportViewer
 - Exportacion a Excel (SpreadsheetLight / DocumentFormat.OpenXml)
 - Generacion de PDF (iText 7)
-- Sistema de licencias integrado
+- Sistema de licencias integrado. En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 - Informacion de licencia en barra de estado y menu
 
-### 3.3 DigitalPlusWeb
+### 3.3 Portal Multi-Tenant (PortalMultiTenant)
 
 | Atributo | Detalle |
 |---|---|
-| **Tipo** | Aplicacion web |
-| **Stack** | Blazor Server / .NET 7 / EF Core + Dapper |
-| **Solucion** | `DigitalPlus.sln` |
-| **Hosting** | Ferozo (produccion) |
-| **Proposito** | Gestion administrativa via web |
+| **Tipo** | Aplicacion web multi-tenant |
+| **Stack** | Blazor Server / .NET 10 / EF Core |
+| **Proyecto** | `PortalMultiTenant\` |
+| **BD** | `DigitalPlusMultiTenant` (localhost / Ferozo) |
+| **Proposito** | Gestion administrativa multi-tenant via web |
 
 **Funcionalidades:**
+- Arquitectura multi-tenant con filtro por EmpresaId en todas las consultas
+- Dashboard con estadisticas, noticias y logo de empresa
 - Gestion de Legajos, Fichadas, Horarios, Categorias
 - Gestion de Sectores, Sucursales, Terminales
 - Feriados, Incidencias, Vacaciones
 - Noticias y Variables del sistema
 - Gestion de Usuarios (Identity)
-- Publicacion automatizada via GitHub Actions
+- Tablas con nombres singulares (Legajo, Fichada, Sucursal, etc.)
+
+### 3.3b DigitalPlusWeb - LEGACY
+
+| Atributo | Detalle |
+|---|---|
+| **Tipo** | Aplicacion web (LEGACY - obsoleta) |
+| **Stack** | Blazor Server / .NET 7 / EF Core + Dapper |
+| **Proyecto** | `PortalWeb\` |
+| **Hosting** | Ferozo (produccion) |
+| **Proposito** | Gestion administrativa via web (reemplazada por Portal Multi-Tenant) |
+
+**Nota:** Este componente esta siendo reemplazado por el Portal Multi-Tenant. No se realizan nuevos desarrollos sobre esta version.
 
 ### 3.4 Portal de Licencias (DigitalPlus.Licencias)
 
@@ -245,26 +276,58 @@ Todas las aplicaciones de escritorio comparten estas librerias:
 
 | Base de datos | Ubicacion | Proposito |
 |---|---|---|
-| `DP_{companyId}` | Ferozo / Local | BD operativa de cada empresa (ej: `DP_integra_ia_srl`) |
-| `DigitalPlus` | Ferozo | BD de DigitalPlusWeb (produccion, 758 legajos) |
+| `DigitalPlusMultiTenant` | localhost / Ferozo | BD operativa multi-tenant (todas las empresas en una sola BD, filtradas por EmpresaId) |
+| `DigitalPlus` | Ferozo | BD de DigitalPlusWeb LEGACY (produccion) |
 | `DigitalPlusAdmin` | Ferozo | BD administrativa: licencias, empresas, codigos, auditoria |
 
-### Tablas principales (BD empresa)
+### Datos migrados
 
-El esquema incluye **29 tablas** creadas automaticamente por `SchemaScript.sql` v3.0:
+- **Kosiuko:** EmpresaId=2, 758 legajos, 784K fichadas (SuperAdmin EmpresaId=1)
 
-**RRHH:**
-- `RRHHLegajos` - Empleados (con PIN, PinExpiraEn, PinRequiereCambio)
-- `RRHHLegajosHuellas` - Huellas digitales binarias
-- `RRHHFichadas` - Registro de fichadas (entrada/salida)
-- `RRHHHorarios`, `RRHHCategorias`, `RRHHIncidencias`
-- `RRHHUbicaciones` (Sectores), `RRHHIncidenciasLegajos`
+### Tablas principales (BD DigitalPlusMultiTenant)
 
-**Generales:**
-- `GRALSucursales`, `GRALTerminales`, `GRALVariablesGlobales`
-- `GRALFeriados`, `GRALNoticias`
+Las tablas usan **nombres singulares** y todas las tablas principales incluyen `EmpresaId` para el filtrado multi-tenant:
 
-**Variables globales relevantes:**
+**Tablas principales (con EmpresaId):**
+- `Legajo` - Empleados (NumeroLegajo, Apellido, Nombre, IsActive, PIN, PinExpiraEn, PinMustChange)
+- `Fichada` - Registro de fichadas (FechaHora en lugar de Registro)
+- `Sucursal` - Sucursales
+- `Horario` - Horarios
+- `Categoria` - Categorias
+- `Sector` - Sectores
+- `Incidencia` - Incidencias (Color como string hex en lugar de ForeColor/BackColor int)
+- `Feriado` - Feriados (Fecha unica en lugar de Desde/Hasta)
+- `Terminal` - Terminales
+
+**Tablas child (sin EmpresaId, filtradas por JOIN con tabla padre):**
+- `LegajoHuella` - Huellas digitales binarias (FingerMask en lugar de nFingerMask)
+- `LegajoPin` - PINs de legajos
+- `LegajoSucursal` - Relacion legajo-sucursal
+- `LegajoDomicilio` - Domicilios de legajos
+- `HorarioDetalle` - Detalle de horarios
+
+### Mapeo de columnas clave (legacy -> multi-tenant)
+
+| Legacy | Multi-Tenant | Tabla |
+|---|---|---|
+| LegajoId | NumeroLegajo | Legajo |
+| Activo | IsActive | Legajo |
+| Nombre (completo) | Apellido + Nombre (separados) | Legajo |
+| Registro | FechaHora | Fichada |
+| nFingerMask | FingerMask | LegajoHuella |
+| ForeColor/BackColor (int) | Color (string hex) | Incidencia |
+| Desde/Hasta | Fecha (unica) | Feriado |
+
+### Patron TenantContext
+
+```csharp
+// Global.Datos.TenantContext - lee EmpresaId de app.config, fallback a 1
+int empresaId = Global.Datos.TenantContext.EmpresaId;
+// Todas las queries agregan: WHERE EmpresaId = @empresaId
+```
+
+### Variables globales relevantes
+
 - `FichadaModoPIN` - Habilita fichada por PIN
 - `PinExpiraDias` - Dias de expiracion del PIN (0=no expira)
 - `FichadaModoDemo` - Habilita modo demostracion
@@ -283,8 +346,9 @@ El esquema incluye **29 tablas** creadas automaticamente por `SchemaScript.sql` 
 
 | Componente | Patron |
 |---|---|
-| Fichador/Administrador | ADO.NET puro + Stored Procedures via `Global.Datos.SQLServer` |
-| DigitalPlusWeb | EF Core + Dapper |
+| Fichador/Administrador | ADO.NET puro + SQL directo multi-tenant via `Global.Datos.SQLServer` (SPs legacy reemplazados) |
+| Portal Multi-Tenant | EF Core / .NET 10 |
+| DigitalPlusWeb (legacy) | EF Core + Dapper |
 | Portal Licencias | EF Core |
 | Azure Functions | ADO.NET + Stored Procedures |
 
@@ -326,6 +390,10 @@ POST /api/license/activate (con codigo) --> Azure valida y consume
     v
 Retorna ticket firmado RSA + signature --> Cache local (DPAPI)
 ```
+
+### Modo multi-tenant
+
+En modo multi-tenant, la validacion de licencia esta **deshabilitada** en las apps de escritorio (Fichador y Administrador). La activacion se realiza durante la instalacion, a traves del endpoint `/api/activar` del Portal de Licencias, invocado por el instalador liviano.
 
 ### Seguridad del licenciamiento
 
@@ -380,73 +448,48 @@ Se implemento un modelo de seguridad con usuarios SQL dedicados:
 
 ## 8. ESTRUCTURA DE REPOSITORIOS
 
-### Repositorio principal: DigitalPlusDesk_Claude (Git)
+### Repositorio principal: DigitalPlusSuiteMultiTenant
 
 ```
-C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\
+C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 |
-+-- Common\                          Librerias compartidas (nivel raiz)
++-- Fichador\                        App Fichador
+|   +-- TEntradaSalida\              Proyecto principal (.csproj, WinForms .NET 4.8)
+|
++-- Administrador\                   App Administrador
+|   +-- Acceso\                      Proyecto principal (.csproj, WinForms .NET 4.8)
+|
++-- Common\                          Librerias compartidas
 |   +-- Acceso.Clases.Datos\         Capa de datos RRHH
-|   +-- DigitalPlus.Licensing\       Sistema de licencias
-|   +-- Global.Calendario\           Control calendario
-|   +-- Global.Controles\            Controles WinForms custom
-|   +-- Global.Datos\                Infraestructura ADO.NET
-|   +-- Global.DigitalPersona\       SDK huella digital
+|   +-- Global.Datos\                Infraestructura ADO.NET + TenantContext
 |   +-- Global.Funciones\            Utilidades
-|   +-- Imagenes\                    Recursos graficos
+|   +-- Global.Controles\            Controles WinForms custom
+|   +-- DigitalPlus.Licensing\       Sistema de licencias
+|   +-- Global.DigitalPersona\       SDK huella digital
 |
-+-- Complementos\                    SDKs externos
-|   +-- Digital-Persona-SDK-master\  SDK DigitalPersona
-|   +-- Excel\                       Complementos Excel
++-- PortalMultiTenant\               Portal Multi-Tenant (Blazor Server .NET 10)
 |
-+-- DigitalOnePlus\                  Aplicaciones
-    +-- Administrador\               App Administrador
-    |   +-- Acceso\                  Proyecto principal (.csproj)
-    |   |   +-- Generales\           Forms generales (MainMenu, Config)
-    |   |   +-- RRHH\                Forms RRHH (Legajos, Fichadas)
-    |   |   +-- Reportes\            Reportes RDLC
-    |   |   +-- SQL\                 Scripts SQL
-    |   +-- Instalador\              Instalador legacy (individual)
-    |   +-- Documentacion\           Docs del Administrador
-    |
-    +-- Fichador\                    App Fichador
-    |   +-- TEntradaSalida\          Proyecto principal (.csproj)
-    |   |   +-- uAreu\               Form de fichaje (FrmFichar)
-    |   +-- Installer\               Instalador legacy (individual)
-    |   +-- DocumentacionClaude\     Documentacion del proyecto
-    |
-    +-- InstaladorUnificado\         Instalador completo (Local + Nube)
-    |   +-- setup.iss                Script InnoSetup
-    |   +-- Prerequisites\           SQL Express 2019 EXE
-    |   +-- Output\                  EXE generado
-    |
-    +-- InstaladorLiviano\           Instalador cloud-only
-    |   +-- setup-liviano.iss        Script InnoSetup
-    |   +-- Output\                  EXE generado (~25MB)
-    |
-    +-- AzureProvisioning\           Azure Functions
-    |   +-- src\DigitalPlus.Provisioning\  Codigo fuente
-    |   +-- sql\                     Scripts SQL (011-020)
-    |   +-- tools\                   Scripts PowerShell de gestion
-    |   +-- docs\                    Documentacion de provisioning
-    |
-    +-- Common\                      Copia de librerias (nivel DigitalOnePlus)
-    +-- Datos\                       Scripts SQL, queries
-    +-- tools\                       Herramientas (ConfigProtector)
++-- PortalWeb\                       DigitalPlusWeb LEGACY (.NET 7, no modificar)
+|
++-- Instaladores\
+|   +-- InstaladorUnificado\         Instalador completo (Local + Nube)
+|   +-- InstaladorLiviano\           Instalador cloud-only (~25MB)
+|
++-- Database\                        Scripts SQL, migraciones
+|
++-- SDK\                             DigitalPersona SDK
+|
++-- Tools\                           Herramientas (ConfigProtector)
+|
++-- Docs\                            Documentacion
+|
++-- AzureProvisioning\               Azure Functions
 ```
 
-### Repositorio DigitalPlusWeb_Claude (Git separado)
+### Repositorios LEGACY (ARCHIVADOS - NO MODIFICAR)
 
-```
-C:\Apps\Claude\Huellas\DigitalPlusWeb_Claude\
-+-- DigitalPlus\                     Proyecto Blazor Server .NET 7
-    +-- Pages\                       Paginas Razor (Legajos, Fichadas, etc.)
-    +-- Entidades\                   Modelos de dominio
-    +-- Repositorios\                Acceso a datos
-    +-- Servicios\                   Logica de negocio
-    +-- Data\                        DbContext EF Core
-    +-- Areas\Identity\              Autenticacion
-```
+- `C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\` - Apps desktop legacy (archivado)
+- `C:\Apps\Claude\Huellas\DigitalPlusWeb_Claude\` - Portal web legacy (archivado)
 
 ### Repositorio DigitalPlusLicencias (Git separado)
 
@@ -469,8 +512,8 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 |---|---|---|
 | Visual Studio | 2019 o superior | IDE principal para Fichador/Administrador |
 | .NET Framework 4.8 SDK | - | Compilacion apps desktop |
-| .NET 7 SDK | - | DigitalPlusWeb |
-| .NET 10 SDK | - | Portal Licencias |
+| .NET 7 SDK | - | DigitalPlusWeb (legacy) |
+| .NET 10 SDK | - | Portal Multi-Tenant, Portal Licencias |
 | .NET 8 SDK | - | Azure Functions |
 | SQL Server Management Studio | 18+ | Gestion de BD |
 | Inno Setup 6.x | 6.7.1 | Compilar instaladores |
@@ -505,6 +548,14 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 
 - Fichador con 3 modos de fichada (Huella, PIN, Demo)
 - Administrador con gestion de PIN y configuracion
+- **Arquitectura multi-tenant implementada** (TenantContext, EmpresaId, tablas singulares)
+- **BD DigitalPlusMultiTenant** creada en Ferozo con datos Kosiuko migrados (EmpresaId=2, 758 legajos, 784K fichadas)
+- **Kosiuko registrada en DigitalPlusAdmin** (CodigoActivacion=EE509930E07E)
+- **Cambio voluntario de PIN en Fichador** (FrmCambiarPinVoluntario)
+- **Mejoras en gestion de PINs en Administrador** (filtro, resetear, forzar cambio, muestra todos los legajos)
+- **Validacion de licencia deshabilitada en apps desktop** para modo multi-tenant
+- **InstaladorLiviano adaptado para multi-tenant** (EmpresaId en configs)
+- **Llamadas a SP legacy reemplazadas** con SQL directo multi-tenant
 - Sistema de licencias end-to-end (trial -> bloqueo -> activacion)
 - Azure Functions para licenciamiento desplegadas
 - Portal de Licencias funcional (local)
@@ -512,16 +563,19 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 - Instalador Liviano v1.0 compilado OK (25MB)
 - Seguridad SQL: fase 1 completada (scripts ejecutados)
 - API `/api/activar` en portal para instalador liviano
-- Alta de empresa desde portal (crea BD + esquema 29 tablas)
+- Alta de empresa desde portal (crea BD + esquema)
 
 ### En progreso
 
+- Adaptacion de Fichador y Administrador para multi-tenant (re-aplicar cambios sobre DigitalPlusSuiteMultiTenant)
 - Migracion de seguridad SQL (fases 2-5)
 - Portal Licencias: pendiente deploy a produccion
+- InstaladorLiviano apunta a localhost:7043 para testing (pendiente cambiar a produccion)
 
 ### Pendiente
 
 - **CRITICO:** `BuildClientConnectionString` usa `sa` (debe usar usuario dedicado)
+- Probar Fichador y Administrador contra BD DigitalPlusMultiTenant
 - Probar flujo completo: crear empresa -> instalar liviano -> apps conectan
 - Deploy portal licencias a `licencias.digitaloneplus.com`
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
@@ -530,7 +584,6 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 ### Prioridad baja
 
 - Auto-fetch datos fiscales (AFIP, etc.)
-- DigitalPlusWeb multi-tenant
 - WhatsApp integration
 - Reportes ampliados en web
 - Limpieza dead code Administrador
@@ -541,11 +594,12 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 
 ### Fortalezas
 
-1. **Arquitectura instalable** con licenciamiento centralizado - ventaja competitiva real
-2. **Dos modos de despliegue** (local con SQL Express, nube con Ferozo) cubren distintos segmentos
-3. **Licenciamiento robusto** con firma RSA, anti-tampering, y gestion centralizada
-4. **Portal de administracion** permite operar el negocio de licencias de forma profesional
-5. **Separation of concerns** entre apps desktop, web, y Azure Functions
+1. **Arquitectura multi-tenant** con BD unica y filtrado por EmpresaId - escalable y mantenible
+2. **Arquitectura instalable** con licenciamiento centralizado - ventaja competitiva real
+3. **Dos modos de despliegue** (local con SQL Express, nube con Ferozo) cubren distintos segmentos
+4. **Licenciamiento robusto** con firma RSA, anti-tampering, y gestion centralizada
+5. **Portal de administracion** permite operar el negocio de licencias de forma profesional
+6. **Separation of concerns** entre apps desktop, web, y Azure Functions
 
 ### Puntos de atencion
 
@@ -553,7 +607,7 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 2. No hay tests automatizados en ningun componente
 3. Sin sistema de logging estructurado en las apps desktop
 4. El acceso a datos en desktop es via clase estatica `SQLServer` (acoplamiento fuerte)
-5. Tres repositorios Git separados dificultan la gestion unificada de versiones
+5. Repositorio principal unificado (DigitalPlusSuiteMultiTenant) pero Portal Licencias sigue separado
 
 ### Riesgos
 

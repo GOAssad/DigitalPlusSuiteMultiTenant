@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 1.0
-**Fecha:** 2026-03-07
+**Version:** 2.0
+**Fecha:** 2026-03-08
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -58,6 +58,7 @@ Exclusivamente el equipo de Integra IA. Los clientes finales **nunca** acceden a
 | Entorno | URL |
 |---|---|
 | Local (desarrollo) | `https://localhost:7200` |
+| Portal Multi-Tenant (testing) | `https://localhost:7043` |
 | Produccion | `https://licencias.digitaloneplus.com` (pendiente deploy) |
 
 ### Credenciales por defecto
@@ -145,14 +146,16 @@ Complete los datos basicos:
 
 > [CAPTURA: Formulario de datos de empresa con campos y selects cascading (Pais -> Tipo ID)]
 
-### Paso 2 - Creacion de base de datos
+### Paso 2 - Provisionamiento en base de datos multi-tenant
 
-El sistema crea automaticamente una base de datos en Ferozo para la nueva empresa:
-- Nombre de la BD: `DP_{nombre_empresa_normalizado}` (ej: `DP_integra_ia_srl`)
-- Se ejecuta el SchemaScript.sql completo (29 tablas, stored procedures, vistas, datos iniciales)
-- Este proceso toma entre 30 segundos y 2 minutos
+El sistema provisiona la nueva empresa dentro de la base de datos compartida `DigitalPlusMultiTenant` en Ferozo:
+- **No se crea una BD separada por empresa.** Todas las empresas comparten la misma base de datos.
+- Se asigna un `EmpresaId` unico a la nueva empresa dentro de la BD compartida.
+- El esquema tiene **29 tablas con nombres en singular** (Legajo, Fichada, Sucursal, Sector, Horario, Categoria, Incidencia, Feriado, etc.).
+- Todos los datos se filtran por `EmpresaId`, garantizando el aislamiento entre empresas.
+- Se crean los datos iniciales (incidencias predeterminadas, etc.) asociados al nuevo `EmpresaId`.
 
-> [CAPTURA: Barra de progreso de creacion de base de datos]
+> [CAPTURA: Barra de progreso de provisionamiento de empresa]
 
 ### Paso 3 - Registro de empresa
 
@@ -364,23 +367,14 @@ ABM de tipos de documento fiscal, vinculados a paises.
    |
    v
 5. CLIENTE: Usar Fichador y Administrador
-   - Apps conectan a la BD en Ferozo
-   - Sistema arranca en modo Trial (14 dias, 5 legajos)
+   - Apps conectan a la BD multi-tenant en Ferozo
+   - En modo multi-tenant (cloud), la validacion de licencia esta deshabilitada
+   - El codigo de activacion del instalador es suficiente para operar
+   - No hay periodo trial ni activacion adicional requerida
+   - Flujo simplificado: Instalar con codigo -> Apps conectan -> Listo para usar
    |
    v
-6. INTEGRA IA: Generar codigo de licencia (cuando el cliente paga)
-   Portal > Codigos > Generar codigo (plan, legajos, duracion)
-   |
-   v
-7. INTEGRA IA: Enviar codigo de licencia al cliente
-   |
-   v
-8. CLIENTE: Activar licencia
-   Administrador > Menu Licencias > Ingresar codigo
-   El trial se convierte en licencia activa
-   |
-   v
-9. MONITOREO CONTINUO
+6. MONITOREO CONTINUO
    - Heartbeats cada 4 horas (automatico)
    - Revisar Dashboard para detectar problemas
    - Log de auditoria para diagnostico
@@ -396,10 +390,10 @@ ABM de tipos de documento fiscal, vinculados a paises.
 
 ### Caso: Cliente quiere mas legajos
 
-1. Generar un nuevo **codigo de licencia** con el plan y legajos deseados
-2. Enviar el codigo al cliente
-3. El cliente lo ingresa desde Administrador > Licencias
-4. La licencia se actualiza automaticamente
+> **Nota:** En modo multi-tenant (cloud), la validacion de licencia esta deshabilitada y no hay limite de legajos impuesto por licencia. La gestion de limites se realiza administrativamente desde el portal.
+
+1. Ajustar los parametros de la empresa desde el portal de licencias
+2. No se requiere accion del lado del cliente
 
 ### Caso: Suspender un cliente (impago, etc.)
 
@@ -434,10 +428,10 @@ Este endpoint es invocado por el **Instalador Liviano** durante la instalacion p
 
 ```json
 {
-  "connectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DP_mi_empresa;...",
-  "companyId": "mi_empresa",
-  "nombreEmpresa": "Mi Empresa SRL",
-  "databaseName": "DP_mi_empresa"
+  "connectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusMultiTenant;...",
+  "empresaId": 2,
+  "nombreEmpresa": "Kosiuko S.A.",
+  "databaseName": "DigitalPlusMultiTenant"
 }
 ```
 
@@ -454,12 +448,18 @@ Este endpoint es invocado por el **Instalador Liviano** durante la instalacion p
 - El codigo es el **CodigoActivacion** de la empresa (no el codigo de licencia)
 - No requiere autenticacion (el codigo es la credencial)
 - El connection string se arma dinamicamente con `BuildClientConnectionString()`
+- La respuesta incluye `empresaId`, que el instalador escribe en el `app.config` de las aplicaciones
+- En runtime, `TenantContext` lee el `EmpresaId` del `app.config` y todas las queries filtran por ese valor
+- La base de datos es siempre `DigitalPlusMultiTenant` (compartida entre todas las empresas)
+- Ejemplo de empresa ya migrada: Kosiuko (EmpresaId=2, codigo EE509930E07E)
 
 ---
 
 ## 13. REFERENCIA TECNICA
 
-### Estructura de la base de datos administrativa (DigitalPlusAdmin)
+### Estructura de bases de datos
+
+**DigitalPlusAdmin** - Base de datos administrativa (portal de licencias):
 
 | Tabla | Proposito |
 |---|---|
@@ -471,6 +471,21 @@ Este endpoint es invocado por el **Instalador Liviano** durante la instalacion p
 | Paises | Tabla de paises |
 | TiposIdentificacionFiscal | Tipos de documento fiscal por pais |
 | AspNet* | Tablas de Identity para autenticacion del portal |
+
+**DigitalPlusMultiTenant** - Base de datos operativa compartida (multi-tenant):
+
+- Es la **unica BD operativa** para todas las empresas (no se crea una BD por empresa).
+- Contiene 29 tablas con **nombres en singular**: Legajo, Fichada, Sucursal, Sector, Horario, Categoria, Incidencia, Feriado, LegajoSucursal, LegajoHuella, LegajoDomicilio, HorarioDetalle, etc.
+- Todas las tablas principales incluyen la columna `EmpresaId` para aislar los datos por empresa.
+- Las tablas hijas (LegajoSucursal, LegajoHuella, LegajoPin, LegajoDomicilio, HorarioDetalle) no tienen `EmpresaId` directamente; se filtran por JOIN con su tabla padre.
+
+### Patron TenantContext
+
+Las aplicaciones de escritorio (Fichador, Administrador) usan el patron `TenantContext` para el aislamiento multi-tenant:
+
+- El instalador escribe el `EmpresaId` en el `app.config` de cada aplicacion.
+- En runtime, `Global.Datos.TenantContext.EmpresaId` lee ese valor (fallback a 1).
+- Todas las queries de acceso a datos agregan automaticamente `WHERE EmpresaId = @empresaId`.
 
 ### Stored Procedures de licenciamiento (en Azure Functions)
 
@@ -497,7 +512,7 @@ Estos scripts permiten gestionar licencias directamente desde la linea de comand
 | Parametro | Ubicacion | Descripcion |
 |---|---|---|
 | Connection string admin | appsettings.json | Conexion a DigitalPlusAdmin |
-| Connection string cloud | appsettings.json (CloudSql) | Conexion para crear BDs de empresas |
+| Connection string cloud | appsettings.json (CloudSql) | Conexion a DigitalPlusMultiTenant (BD compartida) |
 | Identity config | Program.cs | Configuracion de autenticacion |
 
 ---

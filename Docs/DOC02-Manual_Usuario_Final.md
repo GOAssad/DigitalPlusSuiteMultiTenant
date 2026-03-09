@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 1.0
-**Fecha:** 2026-03-07
+**Version:** 2.0
+**Fecha:** 2026-03-08
 
 ---
 
@@ -245,21 +245,57 @@ Este es el modo principal si tiene un lector de huellas conectado.
 
 Si no hay lector de huellas o si el modo PIN esta habilitado:
 
-1. El empleado selecciona su nombre de la lista (o ingresa su numero de legajo)
+1. El empleado ingresa su **numero de legajo**
 2. Ingresa su **PIN** de 4 a 6 digitos
 3. El sistema valida y registra la fichada
 
-> [CAPTURA: Panel de fichada por PIN mostrando lista de empleados y campo de PIN]
+> [CAPTURA: Panel de fichada por PIN mostrando campo de legajo y campo de PIN]
+
+#### Primera vez (sin PIN asignado)
+
+Si el legajo no tiene un PIN asignado, el sistema le preguntara **"¿Desea crear uno ahora?"**. Si acepta, se abre el formulario de creacion de PIN donde debe:
+
+1. Ingresar un nuevo PIN (4 a 6 digitos)
+2. Confirmar el nuevo PIN
+
+> [CAPTURA: Dialogo preguntando si desea crear un PIN con botones Si/No]
+
+> [CAPTURA: Formulario de creacion de PIN con campos: Nuevo PIN, Confirmar PIN]
+
+#### Cambio forzado por el administrador
+
+Si el administrador marco "Forzar cambio de PIN" o "Resetear PIN" para el empleado, al ingresar su numero de legajo el sistema lo lleva **directamente** al formulario de creacion de PIN, **sin pedir el PIN anterior**. Se muestra el mensaje: **"El administrador requiere que cambie su PIN"**.
+
+> [CAPTURA: Mensaje "El administrador requiere que cambie su PIN" con formulario de nuevo PIN]
+
+#### PIN expirado
+
+Si el PIN del empleado esta vencido, al ingresar el legajo y el PIN actual correctamente, el sistema le solicitara que cree un nuevo PIN antes de completar la fichada.
+
+> [CAPTURA: Mensaje de PIN expirado con formulario de cambio de PIN]
 
 #### Cambiar PIN
 
-El empleado puede cambiar su PIN desde la pantalla de fichaje:
-1. Seleccionar su nombre
-2. Ingresar PIN actual
-3. Ingresar nuevo PIN (4 a 6 digitos)
+Existen **dos formas** de cambiar el PIN:
+
+**1. Cambio voluntario - Link "Cambiar mi PIN"**
+
+En la pantalla de fichada hay un link **"Cambiar mi PIN"** que abre un formulario donde el empleado debe ingresar:
+
+1. Numero de legajo
+2. PIN actual
+3. Nuevo PIN (minimo 4 digitos)
 4. Confirmar nuevo PIN
 
-> [CAPTURA: Dialogo de cambio de PIN con campos: PIN actual, Nuevo PIN, Confirmar PIN]
+El sistema valida que el PIN actual sea correcto, que el nuevo PIN tenga al menos 4 digitos y que sea diferente al PIN actual.
+
+> [CAPTURA: Link "Cambiar mi PIN" en la pantalla de fichada]
+
+> [CAPTURA: Formulario de cambio voluntario de PIN con campos: Legajo, PIN actual, Nuevo PIN, Confirmar PIN]
+
+**2. Cambio forzado por el administrador**
+
+Cuando el administrador marca "Forzar cambio" o "Resetear PIN" desde la pestana de PINs en Configuracion, la proxima vez que el empleado ingrese su numero de legajo en el Fichador, el sistema lo lleva directamente al formulario de creacion de PIN sin pedir el PIN anterior (ver seccion "Cambio forzado por el administrador" mas arriba).
 
 ### 4.3 Modo Demostracion
 
@@ -281,12 +317,20 @@ El Fichador detecta automaticamente si hay un lector de huellas conectado:
 
 ### 4.5 Informacion de licencia
 
-En la barra inferior del Fichador se muestra el estado de la licencia:
+En la barra inferior del Fichador se muestra informacion segun el tipo de instalacion:
+
+**Instalacion local:**
 - Tipo de licencia (Trial / Activa)
 - Dias restantes (si es trial)
 - Plan contratado
 
-> [CAPTURA: Barra de estado inferior mostrando informacion de licencia]
+**Instalacion multi-tenant (nube):**
+- En lugar de datos de licencia, la barra muestra la informacion del **terminal/sucursal**. El terminal se identifica por el nombre de la maquina y se mapea automaticamente a una sucursal en la base de datos.
+- Ejemplo: **"10 - Administracion Dardo Rocha"** muestra el ID de la sucursal y su nombre.
+
+> [CAPTURA: Barra de estado inferior mostrando informacion de licencia (instalacion local)]
+
+> [CAPTURA: Barra de estado inferior mostrando terminal y sucursal (instalacion nube)]
 
 ---
 
@@ -365,11 +409,32 @@ Desde el boton de **Configuracion** (icono de engranaje) accede a:
 
 > [CAPTURA: Pantalla de Configuracion - Pestana Fichada con checkboxes y opciones]
 
-#### Pestana PINs Vencidos
-- Lista de empleados con PIN vencido
-- Boton para forzar cambio de PIN en el proximo ingreso
+#### Pestana PINs
+Muestra **todos los legajos** con su estado de PIN. En la parte superior hay un combo de filtro con las siguientes opciones:
 
-> [CAPTURA: Pantalla de Configuracion - Pestana PINs Vencidos con grilla]
+- **Todos:** Muestra todos los legajos
+- **Con PIN activo:** Solo legajos con PIN vigente
+- **Sin PIN:** Legajos que no tienen PIN asignado
+- **Vencidos:** Legajos cuyo PIN ha expirado
+- **Cambio pendiente:** Legajos a los que el administrador les forzo un cambio de PIN
+
+> [CAPTURA: Pantalla de Configuracion - Pestana PINs con combo de filtro y grilla]
+
+La grilla muestra las siguientes columnas:
+
+| Columna | Descripcion |
+|---|---|
+| **Legajo** | Numero de legajo del empleado |
+| **Nombre** | Nombre completo del empleado |
+| **Estado PIN** | Activo / Sin PIN / Vencido / Cambio pendiente |
+| **Ultimo cambio** | Fecha del ultimo cambio de PIN |
+
+Debajo de la grilla hay dos botones de accion:
+
+- **Forzar cambio de PIN:** Marca los legajos seleccionados con PinMustChange. La proxima vez que el empleado ingrese su numero de legajo en el Fichador, debera establecer un nuevo PIN. No se le pedira el PIN anterior.
+- **Resetear PIN:** Elimina el PIN del empleado por completo. La proxima vez que ingrese su legajo en el Fichador, se le solicitara que cree un PIN nuevo. Use esta opcion cuando un empleado olvido su PIN.
+
+> [CAPTURA: Botones "Forzar cambio de PIN" y "Resetear PIN" en la pestana PINs]
 
 ### 5.5 Reportes
 
@@ -427,6 +492,8 @@ Ingrese sus credenciales de acceso (usuario y contrasena).
 ---
 
 ## 7. SISTEMA DE LICENCIAS
+
+> **Nota importante:** En instalaciones **multi-tenant (nube)**, el sistema de licencias funciona de manera diferente. La activacion se realiza durante la instalacion mediante el codigo de activacion. Las aplicaciones de escritorio **no validan licencias al iniciar** - se conectan directamente a la base de datos en la nube. El sistema de trial y licencias descrito a continuacion aplica **unicamente a instalaciones LOCALES**.
 
 ### Periodo de prueba (Trial)
 
