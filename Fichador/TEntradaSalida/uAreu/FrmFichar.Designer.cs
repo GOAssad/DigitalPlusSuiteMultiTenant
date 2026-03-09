@@ -58,6 +58,8 @@ namespace Acceso.uAreu
             this.lblDemoBanner = new System.Windows.Forms.Label();
             this.cmbLegajosDemo = new System.Windows.Forms.ComboBox();
             this.btnFicharDemo = new System.Windows.Forms.Button();
+            // Cambiar PIN link
+            this.lnkCambiarPin = new System.Windows.Forms.LinkLabel();
             // Mode switch
             this.lnkCambiarModo = new System.Windows.Forms.LinkLabel();
             this.panelHeader.SuspendLayout();
@@ -189,6 +191,7 @@ namespace Acceso.uAreu
             this.panelPin.Controls.Add(this.txtPin);
             this.panelPin.Controls.Add(this.btnFicharPin);
             this.panelPin.Controls.Add(this.lblPinError);
+            this.panelPin.Controls.Add(this.lnkCambiarPin);
             //
             // lblPinTitulo
             //
@@ -261,6 +264,18 @@ namespace Acceso.uAreu
             this.lblPinError.Size = new System.Drawing.Size(400, 20);
             this.lblPinError.Text = "";
             this.lblPinError.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
+            // lnkCambiarPin
+            //
+            this.lnkCambiarPin.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lnkCambiarPin.Location = new System.Drawing.Point(260, 132);
+            this.lnkCambiarPin.Name = "lnkCambiarPin";
+            this.lnkCambiarPin.Size = new System.Drawing.Size(130, 25);
+            this.lnkCambiarPin.TabIndex = 3;
+            this.lnkCambiarPin.TabStop = true;
+            this.lnkCambiarPin.Text = "Cambiar mi PIN";
+            this.lnkCambiarPin.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lnkCambiarPin.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkCambiarPin_LinkClicked);
             //
             // panelDemo
             //
@@ -420,6 +435,8 @@ namespace Acceso.uAreu
         private System.Windows.Forms.Label lblDemoBanner;
         private System.Windows.Forms.ComboBox cmbLegajosDemo;
         private System.Windows.Forms.Button btnFicharDemo;
+        // Cambiar PIN
+        private System.Windows.Forms.LinkLabel lnkCambiarPin;
         // Mode switch
         private System.Windows.Forms.LinkLabel lnkCambiarModo;
     }

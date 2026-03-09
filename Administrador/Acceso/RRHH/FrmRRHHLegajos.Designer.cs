@@ -192,7 +192,7 @@
             this.controlEntidadSimpleCategorias.SinImagen = false;
             this.controlEntidadSimpleCategorias.Size = new System.Drawing.Size(691, 86);
             this.controlEntidadSimpleCategorias.SoloLectura = false;
-            this.controlEntidadSimpleCategorias.SqlAyuda = "Select Id CategoriaID, Nombre Descripcion from Categoria WHERE EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+            this.controlEntidadSimpleCategorias.SqlAyuda = "Select Id CategoriaID, Nombre Descripcion from Categoria WHERE EmpresaId = ";
             this.controlEntidadSimpleCategorias.TabIndex = 3;
             this.controlEntidadSimpleCategorias.TablaSQL = "Categoria";
             this.controlEntidadSimpleCategorias.TextoEtiqueta = "Categoria";
@@ -224,7 +224,7 @@
             this.controlEntidadSimpleUbicaciones.SinImagen = false;
             this.controlEntidadSimpleUbicaciones.Size = new System.Drawing.Size(691, 86);
             this.controlEntidadSimpleUbicaciones.SoloLectura = false;
-            this.controlEntidadSimpleUbicaciones.SqlAyuda = "Select Id Ubicacion, Nombre Descripcion from Sector WHERE EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+            this.controlEntidadSimpleUbicaciones.SqlAyuda = "Select Id Ubicacion, Nombre Descripcion from Sector WHERE EmpresaId = ";
             this.controlEntidadSimpleUbicaciones.TabIndex = 2;
             this.controlEntidadSimpleUbicaciones.TablaSQL = "Sector";
             this.controlEntidadSimpleUbicaciones.TextoEtiqueta = "Sector";
@@ -256,7 +256,7 @@
             this.controlEntidadSucursal.SinImagen = false;
             this.controlEntidadSucursal.Size = new System.Drawing.Size(691, 86);
             this.controlEntidadSucursal.SoloLectura = false;
-            this.controlEntidadSucursal.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Sucursal WHERE EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+            this.controlEntidadSucursal.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Sucursal WHERE EmpresaId = ";
             this.controlEntidadSucursal.TabIndex = 1;
             this.controlEntidadSucursal.TablaSQL = "Sucursal";
             this.controlEntidadSucursal.TextoEtiqueta = "Sucursal";
@@ -288,7 +288,7 @@
             this.controlEntidadHorario.SinImagen = false;
             this.controlEntidadHorario.Size = new System.Drawing.Size(691, 86);
             this.controlEntidadHorario.SoloLectura = false;
-            this.controlEntidadHorario.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Horario WHERE EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+            this.controlEntidadHorario.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Horario WHERE EmpresaId = ";
             this.controlEntidadHorario.TabIndex = 0;
             this.controlEntidadHorario.TablaSQL = "Horario";
             this.controlEntidadHorario.TextoEtiqueta = "Horario";
@@ -308,7 +308,7 @@
             this.tableLayoutReporte.RowCount = 2;
             this.tableLayoutReporte.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutReporte.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutReporte.Size = new System.Drawing.Size(1695, 587);
+            this.tableLayoutReporte.Size = new System.Drawing.Size(1695, 595);
             this.tableLayoutReporte.TabIndex = 19;
             // 
             // PanelBotonesInformes
@@ -319,7 +319,7 @@
             this.PanelBotonesInformes.Location = new System.Drawing.Point(3, 2);
             this.PanelBotonesInformes.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PanelBotonesInformes.Name = "PanelBotonesInformes";
-            this.PanelBotonesInformes.Size = new System.Drawing.Size(1689, 289);
+            this.PanelBotonesInformes.Size = new System.Drawing.Size(1689, 293);
             this.PanelBotonesInformes.TabIndex = 17;
             // 
             // listSeguimiento
@@ -333,7 +333,7 @@
             this.listSeguimiento.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.listSeguimiento.Name = "listSeguimiento";
             this.listSeguimiento.ScrollAlwaysVisible = true;
-            this.listSeguimiento.Size = new System.Drawing.Size(1277, 287);
+            this.listSeguimiento.Size = new System.Drawing.Size(1277, 291);
             this.listSeguimiento.TabIndex = 0;
             // 
             // PanelIndicadores
@@ -351,10 +351,10 @@
             this.PanelIndicadores.Controls.Add(this.lblEtiquetaTitulo);
             this.PanelIndicadores.Dock = System.Windows.Forms.DockStyle.Fill;
             this.PanelIndicadores.Font = new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.PanelIndicadores.Location = new System.Drawing.Point(3, 295);
+            this.PanelIndicadores.Location = new System.Drawing.Point(3, 299);
             this.PanelIndicadores.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PanelIndicadores.Name = "PanelIndicadores";
-            this.PanelIndicadores.Size = new System.Drawing.Size(1689, 290);
+            this.PanelIndicadores.Size = new System.Drawing.Size(1689, 294);
             this.PanelIndicadores.TabIndex = 18;
             this.PanelIndicadores.Paint += new System.Windows.Forms.PaintEventHandler(this.PanelIndicadores_Paint);
             // 
@@ -515,7 +515,7 @@
             this.EnrollmentControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.EnrollmentControl.EnrolledFingerMask = 0;
             this.EnrollmentControl.Location = new System.Drawing.Point(6, 6);
-            this.EnrollmentControl.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.EnrollmentControl.Margin = new System.Windows.Forms.Padding(5);
             this.EnrollmentControl.MaxEnrollFingerCount = 10;
             this.EnrollmentControl.Name = "EnrollmentControl";
             this.EnrollmentControl.ReaderSerialNumber = "00000000-0000-0000-0000-000000000000";
@@ -759,7 +759,7 @@
             this.PageReportes.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PageReportes.Name = "PageReportes";
             this.PageReportes.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.PageReportes.Size = new System.Drawing.Size(1701, 591);
+            this.PageReportes.Size = new System.Drawing.Size(1701, 599);
             this.PageReportes.TabIndex = 2;
             this.PageReportes.Text = "Informacion";
             this.PageReportes.UseVisualStyleBackColor = true;
@@ -778,7 +778,7 @@
             this.PageDomicilios.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PageDomicilios.Name = "PageDomicilios";
             this.PageDomicilios.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.PageDomicilios.Size = new System.Drawing.Size(1701, 591);
+            this.PageDomicilios.Size = new System.Drawing.Size(1701, 599);
             this.PageDomicilios.TabIndex = 3;
             this.PageDomicilios.Text = "Domicilios";
             this.PageDomicilios.UseVisualStyleBackColor = true;
@@ -883,9 +883,9 @@
             this.ctrEntidadPaises1.SinImagen = false;
             this.ctrEntidadPaises1.Size = new System.Drawing.Size(691, 86);
             this.ctrEntidadPaises1.SoloLectura = false;
-            this.ctrEntidadPaises1.SqlAyuda = "SELECT 1 AS nPaisID, 'Argentina' AS Nombre WHERE 1=1";
+            this.ctrEntidadPaises1.SqlAyuda = "SELECT 1 AS nPaisID, \'Argentina\' AS Nombre WHERE 1=1";
             this.ctrEntidadPaises1.TabIndex = 7;
-            this.ctrEntidadPaises1.TablaSQL = "(SELECT 1 AS nPaisID, 'Argentina' AS Nombre) AS GRALPaises";
+            this.ctrEntidadPaises1.TablaSQL = "(SELECT 1 AS nPaisID, \'Argentina\' AS Nombre) AS GRALPaises";
             this.ctrEntidadPaises1.TextoEtiqueta = "Pais";
             this.ctrEntidadPaises1.TituloAyuda = "Paises";
             this.ctrEntidadPaises1.ValorCodigo = "";
@@ -904,7 +904,7 @@
             this.PageTurnos.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PageTurnos.Name = "PageTurnos";
             this.PageTurnos.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.PageTurnos.Size = new System.Drawing.Size(1701, 591);
+            this.PageTurnos.Size = new System.Drawing.Size(1701, 599);
             this.PageTurnos.TabIndex = 4;
             this.PageTurnos.Text = "Turnos";
             this.PageTurnos.UseVisualStyleBackColor = true;
@@ -1057,7 +1057,7 @@
             this.ctrTurnosLegajos.SinImagen = false;
             this.ctrTurnosLegajos.Size = new System.Drawing.Size(691, 86);
             this.ctrTurnosLegajos.SoloLectura = false;
-            this.ctrTurnosLegajos.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Horario WHERE EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+            this.ctrTurnosLegajos.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Horario WHERE EmpresaId = ";
             this.ctrTurnosLegajos.TabIndex = 7;
             this.ctrTurnosLegajos.TablaSQL = "Horario";
             this.ctrTurnosLegajos.TextoEtiqueta = "Horario";
@@ -1129,7 +1129,7 @@
             this.controlEntidadLegajos.SinImagen = false;
             this.controlEntidadLegajos.Size = new System.Drawing.Size(691, 86);
             this.controlEntidadLegajos.SoloLectura = false;
-            this.controlEntidadLegajos.SqlAyuda = "Select NumeroLegajo Legajo, Apellido, Nombre from Legajo WHERE EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+            this.controlEntidadLegajos.SqlAyuda = "Select NumeroLegajo Legajo, Apellido, Nombre from Legajo WHERE EmpresaId = ";
             this.controlEntidadLegajos.TabIndex = 0;
             this.controlEntidadLegajos.TablaSQL = "Legajo";
             this.controlEntidadLegajos.TextoEtiqueta = "Legajo";
@@ -1188,7 +1188,7 @@
             this.BotonGuardarVisible = true;
             this.ClientSize = new System.Drawing.Size(1709, 812);
             this.Controls.Add(this.splitContenedor);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MinimumSize = new System.Drawing.Size(600, 487);
             this.Name = "FrmRRHHLegajos";
             this.Text = "Legajos";

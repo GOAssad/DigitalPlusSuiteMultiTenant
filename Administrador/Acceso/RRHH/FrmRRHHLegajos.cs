@@ -138,7 +138,7 @@ namespace Acceso.RRHH
                     {
                         // Forzar cambio en proximo uso
                         Global.Datos.SQLServer.EjecutarSPsinRespuesta(
-                            "EXEC EscritorioLegajoPIN_ForzarCambio '" + legajoId + "'", false);
+                            "UPDATE lp SET lp.PinMustChange = 1 FROM LegajoPin lp INNER JOIN Legajo l ON lp.LegajoId = l.Id WHERE l.NumeroLegajo = '" + legajoId.Replace("'", "''") + "' AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId, false);
                         MessageBox.Show("PIN temporal asignado: " + pinTemp +
                             "\n\nEl empleado debera cambiarlo en su primer uso.",
                             "PIN asignado", MessageBoxButtons.OK, MessageBoxIcon.Information);

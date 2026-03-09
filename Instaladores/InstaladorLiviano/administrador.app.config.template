@@ -7,6 +7,7 @@
     <add name="local" connectionString="{{CONNECTION_STRING}}" providerName="System.Data.SqlClient"/>
   </connectionStrings>
   <appSettings>
+    <add key="EmpresaId" value="{{EMPRESA_ID}}" />
     <add key="NombreEmpresa" value="{{NOMBRE_EMPRESA}}" />
     <add key="UrlDigitalPlusWeb" value="{{URL_DIGITALPLUS_WEB}}" />
     <add key="UrlKosiuko" value="https://www.kosiuko.com/" />

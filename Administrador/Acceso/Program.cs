@@ -18,35 +18,9 @@ namespace Acceso
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-#if DEBUG
-			// En modo debug, saltear validacion de licencia
+			// Licencia: en multi-tenant la activacion se hace desde el instalador,
+			// no se valida por app. Se mantiene LicMgr para info en UI.
 			Application.Run(new FrmMainMenu());
-#else
-			var apiKey = ConfigurationManager.AppSettings["ProvisioningApiKey"] ?? "";
-			LicMgr = new LicenseManager(apiKey, "Administrador");
-			int legajos = ContarLegajos();
-			var result = LicMgr.ValidateAtStartup(legajos);
-
-			if (result.IsBlocked)
-			{
-				using (var frm = new FrmLicenseBlocked(result, LicMgr))
-				{
-					if (frm.ShowDialog() != DialogResult.OK)
-						return;
-				}
-			}
-
-			// Alerta de vencimiento proximo
-			var diasRestantes = LicMgr.GetDaysRemaining();
-			if (diasRestantes.HasValue && diasRestantes.Value <= 7 && diasRestantes.Value >= 0)
-			{
-				MessageBox.Show(
-					string.Format("Su licencia vence en {0} dia(s).\nContacte a soporte para renovar.", diasRestantes.Value),
-					"Aviso de vencimiento", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-			}
-
-			Application.Run(new FrmMainMenu());
-#endif
 		}
 
 		internal static int ContarLegajos()

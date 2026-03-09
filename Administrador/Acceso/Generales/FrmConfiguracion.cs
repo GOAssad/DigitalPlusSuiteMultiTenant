@@ -28,6 +28,8 @@ namespace Acceso.Generales
         // PIN vencidos
         private DataGridView dgvPinVencidos;
         private Button btnForzarCambioTodos;
+        private Button btnResetearPin;
+        private ComboBox cmbFiltroPins;
         private Label lblPinVencidosInfo;
 
         // Noticias
@@ -116,15 +118,17 @@ namespace Acceso.Generales
             //
             this.tabPinVencidos.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
             this.tabPinVencidos.Controls.Add(this.lblPinVencidosInfo);
+            this.tabPinVencidos.Controls.Add(this.cmbFiltroPins);
             this.tabPinVencidos.Controls.Add(this.dgvPinVencidos);
             this.tabPinVencidos.Controls.Add(this.btnForzarCambioTodos);
+            this.tabPinVencidos.Controls.Add(this.btnResetearPin);
             this.tabPinVencidos.ForeColor = System.Drawing.Color.Gainsboro;
             this.tabPinVencidos.Location = new System.Drawing.Point(4, 26);
             this.tabPinVencidos.Name = "tabPinVencidos";
             this.tabPinVencidos.Padding = new System.Windows.Forms.Padding(20);
             this.tabPinVencidos.Size = new System.Drawing.Size(776, 481);
             this.tabPinVencidos.TabIndex = 1;
-            this.tabPinVencidos.Text = "PINs Vencidos";
+            this.tabPinVencidos.Text = "PINs";
             //
             // tabNoticias
             //
@@ -267,6 +271,35 @@ namespace Acceso.Generales
             this.btnForzarCambioTodos.Text = "Forzar cambio de PIN (seleccionados)";
             this.btnForzarCambioTodos.UseVisualStyleBackColor = false;
             this.btnForzarCambioTodos.Click += new System.EventHandler(this.BtnForzarCambio_Click);
+            //
+            // btnResetearPin
+            //
+            this.btnResetearPin = new System.Windows.Forms.Button();
+            this.btnResetearPin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnResetearPin.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(53)))), ((int)(((byte)(69)))));
+            this.btnResetearPin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnResetearPin.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.btnResetearPin.ForeColor = System.Drawing.Color.White;
+            this.btnResetearPin.Location = new System.Drawing.Point(330, 400);
+            this.btnResetearPin.Name = "btnResetearPin";
+            this.btnResetearPin.Size = new System.Drawing.Size(250, 35);
+            this.btnResetearPin.TabIndex = 4;
+            this.btnResetearPin.Text = "Resetear PIN (seleccionados)";
+            this.btnResetearPin.UseVisualStyleBackColor = false;
+            this.btnResetearPin.Click += new System.EventHandler(this.BtnResetearPin_Click);
+            //
+            // cmbFiltroPins
+            //
+            this.cmbFiltroPins = new System.Windows.Forms.ComboBox();
+            this.cmbFiltroPins.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbFiltroPins.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.cmbFiltroPins.Location = new System.Drawing.Point(530, 13);
+            this.cmbFiltroPins.Name = "cmbFiltroPins";
+            this.cmbFiltroPins.Size = new System.Drawing.Size(226, 25);
+            this.cmbFiltroPins.TabIndex = 5;
+            this.cmbFiltroPins.Items.AddRange(new object[] { "Todos", "Con PIN activo", "Sin PIN", "Vencidos", "Cambio pendiente" });
+            this.cmbFiltroPins.SelectedIndex = 0;
+            this.cmbFiltroPins.SelectedIndexChanged += new System.EventHandler(this.CmbFiltroPins_SelectedIndexChanged);
             //
             // lblNoticiasInfo
             //
@@ -441,39 +474,52 @@ namespace Acceso.Generales
             try
             {
                 int diasExpira = (int)nudExpiraDias.Value;
-                string query;
+                string filtro = cmbFiltroPins != null && cmbFiltroPins.SelectedItem != null
+                    ? cmbFiltroPins.SelectedItem.ToString() : "Todos";
+
+                string estadoCase = "CASE WHEN p.PinHash IS NULL THEN 'Sin PIN' " +
+                    "WHEN p.PinMustChange = 1 THEN 'Cambio pendiente' ";
 
                 if (diasExpira > 0)
-                {
-                    query = "SELECT l.NumeroLegajo AS [Legajo], l.Apellido + ' ' + l.Nombre AS [Nombre], " +
-                        "CASE WHEN p.PinHash IS NULL THEN 'Sin PIN' " +
-                        "WHEN p.PinMustChange = 1 THEN 'Cambio pendiente' " +
-                        "WHEN DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) > " + diasExpira + " THEN 'Vencido (' + CAST(DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) AS VARCHAR) + ' dias)' " +
-                        "ELSE 'Vigente' END AS [Estado PIN] " +
-                        "FROM Legajo l LEFT JOIN LegajoPin p ON l.Id = p.LegajoId " +
-                        "WHERE l.IsActive = 1 AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId + " AND (p.PinHash IS NULL OR p.PinMustChange = 1 OR DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) > " + diasExpira + ") " +
-                        "ORDER BY l.Apellido, l.Nombre";
-                }
-                else
-                {
-                    query = "SELECT l.NumeroLegajo AS [Legajo], l.Apellido + ' ' + l.Nombre AS [Nombre], " +
-                        "CASE WHEN p.PinHash IS NULL THEN 'Sin PIN' " +
-                        "WHEN p.PinMustChange = 1 THEN 'Cambio pendiente' " +
-                        "ELSE 'Vigente' END AS [Estado PIN] " +
-                        "FROM Legajo l LEFT JOIN LegajoPin p ON l.Id = p.LegajoId " +
-                        "WHERE l.IsActive = 1 AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId + " AND (p.PinHash IS NULL OR p.PinMustChange = 1) " +
-                        "ORDER BY l.Apellido, l.Nombre";
-                }
+                    estadoCase += "WHEN DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) > " + diasExpira +
+                        " THEN 'Vencido (' + CAST(DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) AS VARCHAR) + ' dias)' ";
+
+                estadoCase += "ELSE 'Activo' END";
+
+                string whereFilter = "";
+                if (filtro == "Sin PIN")
+                    whereFilter = " AND p.PinHash IS NULL";
+                else if (filtro == "Con PIN activo")
+                    whereFilter = " AND p.PinHash IS NOT NULL AND p.PinMustChange = 0" +
+                        (diasExpira > 0 ? " AND DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) <= " + diasExpira : "");
+                else if (filtro == "Vencidos")
+                    whereFilter = diasExpira > 0
+                        ? " AND p.PinHash IS NOT NULL AND DATEDIFF(DAY, p.PinChangedAt, GETUTCDATE()) > " + diasExpira
+                        : " AND 1=0";
+                else if (filtro == "Cambio pendiente")
+                    whereFilter = " AND p.PinMustChange = 1";
+
+                string query = "SELECT l.NumeroLegajo AS [Legajo], l.Apellido + ' ' + l.Nombre AS [Nombre], " +
+                    estadoCase + " AS [Estado PIN], " +
+                    "CASE WHEN p.PinChangedAt IS NOT NULL THEN CONVERT(VARCHAR(10), p.PinChangedAt, 103) ELSE '' END AS [Ultimo cambio] " +
+                    "FROM Legajo l LEFT JOIN LegajoPin p ON l.Id = p.LegajoId " +
+                    "WHERE l.IsActive = 1 AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId + whereFilter + " " +
+                    "ORDER BY l.Apellido, l.Nombre";
 
                 DataTable dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(query);
                 dgvPinVencidos.DataSource = dt;
-                lblPinVencidosInfo.Text = "Legajos con PIN vencido o sin PIN: " + dt.Rows.Count;
+                lblPinVencidosInfo.Text = "Legajos: " + dt.Rows.Count + " (" + filtro + ")";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error cargando datos: " + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void CmbFiltroPins_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CargarPinVencidos();
         }
 
         private void BtnForzarCambio_Click(object sender, EventArgs e)
@@ -500,8 +546,11 @@ namespace Acceso.Generales
                 {
                     try
                     {
-                        Global.Datos.SQLServer.EjecutarSPsinRespuesta(
-                            "EXEC EscritorioLegajoPIN_ForzarCambio '" + legajoId + "'", false);
+                        string sql = "UPDATE lp SET lp.PinMustChange = 1 FROM LegajoPin lp " +
+                            "INNER JOIN Legajo l ON lp.LegajoId = l.Id " +
+                            "WHERE l.NumeroLegajo = '" + legajoId.Replace("'", "''") + "' " +
+                            "AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+                        Global.Datos.SQLServer.EjecutarSPsinRespuesta(sql, false);
                         count++;
                     }
                     catch { }
@@ -509,6 +558,48 @@ namespace Acceso.Generales
             }
 
             MessageBox.Show("Se marco cambio obligatorio para " + count + " legajo(s).",
+                "Listo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            CargarPinVencidos();
+        }
+
+        private void BtnResetearPin_Click(object sender, EventArgs e)
+        {
+            if (dgvPinVencidos.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Seleccione al menos un legajo.", "Atencion",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                "Se eliminara el PIN de " + dgvPinVencidos.SelectedRows.Count + " legajo(s).\n" +
+                "El empleado debera crear un PIN nuevo al fichar.\n\n¿Continuar?",
+                "Resetear PIN",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes) return;
+
+            int count = 0;
+            foreach (DataGridViewRow row in dgvPinVencidos.SelectedRows)
+            {
+                string legajoId = row.Cells["Legajo"].Value?.ToString();
+                if (!string.IsNullOrEmpty(legajoId))
+                {
+                    try
+                    {
+                        string sql = "DELETE lp FROM LegajoPin lp " +
+                            "INNER JOIN Legajo l ON lp.LegajoId = l.Id " +
+                            "WHERE l.NumeroLegajo = '" + legajoId.Replace("'", "''") + "' " +
+                            "AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId;
+                        Global.Datos.SQLServer.EjecutarSPsinRespuesta(sql, false);
+                        count++;
+                    }
+                    catch { }
+                }
+            }
+
+            MessageBox.Show("Se reseteo el PIN de " + count + " legajo(s).\n" +
+                "Deberan crear un nuevo PIN al fichar.",
                 "Listo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             CargarPinVencidos();
         }

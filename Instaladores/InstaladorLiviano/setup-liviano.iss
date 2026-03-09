@@ -19,24 +19,24 @@
 #define AppId         "{{A1B2C3D4-5E6F-7A8B-9C0D-E1F2A3B4C5D6}"
 
 ; --- Fichador ---
-#define FichBin       "..\Fichador\TEntradaSalida\bin\Release"
+#define FichBin       "..\..\Fichador\TEntradaSalida\bin\Release"
 #define FichExe       "TEntradaSalida.exe"
-#define FichIcon      "..\Fichador\TEntradaSalida\Resources\Huellaksk.ico"
+#define FichIcon      "..\..\Fichador\TEntradaSalida\Resources\Huellaksk.ico"
 
 ; --- Administrador ---
-#define AdminBin      "..\Administrador\Acceso\bin\Release"
+#define AdminBin      "..\..\Administrador\Acceso\bin\Release"
 #define AdminExe      "Acceso.exe"
-#define AdminIcon     "..\Administrador\Acceso\logo_web.ico"
+#define AdminIcon     "..\..\Administrador\Acceso\logo_web.ico"
 
 ; --- Recursos compartidos ---
-#define SourceRTE_x86 "..\Digital-Persona-SDK-master\RTE\Install"
-#define SourceRTE_x64 "..\Digital-Persona-SDK-master\RTE\Install\x64"
+#define SourceRTE_x86 "..\..\SDK\Digital-Persona-SDK-master\RTE\Install"
+#define SourceRTE_x64 "..\..\SDK\Digital-Persona-SDK-master\RTE\Install\x64"
 
 ; --- Herramienta DPAPI para cifrar configs ---
-#define SourceProtector "..\tools\ConfigProtector\bin\Release\net48"
+#define SourceProtector "..\..\tools\ConfigProtector\bin\Release\net48"
 
 ; --- API del portal de licencias ---
-#define PortalApiUrl "https://licencias.digitaloneplus.com/api/activar"
+#define PortalApiUrl "https://localhost:7043/api/activar"
 
 ; ============================================================
 [Setup]
@@ -303,9 +303,10 @@ var
   edtUrl:        TNewEdit;
 
   // Estado interno
-  sConnectionString:   String;    // Connection string recibida de Azure
+  sConnectionString:   String;    // Connection string recibida del portal
   bActivacionOK:       Boolean;   // True si el codigo fue validado
-  sNombreEmpresa:      String;    // Nombre de la empresa (viene del provision)
+  sNombreEmpresa:      String;    // Nombre de la empresa (viene del portal)
+  sEmpresaId:          String;    // EmpresaId del tenant (viene del portal)
 
 // ============================================================
 // UTILIDADES
@@ -341,6 +342,7 @@ begin
   Result := False;
   sConnectionString := '';
   sNombreEmpresa := '';
+  sEmpresaId := '';
 
   sUrl := '{#PortalApiUrl}';
   sBody := '{"Codigo":"' + sCodigo + '"}';
@@ -366,6 +368,18 @@ begin
           sConnectionString := Copy(sResponse, iPos, iEnd - iPos);
       end;
 
+      // Extraer empresaId del JSON (valor numerico)
+      iPos := Pos('empresaId":', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('empresaId":');
+        iEnd := PosEx(',', sResponse, iPos);
+        if iEnd = 0 then
+          iEnd := PosEx('}', sResponse, iPos);
+        if iEnd > iPos then
+          sEmpresaId := Trim(Copy(sResponse, iPos, iEnd - iPos));
+      end;
+
       // Extraer nombreEmpresa del JSON
       iPos := Pos('nombreEmpresa":"', sResponse);
       if iPos > 0 then
@@ -376,7 +390,7 @@ begin
           sNombreEmpresa := Copy(sResponse, iPos, iEnd - iPos);
       end;
 
-      if sConnectionString <> '' then
+      if (sConnectionString <> '') and (sEmpresaId <> '') then
         Result := True;
     end;
   except
@@ -407,7 +421,7 @@ begin
   if ActivarCodigo(sCodigo) then
   begin
     bActivacionOK := True;
-    lblActivResult.Caption := 'Codigo valido. Empresa: ' + sNombreEmpresa;
+    lblActivResult.Caption := 'Codigo valido. Empresa: ' + sNombreEmpresa + ' (ID: ' + sEmpresaId + ')';
     lblActivResult.Font.Color := clGreen;
   end
   else
@@ -513,6 +527,7 @@ begin
     for i := 0 to GetArrayLength(Lines) - 1 do
     begin
       StringChange(Lines[i], '{{CONNECTION_STRING}}', sConnectionString);
+      StringChange(Lines[i], '{{EMPRESA_ID}}', sEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
     end;
     SaveStringsToFile(FilePath, Lines, False);
@@ -525,6 +540,7 @@ begin
     for i := 0 to GetArrayLength(Lines) - 1 do
     begin
       StringChange(Lines[i], '{{CONNECTION_STRING}}', sConnectionString);
+      StringChange(Lines[i], '{{EMPRESA_ID}}', sEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
       StringChange(Lines[i], '{{URL_DIGITALPLUS_WEB}}', sUrlWeb);
     end;
@@ -591,6 +607,7 @@ begin
   bActivacionOK := False;
   sConnectionString := '';
   sNombreEmpresa := '';
+  sEmpresaId := '';
 
   CreateActivacionPage;
   CreateUrlPage;

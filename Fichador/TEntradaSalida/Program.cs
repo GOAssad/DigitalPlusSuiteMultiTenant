@@ -14,35 +14,8 @@ namespace Acceso
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            LicenseManager licMgr = null;
-
-#if DEBUG
-            // En modo Debug, saltar validacion de licencia para desarrollo
-            licMgr = new LicenseManager("", "Fichador");
-#else
-            var apiKey = ConfigurationManager.AppSettings["ProvisioningApiKey"] ?? "";
-            licMgr = new LicenseManager(apiKey, "Fichador");
-            int legajos = ContarLegajos();
-            var result = licMgr.ValidateAtStartup(legajos);
-
-            if (result.IsBlocked)
-            {
-                using (var frm = new FrmLicenseBlocked(result, licMgr))
-                {
-                    if (frm.ShowDialog() != DialogResult.OK)
-                        return;
-                }
-            }
-
-            // Alerta de vencimiento proximo
-            var diasRestantes = licMgr.GetDaysRemaining();
-            if (diasRestantes.HasValue && diasRestantes.Value <= 7 && diasRestantes.Value >= 0)
-            {
-                MessageBox.Show(
-                    string.Format("Su licencia vence en {0} dia(s).\nContacte a soporte para renovar.", diasRestantes.Value),
-                    "Aviso de vencimiento", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-#endif
+            // Licencia: en multi-tenant la activacion se hace desde el instalador
+            var licMgr = new LicenseManager("", "Fichador");
 
             Application.Run(new Acceso.uAreu.FrmFichar(licMgr));
         }

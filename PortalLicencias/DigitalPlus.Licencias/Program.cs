@@ -119,6 +119,7 @@ app.MapPost("/api/activar", async (ActivarRequest req,
     return Results.Ok(new
     {
         connectionString,
+        empresaId = empresa.Id,
         companyId = empresa.CompanyId,
         nombreEmpresa = empresa.Nombre,
         databaseName = empresa.DatabaseName

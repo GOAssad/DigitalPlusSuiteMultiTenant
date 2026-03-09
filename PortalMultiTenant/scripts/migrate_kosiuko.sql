@@ -201,20 +201,29 @@ PRINT '   Legajos migrados: ' + CAST(@@ROWCOUNT AS VARCHAR);
 -- =============================================================================
 PRINT '>> Migrando LegajoPines...';
 
-INSERT INTO LegajoPin (LegajoId, PinHash, PinSalt, PinChangedAt, PinMustChange, CreatedAt)
-SELECT
-    l.Id,
-    l.PinHash,
-    l.PinSalt,
-    l.PinChangedAt,
-    ISNULL(l.PinMustChange, 0),
-    @Now
-FROM DigitalPlus.dbo.Legajos l
-WHERE l.PinHash IS NOT NULL AND l.PinHash != ''
-  AND EXISTS (SELECT 1 FROM Legajo nl WHERE nl.Id = l.Id)
-  AND NOT EXISTS (SELECT 1 FROM LegajoPin lp WHERE lp.LegajoId = l.Id);
-
-PRINT '   LegajoPines migrados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+-- Solo migrar PINs si la BD origen tiene las columnas (agregadas post-deploy)
+IF EXISTS (SELECT 1 FROM DigitalPlus.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Legajos' AND COLUMN_NAME = 'PinHash')
+BEGIN
+    EXEC sp_executesql N'
+    INSERT INTO LegajoPin (LegajoId, PinHash, PinSalt, PinChangedAt, PinMustChange, CreatedAt)
+    SELECT
+        l.Id,
+        l.PinHash,
+        l.PinSalt,
+        l.PinChangedAt,
+        ISNULL(l.PinMustChange, 0),
+        @pNow
+    FROM DigitalPlus.dbo.Legajos l
+    WHERE l.PinHash IS NOT NULL AND l.PinHash != ''''
+      AND EXISTS (SELECT 1 FROM Legajo nl WHERE nl.Id = l.Id)
+      AND NOT EXISTS (SELECT 1 FROM LegajoPin lp WHERE lp.LegajoId = l.Id);
+    ', N'@pNow DATETIME2', @pNow = @Now;
+    PRINT '   LegajoPines migrados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+END
+ELSE
+BEGIN
+    PRINT '   LegajoPines: columnas PIN no existen en origen, omitido';
+END
 
 -- =============================================================================
 -- 9. LEGAJO SUCURSALES

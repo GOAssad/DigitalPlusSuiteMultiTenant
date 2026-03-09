@@ -294,21 +294,23 @@ namespace Acceso.uAreu
                 return;
             }
 
-            // Si no tiene PIN asignado, ofrecer crear uno
-            if (!pinHelper.HasPin)
+            // Si no tiene PIN asignado o el admin reseteo el PIN, pedir crear uno nuevo
+            if (!pinHelper.HasPin || pinHelper.PinMustChange)
             {
-                var result = MessageBox.Show(
-                    "Este legajo no tiene PIN asignado.\n¿Desea crear uno ahora?",
-                    "PIN no configurado",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
+                string msg = !pinHelper.HasPin
+                    ? "Este legajo no tiene PIN asignado.\n¿Desea crear uno ahora?"
+                    : "El administrador requiere que cambie su PIN.\n¿Desea cambiarlo ahora?";
+                string title = !pinHelper.HasPin ? "PIN no configurado" : "Cambio de PIN requerido";
+
+                var result = MessageBox.Show(msg, title,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (result == DialogResult.Yes)
                 {
-                    using (var frm = new FrmCambiarPin(legajoId, pinHelper.sLegajoNombre, true))
+                    using (var frm = new FrmCambiarPin(legajoId, pinHelper.sLegajoNombre, !pinHelper.HasPin))
                     {
                         if (frm.ShowDialog() == DialogResult.OK)
-                            lblPinError.Text = "PIN creado. Ingrese su PIN para fichar.";
+                            lblPinError.Text = "PIN " + (!pinHelper.HasPin ? "creado" : "cambiado") + ". Ingrese su PIN para fichar.";
                     }
                 }
                 txtPin.Text = "";
@@ -325,13 +327,11 @@ namespace Acceso.uAreu
                 return;
             }
 
-            // PIN expirado o debe cambiar
-            if (pinHelper.PinMustChange || pinHelper.PinExpired)
+            // PIN expirado
+            if (pinHelper.PinExpired)
             {
-                string msg = pinHelper.PinExpired
-                    ? "Su PIN ha expirado. Debe cambiarlo para continuar."
-                    : "Debe cambiar su PIN.";
-                MessageBox.Show(msg, "Cambio de PIN requerido", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Su PIN ha expirado. Debe cambiarlo para continuar.",
+                    "Cambio de PIN requerido", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 using (var frm = new FrmCambiarPin(legajoId, pinHelper.sLegajoNombre, false))
                 {
@@ -350,6 +350,14 @@ namespace Acceso.uAreu
             txtLegajoId.Text = "";
             txtPin.Text = "";
             txtLegajoId.Focus();
+        }
+
+        private void lnkCambiarPin_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (var frm = new FrmCambiarPinVoluntario())
+            {
+                frm.ShowDialog(this);
+            }
         }
 
         #endregion
