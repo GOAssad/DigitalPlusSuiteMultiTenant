@@ -80,9 +80,12 @@ namespace Acceso.uAreu
             //
             // panelHeader
             //
+            this.picLogoIntegraIA = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogoIntegraIA)).BeginInit();
             this.panelHeader.BackColor = System.Drawing.Color.RoyalBlue;
-            this.panelHeader.Controls.Add(this.lblHora);
             this.panelHeader.Controls.Add(this.pictureBox1);
+            this.panelHeader.Controls.Add(this.picLogoIntegraIA);
+            this.panelHeader.Controls.Add(this.lblHora);
             this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelHeader.Location = new System.Drawing.Point(0, 0);
             this.panelHeader.Name = "panelHeader";
@@ -105,12 +108,24 @@ namespace Acceso.uAreu
             // pictureBox1
             //
             this.pictureBox1.Image = global::TEntradaSalida.Properties.Resources.Logo_Solo;
-            this.pictureBox1.Location = new System.Drawing.Point(8, 22);
+            this.pictureBox1.Location = new System.Drawing.Point(8, 21);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(46, 46);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.Size = new System.Drawing.Size(48, 48);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.BackColor = System.Drawing.Color.White;
+            //
+            // picLogoIntegraIA
+            //
+            this.picLogoIntegraIA.Location = new System.Drawing.Point(454, 21);
+            this.picLogoIntegraIA.Name = "picLogoIntegraIA";
+            this.picLogoIntegraIA.Size = new System.Drawing.Size(48, 48);
+            this.picLogoIntegraIA.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.picLogoIntegraIA.TabIndex = 2;
+            this.picLogoIntegraIA.TabStop = false;
+            this.picLogoIntegraIA.BackColor = System.Drawing.Color.White;
+            this.picLogoIntegraIA.Padding = new System.Windows.Forms.Padding(2);
             //
             // etiquetaSucursal
             //
@@ -398,6 +413,7 @@ namespace Acceso.uAreu
             this.panelHeader.ResumeLayout(false);
             this.panelHeader.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogoIntegraIA)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PictureHuella)).EndInit();
             this.panelPin.ResumeLayout(false);
             this.panelPin.PerformLayout();
@@ -439,5 +455,7 @@ namespace Acceso.uAreu
         private System.Windows.Forms.LinkLabel lnkCambiarPin;
         // Mode switch
         private System.Windows.Forms.LinkLabel lnkCambiarModo;
+        // Logos
+        private System.Windows.Forms.PictureBox picLogoIntegraIA;
     }
 }

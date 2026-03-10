@@ -532,6 +532,7 @@ namespace Acceso.uAreu
                 this.Text = "DigitalPlus Fichadas - " + nombreEmpresa;
             }
 
+            CargarLogos();
             ConfiguracionLocal();
             Init();
             DetectarModoInicial();
@@ -735,6 +736,39 @@ namespace Acceso.uAreu
 
         private void PictureHuella_Click(object sender, EventArgs e)
         {
+        }
+
+        private void CargarLogos()
+        {
+            try
+            {
+                // Logo de empresa desde DigitalPlusAdmin
+                var empresa = Acceso.Clases.Datos.Generales.EmpresaInfoService.ObtenerEmpresa();
+                if (empresa != null && empresa.Logo != null && empresa.Logo.Length > 0)
+                {
+                    var ms = new MemoryStream(empresa.Logo);
+                    pictureBox1.Image = Image.FromStream(ms);
+
+                    if (!string.IsNullOrEmpty(empresa.Nombre))
+                    {
+                        lblEmpresa.Text = empresa.Nombre;
+                        this.Text = "DigitalPlus Fichadas - " + empresa.Nombre;
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                // Logo IntegraIA (recurso embebido)
+                byte[] integraBytes = Acceso.Clases.Datos.Generales.EmpresaInfoService.ObtenerLogoIntegraIA();
+                if (integraBytes != null && integraBytes.Length > 0)
+                {
+                    var ms = new MemoryStream(integraBytes);
+                    picLogoIntegraIA.Image = Image.FromStream(ms);
+                }
+            }
+            catch { }
         }
     }
 }

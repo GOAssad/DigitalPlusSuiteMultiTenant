@@ -67,6 +67,11 @@ namespace Acceso.Ventas
             this.btnConfiguracion = new FontAwesome.Sharp.IconButton();
             this.btnLicencias = new FontAwesome.Sharp.IconButton();
             this.lblLicenciaStatus = new System.Windows.Forms.Label();
+            this.panelBranding = new System.Windows.Forms.Panel();
+            this.picLogoIntegraIA = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogoIntegraIA)).BeginInit();
+            this.panelBranding.SuspendLayout();
+            this.panelMenu.Controls.Add(this.panelBranding);
             this.panelMenu.Controls.Add(this.btnLogout);
             this.panelMenu.Controls.Add(this.btnKosiuko);
             this.panelMenu.Controls.Add(this.btnDigitalPlusWeb);
@@ -208,6 +213,26 @@ namespace Acceso.Ventas
             this.btnLicencias.UseVisualStyleBackColor = true;
             this.btnLicencias.Click += new System.EventHandler(this.btnLicencias_Click);
             //
+            // panelBranding
+            //
+            this.panelBranding.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(248)))));
+            this.panelBranding.Controls.Add(this.picLogoIntegraIA);
+            this.panelBranding.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelBranding.Location = new System.Drawing.Point(0, 740);
+            this.panelBranding.Name = "panelBranding";
+            this.panelBranding.Size = new System.Drawing.Size(173, 55);
+            this.panelBranding.TabIndex = 12;
+            //
+            // picLogoIntegraIA
+            //
+            this.picLogoIntegraIA.Location = new System.Drawing.Point(41, 5);
+            this.picLogoIntegraIA.Name = "picLogoIntegraIA";
+            this.picLogoIntegraIA.Size = new System.Drawing.Size(90, 45);
+            this.picLogoIntegraIA.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.picLogoIntegraIA.TabIndex = 0;
+            this.picLogoIntegraIA.TabStop = false;
+            this.picLogoIntegraIA.BackColor = System.Drawing.Color.Transparent;
+            //
             // lblLicenciaStatus
             //
             this.lblLicenciaStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -227,15 +252,15 @@ namespace Acceso.Ventas
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(173, 140);
+            this.panel1.Size = new System.Drawing.Size(173, 105);
             this.panel1.TabIndex = 0;
-            // 
+            //
             // btnHome
-            // 
+            //
             this.btnHome.Image = global::Acceso.Properties.Resources.Logo;
-            this.btnHome.Location = new System.Drawing.Point(28, 11);
+            this.btnHome.Location = new System.Drawing.Point(39, 15);
             this.btnHome.Name = "btnHome";
-            this.btnHome.Size = new System.Drawing.Size(109, 113);
+            this.btnHome.Size = new System.Drawing.Size(95, 75);
             this.btnHome.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnHome.TabIndex = 0;
             this.btnHome.TabStop = false;
@@ -401,6 +426,8 @@ namespace Acceso.Ventas
             ((System.ComponentModel.ISupportInitialize)(this.iconClose)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.iconMaximize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.iconCurrentChildForm)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogoIntegraIA)).EndInit();
+            this.panelBranding.ResumeLayout(false);
             this.panelDesktop.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -429,6 +456,8 @@ namespace Acceso.Ventas
         private System.Windows.Forms.Label lblLicenciaStatus;
         private Global.Controles.Reloj reloj1;
         private System.Windows.Forms.Label lblUsuario;
+        private System.Windows.Forms.Panel panelBranding;
+        private System.Windows.Forms.PictureBox picLogoIntegraIA;
     }
 }
 

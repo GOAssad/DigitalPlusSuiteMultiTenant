@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Configuration;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using FontAwesome.Sharp;
 using Acceso.Clases.Datos.Metadatos;
+using Acceso.Clases.Datos.Generales;
 using System.Data;
 using System.Linq;
 using Acceso.Generales;
@@ -198,11 +200,42 @@ namespace Acceso.Ventas
             // Mostrar info de licencia en barra inferior
             if (Program.LicMgr != null && Program.LicMgr.CurrentTicket != null)
                 lblLicenciaStatus.Text = Program.LicMgr.GetStatusBarText();
+
+            CargarLogos();
+        }
+
+        private void CargarLogos()
+        {
+            try
+            {
+                // Logo de empresa desde DigitalPlusAdmin
+                var empresa = EmpresaInfoService.ObtenerEmpresa();
+                if (empresa != null && empresa.Logo != null && empresa.Logo.Length > 0)
+                {
+                    var ms = new MemoryStream(empresa.Logo);
+                    btnHome.Image = Image.FromStream(ms);
+
+                    if (!string.IsNullOrEmpty(empresa.Nombre))
+                        lblUsuario.Text = empresa.Nombre;
+                }
+            }
+            catch { }
+
+            try
+            {
+                // Logo IntegraIA (recurso embebido)
+                byte[] integraBytes = EmpresaInfoService.ObtenerLogoIntegraIA();
+                if (integraBytes != null && integraBytes.Length > 0)
+                {
+                    var ms = new MemoryStream(integraBytes);
+                    picLogoIntegraIA.Image = Image.FromStream(ms);
+                }
+            }
+            catch { }
         }
 
         private void btnLogout_Click(object sender, EventArgs e)
         {
-            ActivateButton(sender, RGBColors.colorLogO);
             if (MessageBox.Show("Esta seguro que quiere salir?", "Atención!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 this.Close();
         }

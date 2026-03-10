@@ -66,6 +66,7 @@
     <Compile Include="Clientes\VENTClientes.cs" />
     <Compile Include="ConnectionSql.cs" />
     <Compile Include="EntidadSimple.cs" />
+    <Compile Include="Generales\EmpresaInfoService.cs" />
     <Compile Include="Generales\GRALSucursales.cs" />
     <Compile Include="Generales\GRALSucursalesGrupos.cs" />
     <Compile Include="Generales\GRALTerminales.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="RRHH\RRHHVacaciones.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Logo-IntegraIA.png" />
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
