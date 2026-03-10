@@ -33,8 +33,7 @@ namespace Acceso.Ventas
             this.panelMenu = new System.Windows.Forms.Panel();
             this.btnLogout = new FontAwesome.Sharp.IconButton();
             this.btnLegajos = new FontAwesome.Sharp.IconButton();
-            this.btnDigitalPlusWeb = new FontAwesome.Sharp.IconButton();
-            this.btnKosiuko = new FontAwesome.Sharp.IconButton();
+            this.panelSocialLinks = new System.Windows.Forms.FlowLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnHome = new System.Windows.Forms.PictureBox();
             this.panelTitleBar = new System.Windows.Forms.Panel();
@@ -73,8 +72,7 @@ namespace Acceso.Ventas
             this.panelBranding.SuspendLayout();
             this.panelMenu.Controls.Add(this.panelBranding);
             this.panelMenu.Controls.Add(this.btnLogout);
-            this.panelMenu.Controls.Add(this.btnKosiuko);
-            this.panelMenu.Controls.Add(this.btnDigitalPlusWeb);
+            this.panelMenu.Controls.Add(this.panelSocialLinks);
             this.panelMenu.Controls.Add(this.btnLicencias);
             this.panelMenu.Controls.Add(this.btnConfiguracion);
             this.panelMenu.Controls.Add(this.btnLegajos);
@@ -129,47 +127,19 @@ namespace Acceso.Ventas
             this.btnLegajos.UseVisualStyleBackColor = true;
             this.btnLegajos.Click += new System.EventHandler(this.btnLegajos_Click);
             //
-            // btnDigitalPlusWeb
+            // panelSocialLinks
             //
-            this.btnDigitalPlusWeb.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnDigitalPlusWeb.FlatAppearance.BorderSize = 0;
-            this.btnDigitalPlusWeb.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDigitalPlusWeb.ForeColor = System.Drawing.Color.Gainsboro;
-            this.btnDigitalPlusWeb.IconChar = FontAwesome.Sharp.IconChar.Globe;
-            this.btnDigitalPlusWeb.IconColor = System.Drawing.Color.Gainsboro;
-            this.btnDigitalPlusWeb.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnDigitalPlusWeb.IconSize = 32;
-            this.btnDigitalPlusWeb.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDigitalPlusWeb.Name = "btnDigitalPlusWeb";
-            this.btnDigitalPlusWeb.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
-            this.btnDigitalPlusWeb.Size = new System.Drawing.Size(173, 60);
-            this.btnDigitalPlusWeb.TabIndex = 7;
-            this.btnDigitalPlusWeb.Text = "DigitalPlusWeb";
-            this.btnDigitalPlusWeb.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDigitalPlusWeb.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.btnDigitalPlusWeb.UseVisualStyleBackColor = true;
-            this.btnDigitalPlusWeb.Click += new System.EventHandler(this.btnDigitalPlusWeb_Click);
-            //
-            // btnKosiuko
-            //
-            this.btnKosiuko.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnKosiuko.FlatAppearance.BorderSize = 0;
-            this.btnKosiuko.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnKosiuko.ForeColor = System.Drawing.Color.Gainsboro;
-            this.btnKosiuko.IconChar = FontAwesome.Sharp.IconChar.Store;
-            this.btnKosiuko.IconColor = System.Drawing.Color.Gainsboro;
-            this.btnKosiuko.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnKosiuko.IconSize = 32;
-            this.btnKosiuko.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnKosiuko.Name = "btnKosiuko";
-            this.btnKosiuko.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
-            this.btnKosiuko.Size = new System.Drawing.Size(173, 60);
-            this.btnKosiuko.TabIndex = 8;
-            this.btnKosiuko.Text = "Kosiuko";
-            this.btnKosiuko.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnKosiuko.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.btnKosiuko.UseVisualStyleBackColor = true;
-            this.btnKosiuko.Click += new System.EventHandler(this.btnKosiuko_Click);
+            this.panelSocialLinks.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelSocialLinks.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.panelSocialLinks.WrapContents = false;
+            this.panelSocialLinks.AutoSize = true;
+            this.panelSocialLinks.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panelSocialLinks.Name = "panelSocialLinks";
+            this.panelSocialLinks.Size = new System.Drawing.Size(173, 0);
+            this.panelSocialLinks.TabIndex = 7;
+            this.panelSocialLinks.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(30)))), ((int)(((byte)(68)))));
+            this.panelSocialLinks.Padding = System.Windows.Forms.Padding.Empty;
+            this.panelSocialLinks.Margin = System.Windows.Forms.Padding.Empty;
             //
             // btnConfiguracion
             //
@@ -449,8 +419,7 @@ namespace Acceso.Ventas
         private FontAwesome.Sharp.IconPictureBox iconMaximize;
         private System.Windows.Forms.Panel panelBotonesWindos;
         private FontAwesome.Sharp.IconButton btnLogout;
-        private FontAwesome.Sharp.IconButton btnDigitalPlusWeb;
-        private FontAwesome.Sharp.IconButton btnKosiuko;
+        private System.Windows.Forms.FlowLayoutPanel panelSocialLinks;
         private FontAwesome.Sharp.IconButton btnConfiguracion;
         private FontAwesome.Sharp.IconButton btnLicencias;
         private System.Windows.Forms.Label lblLicenciaStatus;

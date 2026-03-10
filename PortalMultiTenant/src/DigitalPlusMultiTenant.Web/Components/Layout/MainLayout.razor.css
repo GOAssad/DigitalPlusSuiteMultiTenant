@@ -54,6 +54,22 @@
     padding: 0;
 }
 
+.empresa-logo {
+    height: 54px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.empresa-nombre {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
 .page-content {
     flex: 1;
     padding: 1.5rem;

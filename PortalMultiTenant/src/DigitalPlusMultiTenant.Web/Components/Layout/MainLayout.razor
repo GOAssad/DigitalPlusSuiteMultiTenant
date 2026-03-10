@@ -8,10 +8,17 @@
 
     <div class="main-content">
         <header class="top-bar">
-            <div class="top-bar-left">
+            <div class="top-bar-left d-flex align-items-center">
                 <button class="btn btn-link sidebar-toggle d-md-none" @onclick="ToggleSidebar">
                     <i class="bi bi-list fs-4"></i>
                 </button>
+                <AuthorizeView>
+                    <Authorized>
+                        <img src="/api/empresa-logo" alt="" class="empresa-logo me-2"
+                             onerror="this.style.display='none'" />
+                        <span class="empresa-nombre fw-semibold text-dark">@context.User.FindFirst("EmpresaNombre")?.Value</span>
+                    </Authorized>
+                </AuthorizeView>
             </div>
             <div class="top-bar-right">
                 <AuthorizeView>

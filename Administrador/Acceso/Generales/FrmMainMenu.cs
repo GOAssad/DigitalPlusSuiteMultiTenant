@@ -202,6 +202,7 @@ namespace Acceso.Ventas
                 lblLicenciaStatus.Text = Program.LicMgr.GetStatusBarText();
 
             CargarLogos();
+            CargarLinksEmpresa();
         }
 
         private void CargarLogos()
@@ -247,16 +248,69 @@ namespace Acceso.Ventas
             OpenChildForm(new RRHH.FrmRRHHLegajos());
         }
 
-        private void btnDigitalPlusWeb_Click(object sender, EventArgs e)
+        private void CargarLinksEmpresa()
         {
-            string url = ConfigurationManager.AppSettings["UrlDigitalPlusWeb"] ?? "https://digitalplusapp.azurewebsites.net/";
-            System.Diagnostics.Process.Start(url);
+            panelSocialLinks.Controls.Clear();
+
+            var empresa = EmpresaInfoService.ObtenerEmpresa();
+            if (empresa == null) return;
+
+            // Portal DigitalPlus Web (siempre visible si hay URL configurada)
+            string urlPortal = ConfigurationManager.AppSettings["UrlDigitalPlusWeb"];
+            if (!string.IsNullOrEmpty(urlPortal))
+                AgregarBotonLink("Portal Web", IconChar.Globe, urlPortal);
+
+            // Links dinamicos desde la ficha de empresa en DigitalPlusAdmin
+            if (!string.IsNullOrEmpty(empresa.PaginaWeb))
+                AgregarBotonLink("Web", IconChar.Globe, empresa.PaginaWeb);
+
+            if (!string.IsNullOrEmpty(empresa.Facebook))
+                AgregarBotonLink("Facebook", IconChar.FacebookF, empresa.Facebook);
+
+            if (!string.IsNullOrEmpty(empresa.Instagram))
+                AgregarBotonLink("Instagram", IconChar.Instagram, empresa.Instagram);
+
+            if (!string.IsNullOrEmpty(empresa.LinkedIn))
+                AgregarBotonLink("LinkedIn", IconChar.LinkedinIn, empresa.LinkedIn);
+
+            if (!string.IsNullOrEmpty(empresa.Twitter))
+                AgregarBotonLink("X (Twitter)", IconChar.Twitter, empresa.Twitter);
+
+            if (!string.IsNullOrEmpty(empresa.YouTube))
+                AgregarBotonLink("YouTube", IconChar.Youtube, empresa.YouTube);
+
+            if (!string.IsNullOrEmpty(empresa.TikTok))
+                AgregarBotonLink("TikTok", IconChar.Tiktok, empresa.TikTok);
         }
 
-        private void btnKosiuko_Click(object sender, EventArgs e)
+        private void AgregarBotonLink(string texto, IconChar icono, string url)
         {
-            string url = ConfigurationManager.AppSettings["UrlKosiuko"] ?? "https://www.kosiuko.com/";
-            System.Diagnostics.Process.Start(url);
+            var btn = new IconButton
+            {
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.Gainsboro,
+                IconChar = icono,
+                IconColor = Color.Gainsboro,
+                IconFont = IconFont.Auto,
+                IconSize = 28,
+                ImageAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(10, 0, 20, 0),
+                Size = new Size(173, 50),
+                Text = texto,
+                TextAlign = ContentAlignment.MiddleLeft,
+                TextImageRelation = TextImageRelation.ImageBeforeText,
+                UseVisualStyleBackColor = true,
+                Tag = url,
+                Margin = Padding.Empty
+            };
+            btn.FlatAppearance.BorderSize = 0;
+            btn.Click += (s, e) =>
+            {
+                var link = ((Control)s).Tag?.ToString();
+                if (!string.IsNullOrEmpty(link))
+                    System.Diagnostics.Process.Start(link);
+            };
+            panelSocialLinks.Controls.Add(btn);
         }
 
         private void btnConfiguracion_Click(object sender, EventArgs e)

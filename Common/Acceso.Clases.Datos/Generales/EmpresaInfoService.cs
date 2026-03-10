@@ -23,6 +23,15 @@ namespace Acceso.Clases.Datos.Generales
         public string Estado { get; set; }
         public string CodigoActivacion { get; set; }
         public string IdentificacionFiscal { get; set; }
+
+        // Identidad / Redes sociales
+        public string PaginaWeb { get; set; }
+        public string Facebook { get; set; }
+        public string Instagram { get; set; }
+        public string LinkedIn { get; set; }
+        public string Twitter { get; set; }
+        public string YouTube { get; set; }
+        public string TikTok { get; set; }
     }
 
     /// <summary>
@@ -60,7 +69,8 @@ namespace Acceso.Clases.Datos.Generales
                 {
                     conn.Open();
                     string sql = @"SELECT Id, Nombre, RazonSocial, Email, Telefono, Direccion,
-                                          Logo, LogoContentType, Estado, CodigoActivacion, IdentificacionFiscal
+                                          Logo, LogoContentType, Estado, CodigoActivacion, IdentificacionFiscal,
+                                          PaginaWeb, Facebook, Instagram, LinkedIn, Twitter, YouTube, TikTok
                                    FROM Empresas WHERE Id = @Id";
                     using (var cmd = new SqlCommand(sql, conn))
                     {
@@ -82,7 +92,14 @@ namespace Acceso.Clases.Datos.Generales
                                     LogoContentType = reader.IsDBNull(7) ? "" : reader.GetString(7),
                                     Estado = reader.IsDBNull(8) ? "" : reader.GetString(8),
                                     CodigoActivacion = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                                    IdentificacionFiscal = reader.IsDBNull(10) ? "" : reader.GetString(10)
+                                    IdentificacionFiscal = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                                    PaginaWeb = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                                    Facebook = reader.IsDBNull(12) ? "" : reader.GetString(12),
+                                    Instagram = reader.IsDBNull(13) ? "" : reader.GetString(13),
+                                    LinkedIn = reader.IsDBNull(14) ? "" : reader.GetString(14),
+                                    Twitter = reader.IsDBNull(15) ? "" : reader.GetString(15),
+                                    YouTube = reader.IsDBNull(16) ? "" : reader.GetString(16),
+                                    TikTok = reader.IsDBNull(17) ? "" : reader.GetString(17)
                                 };
                             }
                         }
