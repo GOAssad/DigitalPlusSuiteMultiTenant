@@ -45,6 +45,28 @@ public class Empresa
 
     public string? Notas { get; set; }
 
+    // Identidad
+    [MaxLength(500)]
+    public string? PaginaWeb { get; set; }
+
+    [MaxLength(500)]
+    public string? Facebook { get; set; }
+
+    [MaxLength(500)]
+    public string? Instagram { get; set; }
+
+    [MaxLength(500)]
+    public string? LinkedIn { get; set; }
+
+    [MaxLength(500)]
+    public string? Twitter { get; set; }
+
+    [MaxLength(500)]
+    public string? YouTube { get; set; }
+
+    [MaxLength(500)]
+    public string? TikTok { get; set; }
+
     // Logo
     public byte[]? Logo { get; set; }
 

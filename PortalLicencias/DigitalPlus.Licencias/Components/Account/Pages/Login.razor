@@ -40,7 +40,7 @@
                     </label>
                 </div>
                 <div>
-                    <button type="submit" id="btnLogin" class="w-100 btn btn-lg btn-primary">Log in</button>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
                 </div>
                 <hr />
                 <div class="d-flex flex-column">
@@ -70,21 +70,6 @@
         </section>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var form = document.getElementById('btnLogin')?.closest('form');
-        if (form) {
-            form.addEventListener('submit', function () {
-                var btn = document.getElementById('btnLogin');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ingresando...';
-                }
-            });
-        }
-    });
-</script>
 
 @code {
     private string? errorMessage;
