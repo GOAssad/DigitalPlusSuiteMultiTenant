@@ -3,6 +3,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
 @inject DigitalPlus.Licencias.Services.DatabaseProvisioningService Provisioning
+@inject DigitalPlus.Licencias.Services.MultiTenantProvisioningService MultiTenantProvisioning
 @inject NavigationManager Nav
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthState
@@ -224,7 +225,17 @@
                 <h5>Empresa creada exitosamente</h5>
                 <p><strong>Base de datos:</strong> @resultado.DatabaseName</p>
                 <p><strong>Codigo de activacion:</strong> <code class="fs-5">@resultado.Codigo</code></p>
-                <p class="mb-0"><small class="text-muted">Este codigo queda asociado a la empresa y puede consultarse desde el detalle.</small></p>
+                <hr />
+                <h6>Acceso al Portal Web</h6>
+                <p><strong>Usuario:</strong> <code>@resultado.AdminEmail</code></p>
+                <p><strong>Contraseña temporal:</strong> <code class="fs-5">@resultado.TempPassword</code></p>
+                <p class="mb-0">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        El usuario debera cambiar la contraseña en el primer inicio de sesion.
+                        Estas credenciales no se almacenan, copielas ahora.
+                    </small>
+                </p>
             </div>
             <a href="/empresas" class="btn btn-outline-primary">Volver a Empresas</a>
         }
@@ -255,6 +266,7 @@
                     <li>Ejecutar schema completo (tablas, funciones, SPs, datos iniciales)</li>
                     <li>Crear licencia en el sistema</li>
                     <li>Generar codigo de activacion</li>
+                    <li>Crear acceso al portal web (empresa + usuario admin)</li>
                 </ol>
                 <hr />
                 <p class="small text-muted mb-0">
@@ -419,7 +431,20 @@
             empresa.CodigoActivacion = codigoActivacion;
             await Repo.ActualizarEmpresaAsync(empresa);
 
-            resultado = new ResultadoAlta { DatabaseName = dbName, Codigo = codigoActivacion };
+            // Paso 6: Crear empresa y admin en Portal Multi-Tenant
+            pasoActual = "Creando acceso al portal web...";
+            StateHasChanged();
+            var (mtEmpresaId, adminEmail, tempPassword) =
+                await MultiTenantProvisioning.CreateEmpresaAndAdminAsync(
+                    companyId, nombre, null, email);
+
+            resultado = new ResultadoAlta
+            {
+                DatabaseName = dbName,
+                Codigo = codigoActivacion,
+                AdminEmail = adminEmail,
+                TempPassword = tempPassword
+            };
         }
         catch (Exception ex)
         {
@@ -436,5 +461,7 @@
     {
         public string DatabaseName { get; set; } = "";
         public string Codigo { get; set; } = "";
+        public string AdminEmail { get; set; } = "";
+        public string TempPassword { get; set; } = "";
     }
 }

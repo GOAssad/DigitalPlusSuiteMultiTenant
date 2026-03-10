@@ -26,6 +26,9 @@ public class CustomClaimsPrincipalFactory : UserClaimsPrincipalFactory<Applicati
         var identity = await base.GenerateClaimsAsync(user);
         identity.AddClaim(new Claim("EmpresaId", user.EmpresaId.ToString()));
 
+        if (user.MustChangePassword)
+            identity.AddClaim(new Claim("MustChangePassword", "true"));
+
         var empresa = await _db.Empresas.AsNoTracking()
             .Where(e => e.Id == user.EmpresaId)
             .Select(e => e.Nombre)

@@ -92,6 +92,22 @@ public class Program
 
         app.UseAntiforgery();
 
+        // Forzar cambio de contraseña temporal
+        app.Use(async (context, next) =>
+        {
+            if (context.User.Identity?.IsAuthenticated == true
+                && context.User.HasClaim("MustChangePassword", "true")
+                && !context.Request.Path.StartsWithSegments("/Account/ForceChangePassword")
+                && !context.Request.Path.StartsWithSegments("/Account/Logout")
+                && !context.Request.Path.StartsWithSegments("/_blazor")
+                && !context.Request.Path.StartsWithSegments("/_framework"))
+            {
+                context.Response.Redirect("/Account/ForceChangePassword");
+                return;
+            }
+            await next();
+        });
+
         app.MapStaticAssets();
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();

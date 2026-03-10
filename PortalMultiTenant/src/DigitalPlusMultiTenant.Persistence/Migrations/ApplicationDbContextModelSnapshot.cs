@@ -107,6 +107,9 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NombreCompleto")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");

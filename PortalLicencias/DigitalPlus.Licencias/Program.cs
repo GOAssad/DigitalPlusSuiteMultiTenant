@@ -51,6 +51,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 // Servicios
 builder.Services.AddTransient<RepositorioLicencias>();
 builder.Services.AddSingleton<DatabaseProvisioningService>();
+builder.Services.AddSingleton<MultiTenantProvisioningService>();
 
 var app = builder.Build();
 
