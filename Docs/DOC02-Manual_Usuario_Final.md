@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 3.0
-**Fecha:** 2026-03-09
+**Version:** 4.0
+**Fecha:** 2026-03-11
 
 ---
 
@@ -465,11 +465,21 @@ Desde el menu **Licencias** puede:
 
 ### Acceso
 
-Abra su navegador web y vaya a la direccion proporcionada por su administrador (ejemplo: `https://www.digitaloneplus.com/`).
+Abra su navegador web y vaya a la direccion proporcionada por su administrador (ejemplo: `https://digitalplusportalmt.azurewebsites.net/`).
 
 Ingrese sus credenciales de acceso (usuario y contrasena). El boton de inicio de sesion se deshabilita automaticamente mientras se procesa para evitar errores por doble clic.
 
 > [CAPTURA: Pantalla de login del portal web]
+
+### Primer inicio de sesion
+
+Si es la primera vez que accede (con la contrasena temporal proporcionada por el administrador), el sistema le pedira que **cambie su contrasena** obligatoriamente antes de poder usar el portal. Ingrese una nueva contrasena y confirmela. Esta pantalla no se puede omitir ni navegar a otra seccion hasta completar el cambio.
+
+> [CAPTURA: Pantalla de cambio obligatorio de contrasena]
+
+### Empresa suspendida
+
+Si al intentar iniciar sesion recibe el mensaje **"El acceso a su empresa ha sido suspendido"**, significa que el administrador del sistema ha desactivado temporalmente el acceso. Contacte a su proveedor para resolver la situacion. Lo mismo aplica a las aplicaciones de escritorio (Fichador y Administrador): si la empresa esta suspendida, las apps mostraran un aviso y se cerraran.
 
 ### Barra superior
 

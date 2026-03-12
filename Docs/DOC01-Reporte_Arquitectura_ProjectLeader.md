@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 5.0
-**Fecha:** 2026-03-09
+**Version:** 6.0
+**Fecha:** 2026-03-11
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -80,6 +80,7 @@ PORTAL DE LICENCIAS (Backoffice Integra IA)
 | PORTAL LICENCIAS    |
 | Blazor Server       |
 | .NET 10             |
+| Azure App Service   |
 +----------+----------+
            |
            v
@@ -124,6 +125,7 @@ INFRAESTRUCTURA CLOUD
 - Cambio voluntario de PIN (link "Cambiar mi PIN" en pantalla de fichada, formulario FrmCambiarPinVoluntario)
 - Si el admin fuerza cambio de PIN (PinMustChange), al ingresar legajo va directo a pedir nuevo PIN sin requerir el actual
 - Si el admin resetea el PIN (lo elimina), al ingresar legajo ofrece crear uno nuevo
+- Verificacion de estado de empresa al iniciar: si la empresa esta suspendida en DigitalPlusAdmin, muestra mensaje y cierra la app
 - Sistema de licencias integrado (trial 14 dias, activacion por codigo). En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 
 **Modos de fichada:**
@@ -155,6 +157,7 @@ INFRAESTRUCTURA CLOUD
 - Reportes con Microsoft ReportViewer
 - Exportacion a Excel (SpreadsheetLight / DocumentFormat.OpenXml)
 - Generacion de PDF (iText 7)
+- Verificacion de estado de empresa al iniciar: si la empresa esta suspendida en DigitalPlusAdmin, muestra mensaje y cierra la app
 - Sistema de licencias integrado. En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 - Informacion de licencia en barra de estado y menu
 - Logo de empresa cliente y logo IntegraIA en la interfaz (desde DigitalPlusAdmin via EmpresaInfoService)
@@ -181,6 +184,10 @@ INFRAESTRUCTURA CLOUD
 - Tablas con nombres singulares (Legajo, Fichada, Sucursal, etc.)
 - Header personalizado con logo y nombre de empresa (endpoint `/api/empresa-logo` con cache 1 hora)
 - Proteccion contra double-submit en login (deshabilita boton mientras procesa)
+- Verificacion de estado de empresa en login: si la empresa esta suspendida en DigitalPlusAdmin, rechaza el acceso (fail-open)
+- Forzar cambio de contraseña en primer login (MustChangePassword con middleware + pagina ForceChangePassword)
+- Auto-provisioning de usuario admin al crear empresa desde Portal Licencias (credenciales temporales)
+- Hosting: Azure App Service (digitalplusportalmt.azurewebsites.net)
 
 ### 3.3b DigitalPlusWeb - LEGACY
 
@@ -206,14 +213,18 @@ INFRAESTRUCTURA CLOUD
 
 **Funcionalidades:**
 - Dashboard con estadisticas
-- ABM de Empresas (con wizard de alta en 5 pasos)
+- ABM de Empresas (con wizard de alta en 6 pasos, incluyendo auto-provisioning de usuario admin en Portal MT)
 - Seccion "Identidad de la Empresa": logo, pagina web, redes sociales (Facebook, Instagram, LinkedIn, X/Twitter, YouTube, TikTok)
 - Gestion de Licencias y codigos de activacion
+- Gestion de Usuarios administradores (CRUD con roles, registro publico deshabilitado)
+- Desactivacion de empresas: cambiar Estado a "suspendida" o "baja" bloquea acceso en Portal MT y apps desktop
 - Log de auditoria
 - Atributos del sistema (Paises, Tipos de identificacion fiscal)
-- API REST `/api/activar` para el instalador liviano
+- API REST `/api/activar` para el instalador liviano (retorna connectionString, adminConnectionString, empresaId, adminEmpresaId)
+- API REST `/api/verificar-estado` para que apps desktop verifiquen si la empresa esta activa
 - Provisionamiento de bases de datos en Ferozo
 - Proteccion contra double-submit en login
+- Hosting: Azure App Service (digitalpluslicencias.azurewebsites.net)
 
 ### 3.5 Azure Functions (Provisioning)
 
@@ -255,9 +266,11 @@ INFRAESTRUCTURA CLOUD
 
 - NO instala SQL Server Express
 - Pide codigo de activacion (generado desde Portal de Licencias)
-- Llama a API del portal (`/api/activar`) para obtener connection string
+- Llama a API del Portal de Licencias en Azure (`/api/activar`) para obtener connection strings
+- Configura dos connection strings: `Local` (DigitalPlusMultiTenant con dp_app_svc) y `Admin` (DigitalPlusAdmin)
+- Configura appSettings: `EmpresaId`, `AdminEmpresaId`, `NombreEmpresa`
 - Instala: Fichador + Administrador + Driver DigitalPersona RTE
-- Cifra configuracion con DPAPI
+- Cifra configuracion con DPAPI via ConfigProtector
 
 ---
 
@@ -428,27 +441,36 @@ En modo multi-tenant, la validacion de licencia esta **deshabilitada** en las ap
 
 ### Estado actual
 
-Se implemento un modelo de seguridad con usuarios SQL dedicados:
+Se implemento un modelo de seguridad con usuarios SQL dedicados y separacion de responsabilidades:
 
-| Usuario | Rol | Usado por |
-|---|---|---|
-| `dp_admin_svc` | Administracion | Azure Functions, Portal Licencias |
-| `dp_web_svc` | Web | DigitalPlusWeb (deploy pausado) |
-| `sa` | Superadmin | Aun en uso (pendiente deshabilitar) |
+| Usuario | Rol | Usado por | Proposito |
+|---|---|---|---|
+| `sa` | Superadmin | Portal Licencias (CloudSql) | Provisioning: CREATE DATABASE, schema |
+| `dp_app_svc` | `dp_role_app` | Apps desktop (via instalador) | Operaciones CRUD en DigitalPlusMultiTenant |
+| `dp_admin_svc` | Administracion | Azure Functions | Licenciamiento |
+| `dp_web_svc` | Web | DigitalPlusWeb (deploy pausado) | Portal legacy |
+
+### Separacion CloudSql vs ClientSql
+
+El Portal de Licencias maneja dos conexiones SQL diferenciadas:
+
+- **CloudSql** (`sa`): Usado internamente para provisioning (crear empresas, esquemas, INSERT iniciales). Solo ejecuta en el servidor del portal.
+- **ClientSql** (`dp_app_svc`): Usado para generar el connection string que reciben las apps desktop via `/api/activar`. El usuario `dp_app_svc` tiene permisos granulares (SELECT/INSERT/UPDATE/DELETE en 29 tablas + EXECUTE en 35 SPs) definidos por el rol `dp_role_app`.
+
+### Script de creacion
+
+`AzureProvisioning/tools/create-dp-app-svc.ps1` - Crea el login `dp_app_svc`, el rol `dp_role_app` con permisos granulares en DigitalPlusMultiTenant.
 
 ### Fases del plan de migracion
 
 | Fase | Estado |
 |---|---|
 | 1. Scripts SQL en Ferozo | COMPLETADA |
-| 2. Actualizar configuraciones | EN PROGRESO (web pausado) |
-| 3. Verificacion funcional | PENDIENTE |
-| 4. Monitoreo conexiones | PENDIENTE |
-| 5. Deshabilitar sa | PENDIENTE |
-
-### Pendiente critico
-
-`BuildClientConnectionString` en el portal de licencias usa `sa` para armar el connection string de las empresas. **Debe usar el usuario SQL dedicado de la empresa.**
+| 2. Crear dp_app_svc con permisos granulares | COMPLETADA |
+| 3. Separar CloudSql/ClientSql en Portal Licencias | COMPLETADA |
+| 4. Deploy appsettings.json DigitalPlusWeb con dp_web_svc | PAUSADO |
+| 5. Monitoreo conexiones | PENDIENTE |
+| 6. Deshabilitar sa | PENDIENTE |
 
 ---
 
@@ -555,38 +577,40 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Cambio voluntario de PIN en Fichador** (FrmCambiarPinVoluntario)
 - **Mejoras en gestion de PINs en Administrador** (filtro, resetear, forzar cambio, muestra todos los legajos)
 - **Validacion de licencia deshabilitada en apps desktop** para modo multi-tenant
-- **InstaladorLiviano adaptado para multi-tenant** (EmpresaId en configs)
+- **InstaladorLiviano listo para produccion**: API URL apunta a Azure, connection strings con dp_app_svc, AdminConnection y AdminEmpresaId
 - **Llamadas a SP legacy reemplazadas** con SQL directo multi-tenant
 - Sistema de licencias end-to-end (trial -> bloqueo -> activacion)
 - Azure Functions para licenciamiento desplegadas
-- Portal de Licencias funcional (local)
 - Instalador Unificado v1.3 (Local + Nube)
 - Instalador Liviano v1.0 compilado OK (25MB)
-- Seguridad SQL: fase 1 completada (scripts ejecutados)
-- API `/api/activar` en portal para instalador liviano
-- Alta de empresa desde portal (crea BD + esquema)
+- **Seguridad SQL: dp_app_svc creado** con permisos granulares (dp_role_app), separacion CloudSql/ClientSql en Portal Licencias
+- API `/api/activar` en portal: retorna connectionString (dp_app_svc), adminConnectionString, empresaId (MT), adminEmpresaId
+- API `/api/verificar-estado` en portal: permite a apps desktop verificar si empresa esta activa
+- Alta de empresa desde portal (crea BD + esquema + usuario admin en Portal MT con password temporal)
 - Logo empresa + IntegraIA en Fichador y Administrador (EmpresaInfoService con conexion a DigitalPlusAdmin)
 - Portal Multi-Tenant: logo y nombre de empresa en header, endpoint `/api/empresa-logo`, fix double-submit login
+- Portal Multi-Tenant: verificacion de estado de empresa en login, forzar cambio de contraseña en primer acceso
+- Portal Multi-Tenant: **deployado en Azure** (digitalplusportalmt.azurewebsites.net)
 - Portal Licencias: seccion "Identidad de la Empresa" con web y 6 redes sociales
+- Portal Licencias: gestion de usuarios administradores (CRUD), registro publico deshabilitado
+- Portal Licencias: **deployado en Azure** (digitalpluslicencias.azurewebsites.net)
 - Administrador: menu dinamico con links a redes sociales (reemplaza botones fijos hardcodeados)
+- **Desactivacion de empresas**: desde Portal Licencias cambiar Estado bloquea acceso en Portal MT (login) y apps desktop (Form_Load)
 - Portal Licencias sincronizado en repo principal (todo respaldado en GitHub)
 
 ### En progreso
 
-- Migracion de seguridad SQL (fases 2-5)
-- Portal Licencias: pendiente deploy a produccion
-- InstaladorLiviano apunta a localhost:7043 para testing (pendiente cambiar a produccion)
+- Migracion de seguridad SQL: deshabilitar sa (pendiente estabilizacion)
 
 ### Pendiente
 
-- **CRITICO:** `BuildClientConnectionString` usa `sa` (debe usar usuario dedicado)
-- Probar flujo completo: crear empresa -> instalar liviano -> apps conectan
-- Deploy portal licencias a `licencias.digitaloneplus.com`
+- Probar flujo completo: crear empresa NUEVA -> instalar con InstaladorLiviano -> apps conectan a Ferozo
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
 - Link al portal web multi-tenant en menu del Administrador
 - Verificar durabilidad licencias (por terminal vs por empresa)
 - Prueba de clonacion desde GitHub para verificar recuperabilidad
+- Paginacion en Asistencia Diaria del portal MT
 
 ### Prioridad baja
 
@@ -619,7 +643,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 ### Riesgos
 
 1. **Dependencia de Ferozo:** Si Ferozo cae, todas las instalaciones nube quedan sin servicio
-2. **sa aun activo:** Riesgo de seguridad hasta completar la migracion
+2. **sa aun activo en CloudSql:** Usado solo para provisioning, pero pendiente plan de reemplazo
 3. **Sin backup automatizado** documentado para las BD de empresas en Ferozo
 4. **SDK DigitalPersona** es un componente legacy sin actualizaciones recientes
 

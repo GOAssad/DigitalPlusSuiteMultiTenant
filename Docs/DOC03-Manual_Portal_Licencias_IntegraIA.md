@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 3.0
-**Fecha:** 2026-03-09
+**Version:** 4.0
+**Fecha:** 2026-03-11
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -14,13 +14,15 @@
 4. [Gestion de Empresas](#4-gestion-de-empresas)
 5. [Alta de Nueva Empresa (Wizard)](#5-alta-de-nueva-empresa-wizard)
 6. [Detalle de Empresa](#6-detalle-de-empresa)
-7. [Gestion de Licencias](#7-gestion-de-licencias)
-8. [Codigos de Licencia](#8-codigos-de-licencia)
-9. [Log de Auditoria](#9-log-de-auditoria)
-10. [Atributos del Sistema](#10-atributos-del-sistema)
-11. [Flujo Operativo Completo](#11-flujo-operativo-completo)
-12. [API de Activacion](#12-api-de-activacion)
-13. [Referencia Tecnica](#13-referencia-tecnica)
+7. [Desactivacion de Empresas](#7-desactivacion-de-empresas)
+8. [Gestion de Licencias](#8-gestion-de-licencias)
+9. [Codigos de Licencia](#9-codigos-de-licencia)
+10. [Log de Auditoria](#10-log-de-auditoria)
+11. [Atributos del Sistema](#11-atributos-del-sistema)
+12. [Gestion de Usuarios](#12-gestion-de-usuarios)
+13. [Flujo Operativo Completo](#13-flujo-operativo-completo)
+14. [APIs del Portal](#14-apis-del-portal)
+15. [Referencia Tecnica](#15-referencia-tecnica)
 
 ---
 
@@ -58,8 +60,7 @@ Exclusivamente el equipo de Integra IA. Los clientes finales **nunca** acceden a
 | Entorno | URL |
 |---|---|
 | Local (desarrollo) | `https://localhost:7200` |
-| Portal Multi-Tenant (testing) | `https://localhost:7043` |
-| Produccion | `https://licencias.digitaloneplus.com` (pendiente deploy) |
+| Produccion | `https://digitalpluslicencias.azurewebsites.net` |
 
 ### Credenciales por defecto
 
@@ -126,7 +127,7 @@ Desde el menu lateral, acceda a **Empresas**. Vera un listado con todas las empr
 
 ### Cuando usar esta funcion
 
-Cada vez que un nuevo cliente contrata DigitalPlus, debe crearse su empresa en el portal. El wizard automatiza todo el proceso en **5 pasos**.
+Cada vez que un nuevo cliente contrata DigitalPlus, debe crearse su empresa en el portal. El wizard automatiza todo el proceso en **6 pasos**.
 
 ### Acceso
 
@@ -178,11 +179,23 @@ Se muestra un resumen con:
 
 > [CAPTURA: Pantalla de confirmacion mostrando resumen y codigo de activacion]
 
+### Paso 6 - Auto-provisioning de usuario admin
+
+Al completar el wizard, el sistema automaticamente:
+1. Crea un registro `Empresa` en la BD `DigitalPlusMultiTenant` con el codigo de la empresa
+2. Crea un usuario admin en `AspNetUsers` de DigitalPlusMultiTenant con email `admin@{companyId}.com`
+3. Genera una **contraseña temporal** (10 caracteres aleatorios) que se muestra en pantalla
+4. Asigna el rol `AdminEmpresa` al usuario
+5. Marca `MustChangePassword = 1` para forzar cambio en el primer login del Portal MT
+
+> **Importante:** La contraseña temporal se muestra **una sola vez** en la pantalla de confirmacion. Debe copiarla y enviarsela al cliente junto con el codigo de activacion.
+
 ### Que hacer despues del alta
 
-1. **Copiar el codigo de activacion**
+1. **Copiar el codigo de activacion** y la **contraseña temporal del portal**
 2. **Enviarselo al cliente** (por email, WhatsApp, etc.)
-3. El cliente lo usara en el **Instalador Liviano** para conectarse a su base de datos
+3. El cliente usara el codigo en el **Instalador Liviano** para las apps desktop
+4. El cliente usara el email y contraseña temporal para acceder al **Portal Web** (se le pedira cambiar la contraseña en el primer acceso)
 
 ---
 
@@ -245,7 +258,44 @@ Se muestra el listado de licencias vinculadas a la empresa con:
 
 ---
 
-## 7. GESTION DE LICENCIAS
+## 7. DESACTIVACION DE EMPRESAS
+
+### Para que sirve
+
+Permite **suspender el acceso** de una empresa cliente a todo el sistema DigitalPlus. Util en casos de impago, fin de contrato, o cualquier situacion que requiera cortar el servicio.
+
+### Como desactivar una empresa
+
+1. Ir a **Empresas** en el menu lateral
+2. Hacer clic en **Editar** en la empresa a desactivar
+3. En el campo **Estado**, cambiar de "Activa" a:
+   - **Suspendida**: Bloqueo temporal (reactivable)
+   - **Baja**: Bloqueo definitivo
+4. Hacer clic en **Guardar**
+
+### Efecto inmediato
+
+El cambio de estado tiene efecto inmediato en todos los componentes:
+
+| Componente | Comportamiento cuando empresa NO esta "activa" |
+|---|---|
+| **Portal Multi-Tenant** | El login es rechazado con mensaje "El acceso a su empresa ha sido suspendido" |
+| **Fichador** | Al iniciar muestra "Acceso Suspendido" y se cierra |
+| **Administrador** | Al iniciar muestra "Acceso Suspendido" y se cierra |
+
+> **Nota:** Si las apps desktop ya estan abiertas al momento de la desactivacion, seguiran funcionando hasta que se reinicien. La verificacion se realiza al iniciar la aplicacion.
+
+### Como reactivar una empresa
+
+Mismo procedimiento: editar la empresa y cambiar el Estado a **Activa**. El acceso se restaura inmediatamente.
+
+### Patron fail-open
+
+Si la verificacion de estado falla (por ejemplo, si no hay conexion a DigitalPlusAdmin), el sistema **permite el acceso** por defecto. Esto evita que una falla de red bloquee a todos los clientes.
+
+---
+
+## 8. GESTION DE LICENCIAS
 
 ### Listado de Licencias
 
@@ -281,7 +331,7 @@ Al hacer clic en una licencia, puede ver y modificar:
 
 ---
 
-## 8. CODIGOS DE LICENCIA
+## 9. CODIGOS DE LICENCIA
 
 ### Que son
 
@@ -312,7 +362,7 @@ El listado muestra todos los codigos generados con:
 
 ---
 
-## 9. LOG DE AUDITORIA
+## 10. LOG DE AUDITORIA
 
 ### Para que sirve
 
@@ -341,7 +391,7 @@ Desde el menu lateral, acceda a **Log**.
 
 ---
 
-## 10. ATRIBUTOS DEL SISTEMA
+## 11. ATRIBUTOS DEL SISTEMA
 
 ### Para que sirve
 
@@ -365,7 +415,48 @@ ABM de tipos de documento fiscal, vinculados a paises.
 
 ---
 
-## 11. FLUJO OPERATIVO COMPLETO
+## 12. GESTION DE USUARIOS
+
+### Para que sirve
+
+Permite gestionar los usuarios administradores que tienen acceso al Portal de Licencias. El registro publico esta **deshabilitado** - solo un administrador existente puede crear nuevos usuarios.
+
+### Acceso
+
+Desde el menu lateral, acceda a **Usuarios**.
+
+### Crear un usuario
+
+1. Haga clic en **Nuevo Usuario**
+2. Complete los campos:
+   - **Email**: sera el nombre de usuario para el login
+   - **Contraseña**: minimo 6 caracteres
+3. Haga clic en **Crear**
+
+El nuevo usuario se crea con el rol "Administrador" y acceso completo al portal.
+
+### Resetear contraseña
+
+1. En el listado de usuarios, haga clic en **Editar** junto al usuario
+2. Ingrese la nueva contraseña
+3. Haga clic en **Guardar**
+
+### Eliminar un usuario
+
+1. Haga clic en **Eliminar** junto al usuario
+2. Confirme la eliminacion
+
+> **Nota:** El usuario `admin@digitalplus.com` no puede ser eliminado (proteccion contra quedarse sin acceso).
+
+### Usuarios por defecto
+
+| Email | Password | Notas |
+|---|---|---|
+| `admin@digitalplus.com` | `Admin123` | Usuario principal, no eliminable. Cambiar contraseña en produccion. |
+
+---
+
+## 13. FLUJO OPERATIVO COMPLETO
 
 ### Caso: Nuevo cliente contrata DigitalPlus
 
@@ -421,6 +512,13 @@ ABM de tipos de documento fiscal, vinculados a paises.
 
 ### Caso: Suspender un cliente (impago, etc.)
 
+**Opcion 1 - Desactivar empresa (recomendado para multi-tenant):**
+1. Ir a **Empresas** > seleccionar la empresa
+2. Cambiar Estado a **Suspendida**
+3. Efecto inmediato: login rechazado en Portal MT, apps desktop se cierran al iniciar
+4. Para reactivar: cambiar Estado a **Activa**
+
+**Opcion 2 - Suspender licencia (para instalaciones locales):**
 1. Ir a **Licencias** > seleccionar la licencia del cliente
 2. Hacer clic en **Suspender**
 3. El cliente tiene **7 dias de gracia** antes del bloqueo total
@@ -428,59 +526,103 @@ ABM de tipos de documento fiscal, vinculados a paises.
 
 ---
 
-## 12. API DE ACTIVACION
+## 14. APIs DEL PORTAL
 
-### Endpoint
+### API de Activacion
 
 ```
 POST /api/activar
 ```
 
-### Proposito
+Invocado por el **Instalador Liviano** durante la instalacion para obtener los datos de conexion de la empresa.
 
-Este endpoint es invocado por el **Instalador Liviano** durante la instalacion para obtener los datos de conexion de la empresa.
-
-### Request
+**Request:**
 
 ```json
 {
-  "Codigo": "ABC123XYZ"
+  "Codigo": "EE509930E07E"
 }
 ```
 
-### Response (exito - 200)
+**Response (exito - 200):**
 
 ```json
 {
-  "connectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusMultiTenant;...",
-  "empresaId": 5,
+  "connectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusMultiTenant;User Id=dp_app_svc;...",
+  "adminConnectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusAdmin;...",
+  "empresaId": 2,
+  "adminEmpresaId": 5,
   "companyId": "kosiuko-sa",
   "nombreEmpresa": "Kosiuko S.A.",
   "databaseName": "DigitalPlusMultiTenant"
 }
 ```
 
-### Response (error - 404)
+**Response (error - 404):**
 
 ```json
 {
-  "error": "Codigo invalido o empresa no encontrada"
+  "error": "Codigo invalido o empresa inactiva"
 }
 ```
 
-### Notas
+**Campos importantes:**
 
-- El codigo es el **CodigoActivacion** de la empresa (no el codigo de licencia)
-- No requiere autenticacion (el codigo es la credencial)
-- El connection string se arma dinamicamente con `BuildClientConnectionString()`
-- La respuesta incluye `empresaId`, que el instalador escribe en el `app.config` de las aplicaciones
-- En runtime, `TenantContext` lee el `EmpresaId` del `app.config` y todas las queries filtran por ese valor
-- La base de datos es siempre `DigitalPlusMultiTenant` (compartida entre todas las empresas)
-- Ejemplo de empresa ya migrada: Kosiuko (EmpresaId=2, codigo EE509930E07E)
+| Campo | Descripcion | Se escribe en |
+|---|---|---|
+| `connectionString` | Connection string a DigitalPlusMultiTenant (usa dp_app_svc) | app.config `Local` |
+| `adminConnectionString` | Connection string a DigitalPlusAdmin | app.config `Admin` |
+| `empresaId` | ID de la empresa en DigitalPlusMultiTenant | app.config `EmpresaId` |
+| `adminEmpresaId` | ID de la empresa en DigitalPlusAdmin | app.config `AdminEmpresaId` |
+| `nombreEmpresa` | Nombre comercial | app.config `NombreEmpresa` |
+
+> **Nota:** `empresaId` y `adminEmpresaId` son valores DIFERENTES. El instalador los mapea a las appSettings correctas.
+
+### API de Verificacion de Estado
+
+```
+POST /api/verificar-estado
+```
+
+Permite a las apps desktop verificar si la empresa esta activa. Pensado para verificaciones periodicas o al inicio.
+
+**Request:**
+
+```json
+{
+  "CompanyId": "kosiuko-sa"
+}
+```
+
+**Response (exito - 200):**
+
+```json
+{
+  "activa": true,
+  "estado": "activa",
+  "nombre": "Kosiuko S.A."
+}
+```
+
+**Response empresa suspendida (200):**
+
+```json
+{
+  "activa": false,
+  "estado": "suspendida",
+  "nombre": "Kosiuko S.A."
+}
+```
+
+### Notas generales de las APIs
+
+- No requieren autenticacion (el codigo/companyId es la credencial)
+- El connection string de `/api/activar` usa el usuario SQL `dp_app_svc` (no `sa`)
+- Actualmente las apps desktop verifican estado via consulta directa a DigitalPlusAdmin (connection string `Admin` en app.config), no via esta API
 
 ---
 
-## 13. REFERENCIA TECNICA
+## 15. REFERENCIA TECNICA
 
 ### Estructura de bases de datos
 
@@ -536,9 +678,22 @@ Estos scripts permiten gestionar licencias directamente desde la linea de comand
 
 | Parametro | Ubicacion | Descripcion |
 |---|---|---|
-| Connection string admin | appsettings.json | Conexion a DigitalPlusAdmin |
-| Connection string cloud | appsettings.json (CloudSql) | Conexion a DigitalPlusMultiTenant (BD compartida) |
-| Identity config | Program.cs | Configuracion de autenticacion |
+| DefaultConnection | appsettings.json (ConnectionStrings) | Conexion a DigitalPlusAdmin (Identity + datos admin) |
+| CloudSql | appsettings.json | Conexion a Ferozo con `sa` para provisioning (CREATE DATABASE, schema) |
+| ClientSql | appsettings.json | Conexion a Ferozo con `dp_app_svc` para generar connection strings de clientes |
+| MultiTenant:DatabaseName | appsettings.json | Nombre de la BD multi-tenant (DigitalPlusMultiTenant) |
+| Identity config | Program.cs | Configuracion de autenticacion (password min 6 chars, sin requisitos complejos) |
+
+### Seguridad SQL
+
+El portal maneja dos usuarios SQL diferenciados:
+
+| Usuario | Usado para | Configurado en |
+|---|---|---|
+| `sa` | Provisioning (crear empresas, tablas, datos iniciales) | CloudSql |
+| `dp_app_svc` | Connection strings que reciben las apps desktop | ClientSql |
+
+> **Importante:** Las apps desktop nunca reciben `sa`. El connection string generado por `/api/activar` usa `dp_app_svc` con permisos granulares (SELECT/INSERT/UPDATE/DELETE en tablas, EXECUTE en SPs).
 
 ---
 
