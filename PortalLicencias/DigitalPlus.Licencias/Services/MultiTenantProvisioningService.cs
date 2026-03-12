@@ -154,6 +154,22 @@ public class MultiTenantProvisioningService
         await cmd.ExecuteNonQueryAsync();
     }
 
+    /// <summary>
+    /// Busca el EmpresaId en DigitalPlusMultiTenant por el Codigo de la empresa.
+    /// </summary>
+    public async Task<int?> BuscarEmpresaIdPorCodigoAsync(string codigo)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = "SELECT Id FROM Empresa WHERE Codigo = @Codigo AND IsActive = 1";
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@Codigo", codigo);
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result != null ? (int)result : null;
+    }
+
     private static string GenerateTempPassword()
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";

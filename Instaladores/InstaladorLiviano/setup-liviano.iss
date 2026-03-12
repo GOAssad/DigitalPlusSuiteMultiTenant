@@ -36,7 +36,7 @@
 #define SourceProtector "..\..\tools\ConfigProtector\bin\Release\net48"
 
 ; --- API del portal de licencias ---
-#define PortalApiUrl "https://localhost:7043/api/activar"
+#define PortalApiUrl "https://digitalpluslicencias.azurewebsites.net/api/activar"
 
 ; ============================================================
 [Setup]
@@ -303,10 +303,12 @@ var
   edtUrl:        TNewEdit;
 
   // Estado interno
-  sConnectionString:   String;    // Connection string recibida del portal
-  bActivacionOK:       Boolean;   // True si el codigo fue validado
-  sNombreEmpresa:      String;    // Nombre de la empresa (viene del portal)
-  sEmpresaId:          String;    // EmpresaId del tenant (viene del portal)
+  sConnectionString:      String;    // Connection string a DigitalPlusMultiTenant
+  sAdminConnectionString: String;    // Connection string a DigitalPlusAdmin
+  bActivacionOK:          Boolean;   // True si el codigo fue validado
+  sNombreEmpresa:         String;    // Nombre de la empresa (viene del portal)
+  sEmpresaId:             String;    // EmpresaId del tenant en DigitalPlusMultiTenant
+  sAdminEmpresaId:        String;    // Id de la empresa en DigitalPlusAdmin
 
 // ============================================================
 // UTILIDADES
@@ -341,8 +343,10 @@ var
 begin
   Result := False;
   sConnectionString := '';
+  sAdminConnectionString := '';
   sNombreEmpresa := '';
   sEmpresaId := '';
+  sAdminEmpresaId := '';
 
   sUrl := '{#PortalApiUrl}';
   sBody := '{"Codigo":"' + sCodigo + '"}';
@@ -358,7 +362,7 @@ begin
 
     if StatusCode = 200 then
     begin
-      // Extraer connectionString del JSON
+      // Extraer connectionString del JSON (BD DigitalPlusMultiTenant)
       iPos := Pos('connectionString":"', sResponse);
       if iPos > 0 then
       begin
@@ -368,7 +372,17 @@ begin
           sConnectionString := Copy(sResponse, iPos, iEnd - iPos);
       end;
 
-      // Extraer empresaId del JSON (valor numerico)
+      // Extraer adminConnectionString del JSON (BD DigitalPlusAdmin)
+      iPos := Pos('adminConnectionString":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('adminConnectionString":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sAdminConnectionString := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer empresaId del JSON (EmpresaId en DigitalPlusMultiTenant)
       iPos := Pos('empresaId":', sResponse);
       if iPos > 0 then
       begin
@@ -378,6 +392,18 @@ begin
           iEnd := PosEx('}', sResponse, iPos);
         if iEnd > iPos then
           sEmpresaId := Trim(Copy(sResponse, iPos, iEnd - iPos));
+      end;
+
+      // Extraer adminEmpresaId del JSON (Id en DigitalPlusAdmin)
+      iPos := Pos('adminEmpresaId":', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('adminEmpresaId":');
+        iEnd := PosEx(',', sResponse, iPos);
+        if iEnd = 0 then
+          iEnd := PosEx('}', sResponse, iPos);
+        if iEnd > iPos then
+          sAdminEmpresaId := Trim(Copy(sResponse, iPos, iEnd - iPos));
       end;
 
       // Extraer nombreEmpresa del JSON
@@ -527,7 +553,9 @@ begin
     for i := 0 to GetArrayLength(Lines) - 1 do
     begin
       StringChange(Lines[i], '{{CONNECTION_STRING}}', sConnectionString);
+      StringChange(Lines[i], '{{ADMIN_CONNECTION_STRING}}', sAdminConnectionString);
       StringChange(Lines[i], '{{EMPRESA_ID}}', sEmpresaId);
+      StringChange(Lines[i], '{{ADMIN_EMPRESA_ID}}', sAdminEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
     end;
     SaveStringsToFile(FilePath, Lines, False);
@@ -540,7 +568,9 @@ begin
     for i := 0 to GetArrayLength(Lines) - 1 do
     begin
       StringChange(Lines[i], '{{CONNECTION_STRING}}', sConnectionString);
+      StringChange(Lines[i], '{{ADMIN_CONNECTION_STRING}}', sAdminConnectionString);
       StringChange(Lines[i], '{{EMPRESA_ID}}', sEmpresaId);
+      StringChange(Lines[i], '{{ADMIN_EMPRESA_ID}}', sAdminEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
       StringChange(Lines[i], '{{URL_DIGITALPLUS_WEB}}', sUrlWeb);
     end;
@@ -606,8 +636,10 @@ procedure InitializeWizard;
 begin
   bActivacionOK := False;
   sConnectionString := '';
+  sAdminConnectionString := '';
   sNombreEmpresa := '';
   sEmpresaId := '';
+  sAdminEmpresaId := '';
 
   CreateActivacionPage;
   CreateUrlPage;

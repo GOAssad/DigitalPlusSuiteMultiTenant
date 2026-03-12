@@ -106,7 +106,8 @@ app.MapAdditionalIdentityEndpoints();
 
 // API para instalador liviano: activar codigo y obtener connection string
 app.MapPost("/api/activar", async (ActivarRequest req,
-    RepositorioLicencias repo, DatabaseProvisioningService provisioning) =>
+    RepositorioLicencias repo, DatabaseProvisioningService provisioning,
+    MultiTenantProvisioningService mtProvisioning, IConfiguration config) =>
 {
     if (string.IsNullOrWhiteSpace(req.Codigo))
         return Results.BadRequest(new { error = "Codigo requerido" });
@@ -115,18 +116,46 @@ app.MapPost("/api/activar", async (ActivarRequest req,
     if (empresa == null)
         return Results.NotFound(new { error = "Codigo invalido o empresa inactiva" });
 
-    var connectionString = provisioning.BuildClientConnectionString(empresa.DatabaseName);
+    // Connection string a DigitalPlusMultiTenant (para datos del tenant)
+    var tenantConnectionString = provisioning.BuildClientConnectionString(empresa.DatabaseName);
+
+    // Connection string a DigitalPlusAdmin (para info de empresa: logo, redes sociales)
+    var adminConnectionString = config.GetConnectionString("DefaultConnection") ?? "";
+
+    // EmpresaId real en DigitalPlusMultiTenant (diferente al Id en DigitalPlusAdmin)
+    var tenantEmpresaId = await mtProvisioning.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
 
     return Results.Ok(new
     {
-        connectionString,
-        empresaId = empresa.Id,
+        connectionString = tenantConnectionString,
+        adminConnectionString,
+        empresaId = tenantEmpresaId ?? 0,
+        adminEmpresaId = empresa.Id,
         companyId = empresa.CompanyId,
         nombreEmpresa = empresa.Nombre,
         databaseName = empresa.DatabaseName
     });
 });
 
+// API para desktop apps: verificar si la empresa esta activa
+app.MapPost("/api/verificar-estado", async (VerificarEstadoRequest req, RepositorioLicencias repo) =>
+{
+    if (string.IsNullOrWhiteSpace(req.CompanyId))
+        return Results.BadRequest(new { error = "CompanyId requerido" });
+
+    var empresa = await repo.GetEmpresaPorCompanyIdAsync(req.CompanyId.Trim());
+    if (empresa == null)
+        return Results.NotFound(new { error = "Empresa no encontrada", activa = false });
+
+    return Results.Ok(new
+    {
+        activa = empresa.Estado == "activa",
+        estado = empresa.Estado ?? "activa",
+        nombre = empresa.Nombre
+    });
+});
+
 app.Run();
 
 record ActivarRequest(string Codigo);
+record VerificarEstadoRequest(string CompanyId);

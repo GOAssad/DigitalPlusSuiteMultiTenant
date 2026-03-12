@@ -202,6 +202,18 @@ namespace Acceso.Ventas
                 lblLicenciaStatus.Text = Program.LicMgr.GetStatusBarText();
 
             CargarLogos();
+
+            // Verificar que la empresa esta activa en DigitalPlusAdmin
+            var empresaInfo = EmpresaInfoService.ObtenerEmpresa();
+            if (empresaInfo != null && !string.IsNullOrEmpty(empresaInfo.Estado) && empresaInfo.Estado != "activa")
+            {
+                MessageBox.Show(
+                    "El acceso a su empresa ha sido suspendido.\nContacte al administrador del sistema.",
+                    "Acceso Suspendido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                this.Load += (s2, e2) => this.Close();
+                return;
+            }
+
             CargarLinksEmpresa();
         }
 

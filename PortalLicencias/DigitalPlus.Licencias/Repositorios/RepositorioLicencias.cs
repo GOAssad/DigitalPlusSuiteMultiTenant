@@ -311,6 +311,12 @@ public class RepositorioLicencias
 
     // --- Activacion por codigo (para instalador liviano) ---
 
+    public async Task<Empresa?> GetEmpresaPorCompanyIdAsync(string companyId)
+    {
+        return await _context.Empresas
+            .FirstOrDefaultAsync(e => e.CompanyId == companyId);
+    }
+
     public async Task<Empresa?> BuscarEmpresaPorCodigoActivacionAsync(string codigo)
     {
         return await _context.Empresas

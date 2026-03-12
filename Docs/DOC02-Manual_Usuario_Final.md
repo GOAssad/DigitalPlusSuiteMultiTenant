@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 2.0
-**Fecha:** 2026-03-08
+**Version:** 3.0
+**Fecha:** 2026-03-09
 
 ---
 
@@ -338,9 +338,11 @@ En la barra inferior del Fichador se muestra informacion segun el tipo de instal
 
 ### Pantalla principal
 
-Al abrir el Administrador, vera un menu lateral con todas las opciones disponibles.
+Al abrir el Administrador, vera un menu lateral con todas las opciones disponibles. En la parte superior del menu se muestra el **logo de su empresa** (si fue cargado por el administrador del sistema). En la parte inferior del menu aparece el logo de Integra IA.
 
-> [CAPTURA: Pantalla principal del Administrador con menu lateral]
+El menu incluye accesos directos a las **redes sociales y pagina web** de su empresa (si fueron configuradas). Estos links se cargan automaticamente desde el sistema y abren el navegador web al hacer clic.
+
+> [CAPTURA: Pantalla principal del Administrador con menu lateral, logo de empresa y links de redes sociales]
 
 ### 5.1 Gestion de Legajos (Empleados)
 
@@ -465,9 +467,17 @@ Desde el menu **Licencias** puede:
 
 Abra su navegador web y vaya a la direccion proporcionada por su administrador (ejemplo: `https://www.digitaloneplus.com/`).
 
-Ingrese sus credenciales de acceso (usuario y contrasena).
+Ingrese sus credenciales de acceso (usuario y contrasena). El boton de inicio de sesion se deshabilita automaticamente mientras se procesa para evitar errores por doble clic.
 
 > [CAPTURA: Pantalla de login del portal web]
+
+### Barra superior
+
+Una vez dentro del portal, en la **barra superior** se muestra:
+- **Lado izquierdo:** El logo y nombre de su empresa
+- **Lado derecho:** El identificador de empresa y el nombre del usuario logueado, con menu desplegable para acceder a configuracion de cuenta y cerrar sesion
+
+> [CAPTURA: Barra superior del portal con logo de empresa a la izquierda y datos de usuario a la derecha]
 
 ### Funcionalidades disponibles
 

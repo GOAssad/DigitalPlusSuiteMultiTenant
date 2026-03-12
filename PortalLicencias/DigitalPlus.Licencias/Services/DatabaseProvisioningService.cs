@@ -9,6 +9,8 @@ public class DatabaseProvisioningService
     private readonly string _server;
     private readonly string _user;
     private readonly string _password;
+    private readonly string _clientUser;
+    private readonly string _clientPassword;
     private readonly ILogger<DatabaseProvisioningService> _logger;
 
     private static readonly Regex[] SkipPatterns =
@@ -29,6 +31,11 @@ public class DatabaseProvisioningService
             ?? throw new InvalidOperationException("Missing CloudSql:User.");
         _password = config["CloudSql:Password"]
             ?? throw new InvalidOperationException("Missing CloudSql:Password.");
+
+        // Credenciales para connection strings de apps cliente (permisos limitados)
+        _clientUser = config["ClientSql:User"] ?? _user;
+        _clientPassword = config["ClientSql:Password"] ?? _password;
+
         _logger = logger;
     }
 
@@ -99,7 +106,7 @@ public class DatabaseProvisioningService
 
     public string BuildClientConnectionString(string dbName)
     {
-        return $"Server={_server};Database={dbName};User Id={_user};Password={_password};" +
+        return $"Server={_server};Database={dbName};User Id={_clientUser};Password={_clientPassword};" +
                "Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;";
     }
 

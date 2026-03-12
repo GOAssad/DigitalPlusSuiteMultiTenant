@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 4.0
-**Fecha:** 2026-03-08
+**Version:** 5.0
+**Fecha:** 2026-03-09
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -157,6 +157,8 @@ INFRAESTRUCTURA CLOUD
 - Generacion de PDF (iText 7)
 - Sistema de licencias integrado. En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 - Informacion de licencia en barra de estado y menu
+- Logo de empresa cliente y logo IntegraIA en la interfaz (desde DigitalPlusAdmin via EmpresaInfoService)
+- Menu lateral dinamico con links a redes sociales de la empresa (web, Facebook, Instagram, LinkedIn, X/Twitter, YouTube, TikTok) cargados desde DigitalPlusAdmin
 
 ### 3.3 Portal Multi-Tenant (PortalMultiTenant)
 
@@ -177,6 +179,8 @@ INFRAESTRUCTURA CLOUD
 - Noticias y Variables del sistema
 - Gestion de Usuarios (Identity)
 - Tablas con nombres singulares (Legajo, Fichada, Sucursal, etc.)
+- Header personalizado con logo y nombre de empresa (endpoint `/api/empresa-logo` con cache 1 hora)
+- Proteccion contra double-submit en login (deshabilita boton mientras procesa)
 
 ### 3.3b DigitalPlusWeb - LEGACY
 
@@ -197,17 +201,19 @@ INFRAESTRUCTURA CLOUD
 | **Tipo** | Aplicacion web (backoffice) |
 | **Stack** | Blazor Server / .NET 10 / EF Core |
 | **Solucion** | `DigitalPlus.Licencias.sln` |
-| **Repositorio** | Independiente (`C:\apps\claude\huellas\DigitalPlusLicencias\`) |
+| **Repositorio** | Copia sincronizada en `PortalLicencias\` dentro del repo principal |
 | **Proposito** | Administracion de empresas, licencias y provisionamiento |
 
 **Funcionalidades:**
 - Dashboard con estadisticas
 - ABM de Empresas (con wizard de alta en 5 pasos)
+- Seccion "Identidad de la Empresa": logo, pagina web, redes sociales (Facebook, Instagram, LinkedIn, X/Twitter, YouTube, TikTok)
 - Gestion de Licencias y codigos de activacion
 - Log de auditoria
 - Atributos del sistema (Paises, Tipos de identificacion fiscal)
 - API REST `/api/activar` para el instalador liviano
 - Provisionamiento de bases de datos en Ferozo
+- Proteccion contra double-submit en login
 
 ### 3.5 Azure Functions (Provisioning)
 
@@ -261,7 +267,7 @@ Todas las aplicaciones de escritorio comparten estas librerias:
 
 | Libreria | Responsabilidad |
 |---|---|
-| **Acceso.Clases.Datos** | Entidades de dominio RRHH, acceso a datos especifico del negocio, clases PIN |
+| **Acceso.Clases.Datos** | Entidades de dominio RRHH, acceso a datos especifico del negocio, clases PIN, EmpresaInfoService (consulta info de empresa + redes sociales desde DigitalPlusAdmin) |
 | **Global.Datos** | Capa de infraestructura: clase estatica SQLServer con metodos ADO.NET |
 | **Global.Funciones** | Utilidades transversales: configuracion, cadenas, formatos, mail |
 | **Global.Controles** | Controles WinForms personalizados (botones, grillas, etiquetas) |
@@ -334,7 +340,7 @@ int empresaId = Global.Datos.TenantContext.EmpresaId;
 
 ### Tablas administrativas (DigitalPlusAdmin)
 
-- `Empresas` - Registro de empresas clientes (con CodigoActivacion)
+- `Empresas` - Registro de empresas clientes (CodigoActivacion, Logo, PaginaWeb, Facebook, Instagram, LinkedIn, Twitter, YouTube, TikTok)
 - `Licencias` - Estado de licencias por empresa/maquina
 - `LicenciasLog` - Auditoria de operaciones de licencia
 - `LicenseCodes` - Codigos de activacion de uso unico
@@ -469,6 +475,8 @@ C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 |
 +-- PortalMultiTenant\               Portal Multi-Tenant (Blazor Server .NET 10)
 |
++-- PortalLicencias\                 Portal de Licencias (copia sincronizada, Blazor .NET 10)
+|
 +-- PortalWeb\                       DigitalPlusWeb LEGACY (.NET 7, no modificar)
 |
 +-- Instaladores\
@@ -491,16 +499,9 @@ C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 - `C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\` - Apps desktop legacy (archivado)
 - `C:\Apps\Claude\Huellas\DigitalPlusWeb_Claude\` - Portal web legacy (archivado)
 
-### Repositorio DigitalPlusLicencias (Git separado)
+### Portal de Licencias (dentro del repo principal)
 
-```
-C:\apps\claude\huellas\DigitalPlusLicencias\
-+-- DigitalPlus.Licencias\          Proyecto Blazor Server .NET 10
-    +-- Components\Pages\            Paginas del portal
-    +-- Models\                      Modelos de datos
-    +-- Services\                    Servicios (DB provisioning, etc.)
-    +-- Data\                        DbContext EF Core
-```
+El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLicencias\`, asegurando que todo el codigo sea recuperable desde GitHub con un solo `git clone`.
 
 ---
 
@@ -564,10 +565,14 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 - Seguridad SQL: fase 1 completada (scripts ejecutados)
 - API `/api/activar` en portal para instalador liviano
 - Alta de empresa desde portal (crea BD + esquema)
+- Logo empresa + IntegraIA en Fichador y Administrador (EmpresaInfoService con conexion a DigitalPlusAdmin)
+- Portal Multi-Tenant: logo y nombre de empresa en header, endpoint `/api/empresa-logo`, fix double-submit login
+- Portal Licencias: seccion "Identidad de la Empresa" con web y 6 redes sociales
+- Administrador: menu dinamico con links a redes sociales (reemplaza botones fijos hardcodeados)
+- Portal Licencias sincronizado en repo principal (todo respaldado en GitHub)
 
 ### En progreso
 
-- Adaptacion de Fichador y Administrador para multi-tenant (re-aplicar cambios sobre DigitalPlusSuiteMultiTenant)
 - Migracion de seguridad SQL (fases 2-5)
 - Portal Licencias: pendiente deploy a produccion
 - InstaladorLiviano apunta a localhost:7043 para testing (pendiente cambiar a produccion)
@@ -575,11 +580,13 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 ### Pendiente
 
 - **CRITICO:** `BuildClientConnectionString` usa `sa` (debe usar usuario dedicado)
-- Probar Fichador y Administrador contra BD DigitalPlusMultiTenant
 - Probar flujo completo: crear empresa -> instalar liviano -> apps conectan
 - Deploy portal licencias a `licencias.digitaloneplus.com`
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
+- Link al portal web multi-tenant en menu del Administrador
+- Verificar durabilidad licencias (por terminal vs por empresa)
+- Prueba de clonacion desde GitHub para verificar recuperabilidad
 
 ### Prioridad baja
 
@@ -607,7 +614,7 @@ C:\apps\claude\huellas\DigitalPlusLicencias\
 2. No hay tests automatizados en ningun componente
 3. Sin sistema de logging estructurado en las apps desktop
 4. El acceso a datos en desktop es via clase estatica `SQLServer` (acoplamiento fuerte)
-5. Repositorio principal unificado (DigitalPlusSuiteMultiTenant) pero Portal Licencias sigue separado
+5. Todo el codigo unificado en un solo repositorio GitHub (DigitalPlusSuiteMultiTenant), incluyendo Portal Licencias sincronizado
 
 ### Riesgos
 

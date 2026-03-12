@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 2.0
-**Fecha:** 2026-03-08
+**Version:** 3.0
+**Fecha:** 2026-03-09
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -75,6 +75,8 @@ Exclusivamente el equipo de Integra IA. Los clientes finales **nunca** acceden a
 1. Ingrese su email y contrasena
 2. Haga clic en **Iniciar Sesion**
 
+> **Nota:** El boton de login se deshabilita automaticamente al hacer clic para evitar errores por doble-submit (proteccion contra tokens antiforgery duplicados).
+
 > [CAPTURA: Pantalla de login del Portal de Licencias]
 
 ---
@@ -101,9 +103,9 @@ La pagina principal muestra un resumen ejecutivo del estado del sistema:
 Desde el menu lateral, acceda a **Empresas**. Vera un listado con todas las empresas registradas.
 
 **Funcionalidades del listado:**
-- Busqueda por nombre
+- Busqueda por nombre o Company ID
 - Filtro por estado (activa, trial, suspendida)
-- Acceso al detalle de cada empresa
+- Boton **Editar** para acceder al detalle de cada empresa
 
 > [CAPTURA: Listado de empresas con filtro y columnas (Nombre, CUIT, Estado, Fecha alta)]
 
@@ -194,7 +196,29 @@ Todos los datos ingresados en el alta son editables:
 - Nombre, datos fiscales, contacto, direccion
 - Los selects de Pais y Tipo de ID Fiscal funcionan en cascada
 
-> [CAPTURA: Formulario de edicion de empresa con todos los campos]
+### Identidad de la Empresa
+
+La seccion **"Identidad de la Empresa"** permite gestionar la imagen corporativa del cliente:
+
+**Logo:**
+- Subir logo en formato PNG, JPG, SVG o WebP (max 500 KB)
+- Vista previa del logo actual
+- Boton para quitar el logo
+
+**Pagina web y redes sociales:**
+- **Pagina web** (icono de globo) - URL del sitio corporativo
+- **Facebook** - URL del perfil de Facebook
+- **Instagram** - URL del perfil de Instagram
+- **LinkedIn** - URL del perfil de LinkedIn
+- **X (Twitter)** - URL del perfil de X/Twitter
+- **YouTube** - URL del canal de YouTube
+- **TikTok** - URL del perfil de TikTok
+
+Cada campo tiene su icono oficial de la red social para facil identificacion. Todos los campos son opcionales.
+
+> **Importante:** Los datos de identidad se usan en las apps de escritorio del cliente. El menu del Administrador desktop muestra automaticamente links a cada red social que tenga URL cargada. Si un campo esta vacio, no aparece en el menu.
+
+> [CAPTURA: Seccion Identidad de la Empresa con logo y campos de redes sociales]
 
 ### Codigo de Activacion
 
@@ -429,7 +453,8 @@ Este endpoint es invocado por el **Instalador Liviano** durante la instalacion p
 ```json
 {
   "connectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusMultiTenant;...",
-  "empresaId": 2,
+  "empresaId": 5,
+  "companyId": "kosiuko-sa",
   "nombreEmpresa": "Kosiuko S.A.",
   "databaseName": "DigitalPlusMultiTenant"
 }
@@ -463,7 +488,7 @@ Este endpoint es invocado por el **Instalador Liviano** durante la instalacion p
 
 | Tabla | Proposito |
 |---|---|
-| Empresas | Registro de empresas clientes |
+| Empresas | Registro de empresas clientes (logo, identidad, redes sociales, codigo activacion) |
 | Licencias | Estado de licencias por empresa/maquina |
 | LicenciasLog | Auditoria de operaciones |
 | LicenseCodes | Codigos de uso unico para activar licencias |

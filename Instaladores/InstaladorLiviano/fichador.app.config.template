@@ -5,9 +5,11 @@
   </configSections>
   <connectionStrings>
     <add name="Local" connectionString="{{CONNECTION_STRING}}" providerName="System.Data.SqlClient"/>
+    <add name="Admin" connectionString="{{ADMIN_CONNECTION_STRING}}" providerName="System.Data.SqlClient"/>
   </connectionStrings>
   <appSettings>
     <add key="EmpresaId" value="{{EMPRESA_ID}}" />
+    <add key="AdminEmpresaId" value="{{ADMIN_EMPRESA_ID}}" />
     <add key="NombreEmpresa" value="{{NOMBRE_EMPRESA}}" />
   </appSettings>
   <entityFramework>

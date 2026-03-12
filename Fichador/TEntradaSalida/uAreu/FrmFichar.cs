@@ -68,23 +68,28 @@ namespace Acceso.uAreu
         protected virtual void Init()
         {
             _lectorDisponible = false;
+            HuellaLog.Write("Init() inicio");
             try
             {
                 Capturer = new DPFP.Capture.Capture();
+                HuellaLog.Write("Init() Capturer creado OK");
                 if (null != Capturer)
                 {
                     Capturer.EventHandler = this;
                     _lectorDisponible = true;
+                    HuellaLog.Write("Init() EventHandler asignado, _lectorDisponible=true");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                HuellaLog.Write("Init() EXCEPCION: " + ex.Message);
                 Capturer = null;
                 _lectorDisponible = false;
             }
             Text = "DigitalPlus Fichadas";
             if (_lectorDisponible)
                 Verificator = new DPFP.Verification.Verification();
+            HuellaLog.Write("Init() fin, _lectorDisponible=" + _lectorDisponible);
         }
 
         private void DetectarModoInicial()
@@ -441,14 +446,19 @@ namespace Acceso.uAreu
 
         protected virtual void Process(DPFP.Sample Sample)
         {
+            HuellaLog.Write("Process() inicio, _modoActual=" + _modoActual);
             // Ignorar huellas si no estamos en modo Huella
             if (_modoActual != ModoFichada.Huella)
+            {
+                HuellaLog.Write("Process() IGNORADO - no estamos en modo Huella");
                 return;
+            }
 
             ActivarSemaforo(4);
             DrawPicture(ConvertSampleToBitmap(Sample));
 
             DPFP.FeatureSet features = ExtractFeatures(Sample, DPFP.Processing.DataPurpose.Verification);
+            HuellaLog.Write("Process() features=" + (features != null ? "OK" : "NULL (mala calidad)"));
             if (features != null)
             {
                 DPFP.Verification.Verification.Result result = new DPFP.Verification.Verification.Result();
@@ -505,15 +515,24 @@ namespace Acceso.uAreu
 
         protected void Start()
         {
+            HuellaLog.Write("Start() llamado, Capturer=" + (Capturer != null ? "OK" : "NULL"));
             if (null != Capturer)
             {
-                try { Capturer.StartCapture(); }
-                catch { }
+                try
+                {
+                    Capturer.StartCapture();
+                    HuellaLog.Write("Start() StartCapture() OK");
+                }
+                catch (Exception ex)
+                {
+                    HuellaLog.Write("Start() EXCEPCION: " + ex.GetType().Name + " - " + ex.Message);
+                }
             }
         }
 
         protected void Stop()
         {
+            HuellaLog.Write("Stop() llamado");
             if (null != Capturer)
             {
                 try { Capturer.StopCapture(); }
@@ -533,6 +552,18 @@ namespace Acceso.uAreu
             }
 
             CargarLogos();
+
+            // Verificar que la empresa esta activa en DigitalPlusAdmin
+            var empresaInfo = Acceso.Clases.Datos.Generales.EmpresaInfoService.ObtenerEmpresa();
+            if (empresaInfo != null && !string.IsNullOrEmpty(empresaInfo.Estado) && empresaInfo.Estado != "activa")
+            {
+                MessageBox.Show(
+                    "El acceso a su empresa ha sido suspendido.\nContacte al administrador del sistema.",
+                    "Acceso Suspendido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                this.Load += (s2, e2) => this.Close();
+                return;
+            }
+
             ConfiguracionLocal();
             Init();
             DetectarModoInicial();
@@ -564,21 +595,25 @@ namespace Acceso.uAreu
 
         public void OnComplete(object Capture, string ReaderSerialNumber, DPFP.Sample Sample)
         {
+            HuellaLog.Write("OnComplete() - Sample recibido, ReaderSN=" + ReaderSerialNumber);
             Process(Sample);
         }
 
         public void OnFingerGone(object Capture, string ReaderSerialNumber)
         {
+            HuellaLog.Write("OnFingerGone()");
             ActivarSemaforo(controlcolor ? 3 : 1);
         }
 
         public void OnFingerTouch(object Capture, string ReaderSerialNumber)
         {
+            HuellaLog.Write("OnFingerTouch() - ReaderSN=" + ReaderSerialNumber);
             ActivarSemaforo(2);
         }
 
         public void OnReaderConnect(object Capture, string ReaderSerialNumber)
         {
+            HuellaLog.Write("OnReaderConnect() - ReaderSN=" + ReaderSerialNumber);
             _lectorFisico = true;
             _lectorDisponible = true;
 
@@ -604,6 +639,7 @@ namespace Acceso.uAreu
 
         public void OnReaderDisconnect(object Capture, string ReaderSerialNumber)
         {
+            HuellaLog.Write("OnReaderDisconnect() - ReaderSN=" + ReaderSerialNumber);
             _lectorFisico = false;
             _lectorDisponible = false;
 
@@ -615,6 +651,7 @@ namespace Acceso.uAreu
 
         public void OnSampleQuality(object Capture, string ReaderSerialNumber, DPFP.Capture.CaptureFeedback CaptureFeedback)
         {
+            HuellaLog.Write("OnSampleQuality() - Feedback=" + CaptureFeedback);
         }
 
         #endregion
