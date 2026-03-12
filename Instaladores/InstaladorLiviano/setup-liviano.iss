@@ -296,11 +296,8 @@ var
   btnActivar:       TNewButton;
   lblActivResult:   TNewStaticText;
 
-  // Pagina: URL Portal Web
-  UrlPage:       TWizardPage;
-  lblUrlInfo:    TNewStaticText;
-  lblUrl:        TNewStaticText;
-  edtUrl:        TNewEdit;
+  // URL Portal Web (fija, no se pregunta al usuario)
+  // Se usa https://integraia.tech/ por default
 
   // Estado interno
   sConnectionString:      String;    // Connection string a DigitalPlusMultiTenant
@@ -501,35 +498,7 @@ begin
   lblActivResult.Caption := '';
 end;
 
-procedure CreateUrlPage;
-begin
-  UrlPage := CreateCustomPage(ActivacionPage.ID,
-    'Portal Web DigitalPlus',
-    'Ingrese la URL del portal web (opcional)');
-
-  lblUrlInfo := TNewStaticText.Create(WizardForm);
-  lblUrlInfo.Parent := UrlPage.Surface;
-  lblUrlInfo.Caption :=
-    'Si su empresa dispone de un portal web DigitalPlus, ' +
-    'ingrese la URL a continuacion. Puede dejarlo en blanco.';
-  lblUrlInfo.Left := 0;
-  lblUrlInfo.Top := 0;
-  lblUrlInfo.Width := UrlPage.SurfaceWidth;
-  lblUrlInfo.WordWrap := True;
-
-  lblUrl := TNewStaticText.Create(WizardForm);
-  lblUrl.Parent := UrlPage.Surface;
-  lblUrl.Caption := 'URL del portal:';
-  lblUrl.Left := 0;
-  lblUrl.Top := lblUrlInfo.Top + lblUrlInfo.Height + 20;
-
-  edtUrl := TNewEdit.Create(WizardForm);
-  edtUrl.Parent := UrlPage.Surface;
-  edtUrl.Left := 0;
-  edtUrl.Top := lblUrl.Top + lblUrl.Height + 5;
-  edtUrl.Width := UrlPage.SurfaceWidth;
-  edtUrl.Text := '';
-end;
+// URL del portal web se configura fija (https://integraia.tech/)
 
 // ============================================================
 // CONFIGURACION POST-INSTALACION
@@ -542,9 +511,7 @@ var
   i: Integer;
   sUrlWeb: String;
 begin
-  sUrlWeb := Trim(edtUrl.Text);
-  if sUrlWeb = '' then
-    sUrlWeb := 'https://www.digitaloneplus.com/';
+  sUrlWeb := 'https://integraia.tech/';
 
   // --- Fichador config ---
   FilePath := ExpandConstant('{app}\Fichadas\TEntradaSalida.exe.config');
@@ -642,7 +609,6 @@ begin
   sAdminEmpresaId := '';
 
   CreateActivacionPage;
-  CreateUrlPage;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

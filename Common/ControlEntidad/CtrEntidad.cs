@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Data;
 using System.Windows.Forms;
 using Acceso.Clases.Datos.Generales;
+using Global.Datos;
 
 namespace Acceso.ControlEntidad
 {
@@ -474,7 +475,10 @@ namespace Acceso.ControlEntidad
             //gustvo 6/3/2021
             textoDescripcion.Text = string.Empty;
 
-            string consulta = "Select * from " + _TablaSQL + " WHERE " + _IDSQLWhere + " = '" + codigo + "'";
+            if (string.IsNullOrEmpty(_TablaSQL) || string.IsNullOrEmpty(_IDSQLWhere)) return;
+
+            string consulta = "Select * from " + _TablaSQL + " WHERE " + _IDSQLWhere + " = '" + codigo + "'"
+                + AppendEmpresaIdFilter(_TablaSQL);
             try
             {
                 dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(consulta);
@@ -564,7 +568,8 @@ namespace Acceso.ControlEntidad
             try
             {
 
-                string comando = "Select * from " + _TablaSQL + " WHERE " + IDSQLWherePK + " = " + codigo;
+                string comando = "Select * from " + _TablaSQL + " WHERE " + IDSQLWherePK + " = " + codigo
+                    + AppendEmpresaIdFilter(_TablaSQL);
                 dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(comando);
 
                 if (dt.Rows.Count == 0) return;
@@ -608,10 +613,13 @@ namespace Acceso.ControlEntidad
 
             try
             {
+                int empresaId = TenantContext.EmpresaId;
+
                 if (BusquedaEspecial)
                 {
-                    consulta = "Select " + IDSQLWhere + ", " + DESCSQLFrom + " from " + _TablaSQL + " WHERE " + IDSQLWhere + " like '%" +
-                                textoBusqueda.Text.Trim() + "%' or " + DESCSQLFrom + " like '%" + textoBusqueda.Text.Trim() + "%'";
+                    consulta = "Select " + IDSQLWhere + ", " + DESCSQLFrom + " from " + _TablaSQL + " WHERE (" + IDSQLWhere + " like '%" +
+                                textoBusqueda.Text.Trim() + "%' or " + DESCSQLFrom + " like '%" + textoBusqueda.Text.Trim() + "%')"
+                                + AppendEmpresaIdFilter(_TablaSQL);
 
                     dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(consulta);
 
@@ -619,7 +627,10 @@ namespace Acceso.ControlEntidad
                 }
                 else
                 {
-                    dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(_SqlAyuda);
+                    string sqlAyuda = _SqlAyuda;
+                    if (!string.IsNullOrEmpty(sqlAyuda) && sqlAyuda.TrimEnd().EndsWith("="))
+                        sqlAyuda += " " + empresaId;
+                    dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(sqlAyuda);
 
                 }
             }
@@ -758,6 +769,20 @@ namespace Acceso.ControlEntidad
         {
             if (textoBusqueda.Text.Trim() == "ingrese texto a buscar")
                 textoBusqueda.Text = string.Empty;
+        }
+
+        private static string AppendEmpresaIdFilter(string tablaSQL)
+        {
+            if (string.IsNullOrEmpty(tablaSQL)) return "";
+            if (tablaSQL.Contains("(")) return "";
+            string tablaUpper = tablaSQL.Trim().ToUpperInvariant();
+            if (tablaUpper == "LEGAJO" || tablaUpper == "SUCURSAL" || tablaUpper == "CATEGORIA" ||
+                tablaUpper == "HORARIO" || tablaUpper == "SECTOR" || tablaUpper == "INCIDENCIA" ||
+                tablaUpper == "FERIADO" || tablaUpper == "EMPRESA")
+            {
+                return " AND EmpresaId = " + TenantContext.EmpresaId;
+            }
+            return "";
         }
     }
 }

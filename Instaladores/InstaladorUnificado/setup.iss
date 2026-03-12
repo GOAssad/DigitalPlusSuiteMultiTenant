@@ -307,11 +307,7 @@ var
   lblEmpresa:    TNewStaticText;
   edtEmpresa:    TNewEdit;
 
-  // Pagina: URL Portal Web
-  UrlPage:       TWizardPage;
-  lblUrlInfo:    TNewStaticText;
-  lblUrl:        TNewStaticText;
-  edtUrl:        TNewEdit;
+  // URL Portal Web (fija, no se pregunta al usuario)
 
   // Pagina: Modo de instalacion (Local vs Nube)
   ModoPage:      TWizardPage;
@@ -633,39 +629,7 @@ begin
 end;
 
 
-// ------------------------------------------------------------
-// Pagina 2: URL del portal DigitalPlusWeb
-// ------------------------------------------------------------
-procedure CreateUrlPage;
-begin
-  UrlPage := CreateCustomPage(
-    EmpresaPage.ID,
-    'Portal web DigitalPlus',
-    'Ingrese la URL del portal web de DigitalPlus (modulo de administracion web).');
-
-  lblUrlInfo := TNewStaticText.Create(UrlPage);
-  lblUrlInfo.Parent     := UrlPage.Surface;
-  lblUrlInfo.Left       := 0;
-  lblUrlInfo.Top        := 8;
-  lblUrlInfo.Width      := UrlPage.Surface.Width;
-  lblUrlInfo.WordWrap   := True;
-  lblUrlInfo.Caption    :=
-    'Esta URL se usara cuando presione el boton "DigitalPlusWeb" en el menu principal del Administrador.' + #13#10 +
-    'Puede ser una IP local (http://192.168.0.x/), un dominio, o una URL en la nube.';
-
-  lblUrl := TNewStaticText.Create(UrlPage);
-  lblUrl.Parent  := UrlPage.Surface;
-  lblUrl.Left    := 0;
-  lblUrl.Top     := 52;
-  lblUrl.Caption := 'URL del portal web:';
-
-  edtUrl := TNewEdit.Create(UrlPage);
-  edtUrl.Parent  := UrlPage.Surface;
-  edtUrl.Left    := 0;
-  edtUrl.Top     := 72;
-  edtUrl.Width   := UrlPage.Surface.Width;
-  edtUrl.Text    := 'https://digitalplusapp.azurewebsites.net/';
-end;
+// URL del portal web se configura fija (https://integraia.tech/)
 
 
 // ------------------------------------------------------------
@@ -676,7 +640,7 @@ begin
   bModoLocal := True;  // default: local
 
   ModoPage := CreateCustomPage(
-    UrlPage.ID,
+    EmpresaPage.ID,
     'Tipo de instalacion',
     'Seleccione como desea configurar la base de datos del sistema.');
 
@@ -880,7 +844,6 @@ end;
 procedure InitializeWizard;
 begin
   CreateEmpresaPage;
-  CreateUrlPage;
   CreateModoPage;
   CreateActivacionPage;
 end;
@@ -907,16 +870,6 @@ end;
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
-
-  // Al salir de la pagina de URL, validar
-  if CurPageID = UrlPage.ID then
-  begin
-    if Trim(edtUrl.Text) = '' then
-    begin
-      MsgBox('Debe ingresar la URL del portal web antes de continuar.', mbError, MB_OK);
-      Result := False;
-    end;
-  end;
 
   // Al salir de la pagina de modo, guardar eleccion
   if CurPageID = ModoPage.ID then
@@ -1034,7 +987,7 @@ begin
     begin
       StringChange(Lines[i], '{{CONNECTION_STRING}}',    sConnectionString);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}',       Trim(edtEmpresa.Text));
-      StringChange(Lines[i], '{{URL_DIGITALPLUS_WEB}}',  Trim(edtUrl.Text));
+      StringChange(Lines[i], '{{URL_DIGITALPLUS_WEB}}',  'https://integraia.tech/');
       StringChange(Lines[i], '{{PROVISIONING_API_KEY}}', '{#ProvisionApiKey}');
     end;
     SaveStringsToFile(FilePath, Lines, False);

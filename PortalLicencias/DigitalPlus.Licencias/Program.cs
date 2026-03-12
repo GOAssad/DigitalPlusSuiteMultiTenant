@@ -116,8 +116,9 @@ app.MapPost("/api/activar", async (ActivarRequest req,
     if (empresa == null)
         return Results.NotFound(new { error = "Codigo invalido o empresa inactiva" });
 
-    // Connection string a DigitalPlusMultiTenant (para datos del tenant)
-    var tenantConnectionString = provisioning.BuildClientConnectionString(empresa.DatabaseName);
+    // Connection string a DigitalPlusMultiTenant (BD compartida multi-tenant, NO por empresa)
+    var multiTenantDbName = config["MultiTenant:DatabaseName"] ?? "DigitalPlusMultiTenant";
+    var tenantConnectionString = provisioning.BuildClientConnectionString(multiTenantDbName);
 
     // Connection string a DigitalPlusAdmin (para info de empresa: logo, redes sociales)
     var adminConnectionString = config.GetConnectionString("DefaultConnection") ?? "";

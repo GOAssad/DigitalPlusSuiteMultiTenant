@@ -105,7 +105,8 @@ CREATE PROCEDURE EscritorioFichadasSPSALIDA
     @nLegajoID INT,
     @dRegistro DATETIME,
     @sAccion VARCHAR(50) OUTPUT,
-    @EmpresaId INT
+    @EmpresaId INT,
+    @Origen NVARCHAR(50) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -124,8 +125,8 @@ BEGIN
     ELSE
         SET @sAccion = 'S';
 
-    INSERT INTO Fichada (EmpresaId, LegajoId, SucursalId, FechaHora, Tipo, CreatedAt)
-    VALUES (@EmpresaId, @nLegajoID, @nSucursalID, @dRegistro, @sAccion, GETUTCDATE());
+    INSERT INTO Fichada (EmpresaId, LegajoId, SucursalId, FechaHora, Tipo, Origen, CreatedAt)
+    VALUES (@EmpresaId, @nLegajoID, @nSucursalID, @dRegistro, @sAccion, @Origen, GETUTCDATE());
 END
 GO
 

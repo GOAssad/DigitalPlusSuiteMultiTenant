@@ -45,6 +45,9 @@ public class MultiTenantProvisioningService
             // 1. Crear Empresa en tabla Empresa del Portal MT
             var empresaId = await InsertEmpresaAsync(conn, tx, codigo, nombre, nombreFantasia);
 
+            // 1b. Crear datos default (Sucursal, Categoria, Horario, Sector)
+            await InsertDefaultEntitiesAsync(conn, tx, empresaId);
+
             // 2. Asegurar que el rol AdminEmpresa existe
             var roleId = await EnsureRoleExistsAsync(conn, tx, "AdminEmpresa");
 
@@ -168,6 +171,60 @@ public class MultiTenantProvisioningService
 
         var result = await cmd.ExecuteScalarAsync();
         return result != null ? (int)result : null;
+    }
+
+    private static async Task InsertDefaultEntitiesAsync(SqlConnection conn, SqlTransaction tx, int empresaId)
+    {
+        var now = DateTime.UtcNow;
+        const string createdBy = "portal-licencias";
+
+        // Sucursal default
+        const string sqlSucursal = @"
+            INSERT INTO Sucursal (Codigo, Nombre, IsActive, CreatedAt, CreatedBy, EmpresaId)
+            VALUES ('0001', 'Casa Central', 1, @Now, @CreatedBy, @EmpresaId)";
+        await using (var cmd = new SqlCommand(sqlSucursal, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("@Now", now);
+            cmd.Parameters.AddWithValue("@CreatedBy", createdBy);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Categoria default
+        const string sqlCategoria = @"
+            INSERT INTO Categoria (Nombre, IsActive, CreatedAt, CreatedBy, EmpresaId)
+            VALUES ('General', 1, @Now, @CreatedBy, @EmpresaId)";
+        await using (var cmd = new SqlCommand(sqlCategoria, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("@Now", now);
+            cmd.Parameters.AddWithValue("@CreatedBy", createdBy);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Horario default
+        const string sqlHorario = @"
+            INSERT INTO Horario (Nombre, IsActive, CreatedAt, CreatedBy, EmpresaId)
+            VALUES ('General', 1, @Now, @CreatedBy, @EmpresaId)";
+        await using (var cmd = new SqlCommand(sqlHorario, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("@Now", now);
+            cmd.Parameters.AddWithValue("@CreatedBy", createdBy);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Sector default
+        const string sqlSector = @"
+            INSERT INTO Sector (Nombre, IsActive, CreatedAt, CreatedBy, EmpresaId)
+            VALUES ('General', 1, @Now, @CreatedBy, @EmpresaId)";
+        await using (var cmd = new SqlCommand(sqlSector, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("@Now", now);
+            cmd.Parameters.AddWithValue("@CreatedBy", createdBy);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            await cmd.ExecuteNonQueryAsync();
+        }
     }
 
     private static string GenerateTempPassword()

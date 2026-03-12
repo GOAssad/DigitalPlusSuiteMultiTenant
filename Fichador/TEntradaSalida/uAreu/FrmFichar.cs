@@ -411,30 +411,48 @@ namespace Acceso.uAreu
 
         private void RegistrarFichada(int nLegajoID, string sLegajoID, string nombre)
         {
-            sNombre = nombre;
-            oFichada.sLegajoID = sLegajoID;
-            oFichada.dRegistro = DateTime.Now;
-            oFichada.nSucursalID = oTerminal.sSucursalID.sSucursalID.ToString() != string.Empty
-                ? Convert.ToInt32(oTerminal.sSucursalID.sSucursalID.ToString()) : 0;
-            oFichada.nLegajoID = nLegajoID;
-            // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2
-            oFichada.sOrigen = _modoActual == ModoFichada.Pin ? "PIN" : _modoActual.ToString();
+            HuellaLog.Write("RegistrarFichada() inicio legajo=" + sLegajoID + " nombre=" + nombre + " nLegajoID=" + nLegajoID);
+            try
+            {
+                sNombre = nombre;
+                oFichada.sLegajoID = sLegajoID;
+                oFichada.dRegistro = DateTime.Now;
+                int sucursalId = 0;
+                try
+                {
+                    if (oTerminal.sSucursalID != null && !string.IsNullOrEmpty(oTerminal.sSucursalID.sSucursalID))
+                        sucursalId = Convert.ToInt32(oTerminal.sSucursalID.sSucursalID);
+                }
+                catch { }
+                oFichada.nSucursalID = sucursalId;
+                oFichada.nLegajoID = nLegajoID;
+                // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2
+                oFichada.sOrigen = _modoActual == ModoFichada.Pin ? "PIN" : _modoActual.ToString();
+                HuellaLog.Write("RegistrarFichada() antes de Actualizar, sucursalId=" + sucursalId);
 
-            if (oFichada.Actualizar())
-            {
-                sCadenaEntraSale = oFichada.sEntraSale == "E" ? "ENTRADA" : "SALIDA";
-                sBienVenidaAux = oFichada.sEntraSale == "E"
-                    ? "Bienvenido " + sNombre
-                    : "Hasta Luego " + sNombre;
-                MakeReport();
-                ActivarSemaforo(3);
-                controlcolor = true;
+                if (oFichada.Actualizar())
+                {
+                    HuellaLog.Write("RegistrarFichada() OK - EntraSale=" + oFichada.sEntraSale);
+                    sCadenaEntraSale = oFichada.sEntraSale == "E" ? "ENTRADA" : "SALIDA";
+                    sBienVenidaAux = oFichada.sEntraSale == "E"
+                        ? "Bienvenido " + sNombre
+                        : "Hasta Luego " + sNombre;
+                    MakeReport();
+                    ActivarSemaforo(3);
+                    controlcolor = true;
+                }
+                else
+                {
+                    HuellaLog.Write("RegistrarFichada() FALLO");
+                    sBienVenidaAux = string.Empty;
+                    sCadenaEntraSale = string.Empty;
+                    MakeReport();
+                    ActivarSemaforo(1);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                sBienVenidaAux = string.Empty;
-                sCadenaEntraSale = string.Empty;
-                MakeReport();
+                HuellaLog.Write("RegistrarFichada() EXCEPTION: " + ex.ToString());
                 ActivarSemaforo(1);
             }
             timer.Enabled = true;
@@ -463,7 +481,6 @@ namespace Acceso.uAreu
             {
                 DPFP.Verification.Verification.Result result = new DPFP.Verification.Verification.Result();
                 DPFP.Template template = new DPFP.Template();
-                Stream stream;
                 sNombre = string.Empty;
                 sBienVenidaAux = string.Empty;
                 sCadenaEntraSale = string.Empty;
@@ -471,20 +488,30 @@ namespace Acceso.uAreu
                 try
                 {
                     oLHuellas.TodasLasHuellas();
+                    HuellaLog.Write("TodasLasHuellas() OK, error='" + oLHuellas.sMensajeError + "'");
                 }
                 catch (Exception ex)
                 {
+                    HuellaLog.Write("TodasLasHuellas() EXCEPTION: " + ex.Message);
                     MessageBox.Show(ex.Message);
                     return;
                 }
+
+                int totalHuellas = oLHuellas.dtLegajosHuellas != null ? oLHuellas.dtLegajosHuellas.Rows.Count : 0;
+                HuellaLog.Write("Total huellas cargadas: " + totalHuellas);
 
                 ActivarSemaforo(2);
 
                 for (int i = 0; i < oLHuellas.dtLegajosHuellas.Rows.Count; i++)
                 {
-                    stream = new MemoryStream((byte[])oLHuellas.dtLegajosHuellas.Rows[i]["iHuella"]);
-                    template = new DPFP.Template(stream);
+                    // Usar DeSerialize para reconstruir desde Bytes (mismo formato que Administrador al grabar)
+                    byte[] huellaBytes = (byte[])oLHuellas.dtLegajosHuellas.Rows[i]["iHuella"];
+                    template = new DPFP.Template();
+                    template.DeSerialize(huellaBytes);
                     Verificator.Verify(features, template, ref result);
+                    HuellaLog.Write("Huella[" + i + "] legajo=" + oLHuellas.dtLegajosHuellas.Rows[i]["sLegajoID"] +
+                        " dedo=" + oLHuellas.dtLegajosHuellas.Rows[i]["nDedo"] +
+                        " FAR=" + result.FARAchieved + " verified=" + result.Verified);
                     controlcolor = false;
 
                     if (result.Verified)
@@ -563,6 +590,9 @@ namespace Acceso.uAreu
                 this.Load += (s2, e2) => this.Close();
                 return;
             }
+
+            // Diagnostico de BD al arrancar
+            DiagnosticoBD();
 
             ConfiguracionLocal();
             Init();
@@ -738,6 +768,45 @@ namespace Acceso.uAreu
                     lblEstado.ForeColor = Color.DimGray;
                     lblEstado.Text = string.Empty;
                     break;
+            }
+        }
+
+        private void DiagnosticoBD()
+        {
+            try
+            {
+                int empresaId = Global.Datos.TenantContext.EmpresaId;
+                string connName = System.Configuration.ConfigurationManager.ConnectionStrings["Local"]?.ConnectionString ?? "NULL";
+                // Extraer solo server y database del connection string para no mostrar password
+                string serverInfo = "?";
+                string dbInfo = "?";
+                try
+                {
+                    var csb = new System.Data.SqlClient.SqlConnectionStringBuilder(connName);
+                    serverInfo = csb.DataSource;
+                    dbInfo = csb.InitialCatalog;
+                }
+                catch { }
+
+                var dtLegajos = Global.Datos.SQLServer.EjecutarParaSoloLectura(
+                    "SELECT COUNT(*) AS cnt FROM Legajo WHERE EmpresaId = " + empresaId + " AND IsActive = 1");
+                int legajos = dtLegajos.Rows.Count > 0 ? Convert.ToInt32(dtLegajos.Rows[0][0]) : 0;
+
+                var dtHuellas = Global.Datos.SQLServer.EjecutarParaSoloLectura(
+                    "SELECT COUNT(*) AS cnt FROM LegajoHuella lh INNER JOIN Legajo l ON lh.LegajoId = l.Id WHERE l.EmpresaId = " + empresaId);
+                int huellas = dtHuellas.Rows.Count > 0 ? Convert.ToInt32(dtHuellas.Rows[0][0]) : 0;
+
+                string diag = string.Format("BD: {0}/{1} | EmpresaId={2} | Legajos={3} | Huellas={4}",
+                    serverInfo, dbInfo, empresaId, legajos, huellas);
+                HuellaLog.Write("DIAG: " + diag);
+
+                // Mostrar diagnostico temporal en titulo
+                this.Text += " [" + diag + "]";
+            }
+            catch (Exception ex)
+            {
+                HuellaLog.Write("DIAG ERROR: " + ex.Message);
+                this.Text += " [BD ERROR: " + ex.Message + "]";
             }
         }
 
