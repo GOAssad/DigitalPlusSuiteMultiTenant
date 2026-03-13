@@ -16,14 +16,14 @@
 
 <PageTitle>Iniciar Sesion - DigitalPlus</PageTitle>
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5 col-lg-4">
-        <div class="card border-0 shadow">
+<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh; background: linear-gradient(180deg, #050810 0%, #0B1120 100%);">
+    <div style="width: 100%; max-width: 420px; padding: 1rem;">
+        <div class="card border-0 shadow-lg" style="background: #0B1120; border: 1px solid rgba(201,168,76,0.2) !important;">
             <div class="card-body p-4">
                 <div class="text-center mb-4">
-                    <i class="bi bi-fingerprint text-primary" style="font-size: 3rem;"></i>
-                    <h4 class="mt-2 mb-0">DigitalPlus</h4>
-                    <small class="text-muted">Sistema de Control de Asistencia</small>
+                    <i class="bi bi-fingerprint" style="font-size: 3rem; color: #C9A84C;"></i>
+                    <h4 class="mt-2 mb-0" style="color: #C9A84C; font-weight: 700;">DIGITAL ONE</h4>
+                    <small style="color: rgba(232,234,240,0.6);">Sistema de Control de Asistencia</small>
                 </div>
 
                 <StatusMessage Message="@errorMessage" />
@@ -31,32 +31,32 @@
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger" role="alert" />
                     <div class="form-floating mb-3">
-                        <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="usuario@empresa.com" />
-                        <label for="Input.Email">Email</label>
+                        <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control bg-dark text-light border-secondary" autocomplete="username" aria-required="true" placeholder="usuario@empresa.com" style="color: #E8EAF0 !important;" />
+                        <label for="Input.Email" style="color: rgba(232,234,240,0.5);">Email</label>
                         <ValidationMessage For="() => Input.Email" class="text-danger small" />
                     </div>
                     <div class="form-floating mb-3">
-                        <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="contraseña" />
-                        <label for="Input.Password">Contraseña</label>
+                        <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control bg-dark text-light border-secondary" autocomplete="current-password" aria-required="true" placeholder="contraseña" style="color: #E8EAF0 !important;" />
+                        <label for="Input.Password" style="color: rgba(232,234,240,0.5);">Contraseña</label>
                         <ValidationMessage For="() => Input.Password" class="text-danger small" />
                     </div>
                     <div class="checkbox mb-3">
-                        <label class="form-label">
+                        <label class="form-label" style="color: rgba(232,234,240,0.7);">
                             <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
                             Recordarme
                         </label>
                     </div>
                     <div>
-                        <button type="submit" id="btnLogin" class="w-100 btn btn-lg btn-primary"><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesion</button>
+                        <button type="submit" id="btnLogin" class="w-100 btn btn-lg" style="background-color: #C9A84C; color: #050810; font-weight: 600;"><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesion</button>
                     </div>
                 </EditForm>
 
                 <div class="text-center mt-3">
-                    <a href="Account/ForgotPassword" class="text-muted small">¿Olvidaste tu contraseña?</a>
+                    <a href="Account/ForgotPassword" style="color: rgba(201,168,76,0.6);" class="small">¿Olvidaste tu contraseña?</a>
                 </div>
             </div>
         </div>
-        <p class="text-center text-muted small mt-3">&copy; @DateTime.Now.Year DigitalPlus</p>
+        <p class="text-center small mt-3" style="color: rgba(232,234,240,0.4);">&copy; @DateTime.Now.Year DigitalPlus &mdash; <a href="https://www.integraia.tech" target="_blank" style="color: rgba(201,168,76,0.5);">integraia.tech</a></p>
     </div>
 </div>
 

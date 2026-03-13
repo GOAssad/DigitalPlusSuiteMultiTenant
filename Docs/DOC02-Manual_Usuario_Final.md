@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 4.0
-**Fecha:** 2026-03-11
+**Version:** 5.0
+**Fecha:** 2026-03-12
 
 ---
 
@@ -141,54 +141,71 @@ Haga clic en **Finalizar**. Opcionalmente puede marcar ejecutar las aplicaciones
 
 ### 2.2 Instalador Liviano (Nube)
 
-Este instalador es para empresas cuya base de datos esta alojada en la nube. Es mas rapido y liviano, pero requiere un **codigo de activacion** proporcionado por el administrador del sistema.
+Este es el instalador recomendado para la mayoria de las empresas. La base de datos esta alojada en la nube (no se necesita instalar nada de SQL Server en su equipo). Es rapido y liviano (~25 MB), pero requiere un **codigo de activacion** proporcionado por el administrador del sistema.
+
+#### Que necesita antes de empezar
+
+1. El archivo del instalador: `DigitalPlus_Cloud_Setup_v1.0.exe`
+2. El **codigo de activacion** de su empresa (proporcionado por su proveedor)
+3. Conexion a internet (obligatoria durante la instalacion)
 
 #### Paso 1 - Ejecutar el instalador
 
-Haga doble clic en:
-```
-DigitalPlus_Cloud_Setup_v1.0.exe
-```
+Haga doble clic en el archivo `DigitalPlus_Cloud_Setup_v1.0.exe`. Si Windows muestra una advertencia de seguridad (SmartScreen o UAC), haga clic en **Mas informacion** y luego en **Ejecutar de todas formas**, y luego **Si** en la pantalla de permisos de administrador.
 
 > [CAPTURA: Pantalla de UAC de Windows]
 
 #### Paso 2 - Pantalla de bienvenida
 
-Haga clic en **Siguiente**.
+Lea la informacion y haga clic en **Siguiente**.
 
 > [CAPTURA: Pantalla de bienvenida del instalador liviano]
 
-#### Paso 3 - Accesos directos
+#### Paso 3 - Accesos directos y opciones
 
-Seleccione los accesos directos deseados y haga clic en **Siguiente**.
+Seleccione las opciones deseadas:
+- **Crear acceso directo en el Escritorio para Fichador** (recomendado para terminales de fichaje)
+- **Crear acceso directo en el Escritorio para Administrador** (recomendado para el puesto de administracion)
+- **Iniciar Fichador automaticamente al encender** (recomendado para terminales que siempre deben estar activas)
+- **Iniciar Administrador automaticamente al encender** (opcional)
+
+Haga clic en **Siguiente**.
 
 > [CAPTURA: Pantalla de seleccion de accesos directos]
 
 #### Paso 4 - Codigo de Activacion
 
-Esta es la pantalla mas importante. Ingrese el codigo de activacion que le proporciono su proveedor.
+Esta es la pantalla mas importante del proceso.
 
-1. Escriba el codigo en el campo de texto
-2. Haga clic en **Validar Codigo**
-3. Espere la respuesta:
-   - **Verde:** "Codigo valido. Empresa: [nombre]" - Puede continuar
-   - **Rojo:** "Codigo invalido o expirado" - Verifique el codigo
+1. Escriba o pegue el **codigo de activacion** en el campo de texto. El codigo tiene formato `XXXX-XXXX-XXXX-XXXX-XXXX-XXXX` (puede variar en longitud).
+2. Haga clic en el boton **Validar Codigo**
+3. Espere la respuesta del servidor (requiere internet):
+   - **Verde:** "Codigo valido. Empresa: [nombre de su empresa]" — Puede continuar con la instalacion
+   - **Rojo:** "Codigo invalido o expirado" — Verifique que el codigo este bien escrito. Si persiste, contacte a su proveedor.
 
 > [CAPTURA: Pantalla de ingreso de codigo de activacion con campo de texto y boton Validar]
 
-> **Importante:** Sin un codigo valido no podra continuar con la instalacion. Si no tiene el codigo, contacte al administrador del sistema.
+> **Importante:** Sin un codigo valido no podra continuar con la instalacion. Si no tiene el codigo, contacte al administrador del sistema. Cada codigo esta asociado a una empresa especifica.
 
-#### Paso 5 - URL del Portal Web (opcional)
+#### Paso 5 - Instalacion
 
-Si su empresa tiene un portal web DigitalPlus, ingrese la URL. Si no la tiene, puede dejar el campo vacio.
-
-> [CAPTURA: Pantalla de configuracion de URL del portal web]
-
-#### Paso 6 - Instalacion y finalizacion
-
-El proceso es igual al instalador completo: copiar archivos, instalar drivers y finalizar.
+Haga clic en **Instalar**. El instalador realizara automaticamente:
+- Copia de archivos del Fichador y Administrador
+- Instalacion del driver del lector de huellas DigitalPersona
+- Configuracion de la conexion a la base de datos en la nube (usando el codigo validado)
+- Cifrado de la configuracion de seguridad (proteccion DPAPI)
 
 > [CAPTURA: Progreso de instalacion liviana]
+
+#### Paso 6 - Finalizacion
+
+Haga clic en **Finalizar**. Opcionalmente puede marcar ejecutar las aplicaciones inmediatamente.
+
+#### Que sucede automaticamente despues de instalar
+
+Al abrir el **Fichador** por primera vez, el sistema realiza un **auto-registro de la terminal**: detecta el nombre de la computadora y la registra automaticamente en la base de datos, asociandola a la sucursal principal de su empresa. **No es necesario dar de alta la computadora manualmente** desde el portal web ni desde el Administrador.
+
+Si necesita cambiar la sucursal asignada a una terminal, puede hacerlo desde el **Portal Web** en la seccion **Terminales**.
 
 ---
 
@@ -208,10 +225,12 @@ Si el lector ya estaba conectado antes de instalar, desconectelo y vuelva a cone
 
 1. Abra **DigitalPlus Administrador**
 2. Configure los datos basicos: Sucursales, Categorias, Horarios, Sectores
-3. Cargue los **Legajos** (empleados)
+3. Cargue los **Legajos** (empleados) — puede tomarles foto con la camara web
 4. Registre las **huellas digitales** de cada empleado (o asigne PINs)
-5. Abra **DigitalPlus Fichador** en la terminal de fichaje
+5. Abra **DigitalPlus Fichador** en la terminal de fichaje — la computadora se registra automaticamente como terminal asociada a la sucursal principal
 6. Pruebe fichando con un empleado registrado
+
+> **Nota:** No es necesario registrar las terminales (computadoras de fichaje) manualmente. El Fichador las registra automaticamente la primera vez que se ejecuta en cada computadora.
 
 ---
 
@@ -253,10 +272,12 @@ Si no hay lector de huellas o si el modo PIN esta habilitado:
 
 #### Primera vez (sin PIN asignado)
 
-Si el legajo no tiene un PIN asignado, el sistema le preguntara **"¿Desea crear uno ahora?"**. Si acepta, se abre el formulario de creacion de PIN donde debe:
+Si el legajo no tiene un PIN asignado, el sistema le preguntara **"¿Desea crear uno ahora?"** con botones **Si** y **No**. Si acepta, se abre el formulario de creacion de PIN donde debe:
 
 1. Ingresar un nuevo PIN (4 a 6 digitos)
 2. Confirmar el nuevo PIN
+
+Si elige **No**, puede fichar de otra manera (huella) o volver mas tarde.
 
 > [CAPTURA: Dialogo preguntando si desea crear un PIN con botones Si/No]
 
@@ -264,9 +285,13 @@ Si el legajo no tiene un PIN asignado, el sistema le preguntara **"¿Desea crear
 
 #### Cambio forzado por el administrador
 
-Si el administrador marco "Forzar cambio de PIN" o "Resetear PIN" para el empleado, al ingresar su numero de legajo el sistema lo lleva **directamente** al formulario de creacion de PIN, **sin pedir el PIN anterior**. Se muestra el mensaje: **"El administrador requiere que cambie su PIN"**.
+Si el administrador marco "Forzar cambio de PIN" para el empleado, al ingresar su numero de legajo el sistema muestra un mensaje **obligatorio**: **"El administrador requiere que cambie su PIN"** con un unico boton **OK**. No hay opcion de cancelar ni de omitir el cambio. Al presionar OK, se abre directamente el formulario de creacion de PIN **sin pedir el PIN anterior**.
 
-> [CAPTURA: Mensaje "El administrador requiere que cambie su PIN" con formulario de nuevo PIN]
+Si el administrador "Reseteo" el PIN (lo elimino), el comportamiento es igual al de "Primera vez" descrito arriba (ofrece crear uno nuevo con Si/No).
+
+> [CAPTURA: Mensaje obligatorio "El administrador requiere que cambie su PIN" con boton OK]
+
+> [CAPTURA: Formulario de nuevo PIN sin campo de PIN anterior]
 
 #### PIN expirado
 
@@ -325,8 +350,9 @@ En la barra inferior del Fichador se muestra informacion segun el tipo de instal
 - Plan contratado
 
 **Instalacion multi-tenant (nube):**
-- En lugar de datos de licencia, la barra muestra la informacion del **terminal/sucursal**. El terminal se identifica por el nombre de la maquina y se mapea automaticamente a una sucursal en la base de datos.
+- En lugar de datos de licencia, la barra muestra la informacion del **terminal/sucursal**. El terminal se identifica por el nombre de la maquina y se registra automaticamente en la primera ejecucion, asociandose a la sucursal principal de la empresa.
 - Ejemplo: **"10 - Administracion Dardo Rocha"** muestra el ID de la sucursal y su nombre.
+- Si la terminal no aparece asociada a ninguna sucursal, verifique la conexion a la base de datos.
 
 > [CAPTURA: Barra de estado inferior mostrando informacion de licencia (instalacion local)]
 

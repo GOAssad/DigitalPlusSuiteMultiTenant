@@ -35,13 +35,13 @@ namespace Acceso
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.WhiteSmoke;
+            this.BackColor = Color.FromArgb(248, 247, 244);
 
             lblTitulo = new Label
             {
                 Text = _legajoNombre,
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                ForeColor = Color.RoyalBlue,
+                ForeColor = Color.FromArgb(201, 168, 76),
                 Location = new Point(20, 15),
                 Size = new Size(300, 30),
                 TextAlign = ContentAlignment.MiddleCenter
@@ -113,8 +113,8 @@ namespace Acceso
             {
                 Text = "Guardar PIN",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                BackColor = Color.RoyalBlue,
-                ForeColor = Color.White,
+                BackColor = Color.FromArgb(201, 168, 76),
+                ForeColor = Color.FromArgb(11, 17, 32),
                 FlatStyle = FlatStyle.Flat,
                 Location = new Point(40, 210),
                 Size = new Size(120, 35)

@@ -62,9 +62,10 @@ namespace Acceso.Ventas
             // panelMenu
             // 
             this.panelMenu.AutoScroll = true;
-            this.panelMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(30)))), ((int)(((byte)(68)))));
+            this.panelMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.btnConfiguracion = new FontAwesome.Sharp.IconButton();
             this.btnLicencias = new FontAwesome.Sharp.IconButton();
+            this.btnCambiarClave = new FontAwesome.Sharp.IconButton();
             this.lblLicenciaStatus = new System.Windows.Forms.Label();
             this.panelBranding = new System.Windows.Forms.Panel();
             this.picLogoIntegraIA = new System.Windows.Forms.PictureBox();
@@ -73,6 +74,7 @@ namespace Acceso.Ventas
             this.panelMenu.Controls.Add(this.panelBranding);
             this.panelMenu.Controls.Add(this.btnLogout);
             this.panelMenu.Controls.Add(this.panelSocialLinks);
+            this.panelMenu.Controls.Add(this.btnCambiarClave);
             this.panelMenu.Controls.Add(this.btnLicencias);
             this.panelMenu.Controls.Add(this.btnConfiguracion);
             this.panelMenu.Controls.Add(this.btnLegajos);
@@ -137,7 +139,7 @@ namespace Acceso.Ventas
             this.panelSocialLinks.Name = "panelSocialLinks";
             this.panelSocialLinks.Size = new System.Drawing.Size(173, 0);
             this.panelSocialLinks.TabIndex = 7;
-            this.panelSocialLinks.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(30)))), ((int)(((byte)(68)))));
+            this.panelSocialLinks.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.panelSocialLinks.Padding = System.Windows.Forms.Padding.Empty;
             this.panelSocialLinks.Margin = System.Windows.Forms.Padding.Empty;
             //
@@ -183,9 +185,30 @@ namespace Acceso.Ventas
             this.btnLicencias.UseVisualStyleBackColor = true;
             this.btnLicencias.Click += new System.EventHandler(this.btnLicencias_Click);
             //
+            // btnCambiarClave
+            //
+            this.btnCambiarClave.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnCambiarClave.FlatAppearance.BorderSize = 0;
+            this.btnCambiarClave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCambiarClave.ForeColor = System.Drawing.Color.Gainsboro;
+            this.btnCambiarClave.IconChar = FontAwesome.Sharp.IconChar.Lock;
+            this.btnCambiarClave.IconColor = System.Drawing.Color.Gainsboro;
+            this.btnCambiarClave.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnCambiarClave.IconSize = 32;
+            this.btnCambiarClave.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnCambiarClave.Name = "btnCambiarClave";
+            this.btnCambiarClave.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnCambiarClave.Size = new System.Drawing.Size(173, 60);
+            this.btnCambiarClave.TabIndex = 11;
+            this.btnCambiarClave.Text = "Cambiar Clave";
+            this.btnCambiarClave.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnCambiarClave.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnCambiarClave.UseVisualStyleBackColor = true;
+            this.btnCambiarClave.Click += new System.EventHandler(this.btnCambiarClave_Click);
+            //
             // panelBranding
             //
-            this.panelBranding.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(248)))));
+            this.panelBranding.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(5)))), ((int)(((byte)(8)))), ((int)(((byte)(16)))));
             this.panelBranding.Controls.Add(this.picLogoIntegraIA);
             this.panelBranding.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panelBranding.Location = new System.Drawing.Point(0, 740);
@@ -195,13 +218,15 @@ namespace Acceso.Ventas
             //
             // picLogoIntegraIA
             //
-            this.picLogoIntegraIA.Location = new System.Drawing.Point(41, 5);
+            this.picLogoIntegraIA.Location = new System.Drawing.Point(22, 3);
             this.picLogoIntegraIA.Name = "picLogoIntegraIA";
-            this.picLogoIntegraIA.Size = new System.Drawing.Size(90, 45);
+            this.picLogoIntegraIA.Size = new System.Drawing.Size(130, 48);
             this.picLogoIntegraIA.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picLogoIntegraIA.TabIndex = 0;
             this.picLogoIntegraIA.TabStop = false;
-            this.picLogoIntegraIA.BackColor = System.Drawing.Color.Transparent;
+            this.picLogoIntegraIA.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(235)))));
+            this.picLogoIntegraIA.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.picLogoIntegraIA.Click += new System.EventHandler(this.picLogoIntegraIA_Click);
             //
             // lblLicenciaStatus
             //
@@ -238,7 +263,7 @@ namespace Acceso.Ventas
             // 
             // panelTitleBar
             // 
-            this.panelTitleBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
+            this.panelTitleBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.panelTitleBar.Controls.Add(this.lblUsuario);
             this.panelTitleBar.Controls.Add(this.panelBotonesWindos);
             this.panelTitleBar.Controls.Add(this.lblTitleChildForm);
@@ -255,7 +280,7 @@ namespace Acceso.Ventas
             this.lblUsuario.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblUsuario.AutoSize = true;
             this.lblUsuario.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblUsuario.ForeColor = System.Drawing.Color.DarkCyan;
+            this.lblUsuario.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.lblUsuario.Location = new System.Drawing.Point(675, 38);
             this.lblUsuario.Name = "lblUsuario";
             this.lblUsuario.Size = new System.Drawing.Size(12, 17);
@@ -275,10 +300,10 @@ namespace Acceso.Ventas
             // 
             // iconMinimize
             // 
-            this.iconMinimize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
-            this.iconMinimize.ForeColor = System.Drawing.Color.Coral;
+            this.iconMinimize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
+            this.iconMinimize.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconMinimize.IconChar = FontAwesome.Sharp.IconChar.WindowMinimize;
-            this.iconMinimize.IconColor = System.Drawing.Color.Coral;
+            this.iconMinimize.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconMinimize.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.iconMinimize.IconSize = 20;
             this.iconMinimize.Location = new System.Drawing.Point(3, 11);
@@ -290,10 +315,10 @@ namespace Acceso.Ventas
             // 
             // iconClose
             // 
-            this.iconClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
-            this.iconClose.ForeColor = System.Drawing.Color.Coral;
+            this.iconClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
+            this.iconClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconClose.IconChar = FontAwesome.Sharp.IconChar.WindowClose;
-            this.iconClose.IconColor = System.Drawing.Color.Coral;
+            this.iconClose.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconClose.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.iconClose.IconSize = 20;
             this.iconClose.Location = new System.Drawing.Point(55, 11);
@@ -305,10 +330,10 @@ namespace Acceso.Ventas
             // 
             // iconMaximize
             // 
-            this.iconMaximize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
-            this.iconMaximize.ForeColor = System.Drawing.Color.Coral;
+            this.iconMaximize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
+            this.iconMaximize.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconMaximize.IconChar = FontAwesome.Sharp.IconChar.WindowMaximize;
-            this.iconMaximize.IconColor = System.Drawing.Color.Coral;
+            this.iconMaximize.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconMaximize.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.iconMaximize.IconSize = 20;
             this.iconMaximize.Location = new System.Drawing.Point(29, 11);
@@ -330,10 +355,10 @@ namespace Acceso.Ventas
             // 
             // iconCurrentChildForm
             // 
-            this.iconCurrentChildForm.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(25)))), ((int)(((byte)(62)))));
-            this.iconCurrentChildForm.ForeColor = System.Drawing.Color.MediumPurple;
+            this.iconCurrentChildForm.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
+            this.iconCurrentChildForm.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconCurrentChildForm.IconChar = FontAwesome.Sharp.IconChar.Home;
-            this.iconCurrentChildForm.IconColor = System.Drawing.Color.MediumPurple;
+            this.iconCurrentChildForm.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.iconCurrentChildForm.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.iconCurrentChildForm.Location = new System.Drawing.Point(17, 23);
             this.iconCurrentChildForm.Name = "iconCurrentChildForm";
@@ -343,7 +368,7 @@ namespace Acceso.Ventas
             // 
             // panelShadow
             // 
-            this.panelShadow.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(24)))), ((int)(((byte)(58)))));
+            this.panelShadow.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(5)))), ((int)(((byte)(8)))), ((int)(((byte)(16)))));
             this.panelShadow.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelShadow.Location = new System.Drawing.Point(159, 75);
             this.panelShadow.Name = "panelShadow";
@@ -352,7 +377,7 @@ namespace Acceso.Ventas
             // 
             // panelDesktop
             // 
-            this.panelDesktop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.panelDesktop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(247)))), ((int)(((byte)(244)))));
             this.panelDesktop.Controls.Add(this.reloj1);
             this.panelDesktop.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelDesktop.Location = new System.Drawing.Point(159, 83);
@@ -422,6 +447,7 @@ namespace Acceso.Ventas
         private System.Windows.Forms.FlowLayoutPanel panelSocialLinks;
         private FontAwesome.Sharp.IconButton btnConfiguracion;
         private FontAwesome.Sharp.IconButton btnLicencias;
+        private FontAwesome.Sharp.IconButton btnCambiarClave;
         private System.Windows.Forms.Label lblLicenciaStatus;
         private Global.Controles.Reloj reloj1;
         private System.Windows.Forms.Label lblUsuario;

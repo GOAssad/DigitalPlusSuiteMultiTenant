@@ -33,11 +33,11 @@ namespace Acceso.Generales
             // lblTitulo
             //
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
-            this.lblTitulo.ForeColor = System.Drawing.Color.White;
+            this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(201, 168, 76);
             this.lblTitulo.Location = new System.Drawing.Point(30, 20);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(500, 35);
-            this.lblTitulo.Text = "Licencia DigitalPlus";
+            this.lblTitulo.Text = "Licencia Digital One";
             //
             // lblEstadoValor
             //
@@ -51,7 +51,7 @@ namespace Acceso.Generales
             // lblInfo
             //
             this.lblInfo.Font = new System.Drawing.Font("Segoe UI", 10F);
-            this.lblInfo.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblInfo.ForeColor = System.Drawing.Color.FromArgb(200, 200, 210);
             this.lblInfo.Location = new System.Drawing.Point(30, 95);
             this.lblInfo.Name = "lblInfo";
             this.lblInfo.Size = new System.Drawing.Size(500, 120);
@@ -63,7 +63,7 @@ namespace Acceso.Generales
             this.grpActivacion.Controls.Add(this.txtCodigo);
             this.grpActivacion.Controls.Add(this.btnActivar);
             this.grpActivacion.Font = new System.Drawing.Font("Segoe UI", 10F);
-            this.grpActivacion.ForeColor = System.Drawing.Color.Gainsboro;
+            this.grpActivacion.ForeColor = System.Drawing.Color.FromArgb(200, 200, 210);
             this.grpActivacion.Location = new System.Drawing.Point(30, 230);
             this.grpActivacion.Name = "grpActivacion";
             this.grpActivacion.Size = new System.Drawing.Size(500, 110);
@@ -73,7 +73,7 @@ namespace Acceso.Generales
             // lblCodigoLabel
             //
             this.lblCodigoLabel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblCodigoLabel.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblCodigoLabel.ForeColor = System.Drawing.Color.FromArgb(200, 200, 210);
             this.lblCodigoLabel.Location = new System.Drawing.Point(15, 30);
             this.lblCodigoLabel.Name = "lblCodigoLabel";
             this.lblCodigoLabel.Size = new System.Drawing.Size(140, 22);
@@ -89,10 +89,11 @@ namespace Acceso.Generales
             //
             // btnActivar
             //
-            this.btnActivar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(95)))), ((int)(((byte)(77)))), ((int)(((byte)(221)))));
+            this.btnActivar.BackColor = System.Drawing.Color.FromArgb(201, 168, 76);
             this.btnActivar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnActivar.FlatAppearance.BorderSize = 0;
             this.btnActivar.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnActivar.ForeColor = System.Drawing.Color.White;
+            this.btnActivar.ForeColor = System.Drawing.Color.FromArgb(11, 17, 32);
             this.btnActivar.Location = new System.Drawing.Point(340, 52);
             this.btnActivar.Name = "btnActivar";
             this.btnActivar.Size = new System.Drawing.Size(145, 32);
@@ -105,7 +106,7 @@ namespace Acceso.Generales
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.BackColor = System.Drawing.Color.FromArgb(11, 17, 32);
             this.ClientSize = new System.Drawing.Size(570, 370);
             this.Controls.Add(this.lblTitulo);
             this.Controls.Add(this.lblEstadoValor);

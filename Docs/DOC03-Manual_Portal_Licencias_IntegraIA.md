@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 4.0
-**Fecha:** 2026-03-11
+**Version:** 5.0
+**Fecha:** 2026-03-12
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -193,9 +193,22 @@ Al completar el wizard, el sistema automaticamente:
 ### Que hacer despues del alta
 
 1. **Copiar el codigo de activacion** y la **contraseña temporal del portal**
-2. **Enviarselo al cliente** (por email, WhatsApp, etc.)
-3. El cliente usara el codigo en el **Instalador Liviano** para las apps desktop
-4. El cliente usara el email y contraseña temporal para acceder al **Portal Web** (se le pedira cambiar la contraseña en el primer acceso)
+2. **Enviarselo al cliente** junto con el archivo del instalador (`DigitalPlus_Cloud_Setup_v1.0.exe`)
+3. El cliente ejecuta el **Instalador Liviano**, ingresa el codigo de activacion, y el sistema se configura automaticamente
+4. Al abrir el **Fichador** por primera vez, la computadora se registra automaticamente como terminal asociada a la sucursal principal — **no es necesario dar de alta terminales manualmente**
+5. El cliente usara el email y contraseña temporal para acceder al **Portal Web** (se le pedira cambiar la contraseña en el primer acceso)
+
+### Que enviar al cliente
+
+Envie al cliente los siguientes elementos (por email, WhatsApp, etc.):
+
+| Elemento | Ejemplo | Para que lo necesita |
+|---|---|---|
+| Instalador | `DigitalPlus_Cloud_Setup_v1.0.exe` | Instalar Fichador y Administrador |
+| Codigo de activacion | `3CCA-6A4C-C675-A967-21A2-F95D` | Activar la instalacion (lo pide el instalador) |
+| Email del portal | `admin@{companyId}.com` | Acceder al Portal Web |
+| Contraseña temporal | (la que se mostro en el wizard) | Primer login en el Portal Web |
+| URL del portal | `https://digitalplusportalmt.azurewebsites.net` | Direccion del portal web |
 
 ---
 
@@ -452,7 +465,30 @@ El nuevo usuario se crea con el rol "Administrador" y acceso completo al portal.
 
 | Email | Password | Notas |
 |---|---|---|
-| `admin@digitalplus.com` | `Admin123` | Usuario principal, no eliminable. Cambiar contraseña en produccion. |
+| `admin@digitalplus.com` | `Admin123` | Usuario principal del Portal de Licencias. No eliminable. Cambiar contraseña en produccion. |
+
+### Credenciales SuperAdmin - Portal Multi-Tenant y Apps Desktop
+
+El SuperAdmin es el usuario de IntegraIA con acceso cross-tenant (puede acceder a cualquier empresa).
+
+| Email | Password | Rol | EmpresaId | Notas |
+|---|---|---|---|---|
+| `admin@integraia.tech` | `Admin123` | SuperAdmin | 1 (IntegraIA) | Acceso total a todas las empresas. Cambiar password en produccion. |
+| `admin@kosiuko.com` | `Admin123` | AdminEmpresa | 2 (Kosiuko) | Admin de la empresa Kosiuko, solo accede a su empresa. |
+
+> **Importante:**
+> - El SuperAdmin (`admin@integraia.tech`) puede iniciar sesion en **cualquier instalacion desktop** (Fichador o Administrador) sin importar el EmpresaId configurado. Util para soporte tecnico remoto.
+> - Los usuarios con rol AdminEmpresa solo pueden acceder a la empresa que tienen asignada (validado contra el EmpresaId del app.config de la instalacion).
+> - **Cambiar la contraseña por defecto** de ambos usuarios en produccion.
+
+### Jerarquia de roles (Portal Multi-Tenant)
+
+| Rol | Acceso |
+|---|---|
+| `SuperAdmin` | Acceso global cross-tenant. Solo para IntegraIA. |
+| `AdminEmpresa` | Administrador de una empresa. Gestiona usuarios, configuracion. |
+| `Operador` | Operaciones diarias (fichadas, legajos). |
+| `Consulta` | Solo lectura. |
 
 ---
 
@@ -470,26 +506,32 @@ El nuevo usuario se crea con el rol "Administrador" y acceso completo al portal.
    |
    v
 3. INTEGRA IA: Enviar al cliente
-   - Codigo de activacion (para instalador)
-   - Link de descarga del Instalador Liviano
-   - Instrucciones de instalacion
+   - Archivo: DigitalPlus_Cloud_Setup_v1.0.exe
+   - Codigo de activacion
+   - Credenciales del portal web (email + password temporal)
+   - URL del portal: https://digitalplusportalmt.azurewebsites.net
    |
    v
 4. CLIENTE: Ejecutar Instalador Liviano
    - Ingresa el codigo de activacion
    - El instalador llama a /api/activar del portal
    - Obtiene connection string y configura las apps
+   - Se instala Fichador + Administrador + driver de huella
    |
    v
-5. CLIENTE: Usar Fichador y Administrador
+5. CLIENTE: Abrir Fichador por primera vez
+   - La computadora se auto-registra como Terminal
+   - Se asocia a la sucursal principal de la empresa
+   - NO es necesario registrar terminales manualmente
+   |
+   v
+6. CLIENTE: Usar el sistema
    - Apps conectan a la BD multi-tenant en Ferozo
-   - En modo multi-tenant (cloud), la validacion de licencia esta deshabilitada
-   - El codigo de activacion del instalador es suficiente para operar
-   - No hay periodo trial ni activacion adicional requerida
-   - Flujo simplificado: Instalar con codigo -> Apps conectan -> Listo para usar
+   - En modo multi-tenant, la validacion de licencia esta deshabilitada
+   - Flujo simplificado: Instalar con codigo -> Abrir -> Listo para usar
    |
    v
-6. MONITOREO CONTINUO
+7. MONITOREO CONTINUO
    - Heartbeats cada 4 horas (automatico)
    - Revisar Dashboard para detectar problemas
    - Log de auditoria para diagnostico

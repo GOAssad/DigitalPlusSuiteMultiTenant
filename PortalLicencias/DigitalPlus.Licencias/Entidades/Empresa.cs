@@ -67,6 +67,10 @@ public class Empresa
     [MaxLength(500)]
     public string? TikTok { get; set; }
 
+    // Portal web de la empresa (ej: https://digitalplusportalmt.azurewebsites.net/)
+    [MaxLength(500)]
+    public string? UrlPortal { get; set; }
+
     // Logo
     public byte[]? Logo { get; set; }
 

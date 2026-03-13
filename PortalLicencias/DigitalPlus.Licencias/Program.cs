@@ -134,7 +134,8 @@ app.MapPost("/api/activar", async (ActivarRequest req,
         adminEmpresaId = empresa.Id,
         companyId = empresa.CompanyId,
         nombreEmpresa = empresa.Nombre,
-        databaseName = empresa.DatabaseName
+        databaseName = empresa.DatabaseName,
+        urlPortal = empresa.UrlPortal ?? ""
     });
 });
 

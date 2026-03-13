@@ -3,15 +3,16 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1.25rem 1.5rem;
-    color: #fff;
+    color: #C9A84C;
     font-size: 1.35rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
 }
 
 .sidebar-brand i {
     font-size: 1.5rem;
+    color: #C9A84C;
 }
 
 .sidebar-nav {
@@ -19,7 +20,7 @@
 }
 
 .nav-section-title {
-    color: rgba(255,255,255,0.4);
+    color: rgba(201, 168, 76, 0.5);
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -33,7 +34,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.55rem 1.5rem;
-    color: rgba(255,255,255,0.7);
+    color: rgba(232, 234, 240, 0.7);
     text-decoration: none;
     font-size: 0.875rem;
     transition: all 0.15s ease;
@@ -41,14 +42,14 @@
 }
 
 ::deep .sidebar-link:hover {
-    color: #fff;
-    background-color: rgba(255,255,255,0.08);
+    color: #E8EAF0;
+    background-color: rgba(201, 168, 76, 0.08);
 }
 
 ::deep .sidebar-link.active {
-    color: #fff;
-    background-color: rgba(255,255,255,0.12);
-    border-left-color: #4fc3f7;
+    color: #C9A84C;
+    background-color: rgba(201, 168, 76, 0.12);
+    border-left-color: #C9A84C;
 }
 
 ::deep .sidebar-link i {
@@ -81,7 +82,7 @@
     background: none;
     border: none;
     border-left: 3px solid transparent;
-    color: rgba(255,255,255,0.7);
+    color: rgba(232, 234, 240, 0.7);
     font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -89,12 +90,12 @@
 }
 
 .nav-group-toggle:hover {
-    color: #fff;
-    background-color: rgba(255,255,255,0.08);
+    color: #E8EAF0;
+    background-color: rgba(201, 168, 76, 0.08);
 }
 
 .nav-group-toggle.open {
-    color: #fff;
+    color: #C9A84C;
 }
 
 .nav-group-toggle i:first-child {
@@ -121,7 +122,7 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.25s ease;
-    background-color: rgba(0,0,0,0.15);
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 .nav-group-items.show {

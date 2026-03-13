@@ -296,9 +296,6 @@ var
   btnActivar:       TNewButton;
   lblActivResult:   TNewStaticText;
 
-  // URL Portal Web (fija, no se pregunta al usuario)
-  // Se usa https://integraia.tech/ por default
-
   // Estado interno
   sConnectionString:      String;    // Connection string a DigitalPlusMultiTenant
   sAdminConnectionString: String;    // Connection string a DigitalPlusAdmin
@@ -306,6 +303,7 @@ var
   sNombreEmpresa:         String;    // Nombre de la empresa (viene del portal)
   sEmpresaId:             String;    // EmpresaId del tenant en DigitalPlusMultiTenant
   sAdminEmpresaId:        String;    // Id de la empresa en DigitalPlusAdmin
+  sUrlPortal:             String;    // URL del portal web de la empresa
 
 // ============================================================
 // UTILIDADES
@@ -344,6 +342,7 @@ begin
   sNombreEmpresa := '';
   sEmpresaId := '';
   sAdminEmpresaId := '';
+  sUrlPortal := '';
 
   sUrl := '{#PortalApiUrl}';
   sBody := '{"Codigo":"' + sCodigo + '"}';
@@ -411,6 +410,16 @@ begin
         iEnd := PosEx('"', sResponse, iPos);
         if iEnd > iPos then
           sNombreEmpresa := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer urlPortal del JSON
+      iPos := Pos('urlPortal":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('urlPortal":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sUrlPortal := Copy(sResponse, iPos, iEnd - iPos);
       end;
 
       if (sConnectionString <> '') and (sEmpresaId <> '') then
@@ -498,8 +507,6 @@ begin
   lblActivResult.Caption := '';
 end;
 
-// URL del portal web se configura fija (https://integraia.tech/)
-
 // ============================================================
 // CONFIGURACION POST-INSTALACION
 // ============================================================
@@ -509,10 +516,7 @@ var
   FilePath: String;
   Lines: TArrayOfString;
   i: Integer;
-  sUrlWeb: String;
 begin
-  sUrlWeb := 'https://integraia.tech/';
-
   // --- Fichador config ---
   FilePath := ExpandConstant('{app}\Fichadas\TEntradaSalida.exe.config');
   if LoadStringsFromFile(FilePath, Lines) then
@@ -524,6 +528,7 @@ begin
       StringChange(Lines[i], '{{EMPRESA_ID}}', sEmpresaId);
       StringChange(Lines[i], '{{ADMIN_EMPRESA_ID}}', sAdminEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
+      StringChange(Lines[i], '{{URL_PORTAL}}', sUrlPortal);
     end;
     SaveStringsToFile(FilePath, Lines, False);
   end;
@@ -539,7 +544,7 @@ begin
       StringChange(Lines[i], '{{EMPRESA_ID}}', sEmpresaId);
       StringChange(Lines[i], '{{ADMIN_EMPRESA_ID}}', sAdminEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
-      StringChange(Lines[i], '{{URL_DIGITALPLUS_WEB}}', sUrlWeb);
+      StringChange(Lines[i], '{{URL_PORTAL}}', sUrlPortal);
     end;
     SaveStringsToFile(FilePath, Lines, False);
   end;
@@ -607,6 +612,7 @@ begin
   sNombreEmpresa := '';
   sEmpresaId := '';
   sAdminEmpresaId := '';
+  sUrlPortal := '';
 
   CreateActivacionPage;
 end;

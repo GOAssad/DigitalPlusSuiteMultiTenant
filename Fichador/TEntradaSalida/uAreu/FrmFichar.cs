@@ -86,7 +86,7 @@ namespace Acceso.uAreu
                 Capturer = null;
                 _lectorDisponible = false;
             }
-            Text = "DigitalPlus Fichadas";
+            Text = "Digital One";
             if (_lectorDisponible)
                 Verificator = new DPFP.Verification.Verification();
             HuellaLog.Write("Init() fin, _lectorDisponible=" + _lectorDisponible);
@@ -180,7 +180,7 @@ namespace Acceso.uAreu
         {
             _modoActual = modo;
 
-            PictureHuella.Visible = (modo == ModoFichada.Huella);
+            panelLector.Visible = (modo == ModoFichada.Huella);
             panelPin.Visible = (modo == ModoFichada.Pin);
             panelDemo.Visible = (modo == ModoFichada.Demo);
 
@@ -226,20 +226,31 @@ namespace Acceso.uAreu
 
         private void ActualizarLinkModo()
         {
-            // Construir opciones de cambio de modo
-            var modos = new System.Collections.Generic.List<string>();
+            try
+            {
+                // Suspender layout para evitar conflicto de Region durante repaint
+                lnkCambiarModo.SuspendLayout();
 
-            if (_modoActual != ModoFichada.Huella && _lectorDisponible)
-                modos.Add("Huella");
-            if (_modoActual != ModoFichada.Pin && _pinHabilitado)
-                modos.Add("PIN");
-            if (_modoActual != ModoFichada.Demo && _demoHabilitado)
-                modos.Add("Demo");
+                var modos = new System.Collections.Generic.List<string>();
 
-            if (modos.Count > 0)
-                lnkCambiarModo.Text = "Cambiar a modo: " + string.Join(" | ", modos);
-            else
-                lnkCambiarModo.Text = "";
+                if (_modoActual != ModoFichada.Huella && _lectorDisponible)
+                    modos.Add("Huella");
+                if (_modoActual != ModoFichada.Pin && _pinHabilitado)
+                    modos.Add("PIN");
+                if (_modoActual != ModoFichada.Demo && _demoHabilitado)
+                    modos.Add("Demo");
+
+                if (modos.Count > 0)
+                    lnkCambiarModo.Text = "Cambiar a modo: " + string.Join(" | ", modos);
+                else
+                    lnkCambiarModo.Text = "";
+
+                lnkCambiarModo.ResumeLayout(true);
+            }
+            catch (ArgumentException)
+            {
+                // GDI+ Region conflict durante repaint — ignorar, se corrige en el proximo tick
+            }
         }
 
         private void lnkCambiarModo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -302,20 +313,31 @@ namespace Acceso.uAreu
             // Si no tiene PIN asignado o el admin reseteo el PIN, pedir crear uno nuevo
             if (!pinHelper.HasPin || pinHelper.PinMustChange)
             {
-                string msg = !pinHelper.HasPin
-                    ? "Este legajo no tiene PIN asignado.\n¿Desea crear uno ahora?"
-                    : "El administrador requiere que cambie su PIN.\n¿Desea cambiarlo ahora?";
-                string title = !pinHelper.HasPin ? "PIN no configurado" : "Cambio de PIN requerido";
-
-                var result = MessageBox.Show(msg, title,
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (result == DialogResult.Yes)
+                if (pinHelper.PinMustChange)
                 {
-                    using (var frm = new FrmCambiarPin(legajoId, pinHelper.sLegajoNombre, !pinHelper.HasPin))
+                    // Cambio obligatorio: solo OK, abre directo el formulario de cambio
+                    MessageBox.Show("El administrador requiere que cambie su PIN.",
+                        "Cambio de PIN requerido", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    using (var frm = new FrmCambiarPin(legajoId, pinHelper.sLegajoNombre, false))
                     {
                         if (frm.ShowDialog() == DialogResult.OK)
-                            lblPinError.Text = "PIN " + (!pinHelper.HasPin ? "creado" : "cambiado") + ". Ingrese su PIN para fichar.";
+                            lblPinError.Text = "PIN cambiado. Ingrese su nuevo PIN para fichar.";
+                    }
+                }
+                else
+                {
+                    // No tiene PIN: preguntar si quiere crear
+                    var result = MessageBox.Show("Este legajo no tiene PIN asignado.\n¿Desea crear uno ahora?",
+                        "PIN no configurado", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        using (var frm = new FrmCambiarPin(legajoId, pinHelper.sLegajoNombre, true))
+                        {
+                            if (frm.ShowDialog() == DialogResult.OK)
+                                lblPinError.Text = "PIN creado. Ingrese su PIN para fichar.";
+                        }
                     }
                 }
                 txtPin.Text = "";
@@ -438,6 +460,7 @@ namespace Acceso.uAreu
                         ? "Bienvenido " + sNombre
                         : "Hasta Luego " + sNombre;
                     MakeReport();
+                    MostrarAvatar(nLegajoID, nombre);
                     ActivarSemaforo(3);
                     controlcolor = true;
                 }
@@ -571,11 +594,15 @@ namespace Acceso.uAreu
 
         private void CaptureForm_Load(object sender, EventArgs e)
         {
+            // Formas visuales: ovalo lector + circulo avatar
+            AplicarFormaLector();
+            AplicarFormaAvatar();
+
             string nombreEmpresa = ConfigurationManager.AppSettings["NombreEmpresa"];
             if (!string.IsNullOrEmpty(nombreEmpresa))
             {
                 lblEmpresa.Text = nombreEmpresa;
-                this.Text = "DigitalPlus Fichadas - " + nombreEmpresa;
+                this.Text = "Digital One v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + " - " + nombreEmpresa;
             }
 
             CargarLogos();
@@ -713,7 +740,7 @@ namespace Acceso.uAreu
                     etiquetaES.Text = sCadenaEntraSale;
                     etiquetaES.ForeColor = (sCadenaEntraSale != null && sCadenaEntraSale.Contains("SALIDA"))
                         ? Color.OrangeRed
-                        : Color.RoyalBlue;
+                        : Color.FromArgb(201, 168, 76);
                 }));
             }
             else
@@ -722,7 +749,7 @@ namespace Acceso.uAreu
                 etiquetaES.Text = sCadenaEntraSale;
                 etiquetaES.ForeColor = (sCadenaEntraSale != null && sCadenaEntraSale.Contains("SALIDA"))
                     ? Color.OrangeRed
-                    : Color.RoyalBlue;
+                    : Color.FromArgb(201, 168, 76);
             }
         }
 
@@ -746,26 +773,173 @@ namespace Acceso.uAreu
             }
         }
 
+        // Cache de avatares en memoria para no re-consultar la BD
+        private System.Collections.Generic.Dictionary<int, Image> _cacheAvatares
+            = new System.Collections.Generic.Dictionary<int, Image>();
+        // null = sin foto, se usa para saber si ya consultamos
+        private System.Collections.Generic.HashSet<int> _sinFoto
+            = new System.Collections.Generic.HashSet<int>();
+
+        private void AplicarFormaAvatar()
+        {
+            // Forma circular para el avatar foto
+            var pathAvatar = new System.Drawing.Drawing2D.GraphicsPath();
+            pathAvatar.AddEllipse(0, 0, picAvatar.Width, picAvatar.Height);
+            picAvatar.Region = new Region(pathAvatar);
+
+            // Forma circular para las iniciales
+            var pathIniciales = new System.Drawing.Drawing2D.GraphicsPath();
+            pathIniciales.AddEllipse(0, 0, lblIniciales.Width, lblIniciales.Height);
+            lblIniciales.Region = new Region(pathIniciales);
+        }
+
+        private string ObtenerIniciales(string nombre)
+        {
+            if (string.IsNullOrEmpty(nombre)) return "?";
+            // Remover "Bienvenido " / "Hasta Luego " si viene con prefijo
+            nombre = nombre.Replace("Bienvenido ", "").Replace("Hasta Luego ", "").Trim();
+            var partes = nombre.Split(new[] { ' ', ',' }, System.StringSplitOptions.RemoveEmptyEntries);
+            if (partes.Length >= 2)
+                return (partes[0][0].ToString() + partes[1][0].ToString()).ToUpper();
+            if (partes.Length == 1 && partes[0].Length >= 2)
+                return partes[0].Substring(0, 2).ToUpper();
+            return nombre.Length > 0 ? nombre[0].ToString().ToUpper() : "?";
+        }
+
+        private void MostrarAvatar(int nLegajoID, string nombre)
+        {
+            // Mostrar iniciales inmediatamente como placeholder
+            lblIniciales.Text = ObtenerIniciales(nombre);
+            lblIniciales.Visible = true;
+            picAvatar.Visible = false;
+            PosicionarConAvatar();
+
+            // Si ya tenemos la foto en cache, mostrar directo
+            if (_cacheAvatares.ContainsKey(nLegajoID))
+            {
+                picAvatar.Image = _cacheAvatares[nLegajoID];
+                picAvatar.Visible = true;
+                lblIniciales.Visible = false;
+                return;
+            }
+
+            // Si ya sabemos que no tiene foto, quedarse con iniciales
+            if (_sinFoto.Contains(nLegajoID))
+                return;
+
+            // Cargar foto async desde la BD
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(
+                        "SELECT Foto FROM Legajo WHERE Id = " + nLegajoID);
+                    if (dt.Rows.Count > 0 && dt.Rows[0]["Foto"] != System.DBNull.Value)
+                    {
+                        byte[] fotoBytes = (byte[])dt.Rows[0]["Foto"];
+                        if (fotoBytes != null && fotoBytes.Length > 0)
+                        {
+                            var ms = new MemoryStream(fotoBytes);
+                            var img = Image.FromStream(ms);
+                            _cacheAvatares[nLegajoID] = img;
+
+                            if (!this.IsDisposed)
+                            {
+                                this.Invoke(new Function(delegate ()
+                                {
+                                    picAvatar.Image = img;
+                                    picAvatar.Visible = true;
+                                    lblIniciales.Visible = false;
+                                }));
+                            }
+                            return;
+                        }
+                    }
+                    // No tiene foto
+                    _sinFoto.Add(nLegajoID);
+                }
+                catch
+                {
+                    // Error de BD — quedarse con iniciales, no bloquear
+                    _sinFoto.Add(nLegajoID);
+                }
+            });
+        }
+
+        private void OcultarAvatar()
+        {
+            picAvatar.Visible = false;
+            lblIniciales.Visible = false;
+            // Restaurar nombre centrado
+            etiquetaNombre.Location = new Point(5, 496);
+            etiquetaNombre.Size = new Size(520, 38);
+            etiquetaNombre.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+        }
+
+        private void PosicionarConAvatar()
+        {
+            // Desplazar nombre a la derecha del avatar (64px avatar + margen)
+            etiquetaNombre.Location = new Point(128, 496);
+            etiquetaNombre.Size = new Size(395, 64);
+            etiquetaNombre.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+        }
+
+        private void AplicarFormaLector()
+        {
+            // Ovalo para el PictureHuella (simula sensor del lector)
+            var pathHuella = new System.Drawing.Drawing2D.GraphicsPath();
+            pathHuella.AddEllipse(0, 0, PictureHuella.Width, PictureHuella.Height);
+            PictureHuella.Region = new Region(pathHuella);
+
+            // Forma redondeada para la carcasa del lector
+            var pathLector = new System.Drawing.Drawing2D.GraphicsPath();
+            int r = 20; // radio de esquinas
+            var rect = new Rectangle(0, 0, panelLector.Width, panelLector.Height);
+            pathLector.AddArc(rect.X, rect.Y, r * 2, r * 2, 180, 90);
+            pathLector.AddArc(rect.Right - r * 2, rect.Y, r * 2, r * 2, 270, 90);
+            pathLector.AddArc(rect.Right - r * 2, rect.Bottom - r * 2, r * 2, r * 2, 0, 90);
+            pathLector.AddArc(rect.X, rect.Bottom - r * 2, r * 2, r * 2, 90, 90);
+            pathLector.CloseFigure();
+            panelLector.Region = new Region(pathLector);
+        }
+
+        private static readonly Color SemaforoApagado = Color.FromArgb(60, 60, 60);
+        private static readonly Color SemaforoRojo = Color.FromArgb(220, 50, 50);
+        private static readonly Color SemaforoAmarillo = Color.FromArgb(232, 201, 122);
+        private static readonly Color SemaforoVerde = Color.FromArgb(50, 180, 80);
+
         private void ActivarSemaforoInternal(int pos)
         {
+            // Resetear todos los circulos a apagado
+            lblSemaforoRojo.ForeColor = SemaforoApagado;
+            lblSemaforoAmarillo.ForeColor = SemaforoApagado;
+            lblSemaforoVerde.ForeColor = SemaforoApagado;
+            lblLectorLed.BackColor = SemaforoApagado;
+
             switch (pos)
             {
-                case 1:
-                    lblEstado.ForeColor = Color.Red;
+                case 1: // Error - rojo
+                    lblSemaforoRojo.ForeColor = SemaforoRojo;
+                    lblLectorLed.BackColor = SemaforoRojo;
+                    lblEstado.ForeColor = SemaforoRojo;
                     lblEstado.Text = _modoActual == ModoFichada.Huella
                         ? "Huella no reconocida"
                         : "Error en fichada";
                     break;
-                case 2:
-                    lblEstado.ForeColor = Color.DarkOrange;
+                case 2: // Verificando - amarillo
+                    lblSemaforoAmarillo.ForeColor = SemaforoAmarillo;
+                    lblLectorLed.BackColor = SemaforoAmarillo;
+                    lblEstado.ForeColor = Color.FromArgb(201, 168, 76);
                     lblEstado.Text = "Verificando...";
                     break;
-                case 3:
-                    lblEstado.ForeColor = Color.Green;
-                    lblEstado.Text = "¡Registro exitoso!";
+                case 3: // Exito - verde
+                    lblSemaforoVerde.ForeColor = SemaforoVerde;
+                    lblLectorLed.BackColor = SemaforoVerde;
+                    lblEstado.ForeColor = SemaforoVerde;
+                    lblEstado.Text = "\u00A1Registro exitoso!";
                     break;
-                default:
-                    lblEstado.ForeColor = Color.DimGray;
+                default: // Inactivo - todo apagado
+                    lblEstado.ForeColor = Color.FromArgb(100, 100, 110);
                     lblEstado.Text = string.Empty;
                     break;
             }
@@ -814,6 +988,27 @@ namespace Acceso.uAreu
         {
             oTerminal.sTerminalID = Environment.MachineName.ToString();
             oTerminal.Inicializar();
+
+            if (!oTerminal.Existe)
+            {
+                // Auto-registrar terminal con la primera sucursal de la empresa
+                try
+                {
+                    int empresaId = Global.Datos.TenantContext.EmpresaId;
+                    var dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(
+                        "SELECT TOP 1 Id FROM Sucursal WHERE EmpresaId = " + empresaId + " ORDER BY Id");
+                    if (dt.Rows.Count > 0)
+                    {
+                        string sucursalId = dt.Rows[0]["Id"].ToString();
+                        oTerminal.sDescripcion = Environment.MachineName;
+                        oTerminal.sSucursalID.sSucursalID = sucursalId;
+                        oTerminal.Actualizar();
+                        oTerminal.Inicializar(); // recargar con datos completos
+                    }
+                }
+                catch { /* si falla el auto-registro, sigue sin terminal */ }
+            }
+
             if (oTerminal.Existe)
             {
                 etiquetaSucursal.Text = oTerminal.sSucursalID.sSucursalID + "  -  " +
@@ -829,6 +1024,7 @@ namespace Acceso.uAreu
             sCadenaEntraSale = string.Empty;
             timer.Enabled = false;
             MakeReport();
+            OcultarAvatar();
             ActivarSemaforo(4);
             PictureHuella.Image = null;
             controlcolor = false;
@@ -836,7 +1032,7 @@ namespace Acceso.uAreu
 
         private void timerHora_Tick(object sender, EventArgs e)
         {
-            lblHora.Text = DateTime.Now.ToString("hh:mm:ss");
+            lblHora.Text = DateTime.Now.ToString("hh:mm:ss tt");
             lblFecha.Text = DateTime.Now.ToLongDateString();
         }
 
@@ -858,7 +1054,7 @@ namespace Acceso.uAreu
                     if (!string.IsNullOrEmpty(empresa.Nombre))
                     {
                         lblEmpresa.Text = empresa.Nombre;
-                        this.Text = "DigitalPlus Fichadas - " + empresa.Nombre;
+                        this.Text = "Digital One v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + " - " + empresa.Nombre;
                     }
                 }
             }

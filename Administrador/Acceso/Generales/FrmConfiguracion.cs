@@ -97,7 +97,7 @@ namespace Acceso.Generales
             //
             // tabFichada
             //
-            this.tabFichada.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.tabFichada.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.tabFichada.Controls.Add(this.lblTitulo);
             this.tabFichada.Controls.Add(this.chkModoPIN);
             this.tabFichada.Controls.Add(this.lblExpiraDias);
@@ -116,7 +116,7 @@ namespace Acceso.Generales
             //
             // tabPinVencidos
             //
-            this.tabPinVencidos.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.tabPinVencidos.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.tabPinVencidos.Controls.Add(this.lblPinVencidosInfo);
             this.tabPinVencidos.Controls.Add(this.cmbFiltroPins);
             this.tabPinVencidos.Controls.Add(this.dgvPinVencidos);
@@ -132,7 +132,7 @@ namespace Acceso.Generales
             //
             // tabNoticias
             //
-            this.tabNoticias.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.tabNoticias.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.tabNoticias.Controls.Add(this.lblNoticiasInfo);
             this.tabNoticias.Controls.Add(this.dgvNoticias);
             this.tabNoticias.Controls.Add(this.btnNoticiaAgregar);
@@ -149,7 +149,7 @@ namespace Acceso.Generales
             // lblTitulo
             //
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
-            this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(172)))), ((int)(((byte)(126)))), ((int)(((byte)(241)))));
+            this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.lblTitulo.Location = new System.Drawing.Point(20, 20);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(400, 30);
@@ -209,7 +209,7 @@ namespace Acceso.Generales
             //
             // btnGuardar
             //
-            this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(172)))), ((int)(((byte)(126)))), ((int)(((byte)(241)))));
+            this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.btnGuardar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnGuardar.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this.btnGuardar.ForeColor = System.Drawing.Color.White;
@@ -246,7 +246,7 @@ namespace Acceso.Generales
             this.dgvPinVencidos.AllowUserToAddRows = false;
             this.dgvPinVencidos.AllowUserToDeleteRows = false;
             this.dgvPinVencidos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvPinVencidos.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(43)))), ((int)(((byte)(84)))));
+            this.dgvPinVencidos.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(18)))), ((int)(((byte)(25)))), ((int)(((byte)(45)))));
             this.dgvPinVencidos.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.dgvPinVencidos.ForeColor = System.Drawing.Color.Black;
             this.dgvPinVencidos.Location = new System.Drawing.Point(20, 50);
@@ -316,7 +316,7 @@ namespace Acceso.Generales
             this.dgvNoticias.AllowUserToAddRows = false;
             this.dgvNoticias.AllowUserToDeleteRows = false;
             this.dgvNoticias.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvNoticias.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(43)))), ((int)(((byte)(84)))));
+            this.dgvNoticias.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(18)))), ((int)(((byte)(25)))), ((int)(((byte)(45)))));
             this.dgvNoticias.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.dgvNoticias.ForeColor = System.Drawing.Color.Black;
             this.dgvNoticias.Location = new System.Drawing.Point(20, 50);
@@ -330,7 +330,7 @@ namespace Acceso.Generales
             // btnNoticiaAgregar
             //
             this.btnNoticiaAgregar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnNoticiaAgregar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(172)))), ((int)(((byte)(126)))), ((int)(((byte)(241)))));
+            this.btnNoticiaAgregar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.btnNoticiaAgregar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNoticiaAgregar.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnNoticiaAgregar.ForeColor = System.Drawing.Color.White;
@@ -345,7 +345,7 @@ namespace Acceso.Generales
             // btnNoticiaEditar
             //
             this.btnNoticiaEditar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnNoticiaEditar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(195)))), ((int)(((byte)(247)))));
+            this.btnNoticiaEditar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(201)))), ((int)(((byte)(122)))));
             this.btnNoticiaEditar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNoticiaEditar.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnNoticiaEditar.ForeColor = System.Drawing.Color.White;
@@ -374,7 +374,7 @@ namespace Acceso.Generales
             //
             // FrmConfiguracion
             //
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(784, 511);
             this.Controls.Add(this.tabConfig);
             this.ForeColor = System.Drawing.Color.Gainsboro;
@@ -831,7 +831,7 @@ namespace Acceso.Generales
             //
             // btnAceptar
             //
-            this.btnAceptar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(172)))), ((int)(((byte)(126)))), ((int)(((byte)(241)))));
+            this.btnAceptar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(168)))), ((int)(((byte)(76)))));
             this.btnAceptar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAceptar.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
             this.btnAceptar.ForeColor = System.Drawing.Color.White;
@@ -860,7 +860,7 @@ namespace Acceso.Generales
             // FrmNoticiaEdit
             //
             this.AcceptButton = this.btnAceptar;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(33)))), ((int)(((byte)(74)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.CancelButton = this.btnCancelar;
             this.ClientSize = new System.Drawing.Size(720, 505);
             this.Controls.Add(this.lblTituloLabel);

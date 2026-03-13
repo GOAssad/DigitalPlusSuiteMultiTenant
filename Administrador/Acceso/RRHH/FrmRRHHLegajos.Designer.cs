@@ -136,31 +136,38 @@
             this.panelDatosLegajos.Controls.Add(this.controlEntidadSimpleUbicaciones);
             this.panelDatosLegajos.Controls.Add(this.controlEntidadSucursal);
             this.panelDatosLegajos.Controls.Add(this.controlEntidadHorario);
-            this.panelDatosLegajos.Dock = System.Windows.Forms.DockStyle.Left;
+            this.panelDatosLegajos.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelDatosLegajos.Location = new System.Drawing.Point(3, 2);
             this.panelDatosLegajos.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelDatosLegajos.Name = "panelDatosLegajos";
-            this.panelDatosLegajos.Size = new System.Drawing.Size(721, 595);
+            this.panelDatosLegajos.Size = new System.Drawing.Size(1701, 215);
             this.panelDatosLegajos.TabIndex = 15;
             this.panelDatosLegajos.Paint += new System.Windows.Forms.PaintEventHandler(this.panelDatosLegajos_Paint);
             // 
             // chkActivo
             // 
-            this.chkActivo.AutoSize = true;
-            this.chkActivo.Location = new System.Drawing.Point(93, 526);
+            this.chkActivo.AutoSize = false;
+            this.chkActivo.Appearance = System.Windows.Forms.Appearance.Button;
+            this.chkActivo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.chkActivo.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(160)))));
+            this.chkActivo.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(167)))), ((int)(((byte)(69)))));
+            this.chkActivo.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.chkActivo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(70)))));
+            this.chkActivo.Location = new System.Drawing.Point(1035, 120);
             this.chkActivo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.chkActivo.Name = "chkActivo";
-            this.chkActivo.Size = new System.Drawing.Size(66, 20);
+            this.chkActivo.Size = new System.Drawing.Size(130, 38);
             this.chkActivo.TabIndex = 24;
             this.chkActivo.Text = "Activo";
-            this.chkActivo.UseVisualStyleBackColor = true;
+            this.chkActivo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.chkActivo.UseVisualStyleBackColor = false;
             // 
             // lblInactivo
             // 
             this.lblInactivo.AutoSize = true;
             this.lblInactivo.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblInactivo.ForeColor = System.Drawing.Color.Red;
-            this.lblInactivo.Location = new System.Drawing.Point(183, 527);
+            this.lblInactivo.Location = new System.Drawing.Point(1175, 125);
             this.lblInactivo.Name = "lblInactivo";
             this.lblInactivo.Size = new System.Drawing.Size(139, 20);
             this.lblInactivo.TabIndex = 25;
@@ -184,13 +191,13 @@
             this.controlEntidadSimpleCategorias.IDSQLWhere = "Id";
             this.controlEntidadSimpleCategorias.IDSQLWherePK = "Id";
             this.controlEntidadSimpleCategorias.IDValor = 0;
-            this.controlEntidadSimpleCategorias.Location = new System.Drawing.Point(13, 378);
+            this.controlEntidadSimpleCategorias.Location = new System.Drawing.Point(520, 95);
             this.controlEntidadSimpleCategorias.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.controlEntidadSimpleCategorias.Mascara = "";
             this.controlEntidadSimpleCategorias.MostrarID = false;
             this.controlEntidadSimpleCategorias.Name = "controlEntidadSimpleCategorias";
             this.controlEntidadSimpleCategorias.SinImagen = false;
-            this.controlEntidadSimpleCategorias.Size = new System.Drawing.Size(691, 86);
+            this.controlEntidadSimpleCategorias.Size = new System.Drawing.Size(500, 86);
             this.controlEntidadSimpleCategorias.SoloLectura = false;
             this.controlEntidadSimpleCategorias.SqlAyuda = "Select Id CategoriaID, Nombre Descripcion from Categoria WHERE EmpresaId = ";
             this.controlEntidadSimpleCategorias.TabIndex = 3;
@@ -216,13 +223,13 @@
             this.controlEntidadSimpleUbicaciones.IDSQLWhere = "Id";
             this.controlEntidadSimpleUbicaciones.IDSQLWherePK = "Id";
             this.controlEntidadSimpleUbicaciones.IDValor = 0;
-            this.controlEntidadSimpleUbicaciones.Location = new System.Drawing.Point(13, 252);
+            this.controlEntidadSimpleUbicaciones.Location = new System.Drawing.Point(10, 95);
             this.controlEntidadSimpleUbicaciones.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.controlEntidadSimpleUbicaciones.Mascara = "";
             this.controlEntidadSimpleUbicaciones.MostrarID = false;
             this.controlEntidadSimpleUbicaciones.Name = "controlEntidadSimpleUbicaciones";
             this.controlEntidadSimpleUbicaciones.SinImagen = false;
-            this.controlEntidadSimpleUbicaciones.Size = new System.Drawing.Size(691, 86);
+            this.controlEntidadSimpleUbicaciones.Size = new System.Drawing.Size(500, 86);
             this.controlEntidadSimpleUbicaciones.SoloLectura = false;
             this.controlEntidadSimpleUbicaciones.SqlAyuda = "Select Id Ubicacion, Nombre Descripcion from Sector WHERE EmpresaId = ";
             this.controlEntidadSimpleUbicaciones.TabIndex = 2;
@@ -248,13 +255,13 @@
             this.controlEntidadSucursal.IDSQLWhere = "Id";
             this.controlEntidadSucursal.IDSQLWherePK = "Id";
             this.controlEntidadSucursal.IDValor = 0;
-            this.controlEntidadSucursal.Location = new System.Drawing.Point(13, 137);
+            this.controlEntidadSucursal.Location = new System.Drawing.Point(520, 5);
             this.controlEntidadSucursal.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.controlEntidadSucursal.Mascara = "";
             this.controlEntidadSucursal.MostrarID = false;
             this.controlEntidadSucursal.Name = "controlEntidadSucursal";
             this.controlEntidadSucursal.SinImagen = false;
-            this.controlEntidadSucursal.Size = new System.Drawing.Size(691, 86);
+            this.controlEntidadSucursal.Size = new System.Drawing.Size(500, 86);
             this.controlEntidadSucursal.SoloLectura = false;
             this.controlEntidadSucursal.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Sucursal WHERE EmpresaId = ";
             this.controlEntidadSucursal.TabIndex = 1;
@@ -280,13 +287,13 @@
             this.controlEntidadHorario.IDSQLWhere = "Id";
             this.controlEntidadHorario.IDSQLWherePK = "Id";
             this.controlEntidadHorario.IDValor = 0;
-            this.controlEntidadHorario.Location = new System.Drawing.Point(13, 21);
+            this.controlEntidadHorario.Location = new System.Drawing.Point(10, 5);
             this.controlEntidadHorario.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.controlEntidadHorario.Mascara = "";
             this.controlEntidadHorario.MostrarID = false;
             this.controlEntidadHorario.Name = "controlEntidadHorario";
             this.controlEntidadHorario.SinImagen = false;
-            this.controlEntidadHorario.Size = new System.Drawing.Size(691, 86);
+            this.controlEntidadHorario.Size = new System.Drawing.Size(500, 86);
             this.controlEntidadHorario.SoloLectura = false;
             this.controlEntidadHorario.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Horario WHERE EmpresaId = ";
             this.controlEntidadHorario.TabIndex = 0;
@@ -485,7 +492,7 @@
             this.tableLayoutDedos.Controls.Add(this.ListEvents, 0, 1);
             this.tableLayoutDedos.Controls.Add(this.EnrollmentControl, 0, 0);
             this.tableLayoutDedos.Controls.Add(this.panel1, 0, 2);
-            this.tableLayoutDedos.Dock = System.Windows.Forms.DockStyle.Left;
+            this.tableLayoutDedos.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutDedos.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutDedos.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutDedos.Name = "tableLayoutDedos";
@@ -643,8 +650,8 @@
             // panelGridFichadas
             // 
             this.panelGridFichadas.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelGridFichadas.Controls.Add(this.panel2);
             this.panelGridFichadas.Controls.Add(this.tableLayoutDedos);
+            this.panelGridFichadas.Controls.Add(this.panel2);
             this.panelGridFichadas.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelGridFichadas.Location = new System.Drawing.Point(3, 2);
             this.panelGridFichadas.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -657,11 +664,11 @@
             this.panel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel2.Controls.Add(this.panelCamara);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Right;
             this.panel2.Location = new System.Drawing.Point(573, 0);
             this.panel2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(393, 589);
+            this.panel2.Size = new System.Drawing.Size(650, 589);
             this.panel2.TabIndex = 22;
             // 
             // panelCamara
@@ -673,10 +680,9 @@
             this.panelCamara.Controls.Add(this.cboCamera);
             this.panelCamara.Controls.Add(this.picFotoCamara);
             this.panelCamara.Controls.Add(this.videoSourcePlayer1);
-            this.panelCamara.Location = new System.Drawing.Point(3, 30);
+            this.panelCamara.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelCamara.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelCamara.Name = "panelCamara";
-            this.panelCamara.Size = new System.Drawing.Size(385, 480);
             this.panelCamara.TabIndex = 24;
             // 
             // panel4
@@ -687,10 +693,11 @@
             this.panel4.Controls.Add(this.btnTomarFoto);
             this.panel4.Controls.Add(this.btnEliminarFoto);
             this.panel4.Controls.Add(this.btnImagen);
-            this.panel4.Location = new System.Drawing.Point(3, 95);
+            this.panel4.Location = new System.Drawing.Point(3, 78);
             this.panel4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(337, 61);
+            this.panel4.Size = new System.Drawing.Size(540, 61);
+            this.panel4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.panel4.TabIndex = 24;
             // 
             // btnEliminarFoto
@@ -710,44 +717,49 @@
             // etiquetaTitulo1
             // 
             this.etiquetaTitulo1.AutoEllipsis = true;
-            this.etiquetaTitulo1.AutoSize = true;
-            this.etiquetaTitulo1.Font = new System.Drawing.Font("Segoe UI", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.etiquetaTitulo1.AutoSize = false;
+            this.etiquetaTitulo1.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.etiquetaTitulo1.ForeColor = System.Drawing.Color.SteelBlue;
-            this.etiquetaTitulo1.Location = new System.Drawing.Point(131, 11);
+            this.etiquetaTitulo1.Location = new System.Drawing.Point(5, 8);
             this.etiquetaTitulo1.Name = "etiquetaTitulo1";
-            this.etiquetaTitulo1.Size = new System.Drawing.Size(72, 38);
+            this.etiquetaTitulo1.Size = new System.Drawing.Size(540, 32);
+            this.etiquetaTitulo1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.etiquetaTitulo1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.etiquetaTitulo1.TabIndex = 23;
             this.etiquetaTitulo1.Text = "Foto";
             // 
             // cboCamera
             // 
             this.cboCamera.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboCamera.Font = new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cboCamera.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboCamera.FormattingEnabled = true;
-            this.cboCamera.Location = new System.Drawing.Point(5, 52);
+            this.cboCamera.Location = new System.Drawing.Point(5, 45);
             this.cboCamera.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cboCamera.Name = "cboCamera";
-            this.cboCamera.Size = new System.Drawing.Size(335, 37);
+            this.cboCamera.Size = new System.Drawing.Size(540, 28);
+            this.cboCamera.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.cboCamera.TabIndex = 21;
             // 
             // picFotoCamara
             // 
             this.picFotoCamara.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.picFotoCamara.Image = null;
-            this.picFotoCamara.Location = new System.Drawing.Point(5, 162);
+            this.picFotoCamara.Location = new System.Drawing.Point(5, 145);
             this.picFotoCamara.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.picFotoCamara.Name = "picFotoCamara";
-            this.picFotoCamara.Size = new System.Drawing.Size(335, 314);
+            this.picFotoCamara.Size = new System.Drawing.Size(540, 380);
+            this.picFotoCamara.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.picFotoCamara.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picFotoCamara.TabIndex = 22;
             this.picFotoCamara.TabStop = false;
             // 
             // videoSourcePlayer1
             // 
-            this.videoSourcePlayer1.Location = new System.Drawing.Point(5, 162);
+            this.videoSourcePlayer1.Location = new System.Drawing.Point(5, 145);
             this.videoSourcePlayer1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.videoSourcePlayer1.Name = "videoSourcePlayer1";
-            this.videoSourcePlayer1.Size = new System.Drawing.Size(335, 314);
+            this.videoSourcePlayer1.Size = new System.Drawing.Size(540, 380);
+            this.videoSourcePlayer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.videoSourcePlayer1.TabIndex = 20;
             this.videoSourcePlayer1.Text = "videoSourcePlayer1";
             this.videoSourcePlayer1.VideoSource = null;

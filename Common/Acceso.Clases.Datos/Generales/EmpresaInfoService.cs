@@ -32,6 +32,7 @@ namespace Acceso.Clases.Datos.Generales
         public string Twitter { get; set; }
         public string YouTube { get; set; }
         public string TikTok { get; set; }
+        public string UrlPortal { get; set; }
     }
 
     /// <summary>
@@ -70,7 +71,7 @@ namespace Acceso.Clases.Datos.Generales
                     conn.Open();
                     string sql = @"SELECT Id, Nombre, RazonSocial, Email, Telefono, Direccion,
                                           Logo, LogoContentType, Estado, CodigoActivacion, IdentificacionFiscal,
-                                          PaginaWeb, Facebook, Instagram, LinkedIn, Twitter, YouTube, TikTok
+                                          PaginaWeb, Facebook, Instagram, LinkedIn, Twitter, YouTube, TikTok, UrlPortal
                                    FROM Empresas WHERE Id = @Id";
                     using (var cmd = new SqlCommand(sql, conn))
                     {
@@ -99,7 +100,8 @@ namespace Acceso.Clases.Datos.Generales
                                     LinkedIn = reader.IsDBNull(14) ? "" : reader.GetString(14),
                                     Twitter = reader.IsDBNull(15) ? "" : reader.GetString(15),
                                     YouTube = reader.IsDBNull(16) ? "" : reader.GetString(16),
-                                    TikTok = reader.IsDBNull(17) ? "" : reader.GetString(17)
+                                    TikTok = reader.IsDBNull(17) ? "" : reader.GetString(17),
+                                    UrlPortal = reader.IsDBNull(18) ? "" : reader.GetString(18)
                                 };
                             }
                         }

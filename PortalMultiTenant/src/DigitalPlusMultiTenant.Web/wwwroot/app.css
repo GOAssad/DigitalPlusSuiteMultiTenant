@@ -1,19 +1,44 @@
+:root {
+    --dp-dark-1: #050810;
+    --dp-dark-2: #0B1120;
+    --dp-dark-3: #1E2841;
+    --dp-gold: #C9A84C;
+    --dp-gold-hover: #D4B85E;
+    --dp-text-light: #E8EAF0;
+    --dp-bg-content: #F8F7F4;
+    --dp-border-subtle: rgba(201, 168, 76, 0.25);
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 a, .btn-link {
-    color: #006bb7;
+    color: var(--dp-gold);
+}
+
+a:hover, .btn-link:hover {
+    color: var(--dp-gold-hover);
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: var(--dp-gold);
+    border-color: var(--dp-gold);
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--dp-gold-hover);
+    border-color: var(--dp-gold-hover);
+    color: #fff;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--dp-gold);
+}
+
+.form-control:focus {
+    border-color: var(--dp-gold);
 }
 
 .content {
@@ -60,6 +85,11 @@ h1:focus {
     border-color: #929292;
 }
 
+.darker-border-checkbox.form-check-input:checked {
+    background-color: var(--dp-gold);
+    border-color: var(--dp-gold);
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
     color: var(--bs-secondary-color);
     text-align: end;
@@ -67,4 +97,47 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+/* Fix floating labels on dark inputs */
+.form-floating > .form-control.bg-dark ~ label,
+.form-floating > label[style*="transparent"] {
+    color: rgba(232, 234, 240, 0.5) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.form-floating > .form-control.bg-dark:focus ~ label,
+.form-floating > .form-control.bg-dark:not(:placeholder-shown) ~ label {
+    color: var(--dp-gold) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    opacity: 1 !important;
+}
+
+.form-floating > label {
+    --bs-body-bg: transparent;
+}
+
+.form-control.bg-dark:focus {
+    background-color: #1E2841 !important;
+    border-color: var(--dp-gold) !important;
+    color: #E8EAF0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(201, 168, 76, 0.25) !important;
+}
+
+.form-control.bg-dark {
+    border-color: rgba(201, 168, 76, 0.3);
+}
+
+/* Table styling */
+.table thead th {
+    background-color: var(--dp-dark-2);
+    color: var(--dp-text-light);
+    border-color: var(--dp-dark-3);
+}
+
+/* Page titles */
+h3, h4 {
+    color: var(--dp-dark-2);
 }

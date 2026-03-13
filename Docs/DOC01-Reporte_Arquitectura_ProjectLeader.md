@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 6.0
-**Fecha:** 2026-03-11
+**Version:** 7.0
+**Fecha:** 2026-03-12
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -122,9 +122,10 @@ INFRAESTRUCTURA CLOUD
 - Semaforo visual (verde/amarillo/rojo) como feedback
 - Registro automatico de entrada o salida
 - Identificacion de terminal por nombre de maquina
+- **Auto-registro de terminal:** Al iniciar por primera vez, si la maquina no esta registrada como Terminal en la BD, se registra automaticamente asociandola a la sucursal por defecto de la empresa
 - Cambio voluntario de PIN (link "Cambiar mi PIN" en pantalla de fichada, formulario FrmCambiarPinVoluntario)
-- Si el admin fuerza cambio de PIN (PinMustChange), al ingresar legajo va directo a pedir nuevo PIN sin requerir el actual
-- Si el admin resetea el PIN (lo elimina), al ingresar legajo ofrece crear uno nuevo
+- Si el admin fuerza cambio de PIN (PinMustChange), al ingresar legajo muestra mensaje obligatorio (solo boton OK) y va directo a pedir nuevo PIN sin requerir el actual
+- Si el admin resetea el PIN (lo elimina), al ingresar legajo ofrece crear uno nuevo (dialogo Si/No)
 - Verificacion de estado de empresa al iniciar: si la empresa esta suspendida en DigitalPlusAdmin, muestra mensaje y cierra la app
 - Sistema de licencias integrado (trial 14 dias, activacion por codigo). En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 
@@ -144,7 +145,7 @@ INFRAESTRUCTURA CLOUD
 | **Proposito** | Gestion completa del sistema |
 
 **Funcionalidades:**
-- ABM de Legajos (empleados) con foto por camara web
+- ABM de Legajos (empleados) con foto por camara web (se persiste en BD como VARBINARY)
 - Enrolamiento de huellas digitales
 - Gestion de PIN por empleado (asignar, resetear, forzar cambio)
 - Tab "PINs" muestra TODOS los legajos (no solo vencidos)
@@ -188,6 +189,8 @@ INFRAESTRUCTURA CLOUD
 - Forzar cambio de contraseña en primer login (MustChangePassword con middleware + pagina ForceChangePassword)
 - Auto-provisioning de usuario admin al crear empresa desde Portal Licencias (credenciales temporales)
 - Hosting: Azure App Service (digitalplusportalmt.azurewebsites.net)
+- **Identidad visual:** Theme oscuro con paleta integraia.tech (fondos #050810/#0B1120, acentos dorados #C9A84C, texto claro #E8EAF0, contenido #F8F7F4)
+- Branding: "DIGITAL ONE" en sidebar
 
 ### 3.3b DigitalPlusWeb - LEGACY
 
@@ -225,6 +228,8 @@ INFRAESTRUCTURA CLOUD
 - Provisionamiento de bases de datos en Ferozo
 - Proteccion contra double-submit en login
 - Hosting: Azure App Service (digitalpluslicencias.azurewebsites.net)
+- **Identidad visual:** Misma paleta integraia.tech que Portal MT (oscuro + dorado)
+- Branding: "DIGITAL ONE Licencias" en sidebar
 
 ### 3.5 Azure Functions (Provisioning)
 
@@ -271,6 +276,7 @@ INFRAESTRUCTURA CLOUD
 - Configura appSettings: `EmpresaId`, `AdminEmpresaId`, `NombreEmpresa`
 - Instala: Fichador + Administrador + Driver DigitalPersona RTE
 - Cifra configuracion con DPAPI via ConfigProtector
+- Al ejecutar el Fichador por primera vez, la terminal se auto-registra en la BD asociandose a la sucursal por defecto
 
 ---
 
@@ -565,7 +571,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ---
 
-## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026)
+## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-12)
 
 ### Completado
 
@@ -597,6 +603,12 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - Administrador: menu dinamico con links a redes sociales (reemplaza botones fijos hardcodeados)
 - **Desactivacion de empresas**: desde Portal Licencias cambiar Estado bloquea acceso en Portal MT (login) y apps desktop (Form_Load)
 - Portal Licencias sincronizado en repo principal (todo respaldado en GitHub)
+- **Homologacion visual Phase 2:** Layout 80/20 en formulario Legajos, panel de camara ensanchado, boton PIN reubicado
+- **Homologacion visual Phase 3-4:** Portales MT y Licencias con tema oscuro integraia.tech (dorado/oscuro)
+- **Fix foto legajo:** Parametro @Foto en SP y capa de datos para persistir foto en BD
+- **Fix PIN forzado:** Dialogo obligatorio (solo OK) sin opcion de escape
+- **Auto-registro de terminal:** Fichador registra automaticamente la maquina en la BD al primer inicio
+- **Compilacion Release:** Fichador y Administrador compilados en Release, InstaladorLiviano generado
 
 ### En progreso
 
@@ -604,7 +616,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ### Pendiente
 
-- Probar flujo completo: crear empresa NUEVA -> instalar con InstaladorLiviano -> apps conectan a Ferozo
+- **Probar circuito completo en produccion (Ferozo):** Crear empresa -> instalar con InstaladorLiviano -> verificar auto-registro terminal -> fichar -> ver en portal
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
 - Link al portal web multi-tenant en menu del Administrador

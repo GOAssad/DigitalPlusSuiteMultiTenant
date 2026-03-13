@@ -6,7 +6,7 @@
 .sidebar {
     width: 260px;
     height: 100vh;
-    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(180deg, #050810 0%, #0B1120 60%, #0B1120 100%);
     position: fixed;
     top: 0;
     left: 0;
@@ -14,7 +14,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.2) transparent;
+    scrollbar-color: rgba(201, 168, 76, 0.3) transparent;
 }
 
 .main-content {
@@ -22,14 +22,14 @@
     margin-left: 260px;
     display: flex;
     flex-direction: column;
-    background-color: #f4f6f9;
+    background-color: #F8F7F4;
     min-height: 100vh;
 }
 
 .top-bar {
     height: 56px;
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
+    background: #0B1120;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.25);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -49,8 +49,17 @@
     align-items: center;
 }
 
+.top-bar-right .text-muted {
+    color: rgba(232, 234, 240, 0.6) !important;
+}
+
+.top-bar-right .btn-link,
+.top-bar-right .dropdown-toggle {
+    color: #E8EAF0 !important;
+}
+
 .sidebar-toggle {
-    color: #333;
+    color: #E8EAF0;
     padding: 0;
 }
 
@@ -68,6 +77,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 200px;
+    color: #E8EAF0 !important;
 }
 
 .page-content {

@@ -11,6 +11,7 @@
     <add key="EmpresaId" value="{{EMPRESA_ID}}" />
     <add key="AdminEmpresaId" value="{{ADMIN_EMPRESA_ID}}" />
     <add key="NombreEmpresa" value="{{NOMBRE_EMPRESA}}" />
+    <add key="UrlPortal" value="{{URL_PORTAL}}" />
   </appSettings>
   <entityFramework>
     <defaultConnectionFactory type="System.Data.Entity.Infrastructure.SqlConnectionFactory, EntityFramework"/>

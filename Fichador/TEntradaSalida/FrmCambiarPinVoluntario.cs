@@ -34,12 +34,12 @@ namespace Acceso
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.WhiteSmoke;
+            this.BackColor = Color.FromArgb(248, 247, 244);
 
             lblTitulo = new Label();
             lblTitulo.Text = "Cambio de PIN";
             lblTitulo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-            lblTitulo.ForeColor = Color.RoyalBlue;
+            lblTitulo.ForeColor = Color.FromArgb(201, 168, 76);
             lblTitulo.Location = new Point(0, 15);
             lblTitulo.Size = new Size(420, 35);
             lblTitulo.TextAlign = ContentAlignment.MiddleCenter;
@@ -129,8 +129,8 @@ namespace Acceso
             btnAceptar = new Button();
             btnAceptar.Text = "Cambiar PIN";
             btnAceptar.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnAceptar.BackColor = Color.RoyalBlue;
-            btnAceptar.ForeColor = Color.White;
+            btnAceptar.BackColor = Color.FromArgb(201, 168, 76);
+            btnAceptar.ForeColor = Color.FromArgb(11, 17, 32);
             btnAceptar.FlatStyle = FlatStyle.Flat;
             btnAceptar.Location = new Point(40, 290);
             btnAceptar.Size = new Size(160, 42);

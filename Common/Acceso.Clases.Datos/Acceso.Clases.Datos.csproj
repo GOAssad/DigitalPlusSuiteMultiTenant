@@ -73,6 +73,7 @@
     <Compile Include="Generales\GRALUsuarios.cs" />
     <Compile Include="Generales\GRALVariablesGlobales.cs" />
     <Compile Include="Generales\GRALVariablesGlobalesLista.cs" />
+    <Compile Include="Generales\IdentityPasswordVerifier.cs" />
     <Compile Include="Metadatos\METAFormularios.cs" />
     <Compile Include="Metadatos\METAFormulariosList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

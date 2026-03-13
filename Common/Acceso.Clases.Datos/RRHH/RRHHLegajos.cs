@@ -20,7 +20,7 @@ namespace Acceso.Clases.Datos.RRHH
         protected bool _lSeguimiento;
         protected byte[] _iFoto;
 
-        private SqlParameter[] par = new SqlParameter[10];
+        private SqlParameter[] par = new SqlParameter[11];
         DataTable dt;
 
         public bool Existe;
@@ -373,6 +373,11 @@ namespace Acceso.Clases.Datos.RRHH
             par[9].ParameterName = "@EmpresaId";
             par[9].Value         = Global.Datos.TenantContext.EmpresaId;
             par[9].SqlDbType     = SqlDbType.Int;
+
+            par[10] = new SqlParameter();
+            par[10].ParameterName = "@Foto";
+            par[10].SqlDbType     = SqlDbType.VarBinary;
+            par[10].Value         = _iFoto != null ? (object)_iFoto : DBNull.Value;
         }
 
 

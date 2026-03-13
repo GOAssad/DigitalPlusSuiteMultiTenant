@@ -16,8 +16,9 @@ public static class DatabaseSeeder
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         await SeedRolesAsync(roleManager);
+        await SeedSuperAdminAsync(context, userManager);
         var empresa = await SeedEmpresaKosiukoAsync(context);
-        await SeedAdminUserAsync(userManager, empresa.Id);
+        await SeedAdminEmpresaAsync(userManager, empresa.Id);
         await SeedVariablesSistemaAsync(context, empresa.Id);
     }
 
@@ -59,7 +60,65 @@ public static class DatabaseSeeder
         return empresa;
     }
 
-    private static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager, int empresaId)
+    /// <summary>
+    /// SuperAdmin de IntegraIA: acceso cross-tenant a todas las empresas.
+    /// Credenciales documentadas en DOC03-Manual_Portal_Licencias_IntegraIA.md
+    /// </summary>
+    private static async Task SeedSuperAdminAsync(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    {
+        const string superAdminEmail = "admin@integraia.tech";
+
+        // Asegurar que existe empresa IntegraIA (EmpresaId=1, tenant de gestion)
+        var empresaIA = await context.Empresas
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(e => e.Codigo == "IA");
+
+        if (empresaIA == null)
+        {
+            empresaIA = new Empresa
+            {
+                Codigo = "IA",
+                Nombre = "IntegraIA Technology",
+                NombreFantasia = "IntegraIA",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "seed"
+            };
+            context.Empresas.Add(empresaIA);
+            await context.SaveChangesAsync();
+        }
+
+        var existingUser = await userManager.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Email == superAdminEmail);
+
+        if (existingUser != null)
+            return;
+
+        var superAdmin = new ApplicationUser
+        {
+            UserName = superAdminEmail,
+            Email = superAdminEmail,
+            EmailConfirmed = true,
+            NombreCompleto = "SuperAdmin IntegraIA",
+            EmpresaId = empresaIA.Id,
+            IsActive = true,
+            AccesoAdminDesktop = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var result = await userManager.CreateAsync(superAdmin, "Admin123");
+
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+        }
+    }
+
+    /// <summary>
+    /// Admin de empresa Kosiuko (cliente de ejemplo). Rol AdminEmpresa, no SuperAdmin.
+    /// </summary>
+    private static async Task SeedAdminEmpresaAsync(UserManager<ApplicationUser> userManager, int empresaId)
     {
         const string adminEmail = "admin@kosiuko.com";
 
@@ -78,6 +137,7 @@ public static class DatabaseSeeder
             NombreCompleto = "Administrador Kosiuko",
             EmpresaId = empresaId,
             IsActive = true,
+            AccesoAdminDesktop = true,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -85,7 +145,7 @@ public static class DatabaseSeeder
 
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(admin, "SuperAdmin");
+            await userManager.AddToRoleAsync(admin, "AdminEmpresa");
         }
     }
 

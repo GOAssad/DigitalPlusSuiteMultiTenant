@@ -215,6 +215,7 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -240,6 +241,7 @@
     <Compile Include="ControlPanelEntidad\CtrEntidadPanel.Designer.cs">
       <DependentUpon>CtrEntidadPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="DarkToolStripRenderer.cs" />
     <Compile Include="FrmBaseFormulario.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -254,6 +256,9 @@
     </Compile>
     <Compile Include="SqlServerTypes\Loader.cs" />
     <Compile Include="Generales\FrmConfiguracion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Generales\FrmLoginAdmin.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Generales\FrmLicencia.cs">

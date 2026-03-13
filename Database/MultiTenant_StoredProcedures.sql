@@ -23,7 +23,8 @@ CREATE PROCEDURE EscritorioLegajoActualizar
     @HorarioID INT = NULL,
     @HasCalendarioPersonalizado BIT = 0,
     @nSucursalId INT = 0,
-    @EmpresaId INT
+    @EmpresaId INT,
+    @Foto VARBINARY(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -39,6 +40,7 @@ BEGIN
             IsActive = @IsActive,
             HorarioId = @HorarioID,
             HasCalendarioPersonalizado = @HasCalendarioPersonalizado,
+            Foto = @Foto,
             UpdatedAt = GETUTCDATE()
         WHERE NumeroLegajo = @NumeroLegajo AND EmpresaId = @EmpresaId;
 
@@ -47,9 +49,9 @@ BEGIN
     ELSE
     BEGIN
         INSERT INTO Legajo (NumeroLegajo, Apellido, Nombre, SectorId, CategoriaId, IsActive,
-                           HorarioId, HasCalendarioPersonalizado, EmpresaId, CreatedAt)
+                           HorarioId, HasCalendarioPersonalizado, EmpresaId, Foto, CreatedAt)
         VALUES (@NumeroLegajo, @Apellido, @Nombre, @SectorId, @CategoriaId, @IsActive,
-                @HorarioID, @HasCalendarioPersonalizado, @EmpresaId, GETUTCDATE());
+                @HorarioID, @HasCalendarioPersonalizado, @EmpresaId, @Foto, GETUTCDATE());
 
         SET @LegajoId = SCOPE_IDENTITY();
     END
@@ -443,6 +445,24 @@ BEGIN
             INSERT INTO LegajoPin (LegajoId, PinHash, PinSalt, PinMustChange, PinChangedAt, CreatedAt)
             VALUES (@LegajoId, @PinHash, @PinSalt, 0, GETUTCDATE(), GETUTCDATE());
         END
+    END
+END
+GO
+
+-- Forzar cambio de PIN (admin marca que el legajo debe cambiar PIN en próximo fichaje)
+IF OBJECT_ID('EscritorioLegajoPIN_ForzarCambio', 'P') IS NOT NULL DROP PROCEDURE EscritorioLegajoPIN_ForzarCambio;
+GO
+CREATE PROCEDURE EscritorioLegajoPIN_ForzarCambio
+    @sLegajoID NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @LegajoId INT;
+    SELECT @LegajoId = Id FROM Legajo WHERE NumeroLegajo = @sLegajoID AND IsActive = 1;
+
+    IF @LegajoId IS NOT NULL AND EXISTS (SELECT 1 FROM LegajoPin WHERE LegajoId = @LegajoId)
+    BEGIN
+        UPDATE LegajoPin SET PinMustChange = 1 WHERE LegajoId = @LegajoId;
     END
 END
 GO

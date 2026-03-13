@@ -9,6 +9,7 @@ public class ApplicationUser : IdentityUser, ITenantEntity
     public string? NombreCompleto { get; set; }
     public bool IsActive { get; set; } = true;
     public bool MustChangePassword { get; set; }
+    public bool AccesoAdminDesktop { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation

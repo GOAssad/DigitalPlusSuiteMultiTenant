@@ -30,6 +30,11 @@
                         </div>
                         <small class="text-muted">Identificador unico (sin espacios, minusculas)</small>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">URL Portal Web</label>
+                        <input type="url" class="form-control" placeholder="https://digitalplusportalmt.azurewebsites.net/" @bind="urlPortal" />
+                        <small class="text-muted">URL del portal al que se redirige esta empresa para cambio de clave y gestion web</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -228,12 +233,11 @@
                 <hr />
                 <h6>Acceso al Portal Web</h6>
                 <p><strong>Usuario:</strong> <code>@resultado.AdminEmail</code></p>
-                <p><strong>Contraseña temporal:</strong> <code class="fs-5">@resultado.TempPassword</code></p>
+                <p><strong>Contraseña por defecto:</strong> <code class="fs-5">Admin123</code></p>
                 <p class="mb-0">
                     <small class="text-muted">
                         <i class="bi bi-info-circle me-1"></i>
                         El usuario debera cambiar la contraseña en el primer inicio de sesion.
-                        Estas credenciales no se almacenan, copielas ahora.
                     </small>
                 </p>
             </div>
@@ -302,6 +306,7 @@
     private string? twitter;
     private string? youTube;
     private string? tikTok;
+    private string? urlPortal = "https://digitalplusportalmt.azurewebsites.net/";
 
     private List<DigitalPlus.Licencias.Entidades.Pais>? paises;
     private List<DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal>? tiposId;
@@ -417,6 +422,7 @@
             empresa.Twitter = twitter;
             empresa.YouTube = youTube;
             empresa.TikTok = tikTok;
+            empresa.UrlPortal = urlPortal;
             await Repo.ActualizarEmpresaAsync(empresa);
 
             // Paso 4: Crear licencia

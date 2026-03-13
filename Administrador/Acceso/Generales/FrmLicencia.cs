@@ -1,5 +1,7 @@
 using System;
+using System.Configuration;
 using System.Windows.Forms;
+using Acceso.Clases.Datos.Generales;
 using DigitalPlus.Licensing;
 
 namespace Acceso.Generales
@@ -16,43 +18,87 @@ namespace Acceso.Generales
             MostrarInfoLicencia();
         }
 
+        private string ObtenerNombreEmpresa()
+        {
+            try
+            {
+                var empresa = EmpresaInfoService.ObtenerEmpresa();
+                if (empresa != null && !string.IsNullOrEmpty(empresa.Nombre))
+                    return empresa.Nombre;
+            }
+            catch { }
+
+            return ConfigurationManager.AppSettings["NombreEmpresa"] ?? "Sin configurar";
+        }
+
         private void MostrarInfoLicencia()
         {
             var mgr = Program.LicMgr;
+            string nombreEmpresa = ObtenerNombreEmpresa();
+            int legajosActuales = Program.ContarLegajos();
+
             if (mgr == null || mgr.CurrentTicket == null)
             {
-                lblInfo.Text = "No hay informacion de licencia disponible.\n\nIngrese un codigo para activar.";
+                lblInfo.Text = string.Format("Empresa: {0}\nLegajos actuales: {1}\n\nNo hay informacion de licencia disponible.\nIngrese un codigo para activar.", nombreEmpresa, legajosActuales);
                 lblEstadoValor.Text = "Sin licencia";
                 lblEstadoValor.ForeColor = System.Drawing.Color.Red;
                 return;
             }
 
-            lblInfo.Text = mgr.GetLicenseInfoText();
+            var t = mgr.CurrentTicket;
+            var tipo = t.LicenseType == "trial" ? "Prueba" :
+                       t.LicenseType == "active" ? "Activa" :
+                       t.LicenseType == "suspended" ? "Suspendida" : t.LicenseType;
+            var plan = string.IsNullOrEmpty(t.Plan) ? "" : t.Plan.Substring(0, 1).ToUpper() + t.Plan.Substring(1);
 
-            var dias = mgr.GetDaysRemaining();
-            if (dias.HasValue && dias.Value <= 7)
+            string vencimiento;
+            if (t.LicenseType == "trial" && t.TrialEndsAt.HasValue)
             {
-                lblEstadoValor.Text = string.Format("Vence en {0} dia(s)", dias.Value);
+                var dias = (int)(t.TrialEndsAt.Value - DateTime.UtcNow).TotalDays;
+                if (dias < 0) dias = 0;
+                vencimiento = t.TrialEndsAt.Value.ToLocalTime().ToString("dd/MM/yyyy") +
+                    " (" + dias + " dia" + (dias != 1 ? "s" : "") + ")";
+            }
+            else if (t.ExpiresAt.HasValue)
+            {
+                var dias = (int)(t.ExpiresAt.Value - DateTime.UtcNow).TotalDays;
+                if (dias < 0) dias = 0;
+                vencimiento = t.ExpiresAt.Value.ToLocalTime().ToString("dd/MM/yyyy") +
+                    " (" + dias + " dia" + (dias != 1 ? "s" : "") + ")";
+            }
+            else
+            {
+                vencimiento = "Sin vencimiento";
+            }
+
+            lblInfo.Text = string.Format(
+                "Empresa: {0}\nLicencia: {1} - Plan {2}\nMax legajos: {3}\nLegajos actuales: {4}\nVence: {5}",
+                nombreEmpresa, tipo, plan, t.MaxLegajos, legajosActuales, vencimiento);
+
+            var dias2 = mgr.GetDaysRemaining();
+            if (dias2.HasValue && dias2.Value <= 7)
+            {
+                lblEstadoValor.Text = string.Format("Vence en {0} dia(s)", dias2.Value);
                 lblEstadoValor.ForeColor = System.Drawing.Color.OrangeRed;
             }
-            else if (mgr.CurrentTicket.LicenseType == "trial")
+            else if (t.LicenseType == "trial")
             {
                 lblEstadoValor.Text = "Periodo de prueba";
                 lblEstadoValor.ForeColor = System.Drawing.Color.DarkOrange;
             }
-            else if (mgr.CurrentTicket.LicenseType == "active")
+            else if (t.LicenseType == "active")
             {
                 lblEstadoValor.Text = "Licencia activa";
                 lblEstadoValor.ForeColor = System.Drawing.Color.Green;
             }
-            else if (mgr.CurrentTicket.LicenseType == "suspended")
+            else if (t.LicenseType == "suspended")
             {
                 lblEstadoValor.Text = "Licencia suspendida";
                 lblEstadoValor.ForeColor = System.Drawing.Color.Red;
             }
             else
             {
-                lblEstadoValor.Text = mgr.CurrentTicket.LicenseType;
+                lblEstadoValor.Text = t.LicenseType;
                 lblEstadoValor.ForeColor = System.Drawing.Color.Gray;
             }
         }

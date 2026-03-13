@@ -83,6 +83,53 @@ namespace Acceso.RRHH
             ConfiguracionGeneraldelFormulario();
             monthCalendar1.MinDate = DateTime.Today;
             AgregarBotonPin();
+
+            // Layout dinámico 80/20 para controles de datos
+            panelDatosLegajos.Resize += (s, e) => AjustarLayoutDatos();
+            AjustarLayoutDatos();
+        }
+
+        private void AjustarLayoutDatos()
+        {
+            int panelW = panelDatosLegajos.ClientSize.Width;
+            if (panelW < 100) return;
+
+            int margen = 10;
+            int gap = 10;
+            int zonaEntidades = (int)(panelW * 0.80);
+            int anchoControl = (zonaEntidades - margen * 2 - gap) / 2;
+            int altoControl = 86;
+
+            // Fila 1: Horario | Sucursal
+            controlEntidadHorario.Location = new Point(margen, 5);
+            controlEntidadHorario.Size = new Size(anchoControl, altoControl);
+
+            controlEntidadSucursal.Location = new Point(margen + anchoControl + gap, 5);
+            controlEntidadSucursal.Size = new Size(anchoControl, altoControl);
+
+            // Fila 2: Sector | Categoria
+            controlEntidadSimpleUbicaciones.Location = new Point(margen, 95);
+            controlEntidadSimpleUbicaciones.Size = new Size(anchoControl, altoControl);
+
+            controlEntidadSimpleCategorias.Location = new Point(margen + anchoControl + gap, 95);
+            controlEntidadSimpleCategorias.Size = new Size(anchoControl, altoControl);
+
+            // Zona 20% restante: PIN arriba, Activo abajo
+            int zona20 = panelW - zonaEntidades;
+            int xCentro20 = zonaEntidades + (zona20 - chkActivo.Width) / 2;
+
+            // PIN: primera fila del 20%
+            if (btnPin != null)
+            {
+                int xPin = zonaEntidades + (zona20 - btnPin.Width) / 2;
+                btnPin.Location = new Point(xPin, 30);
+            }
+
+            // Activo: segunda fila del 20%
+            chkActivo.Location = new Point(xCentro20, 120);
+
+            // lblInactivo debajo del chkActivo
+            lblInactivo.Location = new Point(xCentro20, chkActivo.Bottom + 4);
         }
 
         private void AgregarBotonPin()
@@ -100,9 +147,8 @@ namespace Acceso.RRHH
             btnPin.FlatAppearance.BorderSize = 0;
             btnPin.Click += BtnPin_Click;
 
-            // Agregar al panel de foto (panel4) al lado de btnEliminarFoto
-            panel4.Controls.Add(btnPin);
-            btnPin.Location = new Point(btnEliminarFoto.Right + 10, btnEliminarFoto.Top + 8);
+            // Agregar al panel de datos, arriba del botón Activo
+            panelDatosLegajos.Controls.Add(btnPin);
             btnPin.BringToFront();
         }
 

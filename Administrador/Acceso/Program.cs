@@ -10,6 +10,8 @@ namespace Acceso
 	static class Program
 	{
 		public static string sysUsuario = string.Empty;
+		public static string sysUsuarioEmail = string.Empty;
+		public static string sysUsuarioRol = string.Empty;
 		public static LicenseManager LicMgr { get; private set; }
 
 		[STAThread]
@@ -18,8 +20,24 @@ namespace Acceso
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			// Licencia: en multi-tenant la activacion se hace desde el instalador,
-			// no se valida por app. Se mantiene LicMgr para info en UI.
+			// Login contra Identity del Portal MT
+			using (var frmLogin = new Generales.FrmLoginAdmin())
+			{
+				if (frmLogin.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+				{
+					return; // Cerro el login sin autenticarse
+				}
+				sysUsuario = frmLogin.UsuarioNombre;
+				sysUsuarioEmail = frmLogin.UsuarioEmail;
+				sysUsuarioRol = frmLogin.UsuarioRol;
+			}
+
+			// Inicializar licencia
+			LicMgr = new LicenseManager("", "Administrador");
+			var licResult = LicMgr.ValidateAtStartup(ContarLegajos());
+			// No bloquear acceso por licencia: el admin siempre debe poder entrar
+			// para gestionar/activar la licencia desde el menu
+
 			Application.Run(new FrmMainMenu());
 		}
 

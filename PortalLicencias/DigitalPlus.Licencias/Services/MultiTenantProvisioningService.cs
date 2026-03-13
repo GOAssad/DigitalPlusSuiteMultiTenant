@@ -31,7 +31,7 @@ public class MultiTenantProvisioningService
             ? contactEmail
             : $"admin@{codigo}.com";
 
-        var tempPassword = GenerateTempPassword();
+        var tempPassword = "Admin123";
 
         var hasher = new PasswordHasher<object>();
         var passwordHash = hasher.HashPassword(null!, tempPassword);
@@ -124,12 +124,12 @@ public class MultiTenantProvisioningService
                 Id, UserName, NormalizedUserName, Email, NormalizedEmail,
                 EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp,
                 PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnabled, AccessFailedCount,
-                EmpresaId, NombreCompleto, IsActive, MustChangePassword, CreatedAt)
+                EmpresaId, NombreCompleto, IsActive, AccesoAdminDesktop, MustChangePassword, CreatedAt)
             VALUES (
                 @Id, @UserName, @NormalizedUserName, @Email, @NormalizedEmail,
                 1, @PasswordHash, @SecurityStamp, @ConcurrencyStamp,
                 0, 0, 1, 0,
-                @EmpresaId, @NombreCompleto, 1, 1, @Now)";
+                @EmpresaId, @NombreCompleto, 1, 1, 1, @Now)";
 
         await using var cmd = new SqlCommand(sql, conn, tx);
         cmd.Parameters.AddWithValue("@Id", userId);
