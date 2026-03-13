@@ -1,0 +1,659 @@
+# DIGITAL ONE - Terminal Móvil (Etapa 2)
+## Documento de Arquitectura y Especificación para Implementación
+
+**Version:** 1.0  
+**Fecha:** 2026-03-12  
+**Generado por:** Claude Sonnet 4.6  
+**Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
+
+---
+
+## 1. OBJETIVO
+
+Incorporar al ecosistema Digital One la capacidad de registrar fichadas desde un **smartphone**, como alternativa al lector DigitalPersona físico, sin reemplazarlo.
+
+El celular actúa como una terminal de fichado personal: el empleado se autentica con su huella dactilar (sensor nativo del dispositivo), el sistema valida que está físicamente presente en la sucursal correcta (WiFi o GPS), y registra la fichada en la misma tabla `Fichada` de la BD multi-tenant.
+
+---
+
+## 2. PRINCIPIOS DE DISEÑO
+
+1. **No invasivo:** No modifica el flujo existente de fichado por huella DigitalPersona ni por PIN.
+2. **Mismo modelo de datos:** Las fichadas móviles se insertan en la tabla `Fichada` existente, con un nuevo valor en el campo `TipoFichada`.
+3. **Multi-tenant nativo:** El empleado se identifica con sus credenciales; el sistema resuelve `EmpresaId` automáticamente.
+4. **Sucursal automática:** La sucursal se resuelve por la ubicación del dispositivo (WiFi BSSID o GPS), sin que el empleado la seleccione.
+5. **Sin compatibilidad de templates biométricos:** No se comparan huellas entre dispositivos. El sensor del celular valida al empleado localmente; el servidor valida que el dispositivo está autorizado para ese empleado.
+6. **Anti-fraude por presencia física:** WiFi de la sucursal como método primario; GPS como fallback configurable por sucursal.
+
+---
+
+## 3. ARQUITECTURA GENERAL
+
+```
+SMARTPHONE (empleado)
++-------------------------------+
+|  App Digital One Mobile       |
+|  React Native (Android/iOS)   |
+|                               |
+|  1. Login con credenciales    |
+|  2. Registro de dispositivo   |
+|     (QR o código de activac.) |
+|  3. Fichada:                  |
+|     a. BiometricPrompt (OS)   |
+|     b. Captura WiFi BSSID     |
+|        o coordenadas GPS      |
+|     c. Firma JWT con clave    |
+|        privada del device     |
+|     d. POST /api/mobile/      |
+|        fichada                |
++---------------+---------------+
+                |
+                | HTTPS
+                v
+PORTAL MULTI-TENANT (Azure)
++-------------------------------+
+|  MobileController             |
+|  (nuevo, en PortalMultiTenant)|
+|                               |
+|  POST /api/mobile/login       |
+|  POST /api/mobile/registrar   |
+|  POST /api/mobile/fichada     |
+|  GET  /api/mobile/estado      |
++---------------+---------------+
+                |
+                v
+        BD DigitalPlusMultiTenant
+        (tablas nuevas + Fichada existente)
+```
+
+---
+
+## 4. MODELO DE DATOS
+
+### 4.1 Tablas nuevas en `DigitalPlusMultiTenant`
+
+#### `TerminalMovil`
+Representa un smartphone registrado y autorizado para un empleado.
+
+```sql
+CREATE TABLE TerminalMovil (
+    Id               INT IDENTITY PRIMARY KEY,
+    EmpresaId        INT NOT NULL,
+    LegajoId         INT NOT NULL,           -- FK a Legajo.Id
+    DeviceId         NVARCHAR(200) NOT NULL,  -- UUID único del dispositivo
+    PublicKey        NVARCHAR(MAX) NOT NULL,  -- Clave pública RSA del device (PEM)
+    Nombre           NVARCHAR(100) NULL,      -- "Samsung Galaxy S24 de Juan"
+    Plataforma       NVARCHAR(20) NULL,       -- 'android' | 'ios'
+    FechaRegistro    DATETIME NOT NULL DEFAULT GETDATE(),
+    UltimoUso        DATETIME NULL,
+    Activo           BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_TerminalMovil_Legajo FOREIGN KEY (LegajoId) REFERENCES Legajo(Id)
+);
+CREATE INDEX IX_TerminalMovil_DeviceId ON TerminalMovil(DeviceId);
+CREATE INDEX IX_TerminalMovil_EmpresaId ON TerminalMovil(EmpresaId, LegajoId);
+```
+
+#### `SucursalGeoconfig`
+Configuración de validación de presencia física por sucursal.
+
+```sql
+CREATE TABLE SucursalGeoconfig (
+    Id                 INT IDENTITY PRIMARY KEY,
+    SucursalId         INT NOT NULL,           -- FK a Sucursal.Id
+    EmpresaId          INT NOT NULL,
+    -- WiFi
+    WifiBSSID          NVARCHAR(50) NULL,       -- MAC del router: "AA:BB:CC:DD:EE:FF"
+    WifiSSID           NVARCHAR(100) NULL,      -- Nombre de la red (referencia, no se valida)
+    -- GPS
+    Latitud            DECIMAL(10,7) NULL,
+    Longitud           DECIMAL(10,7) NULL,
+    RadioMetros        INT NULL DEFAULT 100,
+    -- Método
+    MetodoValidacion   NVARCHAR(20) NOT NULL DEFAULT 'WifiOGPS',
+    -- 'SoloWifi' | 'SoloGPS' | 'WifiOGPS' | 'WifiYGPS' | 'Ninguno'
+    Activo             BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_SucursalGeoconfig_Sucursal FOREIGN KEY (SucursalId) REFERENCES Sucursal(Id)
+);
+```
+
+#### `CodigoActivacionMovil`
+Códigos de uso único para vincular un dispositivo a un empleado.
+
+```sql
+CREATE TABLE CodigoActivacionMovil (
+    Id             INT IDENTITY PRIMARY KEY,
+    EmpresaId      INT NOT NULL,
+    LegajoId       INT NOT NULL,
+    Codigo         NVARCHAR(10) NOT NULL,      -- 6-8 chars alfanumérico mayúscula
+    FechaCreacion  DATETIME NOT NULL DEFAULT GETDATE(),
+    FechaExpira    DATETIME NOT NULL,          -- DEFAULT +24hs
+    Usado          BIT NOT NULL DEFAULT 0,
+    UsadoEn        DATETIME NULL,
+    DeviceId       NVARCHAR(200) NULL          -- se completa al usar
+);
+CREATE UNIQUE INDEX IX_CodigoActivacionMovil_Codigo ON CodigoActivacionMovil(Codigo) WHERE Usado = 0;
+```
+
+### 4.2 Modificaciones a tablas existentes
+
+#### Tabla `Fichada` — nuevo valor en `TipoFichada`
+No requiere cambio de schema si `TipoFichada` es NVARCHAR. Solo agregar el valor `'Movil'` al enum lógico de la aplicación.
+
+Si el campo no existe aún, agregar:
+```sql
+ALTER TABLE Fichada ADD TipoFichada NVARCHAR(20) NULL DEFAULT 'Huella';
+-- Valores posibles: 'Huella' | 'PIN' | 'Demo' | 'Movil'
+```
+
+#### Tabla `Sucursal` — sin cambios
+La geoconfiguración se maneja en la tabla separada `SucursalGeoconfig` para no modificar la entidad existente.
+
+---
+
+## 5. API — ENDPOINTS NUEVOS
+
+Todos los endpoints se crean en **`PortalMultiTenant/Controllers/MobileController.cs`**.
+
+### 5.1 `POST /api/mobile/login`
+Autentica al empleado y retorna un JWT de sesión móvil.
+
+**Request:**
+```json
+{
+  "legajo": "00123",
+  "password": "su_contraseña"
+}
+```
+
+**Response 200:**
+```json
+{
+  "token": "eyJ...",           // JWT, expira en 8hs
+  "legajoId": 45,
+  "nombreEmpleado": "García, Juan",
+  "empresaId": 2,
+  "nombreEmpresa": "Kosiuko SA",
+  "dispositivoRegistrado": true  // false si este device aún no está vinculado
+}
+```
+
+**Notas de implementación:**
+- Validar contra tabla `Legajo` (no contra Identity de portal web — los empleados no son usuarios web).
+- El `EmpresaId` se resuelve del `Legajo` autenticado.
+- Incluir `DeviceId` en el header `X-Device-Id` para detectar si ya está registrado.
+
+---
+
+### 5.2 `POST /api/mobile/registrar-dispositivo`
+Registra o reemplaza el dispositivo de un empleado usando un código de activación.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Request:**
+```json
+{
+  "codigo": "XK9M2P",
+  "deviceId": "550e8400-e29b-41d4-a716-446655440000",
+  "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjAN...\n-----END PUBLIC KEY-----",
+  "nombreDispositivo": "Galaxy S24 de Juan",
+  "plataforma": "android"
+}
+```
+
+**Response 200:**
+```json
+{
+  "ok": true,
+  "mensaje": "Dispositivo registrado correctamente"
+}
+```
+
+**Notas de implementación:**
+- Verificar que el código no esté expirado ni usado.
+- Verificar que el `LegajoId` del código coincida con el del token.
+- Insertar en `TerminalMovil`. Si ya existe un registro activo para ese `LegajoId`, desactivarlo (un empleado = un dispositivo activo).
+- Marcar el código como usado.
+- Todo en una transacción.
+
+---
+
+### 5.3 `POST /api/mobile/fichada`
+Registra una fichada desde el dispositivo móvil.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+X-Device-Id: 550e8400-e29b-41d4-a716-446655440000
+X-Signature: {firma_base64}   // firma RSA del body con la clave privada del device
+```
+
+**Request:**
+```json
+{
+  "timestamp": "2026-03-12T09:15:00Z",
+  "wifiBSSID": "AA:BB:CC:DD:EE:FF",
+  "wifiSSID": "DigitalOne-Oficina",
+  "latitud": -34.5270,
+  "longitud": -58.4995,
+  "tipoFichada": "Entrada"      // "Entrada" | "Salida" | "Auto"
+}
+```
+
+**Response 200:**
+```json
+{
+  "ok": true,
+  "fichadaId": 9821,
+  "tipo": "Entrada",
+  "sucursalId": 3,
+  "sucursalNombre": "Sede Central",
+  "fechaHora": "2026-03-12T09:15:00Z",
+  "mensaje": "Entrada registrada correctamente"
+}
+```
+
+**Response 403 — fuera de ubicación:**
+```json
+{
+  "ok": false,
+  "codigo": "UBICACION_INVALIDA",
+  "mensaje": "No se detectó ninguna sucursal habilitada para fichado móvil en tu ubicación actual."
+}
+```
+
+**Lógica del servidor (orden de ejecución):**
+
+```
+1. Validar JWT y extraer EmpresaId + LegajoId
+2. Buscar TerminalMovil activa para DeviceId + LegajoId + EmpresaId
+   → Si no existe: 403 DISPOSITIVO_NO_REGISTRADO
+3. Verificar firma RSA del body con PublicKey almacenada
+   → Si inválida: 403 FIRMA_INVALIDA
+4. Verificar timestamp (no aceptar fichadas con > 5 minutos de diferencia con servidor)
+   → Si desfasado: 400 TIMESTAMP_INVALIDO
+5. Resolver sucursal:
+   a. Obtener todas las SucursalGeoconfig activas de la empresa
+   b. Para cada una, según MetodoValidacion:
+      - 'SoloWifi':  wifiBSSID del request == WifiBSSID de la config
+      - 'SoloGPS':   distancia(lat/lon request, lat/lon config) <= RadioMetros
+      - 'WifiOGPS':  cualquiera de los dos coincide  ← DEFAULT
+      - 'WifiYGPS':  ambos deben coincidir
+      - 'Ninguno':   siempre válido (para empleados remotos habilitados)
+   c. Si ninguna sucursal coincide: 403 UBICACION_INVALIDA
+   d. Si más de una coincide: usar la de mayor prioridad (menor Id)
+6. Determinar tipo (Entrada/Salida) si tipoFichada == "Auto":
+   → buscar última fichada del legajo en el día, alternar
+7. INSERT INTO Fichada (EmpresaId, LegajoId, SucursalId, FechaHora, TipoFichada, ...)
+   VALUES (@empresaId, @legajoId, @sucursalId, @timestamp, 'Movil', ...)
+8. UPDATE TerminalMovil SET UltimoUso = GETDATE() WHERE Id = @terminalMovilId
+9. Retornar respuesta 200
+```
+
+---
+
+### 5.4 `GET /api/mobile/estado`
+Retorna el estado actual del empleado (para mostrar en la pantalla principal de la app).
+
+**Headers:** `Authorization: Bearer {token}`, `X-Device-Id: ...`
+
+**Response 200:**
+```json
+{
+  "legajoId": 45,
+  "nombre": "García, Juan",
+  "empresaNombre": "Kosiuko SA",
+  "dispositivoActivo": true,
+  "ultimaFichada": {
+    "tipo": "Entrada",
+    "fechaHora": "2026-03-12T09:15:00Z",
+    "sucursal": "Sede Central"
+  },
+  "fichadasHoy": [
+    { "tipo": "Entrada", "fechaHora": "2026-03-12T09:15:00Z" }
+  ]
+}
+```
+
+---
+
+## 6. APLICACIÓN MÓVIL
+
+### 6.1 Stack
+
+| Decisión | Elección | Justificación |
+|---|---|---|
+| Framework | React Native (Expo) | Madurez de librerías biométricas, GPS, WiFi; ecosistema mobile más robusto para MVP |
+| Lenguaje | TypeScript | Consistencia y seguridad de tipos |
+| Biometría | `expo-local-authentication` | Android + iOS, sin acceso al template |
+| WiFi | `react-native-wifi-reborn` | Acceso al BSSID del AP conectado |
+| GPS | `expo-location` | Permisos simplificados con Expo |
+| Criptografía | `react-native-quick-crypto` | Generación de par RSA y firma de requests |
+| Storage seguro | `expo-secure-store` | Almacenamiento de clave privada en Keystore/Keychain |
+| HTTP | `axios` | Interceptores para JWT y firma automática |
+| Navegación | `expo-router` | File-based routing, alineado con convenciones modernas |
+| Estado global | `zustand` | Liviano, suficiente para este scope |
+
+### 6.2 Estructura de carpetas
+
+```
+DigitalOneMobile/
+├── app/
+│   ├── (auth)/
+│   │   └── login.tsx              ← Pantalla de login
+│   ├── (main)/
+│   │   ├── index.tsx              ← Pantalla principal / fichar
+│   │   ├── historial.tsx          ← Últimas fichadas
+│   │   └── configuracion.tsx      ← Info del dispositivo
+│   └── activar.tsx                ← Registro de dispositivo (código QR / manual)
+├── components/
+│   ├── FichadaButton.tsx          ← Botón principal con animación semáforo
+│   ├── EstadoUbicacion.tsx        ← Indicador WiFi/GPS
+│   └── UltimaFichada.tsx
+├── services/
+│   ├── api.ts                     ← Cliente axios con interceptores
+│   ├── auth.ts                    ← Login, token management
+│   ├── biometria.ts               ← Wrapper expo-local-authentication
+│   ├── ubicacion.ts               ← WiFi BSSID + GPS
+│   └── crypto.ts                  ← Generación RSA, firma de requests
+├── store/
+│   └── useAppStore.ts             ← Estado global (zustand)
+├── constants/
+│   └── config.ts                  ← API_BASE_URL, timeouts
+└── app.json
+```
+
+### 6.3 Flujo de pantallas
+
+```
+Inicio de la app
+    │
+    ├─ Sin token guardado ──→ [LOGIN]
+    │                           │ credenciales OK
+    │                           ↓
+    │                        ¿Dispositivo registrado?
+    │                           │ NO
+    │                           ↓
+    │                        [ACTIVAR DISPOSITIVO]
+    │                           │ ingresar código de activación
+    │                           │ o escanear QR
+    │                           ↓
+    │                        Generación de par RSA en device
+    │                        POST /api/mobile/registrar-dispositivo
+    │
+    └─ Con token válido ───→ [PANTALLA PRINCIPAL]
+                                │
+                                │ empleado presiona "FICHAR"
+                                ↓
+                             Solicitar biometría al SO (huella/face)
+                                │ OK
+                                ↓
+                             Capturar WiFi BSSID + GPS coords
+                                │
+                                ↓
+                             Firmar payload con clave privada
+                                │
+                                ↓
+                             POST /api/mobile/fichada
+                                │
+                          ┌─────┴──────┐
+                         OK          ERROR
+                          │             │
+                    Semáforo verde   Semáforo rojo
+                    + animación      + mensaje de error
+                    + tipo fichada
+```
+
+### 6.4 Seguridad del dispositivo
+
+**Generación de claves (al registrar):**
+```typescript
+// crypto.ts
+import { generateKeyPair } from 'react-native-quick-crypto';
+import * as SecureStore from 'expo-secure-store';
+
+export async function generarYGuardarClaves(): Promise<string> {
+  const { privateKey, publicKey } = await generateKeyPair('RSA', {
+    modulusLength: 2048,
+  });
+  // Guardar clave privada en Keystore (Android) / Keychain (iOS)
+  await SecureStore.setItemAsync('dp_private_key', privateKey.export('pem'));
+  return publicKey.export('pem'); // Se envía al servidor
+}
+```
+
+**Firma de cada fichada:**
+```typescript
+export async function firmarPayload(payload: object): Promise<string> {
+  const privateKeyPem = await SecureStore.getItemAsync('dp_private_key');
+  const data = JSON.stringify(payload);
+  const sign = createSign('SHA256');
+  sign.update(data);
+  return sign.sign(privateKeyPem, 'base64');
+}
+```
+
+---
+
+## 7. FLUJO DE ADMINISTRACIÓN (Administrador Desktop)
+
+El administrador desktop (Acceso.exe) necesita una nueva sección para gestionar los dispositivos móviles de los empleados.
+
+### 7.1 Nueva pestaña "Móvil" en el formulario de Legajo
+
+Agregar una pestaña en `FrmLegajo` con:
+
+- **Estado del dispositivo:** Activo / Sin dispositivo registrado
+- **Información:** nombre del dispositivo, plataforma, fecha de registro, último uso
+- **Botón "Generar código de activación":**
+  - Genera un código alfanumérico de 8 caracteres en mayúsculas
+  - Lo inserta en `CodigoActivacionMovil` con expiración de 24hs
+  - Lo muestra en pantalla con un QR (o para copiar/enviar al empleado)
+- **Botón "Desactivar dispositivo":**
+  - Pone `Activo = 0` en el registro de `TerminalMovil`
+
+### 7.2 Nueva sección en Portal Multi-Tenant
+
+Agregar en el menú del Portal Multi-Tenant:
+
+- **`/terminales-moviles`** — listado de dispositivos activos por empresa
+  - Columnas: Empleado, Dispositivo, Plataforma, Último uso, Estado
+  - Acciones: Desactivar, Generar nuevo código de activación
+
+---
+
+## 8. CONFIGURACIÓN POR SUCURSAL
+
+### 8.1 Administrador Desktop — nueva pestaña en Sucursales
+
+Agregar en `FrmSucursal` una pestaña **"Fichado Móvil"** con:
+
+- **Activar fichado móvil para esta sucursal** (checkbox)
+- **Método de validación** (combo): WiFi o GPS | Solo WiFi | Solo GPS | WiFi y GPS | Sin restricción
+- **Configuración WiFi:**
+  - BSSID del router (campo de texto, formato `XX:XX:XX:XX:XX:XX`)
+  - SSID (referencia informativa)
+  - Botón de ayuda: "¿Cómo obtener el BSSID?"
+- **Configuración GPS:**
+  - Latitud y Longitud (campos numéricos)
+  - Radio en metros (slider o campo, default 100m)
+  - Botón "Usar ubicación actual" (si el equipo tiene GPS o IP geolocation)
+
+### 8.2 Portal Multi-Tenant — misma funcionalidad
+
+Agregar los mismos campos en la página de edición de Sucursal en el portal web.
+
+---
+
+## 9. CAMBIOS EN CAPA DE DATOS (PortalMultiTenant)
+
+### 9.1 Nuevas entidades EF Core
+
+```csharp
+// Models/TerminalMovil.cs
+public class TerminalMovil
+{
+    public int Id { get; set; }
+    public int EmpresaId { get; set; }
+    public int LegajoId { get; set; }
+    public string DeviceId { get; set; }
+    public string PublicKey { get; set; }
+    public string? Nombre { get; set; }
+    public string? Plataforma { get; set; }
+    public DateTime FechaRegistro { get; set; }
+    public DateTime? UltimoUso { get; set; }
+    public bool Activo { get; set; }
+    
+    public Legajo Legajo { get; set; }
+}
+
+// Models/SucursalGeoconfig.cs
+public class SucursalGeoconfig
+{
+    public int Id { get; set; }
+    public int SucursalId { get; set; }
+    public int EmpresaId { get; set; }
+    public string? WifiBSSID { get; set; }
+    public string? WifiSSID { get; set; }
+    public decimal? Latitud { get; set; }
+    public decimal? Longitud { get; set; }
+    public int RadioMetros { get; set; } = 100;
+    public string MetodoValidacion { get; set; } = "WifiOGPS";
+    public bool Activo { get; set; }
+    
+    public Sucursal Sucursal { get; set; }
+}
+
+// Models/CodigoActivacionMovil.cs
+public class CodigoActivacionMovil
+{
+    public int Id { get; set; }
+    public int EmpresaId { get; set; }
+    public int LegajoId { get; set; }
+    public string Codigo { get; set; }
+    public DateTime FechaCreacion { get; set; }
+    public DateTime FechaExpira { get; set; }
+    public bool Usado { get; set; }
+    public DateTime? UsadoEn { get; set; }
+    public string? DeviceId { get; set; }
+}
+```
+
+### 9.2 Migración EF Core
+
+Crear migración: `AddTerminalMovilAndGeoconfig`
+
+Aplicar con: `dotnet ef database update`
+
+---
+
+## 10. MODIFICACIONES EN APPS DESKTOP (Acceso.Clases.Datos)
+
+### 10.1 Nuevas clases de datos
+
+Agregar en `Acceso.Clases.Datos`:
+
+- `TerminalMovilDAL` — CRUD sobre `TerminalMovil` y `CodigoActivacionMovil`
+  - `ObtenerPorLegajo(int legajoId, int empresaId)`
+  - `GenerarCodigo(int legajoId, int empresaId)` → retorna el código generado
+  - `Desactivar(int terminalMovilId)`
+
+- `SucursalGeoconfigDAL`
+  - `ObtenerPorSucursal(int sucursalId)`
+  - `Guardar(SucursalGeoconfig config)`
+
+Patrón: igual que los demás DAL del proyecto — ADO.NET directo, SQL parametrizado, sin ORM.
+
+---
+
+## 11. CONSIDERACIONES DE SEGURIDAD
+
+| Riesgo | Mitigación |
+|---|---|
+| Empleado ficha desde casa (fuera de sucursal) | Validación WiFi BSSID + GPS en servidor, configurable por sucursal |
+| Robo del celular | Código de activación nuevo invalidará el anterior; admin puede desactivar el device |
+| Replay attack (reusar un POST capturado) | Timestamp en el payload firmado; servidor rechaza si > 5 min de diferencia |
+| Falsificación de firma | Servidor verifica con `PublicKey` almacenada; clave privada nunca sale del dispositivo (SecureStore) |
+| Fake GPS (app de spoofing) | WiFi BSSID como método primario — más difícil de falsificar sin estar físicamente presente |
+| Token JWT robado | Corta expiración (8hs); `DeviceId` en header también verificado contra el token |
+| Código de activación interceptado | Expira en 24hs; de uso único; debe coincidir con el `LegajoId` del token |
+
+---
+
+## 12. PLAN DE IMPLEMENTACIÓN
+
+### Etapa 2a — Backend + Admin (sin app móvil)
+
+| Tarea | Componente | Prioridad |
+|---|---|---|
+| Script SQL: crear `TerminalMovil`, `SucursalGeoconfig`, `CodigoActivacionMovil` | Database/ | Alta |
+| Agregar campo `TipoFichada` a tabla `Fichada` si no existe | Database/ | Alta |
+| Entidades EF Core + migración | PortalMultiTenant | Alta |
+| `MobileController` con los 4 endpoints | PortalMultiTenant | Alta |
+| Servicio de resolución de sucursal por ubicación (`UbicacionService`) | PortalMultiTenant | Alta |
+| Pestaña "Móvil" en `FrmLegajo` (Administrador) | Administrador/Acceso | Media |
+| Pestaña "Fichado Móvil" en `FrmSucursal` (Administrador) | Administrador/Acceso | Media |
+| Página `/terminales-moviles` en Portal MT | PortalMultiTenant | Media |
+| Campos geoconfig en página Sucursal del Portal MT | PortalMultiTenant | Media |
+| Tests manuales del circuito completo vía Postman | — | Alta |
+
+### Etapa 2b — App Móvil
+
+| Tarea | Componente | Prioridad |
+|---|---|---|
+| Scaffold proyecto Expo + TypeScript | DigitalOneMobile/ | Alta |
+| `crypto.ts`: generación RSA + firma | DigitalOneMobile/services | Alta |
+| `ubicacion.ts`: WiFi BSSID + GPS | DigitalOneMobile/services | Alta |
+| Pantalla Login | DigitalOneMobile/app | Alta |
+| Pantalla Activar Dispositivo (código + QR) | DigitalOneMobile/app | Alta |
+| Pantalla Principal / Fichar | DigitalOneMobile/app | Alta |
+| Pantalla Historial | DigitalOneMobile/app | Media |
+| Build Android (APK/AAB) para testing | — | Alta |
+| Build iOS (requiere Mac o EAS Build) | — | Media |
+
+---
+
+## 13. ESTRUCTURA DE CARPETAS EN EL REPOSITORIO
+
+```
+DigitalPlusSuiteMultiTenant/
+│
+├── ... (estructura existente sin cambios)
+│
+├── DigitalOneMobile/                    ← NUEVO: App React Native
+│   ├── app/
+│   ├── components/
+│   ├── services/
+│   ├── store/
+│   ├── constants/
+│   ├── package.json
+│   └── app.json
+│
+├── Database/
+│   └── Migrations/
+│       └── 003_TerminalMovil_Geoconfig.sql   ← NUEVO: script SQL
+│
+└── Docs/
+    └── DOC02-Terminal_Movil_DigitalOne.md    ← Este documento
+```
+
+---
+
+## 14. NOTAS PARA CLAUDE CODE
+
+Al implementar este documento, tener en cuenta:
+
+1. **Convenciones del proyecto:** Seguir exactamente el mismo estilo de código que en `PortalMultiTenant` — nombres de clases, inyección de dependencias, estructura de controllers, manejo de `EmpresaId` via `TenantContext` o claim del JWT.
+
+2. **Tabla `Fichada`:** El campo `TipoFichada` puede ya existir o no — verificar antes de aplicar el ALTER. Si existe, solo agregar el valor `'Movil'` a la lógica de la app.
+
+3. **Sin cambios en Fichador desktop:** El `TEntradaSalida.exe` no se toca en esta etapa.
+
+4. **Autenticación de empleados en mobile:** Los empleados NO tienen cuenta en ASP.NET Identity del portal. El login mobile usa credenciales propias de la tabla `Legajo` (campo `PIN` o una nueva columna `PasswordHash`). Evaluar con el equipo si se agrega `PasswordHash` a `Legajo` o si se usa el PIN existente como contraseña mobile.
+
+5. **UbicacionService:** Implementar como servicio inyectable en el controller. La lógica de resolución de sucursal por WiFi/GPS debe ser fácilmente testeable de forma aislada.
+
+6. **Logs:** Registrar en una tabla `FichadaMovilLog` (o en el sistema de logging existente) los intentos fallidos de fichada (ubicación inválida, firma inválida) para auditoría.
+
+---
+
+*Fin del documento — Terminal Móvil Digital One v1.0*

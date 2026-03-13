@@ -1,0 +1,75 @@
+- Se creo la base de datos en el servidor de DonWeb
+- El usuario es DigitalPlus Pass:D!g!t@1Plu5
+
+------Cadenas de Conexion
+"DefaultConnection_": "Server=Note;Database=Ver1;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "DigitalPlusLocal": "Server=tcp:digitalone.database.windows.net,1433;Initial Catalog=DigitalOne;Persist Security Info=False;User ID=doAdmin;Password=Guadalupe@7;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "DefaultConnection": "Server=sd-1985882-l.ferozo.com,11434;Initial Catalog=DigitalPlus;Persist Security Info=False;User ID=DigitalPlus;Password=D!g!t@1Plu5;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "DigitalPlus": "Server=sd-1985882-l.ferozo.com,11434;Initial Catalog=DigitalPlus;Persist Security Info=False;User ID=DigitalPlus;Password=D!g!t@1Plu5;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "DigitalOne": "Server=tcp:digitalone.database.windows.net,1433;Initial Catalog=DigitalOne;Persist Security Info=False;User ID=doAdmin;Password=Guadalupe@7;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;",
+    "SignalR": "Endpoint=https://digitalplus.service.signalr.net;AccessKey=+KcKhDz2dNVdom80RXLclTNPUr4eG3fo5dO8KKdsVKU=;Version=1.0;"
+  },
+
+
+7/11/2022
+En el Home tiene que estar el usuario y password y una foto en el fondo.
+
+
+Buena info para trabajar con fechas en sql
+https://www.laescueladelsql.com/sql-funciones-de-fecha-y-hora-con-ejemplos/
+
+
+CALENDARIO
+https://www.youtube.com/playlist?list=PLFJQnCcZXWjv89uDubYW7NniK8mEl4sWQ
+
+
+Autorizaciones
+https://www.google.com/search?q=%40attribute+authorize+blazor&rlz=1C1CHZN_esAR1011AR1011&sxsrf=ALiCzsaTjrRJjz5ELw0NktTI1M2lJJ0y4A%3A1668978000648&ei=UJV6Y-ibJ7Lc1sQP0cyJ4AY&oq=%40attribute+%5BAuthorize%5D+blazor&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAxgAMgcIABCABBATMggIABAWEB4QEzIICAAQFhAeEBMyCAgAEBYQHhATMggIABAWEB4QEzIICAAQFhAeEBM6CggAEEcQ1gQQsAM6CQgAEIAEEA0QEzoKCAAQCBAeEA0QE0oECEEYAEoECEYYAFD-BVi0DWCEIWgBcAF4AIABaYgBpwWSAQM0LjOYAQCgAQHIAQjAAQE&sclient=gws-wiz-serp#fpstate=ive&vld=cid:2f178a4b,vid:CmsfLjXiUDs
+
+
+Udemy
+Curso: Programando en BLAZOR - ASP.NET Core 5
+httpClient, Autenticacion con Token
+89.Proveedor de Estado de Autonticacion Real - Local Storage en 4:35
+94: Renovando e JWT (Jason Web Token)
+100: Enviando el JWT a traves del httpClient
+
+https://www.variablenotfound.com/2017/12/autenticacion-jwt-en-apis-con-aspnet.html
+https://learn.microsoft.com/en-us/answers/questions/760827/how-to-add-bearer-token-to-a-request-in-aspnet-cor.html
+
+GET http://localhost:57284/api/values HTTP/1.1
+Host: localhost:57284
+Content-Length: 0
+Content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImpvaG5kb2UifQ.OZuaG00NsY9ALMgtF-K7YN4XVYtF4mbOHMgh9SZukc4
+
+CONVERTIR JSON A CLASES 
+Editar >> pegado Especial >> convertir Json a Clases
+https://www.youtube.com/watch?v=8rYNNxAcZSA
+
+
+Manuales de Consulta
+https://es.scribd.com/document/460932291/ASPnet-CORE-Manua-pdf
+https://www.dofactory.com/code-examples/csharp/parse-json
+
+
+https://api.shipnow.com.ar/shipping_options?weight={10}&to_zip_code={1617}&types={1}
+
+// Importacion
+2 cadenas de conexion a Azure
+// la primera aputa a Digital One
+// la segunda aputa a Digital Plus
+//
+
+"Server=tcp:digitalone.database.windows.net,1433;Initial Catalog=DigitalOne;Persist Security Info=False;User ID=doAdmin;Password=Guadalupe@7;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" providerName="System.Data.SqlClient" 
+
+
+Pagina de Inicio
+OTR
+Pylot Customer Portal
+
+24/10/2022
+Identity: https://www.youtube.com/watch?v=Lp-0JtQbj84
+
+03/11/2022
+https://mteheran.dev/deshabilitar-elementos-html-en-blazor/

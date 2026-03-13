@@ -1,0 +1,68 @@
+https://digitalplusapp.azurewebsites.net/
+
+- Los reportes que estan para ser probados son los que estan en la ficha de cada legajo (los reportes individuales), en el menu vas a encontrar uno de Fichadas pero ese todavia no lo hice porque tenemos que confirmar si los individuales funcionan bien, si es asi, es lo mismo pero con un where menos.
+- La pantalla de Inicio dice Novedades, estoy haciendo precisamente que se vean cosas distintas ya sea si estas logueado o no, si no estas logueado, novedades boludas y accesos que puden ser de utilidad y si estas logueado mensajes que manda la empresa, subidad que hacemos del sistema y esas cosas. 
+
+
+LOS REPORTES DE FICHADAS SOLO CONTROLAN EL CALENDARIO PERSONAL, SI ESTAN BIEN INCLUYO LOS HORARIOS GENERALES (COMO PARA LOS ADMINISTRATIVOS) 
+
+
+--------------------------------------------------------------------------------------------------
+Conceptos
+
+Usuarios: Son los que se loguean en el sistema
+Legajos: Son los que laburan en la empresa y fichan
+
+No Hice relacion Usuarios - Legajos, no se si hace falta.
+
+-- Alta de Usuarios
+Para crear un nuevo usurio del sistema, simplemente que entre y se registre. Despues un Administrador puede ir al menu Usuarios y asignarle el Rol que le corresponde y las sucursales donde labura. 
+
+-- Alta de Legajos.
+Se tiene que hacer del sistema de escritorio por el tema registro de huellas, es decir que este solo se va a comunicar directo cuando conecte al sistema de escritorio a la nueva base de datos, por ahora los datos que tengo son de una migracion de un par de meses.
+
+-------------------------------------------------------------------------------------
+Rol de Usuarios
+Los voy creando en la medida que necesito hacer distintos tipos de acceso, por ahora les doy bola solo a Administrador y Supervisor_Local
+
+
+ADMINISTRADOR
+Tiene acceso a todo el sistema, pero no necesariamente a todas las sucursales, si querese tener acceso a todas las sucursales incluirlas todas en el menu de Usuario. Solo un supervisor puede hacer eso.
+
+SUPERVISOR_LOCAL
+Pensado para el supervisor de local
+No puede entrar dentro del menu de Atributos ni al de Usuarios
+
+-------------------------------------------------
+Configuraciones de Usuarios con los que probe
+
+Supervisor1@kosiuko.com.ar
+Supervisor1.
+Rol: Supervisor_Local
+Sucursales: DOT
+
+walter@kosiuko.com.ar
+Wal123.
+Rol: Administrador
+Sucursles: Todas
+------------------------------------
+------------------------------------
+Legajo que tiene algunas fichadas cargadsa
+
+COPPETI, MARCELA MARIA
+Las fichadas para probar los listados las creo manualmente desde la ficha del legajo >> Boton Fichadas >> +Fichada
+
+-------------------------------------------------------------
+Calendario
+La version que estoy programando tiene un mejor calendario, este es una cagada pero las tablas son las mismas asi que nos sirver para probarlo a full junto con los reportes.
+-----------------------------------------------------------------------------------------------------------------------
+Que va a tener la version a corto plazo....
+version para imprimir o pasar a PDF
+Todo lo que veas lo voy a pasar a Excel, en este momento no se si lo hace bien o no, pero ya lo tengo listo.
+Un layout mejor
+
+Version a mediano plazo
+un mejor calendario.
+Cuando te logueas tenes que tener novedades para ese usuario o para su categoria en la pagina de inicio.
+
+
