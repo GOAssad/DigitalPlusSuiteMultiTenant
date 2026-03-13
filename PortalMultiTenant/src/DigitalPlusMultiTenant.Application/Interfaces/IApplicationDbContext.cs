@@ -28,5 +28,10 @@ public interface IApplicationDbContext
     DbSet<VariableSistema> VariablesSistema { get; }
     DbSet<UsuarioSucursal> UsuarioSucursales { get; }
 
+    // Terminal Movil (v2)
+    DbSet<TerminalMovil> TerminalesMoviles { get; }
+    DbSet<SucursalGeoconfig> SucursalGeoconfigs { get; }
+    DbSet<CodigoActivacionMovil> CodigosActivacionMovil { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

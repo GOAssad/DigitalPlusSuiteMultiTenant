@@ -6,5 +6,6 @@ public enum OrigenFichada
     PIN,
     Demo,
     Manual,
-    Web
+    Web,
+    Movil
 }

@@ -1,4 +1,5 @@
-﻿using Acceso.Clases.Datos.RRHH;
+﻿using Acceso.Clases.Datos.Generales;
+using Acceso.Clases.Datos.RRHH;
 using AForge.Video.DirectShow;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SpreadsheetLight;
@@ -11,6 +12,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Color = System.Drawing.Color;
+using Font = System.Drawing.Font;
 
 
 
@@ -78,11 +80,24 @@ namespace Acceso.RRHH
 
         private Button btnPin;
 
+        // Controles de la pestaña Móvil (v2)
+        private TabPage PageMovil;
+        private Label lblMovilEstado;
+        private Label lblMovilDispositivo;
+        private Label lblMovilPlataforma;
+        private Label lblMovilRegistro;
+        private Label lblMovilUltimoUso;
+        private Button btnGenerarCodigo;
+        private Button btnDesactivarDispositivo;
+        private TextBox txtCodigoActivacion;
+        private int _terminalMovilId;
+
         private void configuraciongeneral()
         {
             ConfiguracionGeneraldelFormulario();
             monthCalendar1.MinDate = DateTime.Today;
             AgregarBotonPin();
+            AgregarPestanaMovil();
 
             // Layout dinámico 80/20 para controles de datos
             panelDatosLegajos.Resize += (s, e) => AjustarLayoutDatos();
@@ -425,6 +440,9 @@ namespace Acceso.RRHH
             }
 
                 lblBuscando.Visible = false;
+
+            // Terminal Móvil (v2)
+            CargarDatosMovil();
 
         }
 
@@ -1306,6 +1324,223 @@ namespace Acceso.RRHH
         {
             return true;
         }
+
+        #region Pestaña Móvil (v2)
+
+        private void AgregarPestanaMovil()
+        {
+            PageMovil = new TabPage
+            {
+                Name = "PageMovil",
+                Text = "Móvil",
+                Padding = new Padding(15),
+                UseVisualStyleBackColor = true
+            };
+
+            var panelMovil = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
+
+            var font = new Font("Segoe UI", 11F);
+            var fontBold = new Font("Segoe UI", 11F, FontStyle.Bold);
+            var fontTitle = new Font("Segoe UI", 14F, FontStyle.Bold);
+            int y = 10;
+
+            var lblTitulo = new Label
+            {
+                Text = "Terminal Móvil",
+                Font = fontTitle,
+                ForeColor = Color.SteelBlue,
+                Location = new Point(10, y),
+                AutoSize = true
+            };
+            panelMovil.Controls.Add(lblTitulo);
+            y += 40;
+
+            lblMovilEstado = new Label { Font = fontBold, Location = new Point(10, y), AutoSize = true };
+            panelMovil.Controls.Add(lblMovilEstado);
+            y += 30;
+
+            panelMovil.Controls.Add(new Label { Text = "Dispositivo:", Font = fontBold, Location = new Point(10, y), AutoSize = true });
+            lblMovilDispositivo = new Label { Font = font, Location = new Point(160, y), AutoSize = true };
+            panelMovil.Controls.Add(lblMovilDispositivo);
+            y += 28;
+
+            panelMovil.Controls.Add(new Label { Text = "Plataforma:", Font = fontBold, Location = new Point(10, y), AutoSize = true });
+            lblMovilPlataforma = new Label { Font = font, Location = new Point(160, y), AutoSize = true };
+            panelMovil.Controls.Add(lblMovilPlataforma);
+            y += 28;
+
+            panelMovil.Controls.Add(new Label { Text = "Registrado:", Font = fontBold, Location = new Point(10, y), AutoSize = true });
+            lblMovilRegistro = new Label { Font = font, Location = new Point(160, y), AutoSize = true };
+            panelMovil.Controls.Add(lblMovilRegistro);
+            y += 28;
+
+            panelMovil.Controls.Add(new Label { Text = "Último uso:", Font = fontBold, Location = new Point(10, y), AutoSize = true });
+            lblMovilUltimoUso = new Label { Font = font, Location = new Point(160, y), AutoSize = true };
+            panelMovil.Controls.Add(lblMovilUltimoUso);
+            y += 45;
+
+            btnDesactivarDispositivo = new Button
+            {
+                Text = "Desactivar dispositivo",
+                Font = font,
+                Size = new Size(250, 38),
+                Location = new Point(10, y),
+                Enabled = false,
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnDesactivarDispositivo.Click += BtnDesactivarDispositivo_Click;
+            panelMovil.Controls.Add(btnDesactivarDispositivo);
+            y += 55;
+
+            // Separador
+            panelMovil.Controls.Add(new Label
+            {
+                BorderStyle = BorderStyle.Fixed3D,
+                Location = new Point(10, y),
+                Size = new Size(500, 2)
+            });
+            y += 15;
+
+            panelMovil.Controls.Add(new Label
+            {
+                Text = "Generar código de activación",
+                Font = fontBold,
+                Location = new Point(10, y),
+                AutoSize = true
+            });
+            y += 30;
+
+            btnGenerarCodigo = new Button
+            {
+                Text = "Generar código",
+                Font = font,
+                Size = new Size(200, 38),
+                Location = new Point(10, y),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnGenerarCodigo.Click += BtnGenerarCodigo_Click;
+            panelMovil.Controls.Add(btnGenerarCodigo);
+
+            txtCodigoActivacion = new TextBox
+            {
+                Font = new Font("Consolas", 16F, FontStyle.Bold),
+                Location = new Point(230, y),
+                Size = new Size(220, 38),
+                ReadOnly = true,
+                TextAlign = HorizontalAlignment.Center,
+                BackColor = Color.FromArgb(255, 243, 205)
+            };
+            panelMovil.Controls.Add(txtCodigoActivacion);
+
+            PageMovil.Controls.Add(panelMovil);
+            tabControl1.Controls.Add(PageMovil);
+        }
+
+        private void CargarDatosMovil()
+        {
+            _terminalMovilId = 0;
+            lblMovilDispositivo.Text = "-";
+            lblMovilPlataforma.Text = "-";
+            lblMovilRegistro.Text = "-";
+            lblMovilUltimoUso.Text = "-";
+            txtCodigoActivacion.Text = "";
+            btnDesactivarDispositivo.Enabled = false;
+
+            if (!olegajo.Existe || string.IsNullOrEmpty(olegajo.sLegajoID))
+            {
+                lblMovilEstado.Text = "Sin legajo seleccionado";
+                lblMovilEstado.ForeColor = Color.Gray;
+                btnGenerarCodigo.Enabled = false;
+                return;
+            }
+
+            btnGenerarCodigo.Enabled = true;
+
+            try
+            {
+                int legajoId = Convert.ToInt32(olegajo.nLegajoID);
+                int empresaId = Global.Datos.TenantContext.EmpresaId;
+                DataTable dt = TerminalMovilDAL.ObtenerPorLegajo(legajoId, empresaId);
+
+                if (dt.Rows.Count > 0)
+                {
+                    var row = dt.Rows[0];
+                    _terminalMovilId = Convert.ToInt32(row["Id"]);
+                    lblMovilEstado.Text = "Dispositivo activo";
+                    lblMovilEstado.ForeColor = Color.FromArgb(40, 167, 69);
+                    lblMovilDispositivo.Text = row["Nombre"]?.ToString() ?? "(sin nombre)";
+                    lblMovilPlataforma.Text = row["Plataforma"]?.ToString() ?? "-";
+                    lblMovilRegistro.Text = row["FechaRegistro"] != DBNull.Value
+                        ? Convert.ToDateTime(row["FechaRegistro"]).ToString("dd/MM/yyyy HH:mm") : "-";
+                    lblMovilUltimoUso.Text = row["UltimoUso"] != DBNull.Value
+                        ? Convert.ToDateTime(row["UltimoUso"]).ToString("dd/MM/yyyy HH:mm") : "Nunca";
+                    btnDesactivarDispositivo.Enabled = true;
+                }
+                else
+                {
+                    lblMovilEstado.Text = "Sin dispositivo registrado";
+                    lblMovilEstado.ForeColor = Color.FromArgb(108, 117, 125);
+                }
+            }
+            catch (Exception ex)
+            {
+                lblMovilEstado.Text = "Error al consultar: " + ex.Message;
+                lblMovilEstado.ForeColor = Color.Red;
+            }
+        }
+
+        private void BtnGenerarCodigo_Click(object sender, EventArgs e)
+        {
+            if (!olegajo.Existe) return;
+
+            try
+            {
+                int legajoId = Convert.ToInt32(olegajo.nLegajoID);
+                int empresaId = Global.Datos.TenantContext.EmpresaId;
+                string codigo = TerminalMovilDAL.GenerarCodigo(legajoId, empresaId);
+                txtCodigoActivacion.Text = codigo;
+                MessageBox.Show(
+                    $"Código generado: {codigo}\n\nVálido por 24 horas.\nEl empleado debe ingresarlo en la app Digital One Mobile.",
+                    "Código de Activación",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al generar código: " + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnDesactivarDispositivo_Click(object sender, EventArgs e)
+        {
+            if (_terminalMovilId == 0) return;
+
+            var result = MessageBox.Show(
+                "¿Desactivar el dispositivo móvil de este empleado?\n\nEl empleado deberá registrar un nuevo dispositivo con un código de activación.",
+                "Confirmar desactivación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                if (TerminalMovilDAL.Desactivar(_terminalMovilId))
+                {
+                    CargarDatosMovil();
+                    MessageBox.Show("Dispositivo desactivado.", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Error al desactivar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        #endregion
     }
 }
 

@@ -1,0 +1,234 @@
+@page "/terminales-moviles"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject ITenantService Tenant
+
+<PageTitle>Terminales Moviles - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-phone me-2"></i>Terminales Moviles</h4>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Empleado o dispositivo..."
+                       @bind="filtro" @bind:event="oninput" @bind:after="BuscarDebounce" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Estado</label>
+                <select class="form-select form-select-sm" @bind="filtroActivo" @bind:after="Buscar">
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("empleado")'>
+                            Empleado @SortIcon("empleado")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("dispositivo")'>
+                            Dispositivo @SortIcon("dispositivo")
+                        </th>
+                        <th>Plataforma</th>
+                        <th role="button" @onclick='() => SetOrden("registro")'>
+                            Registrado @SortIcon("registro")
+                        </th>
+                        <th role="button" @onclick='() => SetOrden("ultimouso")'>
+                            Ultimo uso @SortIcon("ultimouso")
+                        </th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items == null)
+                    {
+                        <tr><td colspan="7" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
+                    }
+                    else if (!items.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-phone fs-3 d-block mb-2"></i>No hay terminales moviles registradas</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var t in items)
+                        {
+                            <tr>
+                                <td>@t.Legajo.Apellido, @t.Legajo.Nombre <span class="badge bg-secondary ms-1">@t.Legajo.NumeroLegajo</span></td>
+                                <td>@(t.Nombre ?? "(sin nombre)")</td>
+                                <td><span class="badge bg-info">@(t.Plataforma ?? "-")</span></td>
+                                <td class="text-muted small">@t.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-muted small">@(t.UltimoUso?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")</td>
+                                <td><span class="badge @(t.Activo ? "bg-success" : "bg-danger")">@(t.Activo ? "Activo" : "Inactivo")</span></td>
+                                <td class="text-end">
+                                    @if (t.Activo)
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Desactivar(t)"
+                                                title="Desactivar dispositivo">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    }
+                                    <button class="btn btn-sm btn-outline-success ms-1" @onclick="() => GenerarCodigo(t.Legajo)"
+                                            title="Generar codigo de activacion">
+                                        <i class="bi bi-qr-code"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(codigoGenerado))
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Codigo de Activacion</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="text-muted small mb-2">Para: <strong>@codigoEmpleado</strong></p>
+                    <div class="bg-warning bg-opacity-25 border border-warning rounded p-3 mb-2">
+                        <span style="font-family: monospace; font-size: 1.8rem; font-weight: bold; letter-spacing: 4px;">@codigoGenerado</span>
+                    </div>
+                    <p class="text-muted small mb-0">Valido por 24 horas</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary btn-sm" @onclick="CerrarModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<TerminalMovil>? items;
+    private string filtro = "";
+    private string filtroActivo = "true";
+    private string ordenColumna = "empleado";
+    private bool ordenDesc;
+    private CancellationTokenSource? _debounceToken;
+    private string? codigoGenerado;
+    private string? codigoEmpleado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task BuscarDebounce()
+    {
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try { await Task.Delay(300, _debounceToken.Token); await CargarDatos(); }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task Buscar() => await CargarDatos();
+
+    private async Task SetOrden(string columna)
+    {
+        if (ordenColumna == columna) ordenDesc = !ordenDesc;
+        else { ordenColumna = columna; ordenDesc = false; }
+        await CargarDatos();
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
+    }
+
+    private async Task CargarDatos()
+    {
+        var query = Db.TerminalesMoviles.Include(t => t.Legajo).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.Trim().ToLower();
+            query = query.Where(t => t.Legajo.Apellido.ToLower().Contains(f)
+                || t.Legajo.Nombre.ToLower().Contains(f)
+                || (t.Nombre != null && t.Nombre.ToLower().Contains(f)));
+        }
+        if (filtroActivo == "true") query = query.Where(t => t.Activo);
+        else if (filtroActivo == "false") query = query.Where(t => !t.Activo);
+
+        var ordered = ordenColumna switch
+        {
+            "dispositivo" => ordenDesc ? query.OrderByDescending(t => t.Nombre) : query.OrderBy(t => t.Nombre),
+            "registro" => ordenDesc ? query.OrderByDescending(t => t.FechaRegistro) : query.OrderBy(t => t.FechaRegistro),
+            "ultimouso" => ordenDesc ? query.OrderByDescending(t => t.UltimoUso) : query.OrderBy(t => t.UltimoUso),
+            _ => ordenDesc ? query.OrderByDescending(t => t.Legajo.Apellido) : query.OrderBy(t => t.Legajo.Apellido),
+        };
+
+        items = await ordered.ToListAsync();
+    }
+
+    private async Task Desactivar(TerminalMovil t)
+    {
+        t.Activo = false;
+        await Db.SaveChangesAsync();
+        await CargarDatos();
+    }
+
+    private async Task GenerarCodigo(Legajo legajo)
+    {
+        var codigo = GenerarCodigoAleatorio(8);
+        var activacion = new CodigoActivacionMovil
+        {
+            EmpresaId = legajo.EmpresaId,
+            LegajoId = legajo.Id,
+            Codigo = codigo,
+            FechaCreacion = DateTime.UtcNow,
+            FechaExpira = DateTime.UtcNow.AddHours(24),
+            Usado = false
+        };
+        Db.CodigosActivacionMovil.Add(activacion);
+        await Db.SaveChangesAsync();
+
+        codigoGenerado = codigo;
+        codigoEmpleado = $"{legajo.Apellido}, {legajo.Nombre}";
+    }
+
+    private void CerrarModal()
+    {
+        codigoGenerado = null;
+        codigoEmpleado = null;
+    }
+
+    private static string GenerarCodigoAleatorio(int longitud)
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        var bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(longitud);
+        var result = new char[longitud];
+        for (int i = 0; i < longitud; i++)
+            result[i] = chars[bytes[i] % chars.Length];
+        return new string(result);
+    }
+}

@@ -46,6 +46,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<Noticia> Noticias => Set<Noticia>();
     public DbSet<VariableSistema> VariablesSistema => Set<VariableSistema>();
 
+    // Terminal Movil (v2)
+    public DbSet<TerminalMovil> TerminalesMoviles => Set<TerminalMovil>();
+    public DbSet<SucursalGeoconfig> SucursalGeoconfigs => Set<SucursalGeoconfig>();
+    public DbSet<CodigoActivacionMovil> CodigosActivacionMovil => Set<CodigoActivacionMovil>();
+
     // Seguridad
     public DbSet<UsuarioSucursal> UsuarioSucursales => Set<UsuarioSucursal>();
 
@@ -75,6 +80,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.Entity<Feriado>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
         builder.Entity<Noticia>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
         builder.Entity<VariableSistema>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<TerminalMovil>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<SucursalGeoconfig>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<CodigoActivacionMovil>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+
+        // Precision para coordenadas GPS
+        builder.Entity<SucursalGeoconfig>().Property(e => e.Latitud).HasColumnType("decimal(10,7)");
+        builder.Entity<SucursalGeoconfig>().Property(e => e.Longitud).HasColumnType("decimal(10,7)");
         // No filtrar ApplicationUser: Identity necesita acceso sin restriccion para login
     }
 

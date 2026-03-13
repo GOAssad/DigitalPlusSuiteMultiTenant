@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 5.0
-**Fecha:** 2026-03-12
+**Version:** 5.1
+**Fecha:** 2026-03-13
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -684,7 +684,7 @@ Permite a las apps desktop verificar si la empresa esta activa. Pensado para ver
 **DigitalPlusMultiTenant** - Base de datos operativa compartida (multi-tenant):
 
 - Es la **unica BD operativa** para todas las empresas (no se crea una BD por empresa).
-- Contiene 29 tablas con **nombres en singular**: Legajo, Fichada, Sucursal, Sector, Horario, Categoria, Incidencia, Feriado, LegajoSucursal, LegajoHuella, LegajoDomicilio, HorarioDetalle, etc.
+- Contiene 32 tablas con **nombres en singular** (29 originales + 3 de Terminal Movil v2): Legajo, Fichada, Sucursal, Sector, Horario, Categoria, Incidencia, Feriado, LegajoSucursal, LegajoHuella, LegajoDomicilio, HorarioDetalle, etc.
 - Todas las tablas principales incluyen la columna `EmpresaId` para aislar los datos por empresa.
 - Las tablas hijas (LegajoSucursal, LegajoHuella, LegajoPin, LegajoDomicilio, HorarioDetalle) no tienen `EmpresaId` directamente; se filtran por JOIN con su tabla padre.
 

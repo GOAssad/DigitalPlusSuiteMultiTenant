@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 5.0
-**Fecha:** 2026-03-12
+**Version:** 6.0
+**Fecha:** 2026-03-13
 
 ---
 
@@ -29,6 +29,7 @@ DigitalPlus es un sistema de **control de asistencia y gestion de personal** que
 
 - **Huella digital:** El empleado apoya su dedo en un lector USB y el sistema lo identifica automaticamente.
 - **PIN:** El empleado ingresa su numero de legajo y un codigo PIN personal.
+- **Movil (proximamente):** El empleado ficha desde su smartphone con biometria nativa (huella/face) y validacion de ubicacion.
 - **Modo demostracion:** Para pruebas sin necesidad de hardware.
 
 ### Componentes del sistema
@@ -40,6 +41,7 @@ DigitalPlus se compone de tres aplicaciones:
 | **DigitalPlus Fichador** | Terminal de fichaje donde los empleados registran entrada y salida |
 | **DigitalPlus Administrador** | Aplicacion de gestion: legajos, horarios, reportes, configuracion |
 | **Portal Web DigitalPlus** | Acceso via navegador para consulta de fichadas, reportes y gestion |
+| **Digital One Mobile** *(proximamente)* | App de smartphone para fichada con biometria nativa y geolocalizacion |
 
 ### Requisitos del equipo
 
@@ -526,6 +528,8 @@ Una vez dentro del portal, en la **barra superior** se muestra:
 | **Sectores** | Gestionar sectores/areas |
 | **Sucursales** | Gestionar ubicaciones |
 | **Terminales** | Ver terminales de fichaje registradas |
+| **Terminales Moviles** | Gestionar dispositivos moviles registrados (smartphones) |
+| **Fichado Movil** | Configurar validacion de ubicacion (WiFi/GPS) por sucursal |
 | **Incidencias** | Cargar permisos, ausencias, vacaciones |
 | **Feriados** | Gestionar dias feriados |
 | **Variables** | Configuracion general del sistema |

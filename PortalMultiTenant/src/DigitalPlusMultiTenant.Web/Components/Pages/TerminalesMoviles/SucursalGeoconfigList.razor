@@ -1,0 +1,237 @@
+@page "/fichado-movil"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject ITenantService Tenant
+
+<PageTitle>Fichado Movil por Sucursal - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Fichado Movil por Sucursal</h4>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <p class="text-muted small mb-0">
+            Configure la validacion de ubicacion para fichado desde dispositivos moviles.
+            Cada sucursal puede validar por WiFi (BSSID del router), GPS, o ambos.
+        </p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sucursal</th>
+                        <th>Metodo</th>
+                        <th>WiFi BSSID</th>
+                        <th>WiFi SSID</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        <th>Radio (m)</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (sucursales == null)
+                    {
+                        <tr><td colspan="9" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
+                    }
+                    else if (!sucursales.Any())
+                    {
+                        <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-building fs-3 d-block mb-2"></i>No hay sucursales</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var s in sucursales)
+                        {
+                            var geo = configs.FirstOrDefault(g => g.SucursalId == s.Id);
+                            <tr>
+                                <td><strong>@s.Nombre</strong></td>
+                                @if (geo != null)
+                                {
+                                    <td><span class="badge bg-primary">@geo.MetodoValidacion</span></td>
+                                    <td class="small">@(geo.WifiBSSID ?? "-")</td>
+                                    <td class="small text-muted">@(geo.WifiSSID ?? "-")</td>
+                                    <td class="small">@(geo.Latitud?.ToString("F7") ?? "-")</td>
+                                    <td class="small">@(geo.Longitud?.ToString("F7") ?? "-")</td>
+                                    <td>@geo.RadioMetros</td>
+                                    <td><span class="badge @(geo.Activo ? "bg-success" : "bg-danger")">@(geo.Activo ? "Activo" : "Inactivo")</span></td>
+                                }
+                                else
+                                {
+                                    <td colspan="6" class="text-muted small">Sin configuracion</td>
+                                    <td><span class="badge bg-secondary">No configurado</span></td>
+                                }
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => EditarGeoconfig(s, geo)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (editando)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configurar fichado movil - @editSucursalNombre</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarEditor"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Metodo de validacion</label>
+                        <select class="form-select" @bind="editModel.MetodoValidacion">
+                            <option value="WifiOGPS">WiFi o GPS (recomendado)</option>
+                            <option value="SoloWifi">Solo WiFi</option>
+                            <option value="SoloGPS">Solo GPS</option>
+                            <option value="WifiYGPS">WiFi y GPS (ambos)</option>
+                            <option value="Ninguno">Sin restriccion</option>
+                        </select>
+                    </div>
+                    <hr />
+                    <h6>WiFi</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">BSSID (MAC del router)</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="AA:BB:CC:DD:EE:FF"
+                                   @bind="editModel.WifiBSSID" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">SSID (nombre de red)</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombre de la red WiFi"
+                                   @bind="editModel.WifiSSID" />
+                        </div>
+                    </div>
+                    <hr />
+                    <h6>GPS</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small">Latitud</label>
+                            <input type="number" step="0.0000001" class="form-control form-control-sm"
+                                   @bind="editLatitud" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Longitud</label>
+                            <input type="number" step="0.0000001" class="form-control form-control-sm"
+                                   @bind="editLongitud" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Radio (metros)</label>
+                            <input type="number" class="form-control form-control-sm"
+                                   @bind="editModel.RadioMetros" />
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="editModel.Activo" id="chkActivo" />
+                        <label class="form-check-label" for="chkActivo">Fichado movil habilitado</label>
+                    </div>
+                    @if (!string.IsNullOrEmpty(errorMsg))
+                    {
+                        <div class="alert alert-danger mt-2 mb-0 small">@errorMsg</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="CerrarEditor">Cancelar</button>
+                    <button class="btn btn-primary btn-sm" @onclick="GuardarGeoconfig">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Sucursal>? sucursales;
+    private List<SucursalGeoconfig> configs = new();
+    private bool editando;
+    private string editSucursalNombre = "";
+    private int editSucursalId;
+    private SucursalGeoconfig editModel = new();
+    private double? editLatitud;
+    private double? editLongitud;
+    private string? errorMsg;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        sucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        configs = await Db.SucursalGeoconfigs.ToListAsync();
+    }
+
+    private void EditarGeoconfig(Sucursal sucursal, SucursalGeoconfig? geo)
+    {
+        editSucursalId = sucursal.Id;
+        editSucursalNombre = sucursal.Nombre;
+        errorMsg = null;
+
+        if (geo != null)
+        {
+            editModel = geo;
+            editLatitud = geo.Latitud.HasValue ? (double)geo.Latitud.Value : null;
+            editLongitud = geo.Longitud.HasValue ? (double)geo.Longitud.Value : null;
+        }
+        else
+        {
+            editModel = new SucursalGeoconfig
+            {
+                SucursalId = sucursal.Id,
+                EmpresaId = sucursal.EmpresaId,
+                MetodoValidacion = "WifiOGPS",
+                RadioMetros = 100,
+                Activo = true
+            };
+            editLatitud = null;
+            editLongitud = null;
+        }
+        editando = true;
+    }
+
+    private async Task GuardarGeoconfig()
+    {
+        errorMsg = null;
+        editModel.Latitud = editLatitud.HasValue ? (decimal)editLatitud.Value : null;
+        editModel.Longitud = editLongitud.HasValue ? (decimal)editLongitud.Value : null;
+
+        try
+        {
+            if (editModel.Id == 0)
+            {
+                Db.SucursalGeoconfigs.Add(editModel);
+            }
+            await Db.SaveChangesAsync();
+            editando = false;
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
+    private void CerrarEditor()
+    {
+        editando = false;
+        errorMsg = null;
+    }
+}

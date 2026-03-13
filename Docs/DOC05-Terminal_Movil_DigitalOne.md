@@ -1,10 +1,11 @@
 # DIGITAL ONE - Terminal Móvil (Etapa 2)
 ## Documento de Arquitectura y Especificación para Implementación
 
-**Version:** 1.0  
-**Fecha:** 2026-03-12  
-**Generado por:** Claude Sonnet 4.6  
+**Version:** 1.1
+**Fecha:** 2026-03-13
+**Generado por:** Claude Sonnet 4.6 / Claude Opus 4.6
 **Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
+**Estado:** Etapa 2a (Backend + Admin) COMPLETADA. Etapa 2b (App Movil) PENDIENTE.
 
 ---
 
@@ -19,7 +20,7 @@ El celular actúa como una terminal de fichado personal: el empleado se autentic
 ## 2. PRINCIPIOS DE DISEÑO
 
 1. **No invasivo:** No modifica el flujo existente de fichado por huella DigitalPersona ni por PIN.
-2. **Mismo modelo de datos:** Las fichadas móviles se insertan en la tabla `Fichada` existente, con un nuevo valor en el campo `TipoFichada`.
+2. **Mismo modelo de datos:** Las fichadas móviles se insertan en la tabla `Fichada` existente, con `Origen = Movil` (enum `OrigenFichada`). No se agrega campo `TipoFichada` nuevo — se reutiliza el campo `Origen` existente.
 3. **Multi-tenant nativo:** El empleado se identifica con sus credenciales; el sistema resuelve `EmpresaId` automáticamente.
 4. **Sucursal automática:** La sucursal se resuelve por la ubicación del dispositivo (WiFi BSSID o GPS), sin que el empleado la seleccione.
 5. **Sin compatibilidad de templates biométricos:** No se comparan huellas entre dispositivos. El sensor del celular valida al empleado localmente; el servidor valida que el dispositivo está autorizado para ese empleado.
@@ -656,4 +657,49 @@ Al implementar este documento, tener en cuenta:
 
 ---
 
-*Fin del documento — Terminal Móvil Digital One v1.0*
+---
+
+## 15. ESTADO DE IMPLEMENTACION (actualizado 2026-03-13)
+
+### Etapa 2a — Backend + Admin: COMPLETADA
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| Entidades EF Core (TerminalMovil, SucursalGeoconfig, CodigoActivacionMovil) | HECHO | En Domain/Entities/, con ITenantEntity |
+| Migracion EF Core `AddTerminalMovilAndGeoconfig` | HECHO | Aplicada en Ferozo y localhost |
+| OrigenFichada enum + valor Movil | HECHO | No se usa TipoFichada nuevo |
+| MobileController (4 endpoints JWT) | HECHO | Controllers/MobileController.cs |
+| JWT Bearer auth en Program.cs | HECHO | Convive con cookie auth |
+| UbicacionService | HECHO | Infrastructure/Services/UbicacionService.cs |
+| Tab "Movil" en FrmRRHHLegajos | HECHO | Generar codigo + desactivar dispositivo |
+| TerminalMovilDAL + SucursalGeoconfigDAL | HECHO | En Acceso.Clases.Datos/Generales/ |
+| Pagina /terminales-moviles | HECHO | Blazor Server, filtros, ordenamiento |
+| Pagina /fichado-movil (geoconfig) | HECHO | Blazor Server, modal de edicion |
+| NavMenu actualizado | HECHO | 2 links en grupo Estructura |
+| Script SQL referencia | HECHO | Database/003_TerminalMovil_Geoconfig.sql |
+
+### Etapa 2b — App Movil: PENDIENTE
+
+| Tarea | Estado |
+|---|---|
+| Scaffold proyecto Expo + TypeScript | PENDIENTE |
+| crypto.ts (RSA + firma) | PENDIENTE |
+| ubicacion.ts (WiFi BSSID + GPS) | PENDIENTE |
+| Pantalla Login | PENDIENTE |
+| Pantalla Activar Dispositivo | PENDIENTE |
+| Pantalla Principal / Fichar | PENDIENTE |
+| Pantalla Historial | PENDIENTE |
+| Build Android (APK) | PENDIENTE |
+
+### Decisiones de implementacion vs especificacion
+
+| Especificacion | Implementacion real | Motivo |
+|---|---|---|
+| Campo `TipoFichada` nuevo en tabla Fichada | Se reutiliza `Origen` (enum OrigenFichada) con valor `Movil` | El campo Origen ya cumplia el mismo proposito |
+| Login con password del legajo | Login con PIN (SHA256 hash) | Los legajos ya tienen PIN; no agregar otro campo de credencial |
+| Pestaña geoconfig en FrmSucursal desktop | Geoconfig solo en Portal MT web | No existe FrmSucursal dedicado en desktop (usa CtrEntidadPanel generico) |
+| EF Core table names plural | TerminalesMoviles, SucursalGeoconfigs, CodigosActivacionMovil | Consistente con convencion EF Core del proyecto |
+
+---
+
+*Fin del documento — Terminal Móvil Digital One v1.1*

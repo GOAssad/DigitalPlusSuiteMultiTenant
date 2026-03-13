@@ -1,8 +1,11 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
 using DigitalPlusMultiTenant.Web.Components;
 using DigitalPlusMultiTenant.Web.Components.Account;
 using DigitalPlusMultiTenant.Domain.Entities;
@@ -36,6 +39,24 @@ public class Program
                 options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
             })
             .AddIdentityCookies();
+
+        // JWT Bearer para API móvil (v2) — no afecta la auth por cookies del portal web
+        builder.Services.AddAuthentication()
+            .AddJwtBearer(options =>
+            {
+                var jwtConfig = builder.Configuration.GetSection("Jwt");
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtConfig["Issuer"],
+                    ValidAudience = jwtConfig["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtConfig["Key"] ?? "DefaultDevKey_MustBeAtLeast32Characters!"))
+                };
+            });
 
         // Tenant service
         builder.Services.AddHttpContextAccessor();
@@ -73,6 +94,10 @@ public class Program
 
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
         builder.Services.AddMemoryCache();
+
+        // Terminal Movil (v2)
+        builder.Services.AddScoped<UbicacionService>();
+        builder.Services.AddControllers();
 
         var app = builder.Build();
 
@@ -117,6 +142,8 @@ public class Program
 
         // Add additional endpoints required by the Identity /Account Razor components.
         app.MapAdditionalIdentityEndpoints();
+
+        app.MapControllers();
 
         // Logo de empresa desde DigitalPlusAdmin (cacheado 1 hora)
         app.MapGet("/api/empresa-logo", async (HttpContext ctx, IConfiguration config, IMemoryCache cache) =>

@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 7.0
-**Fecha:** 2026-03-12
+**Version:** 8.0
+**Fecha:** 2026-03-13
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -73,6 +73,25 @@ DIGITALPLUSWEB - LEGACY (obsoleto)
            |
            v
   BD DigitalPlus (Ferozo)
+
+
+TERMINAL MOVIL (v2 - en desarrollo)
++-------------------------------+
+|  App Digital One Mobile       |
+|  React Native (Android/iOS)   |
+|                               |
+|  - Fichada x biometria nativa |
+|  - WiFi BSSID + GPS           |
+|  - JWT auth + firma RSA       |
++---------------+---------------+
+                |
+                | HTTPS (POST /api/mobile/*)
+                v
+  Portal Multi-Tenant (MobileController)
+                |
+                v
+  BD DigitalPlusMultiTenant
+  (TerminalesMoviles, SucursalGeoconfigs, CodigosActivacionMovil)
 
 
 PORTAL DE LICENCIAS (Backoffice Integra IA)
@@ -191,6 +210,37 @@ INFRAESTRUCTURA CLOUD
 - Hosting: Azure App Service (digitalplusportalmt.azurewebsites.net)
 - **Identidad visual:** Theme oscuro con paleta integraia.tech (fondos #050810/#0B1120, acentos dorados #C9A84C, texto claro #E8EAF0, contenido #F8F7F4)
 - Branding: "DIGITAL ONE" en sidebar
+
+### 3.3a Terminal Movil - Digital One Mobile (v2, en desarrollo)
+
+| Atributo | Detalle |
+|---|---|
+| **Tipo** | Aplicacion movil (smartphone) |
+| **Stack** | React Native (Expo) / TypeScript |
+| **Carpeta** | `DigitalOneMobile\` (pendiente scaffold) |
+| **Proposito** | Fichada desde smartphone con biometria nativa + geolocalizacion |
+
+**Estado:** Backend implementado (MobileController, entidades, migracion, JWT). App movil pendiente (Etapa 2b).
+
+**Funcionalidades implementadas (backend):**
+- API REST en Portal MT: `POST /api/mobile/login`, `POST /api/mobile/registrar-dispositivo`, `POST /api/mobile/fichada`, `GET /api/mobile/estado`
+- JWT Bearer auth (convive con cookie auth del portal, no interfiere)
+- Login por PIN del legajo (SHA256), no usa Identity del portal
+- Registro de dispositivo con codigo de activacion de uso unico (24hs)
+- Validacion de ubicacion: WiFi BSSID y/o GPS con Haversine (configurable por sucursal)
+- Verificacion de firma RSA del dispositivo en cada fichada
+- Fichadas se insertan en tabla `Fichada` existente con `Origen = Movil`
+- Un empleado = un dispositivo activo
+
+**Administracion:**
+- Tab "Movil" en formulario Legajos del Administrador desktop (generar codigo, desactivar dispositivo)
+- Pagina `/terminales-moviles` en Portal MT (listado de dispositivos)
+- Pagina `/fichado-movil` en Portal MT (geoconfig por sucursal)
+
+**Tablas nuevas en DigitalPlusMultiTenant:**
+- `TerminalesMoviles` - Smartphones registrados por empleado
+- `SucursalGeoconfigs` - Config WiFi/GPS por sucursal
+- `CodigosActivacionMovil` - Codigos de vinculacion dispositivo-empleado
 
 ### 3.3b DigitalPlusWeb - LEGACY
 
@@ -323,6 +373,11 @@ Las tablas usan **nombres singulares** y todas las tablas principales incluyen `
 - `Incidencia` - Incidencias (Color como string hex en lugar de ForeColor/BackColor int)
 - `Feriado` - Feriados (Fecha unica en lugar de Desde/Hasta)
 - `Terminal` - Terminales
+
+**Tablas Terminal Movil v2 (con EmpresaId):**
+- `TerminalesMoviles` - Smartphones registrados (DeviceId, PublicKey RSA, Plataforma)
+- `SucursalGeoconfigs` - Config geolocalizacion por sucursal (WiFi BSSID, GPS lat/lon, radio, metodo)
+- `CodigosActivacionMovil` - Codigos de vinculacion dispositivo-empleado (uso unico, expira 24hs)
 
 **Tablas child (sin EmpresaId, filtradas por JOIN con tabla padre):**
 - `LegajoHuella` - Huellas digitales binarias (FingerMask en lugar de nFingerMask)
@@ -522,6 +577,37 @@ C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 +-- AzureProvisioning\               Azure Functions
 ```
 
+### Control de versiones con Git y GitHub
+
+**Repositorio remoto:** `GOAssad/DigitalPlusSuiteMultiTenant` en GitHub.
+
+**Estrategia de trabajo:** Se trabaja directamente sobre el branch `master`. No se usan feature branches ya que el desarrollo es centralizado (un solo desarrollador + Claude Code). Los cambios se commitean y pushean a GitHub de forma incremental.
+
+**Tags de respaldo:** Antes de iniciar etapas de desarrollo que incorporan funcionalidad nueva significativa, se crea un **tag anotado** en Git para marcar un punto de restauracion estable. Esto permite volver al estado exacto del proyecto en caso de que el nuevo desarrollo introduzca problemas irrecuperables.
+
+| Tag | Commit | Fecha | Descripcion |
+|---|---|---|---|
+| `v1.0-pre-mobile` | `730589f` | 2026-03-12 | **Version 1.0** — Snapshot estable antes de desarrollo Terminal Movil. Circuito completo probado en produccion: Fichador, Administrador, Portal MT, Portal Licencias. |
+
+**Versionado del proyecto:**
+- **v1.0** — Suite completa funcional: Fichador (Huella/PIN/Demo), Administrador, Portal MT, Portal Licencias, Instaladores, Azure Functions. Probado en produccion con Kosiuko y New Family.
+- **v2.0** — Incorpora Terminal Movil (app smartphone para fichado por biometria nativa + geolocalizacion). Etapa 2a (backend + admin) completada. Etapa 2b (app movil React Native) pendiente.
+
+**Como restaurar desde un tag:**
+```bash
+# Ver el estado del proyecto en ese punto
+git checkout v1.0-pre-mobile
+
+# Volver al desarrollo actual
+git checkout master
+```
+
+**Convenciones de commits:**
+- Mensajes descriptivos en español
+- Co-autoría con Claude Code cuando corresponde
+- Sin feature branches: todo va a `master`
+- Push manual a GitHub (no automatico)
+
 ### Repositorios LEGACY (ARCHIVADOS - NO MODIFICAR)
 
 - `C:\Apps\Claude\Huellas\DigitalPlusDesk_Claude\` - Apps desktop legacy (archivado)
@@ -571,7 +657,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ---
 
-## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-12)
+## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-13)
 
 ### Completado
 
@@ -609,14 +695,21 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Fix PIN forzado:** Dialogo obligatorio (solo OK) sin opcion de escape
 - **Auto-registro de terminal:** Fichador registra automaticamente la maquina en la BD al primer inicio
 - **Compilacion Release:** Fichador y Administrador compilados en Release, InstaladorLiviano generado
+- **Terminal Movil v2 - Backend:** MobileController (4 endpoints JWT), entidades EF Core, migracion aplicada en Ferozo, UbicacionService (WiFi/GPS/Haversine)
+- **Terminal Movil v2 - Admin:** Tab "Movil" en FrmRRHHLegajos (generar codigo, desactivar dispositivo), DALs desktop (TerminalMovilDAL, SucursalGeoconfigDAL)
+- **Terminal Movil v2 - Portal MT:** Paginas `/terminales-moviles` y `/fichado-movil`, NavMenu actualizado
+- **Tag v1.0-pre-mobile** creado como punto de restauracion (commit 730589f)
 
 ### En progreso
 
+- **Terminal Movil v2 (Etapa 2a - Backend + Admin):** Backend implementado, tablas en Ferozo, paginas web y tab desktop listos. Pendiente: app movil React Native (Etapa 2b), tests Postman, deploy Azure.
 - Migracion de seguridad SQL: deshabilitar sa (pendiente estabilizacion)
 
 ### Pendiente
 
+- **Terminal Movil v2 (Etapa 2b):** Scaffold app React Native (Expo), pantallas login/fichar/historial, crypto RSA, WiFi BSSID + GPS
 - **Probar circuito completo en produccion (Ferozo):** Crear empresa -> instalar con InstaladorLiviano -> verificar auto-registro terminal -> fichar -> ver en portal
+- Deploy Portal MT a Azure con cambios v2
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
 - Link al portal web multi-tenant en menu del Administrador

@@ -1,10 +1,27 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-12
+**Fecha:** 2026-03-13
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-13
+- [x] Tag v1.0-pre-mobile creado (commit 730589f) como punto de restauracion pre-v2
+- [x] Entidades EF Core: TerminalMovil, SucursalGeoconfig, CodigoActivacionMovil
+- [x] OrigenFichada enum: agregado valor Movil
+- [x] Migracion EF Core AddTerminalMovilAndGeoconfig aplicada en Ferozo (3 tablas creadas)
+- [x] MobileController con 4 endpoints JWT: login, registrar-dispositivo, fichada, estado
+- [x] JWT Bearer auth configurado en Program.cs (convive con cookie auth)
+- [x] UbicacionService: resolucion sucursal por WiFi BSSID o GPS (Haversine)
+- [x] Tab "Movil" en FrmRRHHLegajos del Administrador desktop
+- [x] DALs desktop: TerminalMovilDAL, SucursalGeoconfigDAL
+- [x] Pagina /terminales-moviles en Portal MT
+- [x] Pagina /fichado-movil (SucursalGeoconfigList) en Portal MT
+- [x] NavMenu actualizado con links a Terminales Moviles y Fichado Movil
+- [x] Script SQL de referencia: Database/003_TerminalMovil_Geoconfig.sql
+- [x] Fix: appsettings.Development.json apunta a Ferozo (VS Debug conectaba a localhost)
+- [x] DOC01 actualizado a v8.0 con seccion Terminal Movil
 
 ### Sesion 2026-03-12
 - [x] Homologacion visual Phase 2 (Administrador): layout 80/20 en Legajos, panel camara ensanchado (650px), boton PIN reubicado en zona 20%
@@ -62,6 +79,29 @@
 - [x] Logo empresa + IntegraIA en Fichador y Administrador
 
 ---
+
+## TERMINAL MOVIL v2 (en progreso)
+
+### Etapa 2a - Backend + Admin: COMPLETADA
+- [x] Backend (MobileController, entidades, JWT, UbicacionService)
+- [x] Admin desktop (tab Movil en Legajos)
+- [x] Portal MT (paginas terminales-moviles y fichado-movil)
+- [x] BD Ferozo (3 tablas creadas via migracion EF Core)
+
+### Etapa 2b - App Movil: PENDIENTE
+- [ ] Scaffold proyecto Expo + TypeScript (DigitalOneMobile/)
+- [ ] crypto.ts: generacion RSA + firma
+- [ ] ubicacion.ts: WiFi BSSID + GPS
+- [ ] Pantalla Login
+- [ ] Pantalla Activar Dispositivo (codigo)
+- [ ] Pantalla Principal / Fichar (con biometria nativa)
+- [ ] Pantalla Historial
+- [ ] Build Android (APK) para testing
+
+### Pendientes v2 generales
+- [ ] Tests manuales del circuito via Postman (endpoints /api/mobile/*)
+- [ ] Agregar Jwt config a appsettings.json de produccion (actualmente solo en Development)
+- [ ] Deploy Portal MT a Azure con cambios v2
 
 ## INMEDIATO (Validacion end-to-end)
 
@@ -131,4 +171,4 @@
 
 ---
 
-*Actualizado: 2026-03-12*
+*Actualizado: 2026-03-13*

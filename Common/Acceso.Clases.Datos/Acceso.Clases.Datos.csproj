@@ -70,6 +70,8 @@
     <Compile Include="Generales\GRALSucursales.cs" />
     <Compile Include="Generales\GRALSucursalesGrupos.cs" />
     <Compile Include="Generales\GRALTerminales.cs" />
+    <Compile Include="Generales\TerminalMovilDAL.cs" />
+    <Compile Include="Generales\SucursalGeoconfigDAL.cs" />
     <Compile Include="Generales\GRALUsuarios.cs" />
     <Compile Include="Generales\GRALVariablesGlobales.cs" />
     <Compile Include="Generales\GRALVariablesGlobalesLista.cs" />
