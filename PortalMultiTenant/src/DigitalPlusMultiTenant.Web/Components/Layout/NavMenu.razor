@@ -1,5 +1,6 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
 
 <div class="sidebar-brand">
     <i class="bi bi-fingerprint"></i>
@@ -36,12 +37,15 @@
                     <NavLink class="sidebar-link sub" href="terminales">
                         <i class="bi bi-pc-display"></i> Terminales
                     </NavLink>
-                    <NavLink class="sidebar-link sub" href="terminales-moviles">
-                        <i class="bi bi-phone"></i> Terminales Moviles
-                    </NavLink>
-                    <NavLink class="sidebar-link sub" href="fichado-movil">
-                        <i class="bi bi-geo-alt"></i> Fichado Movil
-                    </NavLink>
+                    @if (Tenant.MobileHabilitado)
+                    {
+                        <NavLink class="sidebar-link sub" href="terminales-moviles">
+                            <i class="bi bi-phone"></i> Terminales Moviles
+                        </NavLink>
+                        <NavLink class="sidebar-link sub" href="fichado-movil">
+                            <i class="bi bi-geo-alt"></i> Fichado Movil
+                        </NavLink>
+                    }
                 </div>
             </div>
 

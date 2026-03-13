@@ -6,7 +6,23 @@
 
 ## COMPLETADO RECIENTEMENTE
 
-### Sesion 2026-03-13
+### Sesion 2026-03-13 (tarde)
+- [x] PWA Terminal Movil: app completa en wwwroot/mobile/ (login, activacion, fichada GPS, historial)
+- [x] PWA deployada y probada end-to-end en iPhone (Safari) y Android (Chrome) contra Azure
+- [x] MobileHabilitado (empresa): flag en Empresa (MT) y Empresas (Admin), checkbox en EmpresaDetalle.razor (Licencias)
+- [x] MobileHabilitado (legajo): flag en Legajo, checkbox en LegajoForm.razor (Portal MT, visible solo si empresa mobile habilitada)
+- [x] MobileHabilitado claim: CustomClaimsPrincipalFactory agrega claim al login, ITenantService.MobileHabilitado
+- [x] NavMenu condicional: links Terminales Moviles y Fichado Movil solo visibles si empresa MobileHabilitado
+- [x] Gestion de PIN desde Portal MT: asignar, cambiar, resetear PIN en LegajoForm (seccion PIN Movil)
+- [x] Iconos de origen en FichadasList: huella (bi-fingerprint), PIN (bi-dialpad), movil (bi-phone), manual (bi-pencil-square), web (bi-globe), demo (bi-play-circle)
+- [x] Terminal en fichadas: muestra nombre terminal (desktop) o "Dispositivo movil" (origen Movil)
+- [x] DatabaseName editable en EmpresaDetalle.razor (Licencias), constraint UNIQUE eliminado
+- [x] Datos habilitados en Ferozo: Kosiuko y New Family MobileHabilitado=1, legajo 1968 MobileHabilitado=1
+- [x] Deploy Portal MT y Portal Licencias a Azure
+- [x] Migracion EF Core AddMobileHabilitado aplicada en Ferozo
+- [x] DOC01-DOC05 actualizados
+
+### Sesion 2026-03-13 (manana)
 - [x] Tag v1.0-pre-mobile creado (commit 730589f) como punto de restauracion pre-v2
 - [x] Entidades EF Core: TerminalMovil, SucursalGeoconfig, CodigoActivacionMovil
 - [x] OrigenFichada enum: agregado valor Movil
@@ -80,7 +96,7 @@
 
 ---
 
-## TERMINAL MOVIL v2 (en progreso)
+## TERMINAL MOVIL v2: COMPLETADA
 
 ### Etapa 2a - Backend + Admin: COMPLETADA
 - [x] Backend (MobileController, entidades, JWT, UbicacionService)
@@ -88,20 +104,22 @@
 - [x] Portal MT (paginas terminales-moviles y fichado-movil)
 - [x] BD Ferozo (3 tablas creadas via migracion EF Core)
 
-### Etapa 2b - App Movil: PENDIENTE
-- [ ] Scaffold proyecto Expo + TypeScript (DigitalOneMobile/)
-- [ ] crypto.ts: generacion RSA + firma
-- [ ] ubicacion.ts: WiFi BSSID + GPS
-- [ ] Pantalla Login
-- [ ] Pantalla Activar Dispositivo (codigo)
-- [ ] Pantalla Principal / Fichar (con biometria nativa)
-- [ ] Pantalla Historial
-- [ ] Build Android (APK) para testing
+### Etapa 2b - App Movil (PWA): COMPLETADA
+- [x] PWA en wwwroot/mobile/ (HTML+CSS+JS estatico)
+- [x] Login con legajo + PIN
+- [x] Activacion de dispositivo con codigo
+- [x] Fichada con GPS
+- [x] Historial de fichadas del dia
+- [x] Service worker + manifest.json (instalable como PWA)
+- [x] Probada end-to-end en iPhone y Android contra Azure
 
-### Pendientes v2 generales
-- [ ] Tests manuales del circuito via Postman (endpoints /api/mobile/*)
-- [ ] Agregar Jwt config a appsettings.json de produccion (actualmente solo en Development)
-- [ ] Deploy Portal MT a Azure con cambios v2
+### Control de acceso: COMPLETADO
+- [x] MobileHabilitado a nivel empresa (Portal Licencias + Portal MT)
+- [x] MobileHabilitado a nivel legajo (Portal MT)
+- [x] Menu condicional en NavMenu (claim MobileHabilitado)
+- [x] Gestion de PIN desde Portal MT (asignar, cambiar, resetear)
+- [x] Jwt config en appsettings.json de produccion
+- [x] Deploy Portal MT y Portal Licencias a Azure
 
 ## INMEDIATO (Validacion end-to-end)
 

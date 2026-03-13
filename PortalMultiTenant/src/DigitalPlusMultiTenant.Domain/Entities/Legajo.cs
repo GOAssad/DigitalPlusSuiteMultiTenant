@@ -12,6 +12,7 @@ public class Legajo : TenantEntity
     public int? HorarioId { get; set; }
     public bool IsActive { get; set; } = true;
     public bool HasCalendarioPersonalizado { get; set; }
+    public bool MobileHabilitado { get; set; }
     public byte[]? Foto { get; set; }
     public string? Email { get; set; }
     public string? Telefono { get; set; }

@@ -49,6 +49,9 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("MobileHabilitado")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -560,6 +563,9 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("MobileHabilitado")
                         .HasColumnType("bit");
 
                     b.Property<string>("Nombre")

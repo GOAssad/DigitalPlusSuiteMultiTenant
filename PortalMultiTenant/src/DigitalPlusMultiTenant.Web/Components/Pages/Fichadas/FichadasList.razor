@@ -122,21 +122,22 @@ else
                                             @(f.Tipo == "E" ? "Entrada" : "Salida")
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         @{
-                                            var (origenText, origenCss) = f.Origen switch
+                                            var (origenIcon, origenTitle, origenColor) = f.Origen switch
                                             {
-                                                Domain.Enums.OrigenFichada.Huella => ("Huella", "bg-primary"),
-                                                Domain.Enums.OrigenFichada.PIN => ("PIN", "bg-warning text-dark"),
-                                                Domain.Enums.OrigenFichada.Demo => ("Demo", "bg-secondary"),
-                                                Domain.Enums.OrigenFichada.Manual => ("Manual", "bg-info"),
-                                                Domain.Enums.OrigenFichada.Web => ("Web", "bg-dark"),
-                                                _ => ("—", "bg-light text-muted")
+                                                Domain.Enums.OrigenFichada.Huella => ("bi-fingerprint", "Huella", "text-primary"),
+                                                Domain.Enums.OrigenFichada.PIN => ("bi-dialpad", "PIN", "text-warning"),
+                                                Domain.Enums.OrigenFichada.Movil => ("bi-phone", "Movil", "text-success"),
+                                                Domain.Enums.OrigenFichada.Demo => ("bi-play-circle", "Demo", "text-secondary"),
+                                                Domain.Enums.OrigenFichada.Manual => ("bi-pencil-square", "Manual", "text-info"),
+                                                Domain.Enums.OrigenFichada.Web => ("bi-globe", "Web", "text-dark"),
+                                                _ => ("bi-dash", "—", "text-muted")
                                             };
                                         }
-                                        <span class="badge @origenCss">@origenText</span>
+                                        <i class="bi @origenIcon @origenColor fs-5" title="@origenTitle"></i>
                                     </td>
-                                    <td>@f.Terminal?.Nombre</td>
+                                    <td>@(f.Terminal?.Nombre ?? (f.Origen == Domain.Enums.OrigenFichada.Movil ? "Dispositivo movil" : "—"))</td>
                                 </tr>
                             }
                         }

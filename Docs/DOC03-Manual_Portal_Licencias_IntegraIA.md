@@ -1,6 +1,6 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 5.1
+**Version:** 6.0
 **Fecha:** 2026-03-13
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
@@ -221,6 +221,17 @@ Al hacer clic en una empresa del listado, se abre su ficha completa.
 Todos los datos ingresados en el alta son editables:
 - Nombre, datos fiscales, contacto, direccion
 - Los selects de Pais y Tipo de ID Fiscal funcionan en cascada
+- **Base de datos:** Campo editable que indica a que BD se conecta la empresa (por defecto `DigitalPlusMultiTenant`). Todas las empresas comparten la misma BD en el modelo multi-tenant actual, pero el campo queda como registro y preparacion para eventual sharding.
+
+### Modulos opcionales
+
+En la seccion "Datos generales" hay un toggle para activar/desactivar modulos opcionales:
+
+- **Fichado Movil habilitado:** Permite a los empleados de la empresa fichar ingreso/egreso desde el celular. Si esta desactivado:
+  - El login mobile (`/api/mobile/login`) rechaza el acceso con mensaje "La empresa no tiene habilitado el modulo movil"
+  - En el Portal MT, las opciones "Terminales Moviles" y "Fichado Movil" se ocultan del menu lateral
+  - El checkbox "Acceso movil" por legajo no aparece en el formulario de Legajos del Portal MT
+  - **Nota:** El usuario debe cerrar sesion y volver a iniciarla en el Portal MT para ver los cambios en el menu (el flag se carga como claim al momento del login)
 
 ### Identidad de la Empresa
 

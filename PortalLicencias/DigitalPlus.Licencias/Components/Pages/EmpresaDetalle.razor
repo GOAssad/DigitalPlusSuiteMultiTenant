@@ -36,7 +36,7 @@ else
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Base de datos</label>
-                            <input type="text" class="form-control" value="@empresa.DatabaseName" readonly />
+                            <input type="text" class="form-control" @bind="empresa.DatabaseName" />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Estado</label>
@@ -50,6 +50,14 @@ else
                             <label class="form-label">URL Portal Web</label>
                             <input type="url" class="form-control" placeholder="https://digitalplusportalmt.azurewebsites.net/" @bind="empresa.UrlPortal" />
                             <small class="text-muted">URL del portal al que se redirige esta empresa para cambio de clave y gestion web</small>
+                        </div>
+                        <div class="col-12">
+                            <h6 class="text-muted mt-2 mb-2">Modulos opcionales</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" @bind="empresa.MobileHabilitado" id="chkMobile" />
+                                <label class="form-check-label" for="chkMobile">Fichado Movil habilitado</label>
+                            </div>
+                            <small class="text-muted">Permite a los empleados fichar ingreso/egreso desde el celular</small>
                         </div>
                     </div>
                 </div>

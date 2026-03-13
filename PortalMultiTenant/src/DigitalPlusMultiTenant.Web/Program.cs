@@ -128,7 +128,8 @@ public class Program
                 && !context.Request.Path.StartsWithSegments("/Account/ForceChangePassword")
                 && !context.Request.Path.StartsWithSegments("/Account/Logout")
                 && !context.Request.Path.StartsWithSegments("/_blazor")
-                && !context.Request.Path.StartsWithSegments("/_framework"))
+                && !context.Request.Path.StartsWithSegments("/_framework")
+                && !context.Request.Path.StartsWithSegments("/mobile"))
             {
                 context.Response.Redirect("/Account/ForceChangePassword");
                 return;
@@ -136,6 +137,17 @@ public class Program
             await next();
         });
 
+        // PWA mobile: /mobile/ y /mobile -> servir index.html
+        app.Use(async (context, next) =>
+        {
+            var path = context.Request.Path.Value;
+            if (path == "/mobile" || path == "/mobile/")
+            {
+                context.Request.Path = "/mobile/index.html";
+            }
+            await next();
+        });
+        app.UseStaticFiles();
         app.MapStaticAssets();
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();

@@ -1,6 +1,6 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 8.0
+**Version:** 9.0
 **Fecha:** 2026-03-13
 **Generado por:** Claude Opus 4.6
 
@@ -14,7 +14,7 @@ DigitalPlus es un **sistema de control de accesos y gestion de personal** basado
 
 ### Que problema resuelve
 
-- Control de asistencia del personal mediante huella dactilar, PIN o modo demostracion
+- Control de asistencia del personal mediante huella dactilar, PIN, dispositivo movil o modo demostracion
 - Registro automatico de fichadas (entrada/salida)
 - Gestion centralizada de legajos, sucursales, categorias y horarios
 - Reportes de horas trabajadas, llegadas tarde, horas extras
@@ -75,14 +75,15 @@ DIGITALPLUSWEB - LEGACY (obsoleto)
   BD DigitalPlus (Ferozo)
 
 
-TERMINAL MOVIL (v2 - en desarrollo)
+TERMINAL MOVIL (PWA)
 +-------------------------------+
-|  App Digital One Mobile       |
-|  React Native (Android/iOS)   |
+|  Digital One Mobile (PWA)     |
+|  HTML + CSS + JS estatico     |
+|  Servida desde wwwroot/mobile |
 |                               |
-|  - Fichada x biometria nativa |
-|  - WiFi BSSID + GPS           |
-|  - JWT auth + firma RSA       |
+|  - Fichada x GPS              |
+|  - JWT auth                   |
+|  - Instalable como PWA        |
 +---------------+---------------+
                 |
                 | HTTPS (POST /api/mobile/*)
@@ -211,18 +212,19 @@ INFRAESTRUCTURA CLOUD
 - **Identidad visual:** Theme oscuro con paleta integraia.tech (fondos #050810/#0B1120, acentos dorados #C9A84C, texto claro #E8EAF0, contenido #F8F7F4)
 - Branding: "DIGITAL ONE" en sidebar
 
-### 3.3a Terminal Movil - Digital One Mobile (v2, en desarrollo)
+### 3.3a Terminal Movil - Digital One Mobile (PWA)
 
 | Atributo | Detalle |
 |---|---|
-| **Tipo** | Aplicacion movil (smartphone) |
-| **Stack** | React Native (Expo) / TypeScript |
-| **Carpeta** | `DigitalOneMobile\` (pendiente scaffold) |
-| **Proposito** | Fichada desde smartphone con biometria nativa + geolocalizacion |
+| **Tipo** | PWA (Progressive Web App) servida desde el portal |
+| **Stack** | HTML + CSS + JavaScript estatico |
+| **Carpeta** | `PortalMultiTenant/src/DigitalPlusMultiTenant.Web/wwwroot/mobile/` |
+| **URL** | `https://digitalplusportalmt.azurewebsites.net/mobile/` |
+| **Proposito** | Fichada desde smartphone con GPS + validacion de ubicacion |
 
-**Estado:** Backend implementado (MobileController, entidades, migracion, JWT). App movil pendiente (Etapa 2b).
+**Estado:** Funcional y probado end-to-end (login, activacion, fichada, historial).
 
-**Funcionalidades implementadas (backend):**
+**Funcionalidades:**
 - API REST en Portal MT: `POST /api/mobile/login`, `POST /api/mobile/registrar-dispositivo`, `POST /api/mobile/fichada`, `GET /api/mobile/estado`
 - JWT Bearer auth (convive con cookie auth del portal, no interfiere)
 - Login por PIN del legajo (SHA256), no usa Identity del portal
@@ -231,11 +233,20 @@ INFRAESTRUCTURA CLOUD
 - Verificacion de firma RSA del dispositivo en cada fichada
 - Fichadas se insertan en tabla `Fichada` existente con `Origen = Movil`
 - Un empleado = un dispositivo activo
+- PWA instalable (manifest.json, service worker, iconos)
+- Compatibilidad iOS Safari y Android Chrome
+
+**Control de acceso (MobileHabilitado):**
+- **Nivel empresa:** Flag `MobileHabilitado` en tabla `Empresa` (DigitalPlusMultiTenant) y `Empresas` (DigitalPlusAdmin). Se gestiona desde Portal Licencias. Si esta desactivado, el menu del Portal MT oculta las opciones de fichado movil.
+- **Nivel legajo:** Flag `MobileHabilitado` en tabla `Legajo`. Se gestiona desde el formulario de Legajos en Portal MT. Controla si el empleado individual puede usar fichado movil.
+- Ambos flags se validan en `MobileController.Login()`.
 
 **Administracion:**
 - Tab "Movil" en formulario Legajos del Administrador desktop (generar codigo, desactivar dispositivo)
-- Pagina `/terminales-moviles` en Portal MT (listado de dispositivos)
+- Pagina `/terminales-moviles` en Portal MT (listado de dispositivos, generar codigos de activacion)
 - Pagina `/fichado-movil` en Portal MT (geoconfig por sucursal)
+- Gestion de PIN desde formulario de Legajos en Portal MT (asignar, cambiar, resetear)
+- Menu condicional: links de fichado movil solo visibles cuando empresa tiene `MobileHabilitado = true`
 
 **Tablas nuevas en DigitalPlusMultiTenant:**
 - `TerminalesMoviles` - Smartphones registrados por empleado
@@ -364,7 +375,7 @@ Todas las aplicaciones de escritorio comparten estas librerias:
 Las tablas usan **nombres singulares** y todas las tablas principales incluyen `EmpresaId` para el filtrado multi-tenant:
 
 **Tablas principales (con EmpresaId):**
-- `Legajo` - Empleados (NumeroLegajo, Apellido, Nombre, IsActive, PIN, PinExpiraEn, PinMustChange)
+- `Legajo` - Empleados (NumeroLegajo, Apellido, Nombre, IsActive, MobileHabilitado, PIN, PinExpiraEn, PinMustChange)
 - `Fichada` - Registro de fichadas (FechaHora en lugar de Registro)
 - `Sucursal` - Sucursales
 - `Horario` - Horarios
@@ -591,7 +602,7 @@ C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 
 **Versionado del proyecto:**
 - **v1.0** — Suite completa funcional: Fichador (Huella/PIN/Demo), Administrador, Portal MT, Portal Licencias, Instaladores, Azure Functions. Probado en produccion con Kosiuko y New Family.
-- **v2.0** — Incorpora Terminal Movil (app smartphone para fichado por biometria nativa + geolocalizacion). Etapa 2a (backend + admin) completada. Etapa 2b (app movil React Native) pendiente.
+- **v2.0** — Incorpora Terminal Movil como PWA (fichado desde smartphone con GPS + validacion de ubicacion). Backend, PWA y admin completos. Control MobileHabilitado a nivel empresa y legajo.
 
 **Como restaurar desde un tag:**
 ```bash
@@ -699,17 +710,19 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Terminal Movil v2 - Admin:** Tab "Movil" en FrmRRHHLegajos (generar codigo, desactivar dispositivo), DALs desktop (TerminalMovilDAL, SucursalGeoconfigDAL)
 - **Terminal Movil v2 - Portal MT:** Paginas `/terminales-moviles` y `/fichado-movil`, NavMenu actualizado
 - **Tag v1.0-pre-mobile** creado como punto de restauracion (commit 730589f)
+- **Terminal Movil PWA:** App PWA completa en wwwroot/mobile/ (login, activacion, fichada GPS, historial). Probada end-to-end en iPhone y Android
+- **MobileHabilitado (empresa):** Flag en tabla Empresa (DigitalPlusMultiTenant) y Empresas (DigitalPlusAdmin). Checkbox en Portal Licencias (EmpresaDetalle). Claim en login del Portal MT. Menu condicional en NavMenu
+- **MobileHabilitado (legajo):** Flag en tabla Legajo. Checkbox en LegajoForm del Portal MT (visible solo si empresa tiene mobile habilitado)
+- **Gestion de PIN desde Portal MT:** Asignar, cambiar y resetear PIN desde LegajoForm (tab Datos, seccion PIN Movil)
+- **Iconos de origen en fichadas:** Columna Origen muestra iconos visuales (huella, PIN, movil, manual, web, demo) en vez de badges de texto
+- **Campo DatabaseName editable:** En Portal Licencias, el campo "Base de datos" de la empresa ahora es editable. Constraint UNIQUE eliminado (multi-tenant comparte BD)
 
 ### En progreso
 
-- **Terminal Movil v2 (Etapa 2a - Backend + Admin):** Backend implementado, tablas en Ferozo, paginas web y tab desktop listos. Pendiente: app movil React Native (Etapa 2b), tests Postman, deploy Azure.
 - Migracion de seguridad SQL: deshabilitar sa (pendiente estabilizacion)
 
 ### Pendiente
 
-- **Terminal Movil v2 (Etapa 2b):** Scaffold app React Native (Expo), pantallas login/fichar/historial, crypto RSA, WiFi BSSID + GPS
-- **Probar circuito completo en produccion (Ferozo):** Crear empresa -> instalar con InstaladorLiviano -> verificar auto-registro terminal -> fichar -> ver en portal
-- Deploy Portal MT a Azure con cambios v2
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
 - Link al portal web multi-tenant en menu del Administrador

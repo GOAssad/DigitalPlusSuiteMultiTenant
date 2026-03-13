@@ -38,54 +38,67 @@ public class MobileController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Legajo) || string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest(new { ok = false, mensaje = "Legajo y contraseña son requeridos." });
-
-        // Buscar legajo sin query filter (necesitamos EmpresaId)
-        var legajo = await _db.Legajos
-            .IgnoreQueryFilters()
-            .Include(l => l.Pin)
-            .Include(l => l.Empresa)
-            .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo && l.IsActive);
-
-        if (legajo == null)
-            return Unauthorized(new { ok = false, mensaje = "Legajo no encontrado o inactivo." });
-
-        if (!legajo.Empresa.IsActive)
-            return Unauthorized(new { ok = false, mensaje = "La empresa se encuentra suspendida." });
-
-        // Verificar PIN como password
-        if (legajo.Pin == null)
-            return Unauthorized(new { ok = false, mensaje = "El empleado no tiene PIN configurado. Solicite al administrador." });
-
-        string hashIngresado = ComputeHash(request.Password, legajo.Pin.PinSalt);
-        if (!string.Equals(hashIngresado, legajo.Pin.PinHash, StringComparison.Ordinal))
-            return Unauthorized(new { ok = false, mensaje = "Contraseña incorrecta." });
-
-        // Verificar si el device ya está registrado
-        var deviceId = Request.Headers["X-Device-Id"].FirstOrDefault();
-        bool dispositivoRegistrado = false;
-        if (!string.IsNullOrEmpty(deviceId))
+        try
         {
-            dispositivoRegistrado = await _db.TerminalesMoviles
+            if (string.IsNullOrWhiteSpace(request.Legajo) || string.IsNullOrWhiteSpace(request.Password))
+                return BadRequest(new { ok = false, mensaje = "Legajo y contraseña son requeridos." });
+
+            // Buscar legajo sin query filter (necesitamos EmpresaId)
+            var legajo = await _db.Legajos
                 .IgnoreQueryFilters()
-                .AnyAsync(t => t.DeviceId == deviceId && t.LegajoId == legajo.Id
-                           && t.EmpresaId == legajo.EmpresaId && t.Activo);
+                .Include(l => l.Pin)
+                .Include(l => l.Empresa)
+                .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo && l.IsActive);
+
+            if (legajo == null)
+                return Unauthorized(new { ok = false, mensaje = "Legajo no encontrado o inactivo." });
+
+            if (!legajo.Empresa.IsActive)
+                return Unauthorized(new { ok = false, mensaje = "La empresa se encuentra suspendida." });
+
+            if (!legajo.Empresa.MobileHabilitado)
+                return Unauthorized(new { ok = false, mensaje = "La empresa no tiene habilitado el módulo móvil." });
+
+            if (!legajo.MobileHabilitado)
+                return Unauthorized(new { ok = false, mensaje = "Este legajo no tiene habilitado el acceso móvil." });
+
+            // Verificar PIN como password
+            if (legajo.Pin == null)
+                return Unauthorized(new { ok = false, mensaje = "El empleado no tiene PIN configurado. Solicite al administrador." });
+
+            string hashIngresado = ComputeHash(request.Password, legajo.Pin.PinSalt);
+            if (!string.Equals(hashIngresado, legajo.Pin.PinHash, StringComparison.Ordinal))
+                return Unauthorized(new { ok = false, mensaje = "Contraseña incorrecta." });
+
+            // Verificar si el device ya está registrado
+            var deviceId = Request.Headers["X-Device-Id"].FirstOrDefault();
+            bool dispositivoRegistrado = false;
+            if (!string.IsNullOrEmpty(deviceId))
+            {
+                dispositivoRegistrado = await _db.TerminalesMoviles
+                    .IgnoreQueryFilters()
+                    .AnyAsync(t => t.DeviceId == deviceId && t.LegajoId == legajo.Id
+                               && t.EmpresaId == legajo.EmpresaId && t.Activo);
+            }
+
+            // Generar JWT
+            var token = GenerarToken(legajo);
+
+            return Ok(new
+            {
+                ok = true,
+                token,
+                legajoId = legajo.Id,
+                nombreEmpleado = $"{legajo.Apellido}, {legajo.Nombre}",
+                empresaId = legajo.EmpresaId,
+                nombreEmpresa = legajo.Empresa.Nombre,
+                dispositivoRegistrado
+            });
         }
-
-        // Generar JWT
-        var token = GenerarToken(legajo);
-
-        return Ok(new
+        catch (Exception ex)
         {
-            ok = true,
-            token,
-            legajoId = legajo.Id,
-            nombreEmpleado = $"{legajo.Apellido}, {legajo.Nombre}",
-            empresaId = legajo.EmpresaId,
-            nombreEmpresa = legajo.Empresa.Nombre,
-            dispositivoRegistrado
-        });
+            return StatusCode(500, new { ok = false, mensaje = $"Error interno: {ex.Message}" });
+        }
     }
 
     // ============================================================

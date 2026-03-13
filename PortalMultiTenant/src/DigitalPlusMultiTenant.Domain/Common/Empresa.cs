@@ -9,6 +9,7 @@ public class Empresa : AuditableEntity
     public string? NombreFantasia { get; set; }
     public string? Cuit { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool MobileHabilitado { get; set; }
 
     // Navigation
     public ICollection<Sucursal> Sucursales { get; set; } = [];

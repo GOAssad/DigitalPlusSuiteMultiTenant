@@ -3,12 +3,15 @@
 @inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@using System.Security.Cryptography
+@using System.Text
 @using DigitalPlusMultiTenant.Application.Interfaces
 @using DigitalPlusMultiTenant.Domain.Entities
 @attribute [Authorize]
 @rendermode InteractiveServer
 
 @inject NavigationManager Nav
+@inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
 
 <PageTitle>@(IsEdit ? "Editar" : "Nuevo") Legajo - DigitalPlus</PageTitle>
 
@@ -143,7 +146,51 @@
                             <label class="form-check-label">Activo</label>
                         </div>
                     </div>
+                    @if (mobileHabilitado)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Acceso movil</label>
+                            <div class="form-check form-switch mt-2">
+                                <InputCheckbox @bind-Value="model.MobileHabilitado" class="form-check-input" />
+                                <label class="form-check-label">Habilitado</label>
+                            </div>
+                        </div>
+                    }
                 </div>
+
+                @if (mobileHabilitado && IsEdit)
+                {
+                    <h6 class="text-muted mb-3"><i class="bi bi-phone me-1"></i>PIN Movil</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            @if (tienePin)
+                            {
+                                <span class="badge bg-success me-2"><i class="bi bi-check-circle me-1"></i>PIN configurado</span>
+                                <button type="button" class="btn btn-sm btn-outline-warning" @onclick="ResetearPin">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Resetear PIN
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary me-2">Sin PIN</span>
+                            }
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">@(tienePin ? "Nuevo PIN" : "Asignar PIN")</label>
+                            <input type="password" class="form-control form-control-sm" maxlength="6" placeholder="6 digitos"
+                                   @bind="nuevoPin" />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="GuardarPin">
+                                <i class="bi bi-save me-1"></i>@(tienePin ? "Cambiar" : "Asignar")
+                            </button>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(pinMessage))
+                    {
+                        <div class="alert @(pinMessageOk ? "alert-success" : "alert-danger") py-2 small">@pinMessage</div>
+                    }
+                }
             }
 
             @* ===== TAB: SUCURSALES ===== *@
@@ -338,6 +385,7 @@
     private List<Horario> horarios = new();
     private string? errorMessage;
     private string activeTab = "datos";
+    private bool mobileHabilitado;
 
     // Sucursales
     private List<Sucursal> sucursalesAsignadas = new();
@@ -353,8 +401,15 @@
     private string? nuevoEventoNota;
     private List<EventoCalendario> eventosEliminados = new();
 
+    // PIN
+    private bool tienePin;
+    private string? nuevoPin;
+    private string? pinMessage;
+    private bool pinMessageOk;
+
     protected override async Task OnInitializedAsync()
     {
+        mobileHabilitado = Tenant.MobileHabilitado;
         sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
         categorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
         horarios = await Db.Horarios.Where(h => h.IsActive).OrderBy(h => h.Nombre).ToListAsync();
@@ -384,6 +439,9 @@
 
             // Huellas
             huellas = entity.Huellas.ToList();
+
+            // PIN
+            tienePin = await Db.LegajoPines.AnyAsync(p => p.LegajoId == entity.Id);
 
             // Calendario
             eventosCalendario = entity.EventosCalendario.ToList();
@@ -428,6 +486,69 @@
     {
         eventosCalendario.Remove(ev);
         if (ev.Id > 0) eventosEliminados.Add(ev);
+    }
+
+    // --- PIN ---
+    private async Task GuardarPin()
+    {
+        pinMessage = null;
+        if (string.IsNullOrWhiteSpace(nuevoPin) || nuevoPin.Length < 4)
+        {
+            pinMessage = "El PIN debe tener al menos 4 digitos.";
+            pinMessageOk = false;
+            return;
+        }
+
+        var existing = await Db.LegajoPines.FirstOrDefaultAsync(p => p.LegajoId == model.Id);
+        var salt = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
+        var hash = ComputePinHash(nuevoPin, salt);
+
+        if (existing != null)
+        {
+            existing.PinHash = hash;
+            existing.PinSalt = salt;
+            existing.PinMustChange = false;
+            existing.PinChangedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            Db.LegajoPines.Add(new LegajoPin
+            {
+                LegajoId = model.Id,
+                PinHash = hash,
+                PinSalt = salt,
+                PinMustChange = false,
+                PinChangedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await Db.SaveChangesAsync();
+        tienePin = true;
+        nuevoPin = null;
+        pinMessage = "PIN actualizado correctamente.";
+        pinMessageOk = true;
+    }
+
+    private async Task ResetearPin()
+    {
+        var existing = await Db.LegajoPines.FirstOrDefaultAsync(p => p.LegajoId == model.Id);
+        if (existing != null)
+        {
+            Db.LegajoPines.Remove(existing);
+            await Db.SaveChangesAsync();
+        }
+        tienePin = false;
+        nuevoPin = null;
+        pinMessage = "PIN eliminado. Asigne uno nuevo.";
+        pinMessageOk = true;
+    }
+
+    private static string ComputePinHash(string pin, string salt)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(salt + pin);
+        byte[] hash = SHA256.HashData(bytes);
+        return Convert.ToBase64String(hash);
     }
 
     // --- Guardar ---

@@ -83,6 +83,9 @@ public class Empresa
     [MaxLength(50)]
     public string Estado { get; set; } = "activa"; // activa, suspendida, baja
 
+    // Módulos opcionales
+    public bool MobileHabilitado { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

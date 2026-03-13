@@ -1,11 +1,11 @@
 # DIGITAL ONE - Terminal Móvil (Etapa 2)
 ## Documento de Arquitectura y Especificación para Implementación
 
-**Version:** 1.1
+**Version:** 2.0
 **Fecha:** 2026-03-13
 **Generado por:** Claude Sonnet 4.6 / Claude Opus 4.6
 **Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
-**Estado:** Etapa 2a (Backend + Admin) COMPLETADA. Etapa 2b (App Movil) PENDIENTE.
+**Estado:** COMPLETADO. Backend, PWA y administración funcionales. Probado end-to-end.
 
 ---
 
@@ -678,18 +678,24 @@ Al implementar este documento, tener en cuenta:
 | NavMenu actualizado | HECHO | 2 links en grupo Estructura |
 | Script SQL referencia | HECHO | Database/003_TerminalMovil_Geoconfig.sql |
 
-### Etapa 2b — App Movil: PENDIENTE
+### Etapa 2b — App Movil (PWA): COMPLETADA
 
-| Tarea | Estado |
-|---|---|
-| Scaffold proyecto Expo + TypeScript | PENDIENTE |
-| crypto.ts (RSA + firma) | PENDIENTE |
-| ubicacion.ts (WiFi BSSID + GPS) | PENDIENTE |
-| Pantalla Login | PENDIENTE |
-| Pantalla Activar Dispositivo | PENDIENTE |
-| Pantalla Principal / Fichar | PENDIENTE |
-| Pantalla Historial | PENDIENTE |
-| Build Android (APK) | PENDIENTE |
+Se descartó React Native/Expo por incompatibilidades de SDK con Expo Go en iOS. Se implementó como PWA (HTML+CSS+JS estático) servida desde `wwwroot/mobile/` del portal Blazor.
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| PWA Login (legajo + PIN) | HECHO | wwwroot/mobile/app.js |
+| PWA Activación de dispositivo | HECHO | Código de activación de 8 caracteres |
+| PWA Fichada con GPS | HECHO | Geolocation API del browser |
+| PWA Historial del día | HECHO | Desde GET /api/mobile/estado |
+| Service Worker + manifest.json | HECHO | Instalable como PWA |
+| Probado en iPhone (Safari) | HECHO | Fix crypto.randomUUID fallback |
+| Probado en Android (Chrome) | HECHO | |
+| MobileHabilitado (empresa) | HECHO | Checkbox en Portal Licencias |
+| MobileHabilitado (legajo) | HECHO | Checkbox en LegajoForm Portal MT |
+| Menu condicional | HECHO | Claim + ITenantService |
+| Gestion de PIN desde Portal MT | HECHO | Asignar, cambiar, resetear |
+| Deploy a Azure | HECHO | digitalplusportalmt.azurewebsites.net/mobile/ |
 
 ### Decisiones de implementacion vs especificacion
 
@@ -699,6 +705,9 @@ Al implementar este documento, tener en cuenta:
 | Login con password del legajo | Login con PIN (SHA256 hash) | Los legajos ya tienen PIN; no agregar otro campo de credencial |
 | Pestaña geoconfig en FrmSucursal desktop | Geoconfig solo en Portal MT web | No existe FrmSucursal dedicado en desktop (usa CtrEntidadPanel generico) |
 | EF Core table names plural | TerminalesMoviles, SucursalGeoconfigs, CodigosActivacionMovil | Consistente con convencion EF Core del proyecto |
+| App React Native (Expo) | PWA (HTML+CSS+JS estatico) | Expo Go en iOS incompatible con SDK recientes; PWA funciona en todos los browsers |
+| Firma RSA en cada fichada | Firma RSA opcional (se valida si se envia) | PWA no tiene acceso facil a crypto RSA nativo |
+| WiFi BSSID como metodo primario | GPS como metodo primario | Browsers no exponen WiFi BSSID; Geolocation API si esta disponible |
 
 ---
 

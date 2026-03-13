@@ -31,10 +31,15 @@ public class CustomClaimsPrincipalFactory : UserClaimsPrincipalFactory<Applicati
 
         var empresa = await _db.Empresas.AsNoTracking()
             .Where(e => e.Id == user.EmpresaId)
-            .Select(e => e.Nombre)
+            .Select(e => new { e.Nombre, e.MobileHabilitado })
             .FirstOrDefaultAsync();
-        if (!string.IsNullOrEmpty(empresa))
-            identity.AddClaim(new Claim("EmpresaNombre", empresa));
+        if (empresa != null)
+        {
+            if (!string.IsNullOrEmpty(empresa.Nombre))
+                identity.AddClaim(new Claim("EmpresaNombre", empresa.Nombre));
+            if (empresa.MobileHabilitado)
+                identity.AddClaim(new Claim("MobileHabilitado", "true"));
+        }
 
         return identity;
     }
