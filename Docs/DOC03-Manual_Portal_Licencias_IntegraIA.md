@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 6.0
-**Fecha:** 2026-03-13
+**Version:** 7.0
+**Fecha:** 2026-03-14
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -232,6 +232,34 @@ En la seccion "Datos generales" hay un toggle para activar/desactivar modulos op
   - En el Portal MT, las opciones "Terminales Moviles" y "Fichado Movil" se ocultan del menu lateral
   - El checkbox "Acceso movil" por legajo no aparece en el formulario de Legajos del Portal MT
   - **Nota:** El usuario debe cerrar sesion y volver a iniciarla en el Portal MT para ver los cambios en el menu (el flag se carga como claim al momento del login)
+
+### Dashboard "Uso del sistema"
+
+En la barra lateral derecha del detalle de empresa, la card **"Uso del sistema"** muestra estadisticas en tiempo real consultadas a DigitalPlusMultiTenant:
+
+- **Indicadores principales:** Legajos activos, fichadas totales, usuarios del portal
+- **Infraestructura:** Sucursales, terminales desktop, terminales moviles
+- **Ultima fichada:** Fecha/hora, cantidad de fichadas y legajos que ficharon ese dia
+- **Origen fichadas (ultimo dia):** Badges con iconos (huella, PIN, movil, manual, web, demo)
+- **Dias con actividad (ult. 30d):** Badge verde (>=20), amarillo (>=10), rojo (<10)
+- **Fichadas por dispositivo (ult. 15 dias):** Huella, PIN, Celular con iconos y contadores
+
+### Zona peligrosa
+
+Al final de la barra lateral hay una card **"Zona peligrosa"** con dos operaciones destructivas:
+
+**Limpiar Empresa:**
+- Elimina datos transaccionales: fichadas, vacaciones, incidencias asignadas, eventos calendario, terminales moviles, codigos de activacion movil
+- Mantiene: empresa, usuarios, sucursales, sectores, categorias, horarios, terminales, legajos (con huellas, PINs), incidencias, feriados, noticias, codigo de activacion
+- La empresa queda en estado "recien creada" pero con toda su estructura intacta
+- **Doble confirmacion:** primero aceptar la advertencia, luego escribir el nombre exacto de la empresa
+
+**Eliminar Empresa:**
+- Elimina absolutamente todo de DigitalPlusMultiTenant (datos, entidades, usuarios, empresa)
+- Elimina licencias y registro de la empresa en DigitalPlusAdmin
+- **Irreversible.** No queda nada
+- **Doble confirmacion** igual que Limpiar
+- Redirige a la lista de empresas despues de eliminar
 
 ### Identidad de la Empresa
 
@@ -494,12 +522,12 @@ El SuperAdmin es el usuario de IntegraIA con acceso cross-tenant (puede acceder 
 
 ### Jerarquia de roles (Portal Multi-Tenant)
 
-| Rol | Acceso |
-|---|---|
-| `SuperAdmin` | Acceso global cross-tenant. Solo para IntegraIA. |
-| `AdminEmpresa` | Administrador de una empresa. Gestiona usuarios, configuracion. |
-| `Operador` | Operaciones diarias (fichadas, legajos). |
-| `Consulta` | Solo lectura. |
+| Rol | Acceso | Puede crear/editar |
+|---|---|---|
+| `SuperAdmin` | Acceso global cross-tenant. Solo para IntegraIA. No aparece en combo de creacion de usuarios. | Todo |
+| `AdminEmpresa` | Acceso total a la empresa. Gestiona usuarios, configuracion, estructura. | Todo dentro de su empresa |
+| `Operador` | Gestiona legajos, fichadas y vacaciones. No puede modificar estructura (sucursales, horarios, etc). | Legajos, vacaciones |
+| `Consulta` | Solo lectura, reportes y exportacion. No ve botones de crear/editar/eliminar. | Nada |
 
 ---
 

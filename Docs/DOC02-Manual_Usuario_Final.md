@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 7.0
-**Fecha:** 2026-03-13
+**Version:** 8.0
+**Fecha:** 2026-03-14
 
 ---
 
@@ -531,10 +531,11 @@ Una vez dentro del portal, en la **barra superior** se muestra:
 | **Terminales Moviles** | Gestionar dispositivos moviles registrados, generar codigos de activacion |
 | **Fichado Movil** | Configurar validacion de ubicacion (WiFi/GPS) por sucursal |
 | **PIN Movil** | Asignar, cambiar y resetear PIN de empleados (desde formulario de Legajos) |
+| **Movil (tab en Legajo)** | Ver estado del dispositivo, generar codigo de activacion con envio automatico por email |
 | **Incidencias** | Cargar permisos, ausencias, vacaciones |
 | **Feriados** | Gestionar dias feriados |
 | **Variables** | Configuracion general del sistema |
-| **Usuarios** | Gestionar accesos al portal |
+| **Usuarios** | Gestionar accesos al portal (AdminEmpresa puede crear Operador y Consulta) |
 
 > [CAPTURA: Dashboard principal del portal web mostrando el menu de navegacion]
 

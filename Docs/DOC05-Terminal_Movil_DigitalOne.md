@@ -1,11 +1,11 @@
 # DIGITAL ONE - Terminal Móvil (Etapa 2)
 ## Documento de Arquitectura y Especificación para Implementación
 
-**Version:** 3.0
-**Fecha:** 2026-03-13
+**Version:** 4.0
+**Fecha:** 2026-03-14
 **Generado por:** Claude Sonnet 4.6 / Claude Opus 4.6
 **Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
-**Estado:** COMPLETADO. Backend, PWA y administración funcionales. Probado end-to-end.
+**Estado:** COMPLETADO. Backend, PWA y administración funcionales. Probado end-to-end. Email de activación automático implementado.
 
 ---
 

@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 10.0
-**Fecha:** 2026-03-13
+**Version:** 11.0
+**Fecha:** 2026-03-14
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -723,6 +723,15 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Rediseno PWA Mobile:** Tema oscuro, mapa GPS con anillos animados, reloj en vivo, boton teal, GPS watch continuo con precision
 - **CRUD Sucursales mejorado:** Nuevos campos (Direccion, Localidad, Provincia, Telefono, Email), mapa Leaflet/OpenStreetMap integrado con buscador Nominatim, geocoding/reverse geocoding, circulo de radio
 - **Validacion GPS por sucursal asignada:** Fichada movil ahora valida que el legajo tenga la sucursal asignada (LegajoSucursal) antes de resolver GPS
+- **Roles en Portal MT:** SuperAdmin, AdminEmpresa, Operador, Consulta con permisos por pagina (Form pages restringidos, botones ocultos con AuthorizeView)
+- **Portal Licencias - Limpiar/Eliminar empresa:** Limpiar elimina datos transaccionales (fichadas, vacaciones, etc) manteniendo entidades; Eliminar borra todo de MT y Admin. Doble confirmacion con escritura del nombre
+- **Portal Licencias - Dashboard "Uso del sistema":** Mini dashboard en detalle de empresa (legajos, fichadas, usuarios, terminales, ultima fichada, fichadas por origen, dias activos 30d, fichadas 15d por dispositivo)
+- **Email de activacion movil:** Servicio SMTP via MailKit (smtp.hostinger.com:465 SSL, notify@integraia.tech). Envio automatico al generar codigo de activacion desde LegajoForm
+- **Pestaña Movil en LegajoForm:** Estado del dispositivo, generar codigo de activacion, envio automatico por email con deep link, boton reintentar/reenviar
+- **Deep link PWA:** URL con ?code=XXX pre-carga el codigo de activacion en la app movil
+- **Fix re-activacion DeviceId:** Si legajo ya tiene terminal activa y cambia DeviceId (cache borrada), el login actualiza automaticamente sin pedir codigo nuevo
+- **Contraste visual mejorado:** Labels uppercase bold, inputs con borde/sombra, card headers oscuros con linea dorada en ambos portales
+- **Icono PWA actualizado:** D1 dorado sobre fondo oscuro (192px/512px)
 
 ### En progreso
 
