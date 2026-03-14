@@ -4,6 +4,7 @@ using DigitalPlusMultiTenant.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DigitalPlusMultiTenant.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313174319_AddMobileHabilitado")]
+    partial class AddMobileHabilitado
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -835,36 +838,16 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Direccion")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<int>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Localidad")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Provincia")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Telefono")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -924,8 +907,7 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
 
                     b.HasIndex("EmpresaId");
 
-                    b.HasIndex("SucursalId")
-                        .IsUnique();
+                    b.HasIndex("SucursalId");
 
                     b.ToTable("SucursalGeoconfigs");
                 });
@@ -1546,8 +1528,8 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("DigitalPlusMultiTenant.Domain.Entities.Sucursal", "Sucursal")
-                        .WithOne("Geoconfig")
-                        .HasForeignKey("DigitalPlusMultiTenant.Domain.Entities.SucursalGeoconfig", "SucursalId")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1766,8 +1748,6 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
             modelBuilder.Entity("DigitalPlusMultiTenant.Domain.Entities.Sucursal", b =>
                 {
                     b.Navigation("Fichadas");
-
-                    b.Navigation("Geoconfig");
 
                     b.Navigation("LegajoSucursales");
 

@@ -6,6 +6,16 @@
 
 ## COMPLETADO RECIENTEMENTE
 
+### Sesion 2026-03-13 (noche)
+- [x] Rediseno PWA Mobile: tema oscuro navy, mapa GPS con anillos animados, reloj en vivo, boton teal, GPS watch continuo
+- [x] CRUD Sucursales mejorado: nuevos campos (Direccion, Localidad, Provincia, Telefono, Email)
+- [x] Mapa Leaflet/OpenStreetMap integrado en formulario de sucursales (buscador Nominatim, geocoding, reverse geocoding, marker arrastrable, circulo de radio)
+- [x] Campos WiFi removidos de UI (BSSID no accesible desde PWA), metodo forzado a SoloGPS
+- [x] Validacion GPS por sucursal asignada: fichada movil valida LegajoSucursal antes de resolver GPS
+- [x] Errores claros en fichada: "No tiene sucursales asignadas" / "Sin configuracion GPS" / "No se detecto sucursal"
+- [x] Migracion EF Core AddSucursalFields aplicada en Ferozo
+- [x] Deploy Portal MT a Azure
+
 ### Sesion 2026-03-13 (tarde)
 - [x] PWA Terminal Movil: app completa en wwwroot/mobile/ (login, activacion, fichada GPS, historial)
 - [x] PWA deployada y probada end-to-end en iPhone (Safari) y Android (Chrome) contra Azure
@@ -120,6 +130,10 @@
 - [x] Gestion de PIN desde Portal MT (asignar, cambiar, resetear)
 - [x] Jwt config en appsettings.json de produccion
 - [x] Deploy Portal MT y Portal Licencias a Azure
+
+## PRIORIDAD ALTA
+
+- [ ] **Registro de huellas desde el Portal Web** — Permitir enrolar huellas digitales desde el portal MT, para abandonar la app Administrador desktop
 
 ## INMEDIATO (Validacion end-to-end)
 

@@ -1,6 +1,6 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 9.0
+**Version:** 10.0
 **Fecha:** 2026-03-13
 **Generado por:** Claude Opus 4.6
 
@@ -222,14 +222,17 @@ INFRAESTRUCTURA CLOUD
 | **URL** | `https://digitalplusportalmt.azurewebsites.net/mobile/` |
 | **Proposito** | Fichada desde smartphone con GPS + validacion de ubicacion |
 
-**Estado:** Funcional y probado end-to-end (login, activacion, fichada, historial).
+**Estado:** Funcional y probado end-to-end (login, activacion, fichada GPS, historial).
+
+**UI:** Tema oscuro navy (#0A1628), reloj en vivo, mapa GPS con anillos animados, boton teal rectangular, badges de precision GPS.
 
 **Funcionalidades:**
 - API REST en Portal MT: `POST /api/mobile/login`, `POST /api/mobile/registrar-dispositivo`, `POST /api/mobile/fichada`, `GET /api/mobile/estado`
 - JWT Bearer auth (convive con cookie auth del portal, no interfiere)
 - Login por PIN del legajo (SHA256), no usa Identity del portal
 - Registro de dispositivo con codigo de activacion de uso unico (24hs)
-- Validacion de ubicacion: WiFi BSSID y/o GPS con Haversine (configurable por sucursal)
+- Validacion de ubicacion por GPS con Haversine (configurable por sucursal)
+- Fichada restringida a sucursales asignadas al legajo (tabla LegajoSucursal)
 - Verificacion de firma RSA del dispositivo en cada fichada
 - Fichadas se insertan en tabla `Fichada` existente con `Origen = Movil`
 - Un empleado = un dispositivo activo
@@ -245,6 +248,7 @@ INFRAESTRUCTURA CLOUD
 - Tab "Movil" en formulario Legajos del Administrador desktop (generar codigo, desactivar dispositivo)
 - Pagina `/terminales-moviles` en Portal MT (listado de dispositivos, generar codigos de activacion)
 - Pagina `/fichado-movil` en Portal MT (geoconfig por sucursal)
+- Config GPS integrada en formulario de Sucursal con mapa Leaflet/OpenStreetMap (buscador de direccion, geocoding, marker arrastrable, circulo de radio)
 - Gestion de PIN desde formulario de Legajos en Portal MT (asignar, cambiar, resetear)
 - Menu condicional: links de fichado movil solo visibles cuando empresa tiene `MobileHabilitado = true`
 
@@ -377,7 +381,7 @@ Las tablas usan **nombres singulares** y todas las tablas principales incluyen `
 **Tablas principales (con EmpresaId):**
 - `Legajo` - Empleados (NumeroLegajo, Apellido, Nombre, IsActive, MobileHabilitado, PIN, PinExpiraEn, PinMustChange)
 - `Fichada` - Registro de fichadas (FechaHora en lugar de Registro)
-- `Sucursal` - Sucursales
+- `Sucursal` - Sucursales (Direccion, Localidad, Provincia, Telefono, Email + geoconfig GPS)
 - `Horario` - Horarios
 - `Categoria` - Categorias
 - `Sector` - Sectores
@@ -716,6 +720,9 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Gestion de PIN desde Portal MT:** Asignar, cambiar y resetear PIN desde LegajoForm (tab Datos, seccion PIN Movil)
 - **Iconos de origen en fichadas:** Columna Origen muestra iconos visuales (huella, PIN, movil, manual, web, demo) en vez de badges de texto
 - **Campo DatabaseName editable:** En Portal Licencias, el campo "Base de datos" de la empresa ahora es editable. Constraint UNIQUE eliminado (multi-tenant comparte BD)
+- **Rediseno PWA Mobile:** Tema oscuro, mapa GPS con anillos animados, reloj en vivo, boton teal, GPS watch continuo con precision
+- **CRUD Sucursales mejorado:** Nuevos campos (Direccion, Localidad, Provincia, Telefono, Email), mapa Leaflet/OpenStreetMap integrado con buscador Nominatim, geocoding/reverse geocoding, circulo de radio
+- **Validacion GPS por sucursal asignada:** Fichada movil ahora valida que el legajo tenga la sucursal asignada (LegajoSucursal) antes de resolver GPS
 
 ### En progreso
 

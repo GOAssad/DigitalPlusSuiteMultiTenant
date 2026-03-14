@@ -196,21 +196,34 @@ public class MobileController : ControllerBase
         if (diff > 5)
             return BadRequest(new { ok = false, codigo = "TIMESTAMP_INVALIDO", mensaje = "El timestamp tiene más de 5 minutos de diferencia con el servidor." });
 
-        // 4. Resolver sucursal por ubicación
+        // 4. Obtener sucursales asignadas al legajo
+        var sucursalesAsignadas = await _db.LegajoSucursales
+            .IgnoreQueryFilters()
+            .Where(ls => ls.LegajoId == legajoId)
+            .Select(ls => ls.SucursalId)
+            .ToListAsync();
+
+        if (!sucursalesAsignadas.Any())
+            return StatusCode(403, new { ok = false, codigo = "SIN_SUCURSAL", mensaje = "No tiene sucursales asignadas. Contacte a su administrador." });
+
+        // 5. Resolver sucursal por ubicación (solo las asignadas al legajo)
         var geoConfigs = await _db.SucursalGeoconfigs
             .IgnoreQueryFilters()
-            .Where(g => g.EmpresaId == empresaId && g.Activo)
+            .Where(g => g.EmpresaId == empresaId && g.Activo && sucursalesAsignadas.Contains(g.SucursalId))
             .Join(_db.Sucursales.IgnoreQueryFilters(),
                   g => g.SucursalId, s => s.Id,
                   (g, s) => new UbicacionService.GeoConfigInfo(
                       s.Id, s.Nombre, g.WifiBSSID, g.Latitud, g.Longitud, g.RadioMetros, g.MetodoValidacion))
             .ToListAsync();
 
+        if (!geoConfigs.Any())
+            return StatusCode(403, new { ok = false, codigo = "SIN_GEOCONFIG", mensaje = "Las sucursales asignadas no tienen configuración GPS. Contacte a su administrador." });
+
         var ubicacion = _ubicacionService.ResolverSucursal(geoConfigs, request.WifiBSSID, request.Latitud, request.Longitud);
         if (!ubicacion.Ok)
             return StatusCode(403, new { ok = false, codigo = "UBICACION_INVALIDA", mensaje = ubicacion.Error });
 
-        // 5. Determinar tipo (Entrada/Salida)
+        // 6. Determinar tipo (Entrada/Salida)
         string tipo = request.TipoFichada;
         if (string.Equals(tipo, "Auto", StringComparison.OrdinalIgnoreCase))
         {
@@ -228,7 +241,7 @@ public class MobileController : ControllerBase
             tipo = string.Equals(tipo, "Salida", StringComparison.OrdinalIgnoreCase) ? "S" : "E";
         }
 
-        // 6. Insertar fichada
+        // 7. Insertar fichada
         var fichada = new Fichada
         {
             EmpresaId = empresaId,
@@ -241,7 +254,7 @@ public class MobileController : ControllerBase
         };
         _db.Fichadas.Add(fichada);
 
-        // 7. Actualizar último uso del terminal
+        // 8. Actualizar último uso del terminal
         terminal.UltimoUso = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();

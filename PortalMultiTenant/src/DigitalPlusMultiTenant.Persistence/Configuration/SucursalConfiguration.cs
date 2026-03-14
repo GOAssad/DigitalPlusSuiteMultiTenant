@@ -12,6 +12,11 @@ public class SucursalConfiguration : IEntityTypeConfiguration<Sucursal>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Codigo).HasMaxLength(10).IsRequired();
         builder.Property(e => e.Nombre).HasMaxLength(100).IsRequired();
+        builder.Property(e => e.Direccion).HasMaxLength(200);
+        builder.Property(e => e.Localidad).HasMaxLength(100);
+        builder.Property(e => e.Provincia).HasMaxLength(100);
+        builder.Property(e => e.Telefono).HasMaxLength(50);
+        builder.Property(e => e.Email).HasMaxLength(150);
         builder.Property(e => e.CreatedBy).HasMaxLength(100);
         builder.Property(e => e.UpdatedBy).HasMaxLength(100);
 
@@ -20,5 +25,8 @@ public class SucursalConfiguration : IEntityTypeConfiguration<Sucursal>
 
         builder.HasOne(e => e.Empresa).WithMany(e => e.Sucursales)
             .HasForeignKey(e => e.EmpresaId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.Geoconfig).WithOne(g => g.Sucursal)
+            .HasForeignKey<SucursalGeoconfig>(g => g.SucursalId);
     }
 }

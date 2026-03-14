@@ -57,6 +57,9 @@
                         <th role="button" @onclick='() => SetOrden("nombre")'>
                             Nombre @SortIcon("nombre")
                         </th>
+                        <th>Dirección</th>
+                        <th>Localidad</th>
+                        <th>GPS</th>
                         <th>Estado</th>
                         <th class="text-end">Acciones</th>
                     </tr>
@@ -64,19 +67,34 @@
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="4" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
+                        <tr><td colspan="7" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay sucursales</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay sucursales</td></tr>
                     }
                     else
                     {
                         @foreach (var s in items)
                         {
+                            var geo = geoconfigs.FirstOrDefault(g => g.SucursalId == s.Id);
                             <tr>
                                 <td><span class="badge bg-secondary">@s.Codigo</span></td>
                                 <td>@s.Nombre</td>
+                                <td class="small text-muted">@(s.Direccion ?? "-")</td>
+                                <td class="small text-muted">@(s.Localidad ?? "-")</td>
+                                <td>
+                                    @if (geo != null && geo.Activo)
+                                    {
+                                        <span class="badge bg-info" title="@geo.MetodoValidacion — Radio: @(geo.RadioMetros)m">
+                                            <i class="bi bi-geo-alt-fill me-1"></i>@geo.MetodoValidacion
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Sin GPS</span>
+                                    }
+                                </td>
                                 <td>
                                     <span class="badge @(s.IsActive ? "bg-success" : "bg-danger")">
                                         @(s.IsActive ? "Activa" : "Inactiva")
@@ -99,6 +117,7 @@
 
 @code {
     private List<Sucursal>? items;
+    private List<SucursalGeoconfig> geoconfigs = new();
     private string filtro = "";
     private string filtroActivo = "true";
     private string ordenColumna = "nombre";
@@ -152,6 +171,7 @@
         };
 
         items = await ordered.ToListAsync();
+        geoconfigs = await Db.SucursalGeoconfigs.ToListAsync();
     }
 
     private async Task ExportarExcel()
@@ -166,10 +186,10 @@
             {
                 Titulo = "Sucursales", NombreEmpresa = Tenant.EmpresaNombre,
                 Filtros = filtros,
-                Encabezados = ["Codigo", "Nombre", "Estado"],
-                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto]
+                Encabezados = ["Codigo", "Nombre", "Direccion", "Localidad", "Provincia", "Telefono", "Email", "Estado"],
+                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto]
             },
-            s => [s.Codigo, s.Nombre, s.IsActive ? "Activa" : "Inactiva"]);
+            s => [s.Codigo, s.Nombre, s.Direccion ?? "", s.Localidad ?? "", s.Provincia ?? "", s.Telefono ?? "", s.Email ?? "", s.IsActive ? "Activa" : "Inactiva"]);
         await JS.InvokeVoidAsync("downloadFile", "sucursales.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
@@ -177,8 +197,8 @@
     {
         if (items == null) return;
         var bytes = CsvExporter.ToCsvBytes(items,
-            ["Codigo", "Nombre", "Estado"],
-            s => [s.Codigo, s.Nombre, s.IsActive ? "Activa" : "Inactiva"]);
+            ["Codigo", "Nombre", "Direccion", "Localidad", "Provincia", "Telefono", "Email", "Estado"],
+            s => [s.Codigo, s.Nombre, s.Direccion ?? "", s.Localidad ?? "", s.Provincia ?? "", s.Telefono ?? "", s.Email ?? "", s.IsActive ? "Activa" : "Inactiva"]);
         await JS.InvokeVoidAsync("downloadFile", "sucursales.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 

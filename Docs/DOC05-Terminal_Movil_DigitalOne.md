@@ -1,7 +1,7 @@
 # DIGITAL ONE - Terminal Móvil (Etapa 2)
 ## Documento de Arquitectura y Especificación para Implementación
 
-**Version:** 2.0
+**Version:** 3.0
 **Fecha:** 2026-03-13
 **Generado por:** Claude Sonnet 4.6 / Claude Opus 4.6
 **Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
@@ -22,9 +22,9 @@ El celular actúa como una terminal de fichado personal: el empleado se autentic
 1. **No invasivo:** No modifica el flujo existente de fichado por huella DigitalPersona ni por PIN.
 2. **Mismo modelo de datos:** Las fichadas móviles se insertan en la tabla `Fichada` existente, con `Origen = Movil` (enum `OrigenFichada`). No se agrega campo `TipoFichada` nuevo — se reutiliza el campo `Origen` existente.
 3. **Multi-tenant nativo:** El empleado se identifica con sus credenciales; el sistema resuelve `EmpresaId` automáticamente.
-4. **Sucursal automática:** La sucursal se resuelve por la ubicación del dispositivo (WiFi BSSID o GPS), sin que el empleado la seleccione.
+4. **Sucursal automática:** La sucursal se resuelve por la ubicación GPS del dispositivo, sin que el empleado la seleccione. Solo se buscan sucursales asignadas al legajo (tabla LegajoSucursal).
 5. **Sin compatibilidad de templates biométricos:** No se comparan huellas entre dispositivos. El sensor del celular valida al empleado localmente; el servidor valida que el dispositivo está autorizado para ese empleado.
-6. **Anti-fraude por presencia física:** WiFi de la sucursal como método primario; GPS como fallback configurable por sucursal.
+6. **Anti-fraude por presencia física:** GPS como método de validación. WiFi BSSID no es accesible desde navegadores web (PWA) por restricciones de privacidad.
 
 ---
 
@@ -574,7 +574,7 @@ Patrón: igual que los demás DAL del proyecto — ADO.NET directo, SQL parametr
 | Robo del celular | Código de activación nuevo invalidará el anterior; admin puede desactivar el device |
 | Replay attack (reusar un POST capturado) | Timestamp en el payload firmado; servidor rechaza si > 5 min de diferencia |
 | Falsificación de firma | Servidor verifica con `PublicKey` almacenada; clave privada nunca sale del dispositivo (SecureStore) |
-| Fake GPS (app de spoofing) | WiFi BSSID como método primario — más difícil de falsificar sin estar físicamente presente |
+| Fake GPS (app de spoofing) | Riesgo aceptado para PWA. Mitigacion futura: app nativa con deteccion de mock location. Auditable por coordenadas registradas |
 | Token JWT robado | Corta expiración (8hs); `DeviceId` en header también verificado contra el token |
 | Código de activación interceptado | Expira en 24hs; de uso único; debe coincidir con el `LegajoId` del token |
 
@@ -711,4 +711,25 @@ Se descartó React Native/Expo por incompatibilidades de SDK con Expo Go en iOS.
 
 ---
 
-*Fin del documento — Terminal Móvil Digital One v1.1*
+### Sesion 2026-03-13 (noche): Rediseno PWA + CRUD Sucursales + Validacion GPS
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| Rediseno PWA Mobile (tema oscuro, GPS visual) | HECHO | Dark theme navy, anillos GPS animados, reloj en vivo, boton teal |
+| GPS watch continuo | HECHO | watchPosition con tracking de accuracy, estados acquiring/verified/error |
+| CRUD Sucursales mejorado | HECHO | Nuevos campos: Direccion, Localidad, Provincia, Telefono, Email |
+| Mapa Leaflet integrado en formulario | HECHO | OpenStreetMap + Nominatim (geocoding/reverse), marker arrastrable, circulo radio |
+| Campos WiFi removidos de UI | HECHO | BSSID no accesible desde PWA; metodo forzado a SoloGPS |
+| Validacion GPS por sucursal asignada | HECHO | Fichada consulta LegajoSucursal antes de resolver GPS |
+| Mensajes de error claros | HECHO | "No tiene sucursales asignadas" / "Sin config GPS" / "No se detecto sucursal" |
+| Migracion EF Core AddSucursalFields | HECHO | Aplicada en Ferozo |
+| Deploy Portal MT | HECHO | digitalplusportalmt.azurewebsites.net |
+| Probado end-to-end con GPS real | HECHO | Sucursal creada con coordenadas reales, fichada exitosa |
+
+### Nota sobre WiFi BSSID
+
+Los navegadores web (Chrome, Safari, Firefox) **no permiten leer el BSSID** (MAC del router) desde JavaScript por razones de privacidad. Solo apps nativas (Android/iOS) pueden acceder a esa informacion. Por lo tanto, para la PWA se usa exclusivamente GPS como metodo de validacion. Los campos WiFi se mantienen en el modelo de datos para futura app nativa pero no se muestran en la UI.
+
+---
+
+*Fin del documento — Terminal Móvil Digital One v3.0*
