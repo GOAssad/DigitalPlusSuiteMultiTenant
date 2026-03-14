@@ -22,6 +22,7 @@
     @if (IsEdit)
     {
         <span class="badge bg-light text-muted ms-2 fs-6">#@model.NumeroLegajo</span>
+        <span class="text-muted ms-2 fs-6">@model.Apellido, @model.Nombre</span>
     }
 </div>
 
@@ -50,6 +51,12 @@
                         @onclick='() => activeTab = "huellas"'>
                     <i class="bi bi-fingerprint me-1"></i>Huellas
                     <span class="badge bg-primary ms-1">@huellas.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link @(activeTab == "fichadas" ? "active" : "")"
+                        @onclick="CargarTabFichadas">
+                    <i class="bi bi-card-checklist me-1"></i>Fichadas
                 </button>
             </li>
             <li class="nav-item">
@@ -294,6 +301,140 @@
                 }
             }
 
+            @* ===== TAB: FICHADAS ===== *@
+            @if (activeTab == "fichadas" && IsEdit)
+            {
+                <div class="row g-2 mb-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">Desde</label>
+                        <input type="date" class="form-control form-control-sm" @bind="ficDesde" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Hasta</label>
+                        <input type="date" class="form-control form-control-sm" @bind="ficHasta" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="CargarFichadas">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-success btn-sm" @onclick="AbrirNuevaFichada">
+                            <i class="bi bi-plus-lg me-1"></i>Nueva Fichada
+                        </button>
+                    </div>
+                </div>
+
+                @if (ficCargando)
+                {
+                    <div class="text-center py-3"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="Cargando fichadas..." /></div>
+                }
+                else if (ficItems == null)
+                {
+                    <div class="alert alert-info small">Seleccione un rango de fechas y presione Buscar.</div>
+                }
+                else if (!ficItems.Any() && !ficIncidencias.Any())
+                {
+                    <div class="text-center text-muted py-3"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin fichadas ni incidencias en el periodo</div>
+                }
+                else
+                {
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Origen</th>
+                                <th>Sucursal</th>
+                                <th>Detalle</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in ficItems!)
+                            {
+                                <tr>
+                                    <td>@f.FechaHora.ToString("dd/MM/yyyy")</td>
+                                    <td>@f.FechaHora.ToString("HH:mm:ss")</td>
+                                    <td><span class="badge @(f.Tipo == "E" ? "bg-success" : "bg-danger")">@(f.Tipo == "E" ? "Entrada" : "Salida")</span></td>
+                                    <td>
+                                        @{ var (ficIcon, ficTitle, ficColor) = f.Origen switch
+                                        {
+                                            Domain.Enums.OrigenFichada.Huella => ("bi-fingerprint", "Huella", "text-primary"),
+                                            Domain.Enums.OrigenFichada.PIN => ("bi-dialpad", "PIN", "text-warning"),
+                                            Domain.Enums.OrigenFichada.Movil => ("bi-phone", "Movil", "text-success"),
+                                            Domain.Enums.OrigenFichada.Manual => ("bi-pencil-square", "Manual", "text-info"),
+                                            Domain.Enums.OrigenFichada.Web => ("bi-globe", "Web", "text-dark"),
+                                            Domain.Enums.OrigenFichada.Demo => ("bi-play-circle", "Demo", "text-secondary"),
+                                            null => ("bi-fingerprint", "Huella (legacy)", "text-primary"),
+                                            _ => ("bi-fingerprint", "Huella", "text-primary")
+                                        }; }
+                                        <i class="bi @ficIcon @ficColor" title="@ficTitle"></i>
+                                        @if (f.ModificadoPor != null)
+                                        {
+                                            <i class="bi bi-pencil-fill text-warning ms-1" title="Modificado por @f.ModificadoPor el @f.ModificadoAt?.ToString("dd/MM HH:mm")"></i>
+                                        }
+                                    </td>
+                                    <td class="small text-muted">@f.Sucursal?.Nombre</td>
+                                    <td class="small text-muted">
+                                        @if (f.Origen == Domain.Enums.OrigenFichada.Manual)
+                                        {
+                                            <span>por @f.CreatedBy</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => AbrirEditarFichada(f)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        @if (ficConfirmEliminar == f.Id)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => ConfirmarEliminarFichada(f)">
+                                                <i class="bi bi-check-lg me-1"></i>Confirmar
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => ficConfirmEliminar = 0">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ficConfirmEliminar = f.Id">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var il in ficIncidencias)
+                            {
+                                <tr class="table-light">
+                                    <td>@il.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-muted">—</td>
+                                    <td colspan="3">
+                                        @if (!string.IsNullOrEmpty(il.Incidencia?.Color))
+                                        {
+                                            <span class="d-inline-block rounded me-1" style="width:12px;height:12px;background-color:@il.Incidencia.Color;vertical-align:middle;"></span>
+                                        }
+                                        <span class="badge bg-info">@il.Incidencia?.Nombre</span>
+                                        @if (!string.IsNullOrEmpty(il.Detalle))
+                                        {
+                                            <span class="text-muted small ms-1">@il.Detalle</span>
+                                        }
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                @if (ficMensaje != null)
+                {
+                    <div class="alert @(ficMensajeOk ? "alert-success" : "alert-danger") py-2 small mt-2">@ficMensaje</div>
+                }
+            }
+
             @* ===== TAB: CALENDARIO ===== *@
             @if (activeTab == "calendario" && IsEdit)
             {
@@ -373,6 +514,176 @@
                             </tbody>
                         </table>
                     }
+                }
+
+                <hr />
+                <h6 class="text-muted mb-3"><i class="bi bi-calendar-check me-1"></i>Novedades del legajo</h6>
+
+                @* Registrar incidencia *@
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">Incidencia</label>
+                                <select class="form-select form-select-sm" @bind="incIndividualId">
+                                    <option value="0">-- Seleccionar --</option>
+                                    @foreach (var inc in incidenciasDisponibles)
+                                    {
+                                        <option value="@inc.Id">@inc.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Desde</label>
+                                <input type="date" class="form-control form-control-sm" @bind="incDesde" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" class="form-control form-control-sm" @bind="incHasta" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Detalle</label>
+                                <input type="text" class="form-control form-control-sm" @bind="incDetalle" placeholder="Opcional..." />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-success btn-sm w-100" @onclick="AgregarIncidencia">
+                                    <i class="bi bi-plus-lg me-1"></i>Incidencia
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Registrar vacaciones *@
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label">Vacaciones desde</label>
+                                <input type="date" class="form-control form-control-sm" @bind="vacDesde" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" class="form-control form-control-sm" @bind="vacHasta" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Nota</label>
+                                <input type="text" class="form-control form-control-sm" @bind="vacNota" placeholder="Opcional..." />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" @onclick="AgregarVacacion">
+                                    <i class="bi bi-sun me-1"></i>Vacaciones
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (incMensaje != null)
+                {
+                    <div class="alert @(incMensajeOk ? "alert-success" : "alert-danger") py-2 small">@incMensaje</div>
+                }
+
+                @* Filtro y listado unificado *@
+                <div class="row g-2 mb-2 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">Filtrar desde</label>
+                        <input type="date" class="form-control form-control-sm" @bind="novDesde" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Hasta</label>
+                        <input type="date" class="form-control form-control-sm" @bind="novHasta" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select form-select-sm" @bind="novFiltroTipo">
+                            <option value="">Todos</option>
+                            <option value="inc">Incidencias</option>
+                            <option value="vac">Vacaciones</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="StateHasChanged">
+                            <i class="bi bi-search me-1"></i>Filtrar
+                        </button>
+                    </div>
+                </div>
+
+                @if (GetNovedadesFiltradas().Count == 0)
+                {
+                    <div class="alert alert-info small">No hay registros en el periodo seleccionado.</div>
+                }
+                else
+                {
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Concepto</th>
+                                <th>Fecha</th>
+                                <th>Detalle</th>
+                                <th style="width:100px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var n in GetNovedadesFiltradas())
+                            {
+                                <tr>
+                                    <td>
+                                        @if (n.Entidad == "vac")
+                                        {
+                                            <span class="badge bg-primary"><i class="bi bi-sun me-1"></i>Vacaciones</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Incidencia</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(n.Color))
+                                        {
+                                            <span class="d-inline-block rounded me-1" style="width:12px;height:12px;background-color:@n.Color;vertical-align:middle;"></span>
+                                        }
+                                        @n.Nombre
+                                        @if (n.Entidad == "vac")
+                                        {
+                                            <span class="text-muted small ms-1">(@n.RangoTexto)</span>
+                                        }
+                                    </td>
+                                    <td>@n.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-muted small">@n.Detalle</td>
+                                    <td>
+                                        @if (n.Entidad == "inc")
+                                        {
+                                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => EliminarIncidenciaPorId(n.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                        else if (n.EsPrimerDiaVac)
+                                        {
+                                            @if (novConfirmEliminar == n.Id)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => ConfirmarEliminarVacacion(n.Id)">
+                                                    Confirmar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => novConfirmEliminar = 0">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => novConfirmEliminar = n.Id"
+                                                        title="Eliminar todas las vacaciones de este periodo">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <small class="text-muted">@GetNovedadesFiltradas().Count registros</small>
                 }
             }
 
@@ -497,6 +808,55 @@
     <div class="alert alert-danger mt-3">@errorMessage</div>
 }
 
+@* Modal crear/editar fichada (fuera del EditForm para evitar conflictos de submit) *@
+@if (ficShowModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(ficEditando != null ? "Editar" : "Nueva") Fichada</h5>
+                    <button type="button" class="btn-close" @onclick="() => ficShowModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" class="form-control" @bind="ficModalFecha" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hora</label>
+                            <input type="time" class="form-control" step="1" @bind="ficModalHora" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" @bind="ficModalTipo">
+                                <option value="E">Entrada</option>
+                                <option value="S">Salida</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sucursal</label>
+                            <select class="form-select" @bind="ficModalSucursalId">
+                                @foreach (var s in ficSucursales)
+                                {
+                                    <option value="@s.Id">@s.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => ficShowModal = false">Cancelar</button>
+                    <button class="btn btn-primary btn-sm" @onclick="GuardarFichada">
+                        <i class="bi bi-check-lg me-1"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public int Id { get; set; }
     private bool IsEdit => Id > 0;
@@ -529,6 +889,45 @@
     private bool movilEmailEnviado;
     private string? movilEmailError;
     private bool reenviandoEmail;
+
+    // Fichadas
+    private List<Fichada>? ficItems;
+    private List<IncidenciaLegajo> ficIncidencias = new();
+    private List<Sucursal> ficSucursales = new();
+    private DateTime ficDesde = DateTime.Today.AddDays(-7);
+    private DateTime ficHasta = DateTime.Today;
+    private bool ficCargando;
+    private int ficConfirmEliminar;
+    private string? ficMensaje;
+    private bool ficMensajeOk;
+    private bool ficShowModal;
+    private Fichada? ficEditando;
+    private DateOnly ficModalFecha = DateOnly.FromDateTime(DateTime.Today);
+    private TimeOnly ficModalHora = TimeOnly.FromDateTime(DateTime.Now);
+    private string ficModalTipo = "E";
+    private int ficModalSucursalId;
+
+    // Incidencias individuales
+    private List<Incidencia> incidenciasDisponibles = new();
+    private List<IncidenciaLegajo> incidenciasLegajo = new();
+    private int incIndividualId;
+    private DateOnly incDesde = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly incHasta = DateOnly.FromDateTime(DateTime.Today);
+    private string? incDetalle;
+    private string? incMensaje;
+    private bool incMensajeOk;
+
+    // Vacaciones individuales
+    private List<Vacacion> vacacionesLegajo = new();
+    private DateOnly vacDesde = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly vacHasta = DateOnly.FromDateTime(DateTime.Today);
+    private string? vacNota;
+
+    // Filtro novedades
+    private DateOnly novDesde = DateOnly.FromDateTime(DateTime.Today.AddDays(-30));
+    private DateOnly novHasta = DateOnly.FromDateTime(DateTime.Today.AddDays(30));
+    private string novFiltroTipo = "";
+    private int novConfirmEliminar;
 
     // PIN
     private bool tienePin;
@@ -574,6 +973,21 @@
 
             // Calendario
             eventosCalendario = entity.EventosCalendario.ToList();
+
+            // Incidencias
+            incidenciasDisponibles = await Db.Incidencias.Where(i => i.IsActive).OrderBy(i => i.Nombre).ToListAsync();
+            incidenciasLegajo = await Db.IncidenciaLegajos
+                .Include(il => il.Incidencia)
+                .Where(il => il.LegajoId == entity.Id)
+                .OrderByDescending(il => il.Fecha)
+                .Take(200)
+                .ToListAsync();
+
+            // Vacaciones
+            vacacionesLegajo = await Db.Vacaciones
+                .Where(v => v.LegajoId == entity.Id)
+                .OrderByDescending(v => v.FechaDesde)
+                .ToListAsync();
 
             // Terminal movil
             terminalMovil = await Db.TerminalesMoviles
@@ -682,6 +1096,273 @@
         byte[] bytes = Encoding.UTF8.GetBytes(salt + pin);
         byte[] hash = SHA256.HashData(bytes);
         return Convert.ToBase64String(hash);
+    }
+
+    // --- Fichadas ---
+    private async Task CargarTabFichadas()
+    {
+        activeTab = "fichadas";
+        if (ficSucursales.Count == 0)
+            ficSucursales = sucursalesAsignadas.Any()
+                ? sucursalesAsignadas
+                : await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        if (ficItems == null)
+            await CargarFichadas();
+    }
+
+    private async Task CargarFichadas()
+    {
+        ficCargando = true;
+        ficMensaje = null;
+        StateHasChanged();
+
+        try
+        {
+            var desde = ficDesde.Date;
+            var hasta = ficHasta.Date.AddDays(1);
+
+            ficItems = await Db.Fichadas
+                .Include(f => f.Sucursal)
+                .Where(f => f.LegajoId == model.Id && f.FechaHora >= desde && f.FechaHora < hasta)
+                .OrderByDescending(f => f.FechaHora)
+                .ToListAsync();
+
+            var desdeOnly = DateOnly.FromDateTime(ficDesde);
+            var hastaOnly = DateOnly.FromDateTime(ficHasta);
+            ficIncidencias = await Db.IncidenciaLegajos
+                .Include(il => il.Incidencia)
+                .Where(il => il.LegajoId == model.Id && il.Fecha >= desdeOnly && il.Fecha <= hastaOnly)
+                .OrderByDescending(il => il.Fecha)
+                .ToListAsync();
+        }
+        finally
+        {
+            ficCargando = false;
+        }
+    }
+
+    private void AbrirNuevaFichada()
+    {
+        ficEditando = null;
+        ficModalFecha = DateOnly.FromDateTime(DateTime.Today);
+        ficModalHora = TimeOnly.FromDateTime(DateTime.Now);
+        ficModalTipo = "E";
+        ficModalSucursalId = ficSucursales.FirstOrDefault()?.Id ?? 0;
+        ficShowModal = true;
+    }
+
+    private void AbrirEditarFichada(Fichada f)
+    {
+        ficEditando = f;
+        ficModalFecha = DateOnly.FromDateTime(f.FechaHora);
+        ficModalHora = TimeOnly.FromTimeSpan(f.FechaHora.TimeOfDay);
+        ficModalTipo = f.Tipo;
+        ficModalSucursalId = f.SucursalId;
+        ficShowModal = true;
+    }
+
+    private async Task GuardarFichada()
+    {
+        ficMensaje = null;
+        var fechaHora = ficModalFecha.ToDateTime(ficModalHora);
+
+        if (ficEditando != null)
+        {
+            // Editar existente
+            ficEditando.FechaHora = fechaHora;
+            ficEditando.Tipo = ficModalTipo;
+            ficEditando.SucursalId = ficModalSucursalId;
+            ficEditando.ModificadoPor = Tenant.UserName;
+            ficEditando.ModificadoAt = DateTime.UtcNow;
+            ficMensaje = "Fichada modificada.";
+        }
+        else
+        {
+            // Nueva fichada manual
+            Db.Fichadas.Add(new Fichada
+            {
+                EmpresaId = model.EmpresaId,
+                LegajoId = model.Id,
+                SucursalId = ficModalSucursalId,
+                FechaHora = fechaHora,
+                Tipo = ficModalTipo,
+                Origen = Domain.Enums.OrigenFichada.Manual,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Tenant.UserName
+            });
+            ficMensaje = "Fichada manual registrada.";
+        }
+
+        await Db.SaveChangesAsync();
+        ficMensajeOk = true;
+        ficShowModal = false;
+        await CargarFichadas();
+    }
+
+    private async Task ConfirmarEliminarFichada(Fichada f)
+    {
+        Db.Fichadas.Remove(f);
+        await Db.SaveChangesAsync();
+        ficItems?.Remove(f);
+        ficConfirmEliminar = 0;
+        ficMensaje = "Fichada eliminada.";
+        ficMensajeOk = true;
+    }
+
+    // --- Incidencias individuales ---
+    private async Task AgregarIncidencia()
+    {
+        incMensaje = null;
+        if (incIndividualId == 0)
+        {
+            incMensaje = "Seleccione una incidencia.";
+            incMensajeOk = false;
+            return;
+        }
+        if (incDesde > incHasta)
+        {
+            incMensaje = "La fecha desde no puede ser mayor a la fecha hasta.";
+            incMensajeOk = false;
+            return;
+        }
+
+        var empresaId = model.EmpresaId;
+        var now = DateTime.UtcNow;
+        var createdBy = Tenant.UserName ?? "portal";
+        int insertados = 0;
+
+        for (var fecha = incDesde; fecha <= incHasta; fecha = fecha.AddDays(1))
+        {
+            var existe = await Db.IncidenciaLegajos
+                .AnyAsync(il => il.IncidenciaId == incIndividualId
+                            && il.LegajoId == model.Id
+                            && il.Fecha == fecha);
+            if (!existe)
+            {
+                var nuevo = new IncidenciaLegajo
+                {
+                    EmpresaId = empresaId,
+                    IncidenciaId = incIndividualId,
+                    LegajoId = model.Id,
+                    Fecha = fecha,
+                    Detalle = incDetalle,
+                    CreatedAt = now,
+                    CreatedBy = createdBy
+                };
+                Db.IncidenciaLegajos.Add(nuevo);
+                insertados++;
+            }
+        }
+
+        await Db.SaveChangesAsync();
+
+        // Recargar lista
+        incidenciasLegajo = await Db.IncidenciaLegajos
+            .Include(il => il.Incidencia)
+            .Where(il => il.LegajoId == model.Id)
+            .OrderByDescending(il => il.Fecha)
+            .Take(200)
+            .ToListAsync();
+
+        var dias = incHasta.DayNumber - incDesde.DayNumber + 1;
+        incMensaje = $"Registrado: {insertados} dias de {incidenciasDisponibles.FirstOrDefault(i => i.Id == incIndividualId)?.Nombre}.";
+        incMensajeOk = true;
+        incIndividualId = 0;
+        incDetalle = null;
+    }
+
+    private record NovedadRow(DateOnly Fecha, string Tipo, string Nombre, string Color, string? Detalle,
+        int Id, string Entidad, string? RangoTexto = null, bool EsPrimerDiaVac = false);
+
+    private List<NovedadRow> GetNovedadesFiltradas()
+    {
+        var all = GetNovedades();
+        var filtered = all.Where(n => n.Fecha >= novDesde && n.Fecha <= novHasta);
+        if (novFiltroTipo == "inc") filtered = filtered.Where(n => n.Entidad == "inc");
+        else if (novFiltroTipo == "vac") filtered = filtered.Where(n => n.Entidad == "vac");
+        return filtered.ToList();
+    }
+
+    private List<NovedadRow> GetNovedades()
+    {
+        var novedades = new List<NovedadRow>();
+        foreach (var il in incidenciasLegajo)
+            novedades.Add(new NovedadRow(il.Fecha, "Incidencia", il.Incidencia?.Nombre ?? "—",
+                il.Incidencia?.Color ?? "", il.Detalle, il.Id, "inc"));
+        foreach (var v in vacacionesLegajo)
+        {
+            var rango = $"{v.FechaDesde:dd/MM} al {v.FechaHasta:dd/MM}";
+            var primera = true;
+            for (var d = v.FechaDesde; d <= v.FechaHasta; d = d.AddDays(1))
+            {
+                novedades.Add(new NovedadRow(d, "Vacaciones", "Vacaciones", "#2563EB",
+                    v.Nota, v.Id, "vac", rango, primera));
+                primera = false;
+            }
+        }
+        return novedades.OrderByDescending(n => n.Fecha).ToList();
+    }
+
+    private async Task EliminarIncidencia(IncidenciaLegajo il)
+    {
+        Db.IncidenciaLegajos.Remove(il);
+        await Db.SaveChangesAsync();
+        incidenciasLegajo.Remove(il);
+    }
+
+    private async Task EliminarIncidenciaPorId(int id)
+    {
+        var il = incidenciasLegajo.FirstOrDefault(x => x.Id == id);
+        if (il != null)
+        {
+            Db.IncidenciaLegajos.Remove(il);
+            await Db.SaveChangesAsync();
+            incidenciasLegajo.Remove(il);
+        }
+    }
+
+    private async Task AgregarVacacion()
+    {
+        incMensaje = null;
+        if (vacDesde > vacHasta)
+        {
+            incMensaje = "La fecha desde no puede ser mayor a la fecha hasta.";
+            incMensajeOk = false;
+            return;
+        }
+
+        var vac = new Vacacion
+        {
+            EmpresaId = model.EmpresaId,
+            LegajoId = model.Id,
+            FechaDesde = vacDesde,
+            FechaHasta = vacHasta,
+            Nota = vacNota,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = Tenant.UserName
+        };
+        Db.Vacaciones.Add(vac);
+        await Db.SaveChangesAsync();
+        vacacionesLegajo.Add(vac);
+
+        var dias = vacHasta.DayNumber - vacDesde.DayNumber + 1;
+        incMensaje = $"Vacaciones registradas: {dias} dias ({vacDesde:dd/MM/yyyy} al {vacHasta:dd/MM/yyyy}).";
+        incMensajeOk = true;
+        vacNota = null;
+    }
+
+    private async Task ConfirmarEliminarVacacion(int id)
+    {
+        var vac = vacacionesLegajo.FirstOrDefault(v => v.Id == id);
+        if (vac != null)
+        {
+            Db.Vacaciones.Remove(vac);
+            await Db.SaveChangesAsync();
+            vacacionesLegajo.Remove(vac);
+            novConfirmEliminar = 0;
+            incMensaje = $"Vacaciones eliminadas ({vac.FechaDesde:dd/MM/yyyy} al {vac.FechaHasta:dd/MM/yyyy}).";
+            incMensajeOk = true;
+        }
     }
 
     // --- Movil ---

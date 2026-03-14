@@ -9,7 +9,9 @@
 
 @inject IJSRuntime JS
 @inject ITenantService Tenant
+@inject IConfiguration Config
 @using DigitalPlusMultiTenant.Web.Helpers
+@using Microsoft.Data.SqlClient
 
 <PageTitle>Incidencias - DigitalPlus</PageTitle>
 
@@ -61,17 +63,18 @@
                         </th>
                         <th>Color</th>
                         <th>Estado</th>
+                        <th class="text-center">Registros hoy</th>
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="5" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
+                        <tr><td colspan="6" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay incidencias</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay incidencias</td></tr>
                     }
                     else
                     {
@@ -87,8 +90,22 @@
                                     }
                                 </td>
                                 <td><span class="badge @(i.IsActive ? "bg-success" : "bg-danger")">@(i.IsActive ? "Activa" : "Inactiva")</span></td>
+                                <td class="text-center">
+                                    @{ var cnt = conteoHoy.GetValueOrDefault(i.Id); }
+                                    @if (cnt > 0)
+                                    {
+                                        <span class="badge bg-info">@cnt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
                                 <td class="text-end">
                                     <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+                                        <button class="btn btn-sm btn-outline-success me-1" @onclick="() => AbrirRegistroMasivo(i)" title="Registrar para todos">
+                                            <i class="bi bi-calendar-plus"></i>
+                                        </button>
                                         <a href="incidencias/editar/@i.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
                                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(i)">
                                             <i class="bi @(i.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
@@ -104,8 +121,167 @@
     </div>
 </div>
 
+@* ===== MODAL REGISTRO MASIVO ===== *@
+@if (showRegistroMasivo && incidenciaSeleccionada != null)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-calendar-plus me-2"></i>Registrar: @incidenciaSeleccionada.Nombre
+                        @if (!string.IsNullOrEmpty(incidenciaSeleccionada.Color))
+                        {
+                            <span class="d-inline-block rounded ms-2" style="width:16px;height:16px;background-color:@incidenciaSeleccionada.Color;vertical-align:middle;"></span>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarRegistroMasivo"></button>
+                </div>
+                <div class="modal-body">
+                    @* Fechas *@
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha desde</label>
+                            <input type="date" class="form-control" @bind="regDesde" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha hasta</label>
+                            <input type="date" class="form-control" @bind="regHasta" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Detalle (opcional)</label>
+                            <input type="text" class="form-control" @bind="regDetalle" placeholder="Motivo..." />
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    @* Filtros y búsqueda *@
+                    <div class="row g-2 mb-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Buscar</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombre o legajo..."
+                                   @bind="regFiltro" @bind:event="oninput" @bind:after="FiltrarLegajos" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Categoria</label>
+                            <select class="form-select form-select-sm" @bind="regFiltroCategoria" @bind:after="FiltrarLegajos">
+                                <option value="0">Todas</option>
+                                @foreach (var c in regCategorias)
+                                {
+                                    <option value="@c.Id">@c.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sector</label>
+                            <select class="form-select form-select-sm" @bind="regFiltroSector" @bind:after="FiltrarLegajos">
+                                <option value="0">Todos</option>
+                                @foreach (var s in regSectores)
+                                {
+                                    <option value="@s.Id">@s.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sucursal</label>
+                            <select class="form-select form-select-sm" @bind="regFiltroSucursal" @bind:after="FiltrarLegajos">
+                                <option value="0">Todas</option>
+                                @foreach (var s in regSucursales)
+                                {
+                                    <option value="@s.Id">@s.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @* Seleccionar/Quitar todos + Counter *@
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1" @onclick="SeleccionarTodos">
+                                <i class="bi bi-check-all me-1"></i>Seleccionar todos
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="QuitarTodos">
+                                <i class="bi bi-x-lg me-1"></i>Quitar todos
+                            </button>
+                        </div>
+                        <span class="badge bg-primary fs-6">@regSeleccionados.Count de @regTodosLegajos.Count seleccionados</span>
+                    </div>
+
+                    @* Lista de legajos *@
+                    <div class="border rounded" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width:40px"></th>
+                                    <th>Legajo</th>
+                                    <th>Apellido y Nombre</th>
+                                    <th>Categoria</th>
+                                    <th>Sector</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var l in regLegajosFiltrados)
+                                {
+                                    <tr @onclick="() => ToggleLegajo(l.Id)" role="button" class="@(regSeleccionados.Contains(l.Id) ? "table-success" : "")">
+                                        <td class="text-center">
+                                            <input type="checkbox" class="form-check-input" checked="@regSeleccionados.Contains(l.Id)"
+                                                   @onchange="() => ToggleLegajo(l.Id)" />
+                                        </td>
+                                        <td><span class="badge bg-secondary">@l.NumeroLegajo</span></td>
+                                        <td><strong>@l.Apellido</strong>, @l.Nombre</td>
+                                        <td class="small text-muted">@l.Categoria?.Nombre</td>
+                                        <td class="small text-muted">@l.Sector?.Nombre</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (regProgreso != null)
+                    {
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>@regProgreso</span>
+                                <span>@regProgresoActual / @regProgresoTotal</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: @(regProgresoTotal > 0 ? (regProgresoActual * 100 / regProgresoTotal) : 0)%"></div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (regMensaje != null)
+                    {
+                        <div class="alert @(regMensajeOk ? "alert-success" : "alert-danger") mt-3 mb-0 small py-2">@regMensaje</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="CerrarRegistroMasivo">
+                        @(regMensajeOk ? "Cerrar" : "Cancelar")
+                    </button>
+                    @if (!regMensajeOk)
+                    {
+                        <button class="btn btn-outline-danger btn-sm" @onclick="EjecutarEliminarMasivo"
+                                disabled="@(regSeleccionados.Count == 0 || registrando)">
+                            @if (registrando && eliminando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-trash me-1"></i>Eliminar del rango
+                        </button>
+                        <button class="btn btn-success btn-sm" @onclick="EjecutarRegistroMasivo"
+                                disabled="@(regSeleccionados.Count == 0 || registrando)">
+                            @if (registrando && !eliminando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-check-lg me-1"></i>Registrar (@regSeleccionados.Count legajos)
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Incidencia>? items;
+    private Dictionary<int, int> conteoHoy = new();
     private string filtro = "";
     private string filtroActivo = "true";
     private string ordenColumna = "nombre";
@@ -159,6 +335,13 @@
         };
 
         items = await ordered.ToListAsync();
+
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        conteoHoy = await Db.IncidenciaLegajos
+            .Where(il => il.Fecha == hoy)
+            .GroupBy(il => il.IncidenciaId)
+            .Select(g => new { IncidenciaId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.IncidenciaId, x => x.Count);
     }
 
     private async Task ExportarExcel()
@@ -189,5 +372,248 @@
         i.IsActive = !i.IsActive;
         await Db.SaveChangesAsync();
         await CargarDatos();
+    }
+
+    // === Registro Masivo ===
+    private bool showRegistroMasivo;
+    private Incidencia? incidenciaSeleccionada;
+    private DateOnly regDesde = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly regHasta = DateOnly.FromDateTime(DateTime.Today);
+    private string? regDetalle;
+    private string regFiltro = "";
+    private int regFiltroCategoria;
+    private int regFiltroSector;
+    private int regFiltroSucursal;
+    private List<Legajo> regTodosLegajos = new();
+    private List<Legajo> regLegajosFiltrados = new();
+    private HashSet<int> regSeleccionados = new();
+    private List<Categoria> regCategorias = new();
+    private List<Sector> regSectores = new();
+    private List<Sucursal> regSucursales = new();
+    private string? regMensaje;
+    private bool regMensajeOk;
+    private bool registrando;
+    private bool eliminando;
+    private string? regProgreso;
+    private int regProgresoActual;
+    private int regProgresoTotal;
+
+    private async Task AbrirRegistroMasivo(Incidencia inc)
+    {
+        incidenciaSeleccionada = inc;
+        regDesde = DateOnly.FromDateTime(DateTime.Today);
+        regHasta = DateOnly.FromDateTime(DateTime.Today);
+        regDetalle = null;
+        regFiltro = "";
+        regFiltroCategoria = 0;
+        regFiltroSector = 0;
+        regFiltroSucursal = 0;
+        regMensaje = null;
+
+        regTodosLegajos = await Db.Legajos
+            .Include(l => l.Categoria)
+            .Include(l => l.Sector)
+            .Where(l => l.IsActive)
+            .OrderBy(l => l.Apellido).ThenBy(l => l.Nombre)
+            .ToListAsync();
+        regCategorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
+        regSectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        regSucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+
+        regSeleccionados = new HashSet<int>(regTodosLegajos.Select(l => l.Id));
+        FiltrarLegajos();
+        showRegistroMasivo = true;
+    }
+
+    private void CerrarRegistroMasivo()
+    {
+        showRegistroMasivo = false;
+        incidenciaSeleccionada = null;
+    }
+
+    private void FiltrarLegajos()
+    {
+        var query = regTodosLegajos.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(regFiltro))
+        {
+            var f = regFiltro.Trim().ToLower();
+            query = query.Where(l => l.Apellido.ToLower().Contains(f)
+                || l.Nombre.ToLower().Contains(f)
+                || l.NumeroLegajo.ToLower().Contains(f));
+        }
+        if (regFiltroCategoria > 0)
+            query = query.Where(l => l.CategoriaId == regFiltroCategoria);
+        if (regFiltroSector > 0)
+            query = query.Where(l => l.SectorId == regFiltroSector);
+        if (regFiltroSucursal > 0)
+        {
+            var legajosSucursal = Db.LegajoSucursales
+                .Where(ls => ls.SucursalId == regFiltroSucursal)
+                .Select(ls => ls.LegajoId)
+                .ToHashSet();
+            query = query.Where(l => legajosSucursal.Contains(l.Id));
+        }
+
+        regLegajosFiltrados = query.ToList();
+    }
+
+    private void ToggleLegajo(int legajoId)
+    {
+        if (!regSeleccionados.Remove(legajoId))
+            regSeleccionados.Add(legajoId);
+    }
+
+    private void SeleccionarTodos()
+    {
+        foreach (var l in regLegajosFiltrados)
+            regSeleccionados.Add(l.Id);
+    }
+
+    private void QuitarTodos()
+    {
+        foreach (var l in regLegajosFiltrados)
+            regSeleccionados.Remove(l.Id);
+    }
+
+    private async Task EjecutarRegistroMasivo()
+    {
+        if (incidenciaSeleccionada == null || regSeleccionados.Count == 0) return;
+        if (regDesde > regHasta)
+        {
+            regMensaje = "La fecha desde no puede ser mayor a la fecha hasta.";
+            regMensajeOk = false;
+            return;
+        }
+
+        registrando = true;
+        eliminando = false;
+        regMensaje = null;
+        regProgreso = "Preparando...";
+        regProgresoActual = 0;
+        var dias = regHasta.DayNumber - regDesde.DayNumber + 1;
+        regProgresoTotal = dias;
+        StateHasChanged();
+
+        try
+        {
+            var connStr = Config.GetConnectionString("DefaultConnection")!;
+            var empresaId = Tenant.EmpresaId;
+            var now = DateTime.UtcNow;
+            var createdBy = Tenant.UserName ?? "portal";
+            var legajoIds = regSeleccionados.ToList();
+            int totalInserts = 0;
+
+            await using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+
+            for (var fecha = regDesde; fecha <= regHasta; fecha = fecha.AddDays(1))
+            {
+                regProgresoActual++;
+                regProgreso = $"Procesando {fecha:dd/MM/yyyy}...";
+                await InvokeAsync(StateHasChanged);
+
+                // Un solo INSERT por día para todos los legajos, excluyendo duplicados
+                const string sql = @"
+                    INSERT INTO IncidenciaLegajo (EmpresaId, IncidenciaId, LegajoId, Fecha, Detalle, CreatedAt, CreatedBy)
+                    SELECT @EmpresaId, @IncidenciaId, L.Id, @Fecha, @Detalle, @Now, @CreatedBy
+                    FROM Legajo L
+                    WHERE L.Id IN (SELECT value FROM STRING_SPLIT(@LegajoIds, ','))
+                      AND L.EmpresaId = @EmpresaId
+                      AND NOT EXISTS (
+                          SELECT 1 FROM IncidenciaLegajo IL
+                          WHERE IL.IncidenciaId = @IncidenciaId AND IL.LegajoId = L.Id AND IL.Fecha = @Fecha
+                      )";
+
+                await using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+                cmd.Parameters.AddWithValue("@IncidenciaId", incidenciaSeleccionada.Id);
+                cmd.Parameters.AddWithValue("@Fecha", fecha.ToDateTime(TimeOnly.MinValue));
+                cmd.Parameters.AddWithValue("@Detalle", (object?)regDetalle ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Now", now);
+                cmd.Parameters.AddWithValue("@CreatedBy", createdBy);
+                cmd.Parameters.AddWithValue("@LegajoIds", string.Join(",", legajoIds));
+
+                totalInserts += await cmd.ExecuteNonQueryAsync();
+            }
+
+            regProgreso = null;
+            regMensaje = $"Registrado: {totalInserts} registros ({legajoIds.Count} legajos x {dias} dias).";
+            regMensajeOk = true;
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            regProgreso = null;
+            regMensaje = $"Error: {ex.InnerException?.Message ?? ex.Message}";
+            regMensajeOk = false;
+        }
+        finally
+        {
+            registrando = false;
+        }
+    }
+
+    private async Task EjecutarEliminarMasivo()
+    {
+        if (incidenciaSeleccionada == null || regSeleccionados.Count == 0) return;
+        if (regDesde > regHasta)
+        {
+            regMensaje = "La fecha desde no puede ser mayor a la fecha hasta.";
+            regMensajeOk = false;
+            return;
+        }
+
+        registrando = true;
+        eliminando = true;
+        regMensaje = null;
+        regProgreso = "Eliminando registros...";
+        regProgresoActual = 0;
+        regProgresoTotal = 1;
+        StateHasChanged();
+
+        try
+        {
+            var connStr = Config.GetConnectionString("DefaultConnection")!;
+            var empresaId = Tenant.EmpresaId;
+            var legajoIds = regSeleccionados.ToList();
+
+            await using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+
+            const string sql = @"
+                DELETE FROM IncidenciaLegajo
+                WHERE EmpresaId = @EmpresaId
+                  AND IncidenciaId = @IncidenciaId
+                  AND Fecha >= @FechaDesde AND Fecha <= @FechaHasta
+                  AND LegajoId IN (SELECT value FROM STRING_SPLIT(@LegajoIds, ','))";
+
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmd.Parameters.AddWithValue("@IncidenciaId", incidenciaSeleccionada.Id);
+            cmd.Parameters.AddWithValue("@FechaDesde", regDesde.ToDateTime(TimeOnly.MinValue));
+            cmd.Parameters.AddWithValue("@FechaHasta", regHasta.ToDateTime(TimeOnly.MinValue));
+            cmd.Parameters.AddWithValue("@LegajoIds", string.Join(",", legajoIds));
+
+            var deleted = await cmd.ExecuteNonQueryAsync();
+
+            regProgresoActual = 1;
+            regProgreso = null;
+            var dias = regHasta.DayNumber - regDesde.DayNumber + 1;
+            regMensaje = $"Eliminados: {deleted} registros del rango {regDesde:dd/MM/yyyy} al {regHasta:dd/MM/yyyy}.";
+            regMensajeOk = true;
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            regProgreso = null;
+            regMensaje = $"Error: {ex.InnerException?.Message ?? ex.Message}";
+            regMensajeOk = false;
+        }
+        finally
+        {
+            registrando = false;
+            eliminando = false;
+        }
     }
 }

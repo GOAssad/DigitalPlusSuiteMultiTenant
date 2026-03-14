@@ -227,7 +227,8 @@ public class MultiTenantProvisioningService
             SELECT @Fichadas15dTotal = COUNT(*),
                    @Fichadas15dHuella = SUM(CASE WHEN Origen = 'Huella' THEN 1 ELSE 0 END),
                    @Fichadas15dPIN = SUM(CASE WHEN Origen = 'PIN' THEN 1 ELSE 0 END),
-                   @Fichadas15dMovil = SUM(CASE WHEN Origen = 'Movil' THEN 1 ELSE 0 END)
+                   @Fichadas15dMovil = SUM(CASE WHEN Origen = 'Movil' THEN 1 ELSE 0 END),
+                   @Fichadas15dManual = SUM(CASE WHEN Origen = 'Manual' THEN 1 ELSE 0 END)
             FROM Fichada
             WHERE EmpresaId = @EmpresaId AND FechaHora >= DATEADD(DAY, -15, GETDATE());";
 
@@ -254,6 +255,7 @@ public class MultiTenantProvisioningService
         cmd2.Parameters.Add("@Fichadas15dHuella", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
         cmd2.Parameters.Add("@Fichadas15dPIN", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
         cmd2.Parameters.Add("@Fichadas15dMovil", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+        cmd2.Parameters.Add("@Fichadas15dManual", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
 
         await cmd2.ExecuteNonQueryAsync();
 
@@ -278,6 +280,7 @@ public class MultiTenantProvisioningService
         stats.Fichadas15dHuella = cmd2.Parameters["@Fichadas15dHuella"].Value as int? ?? 0;
         stats.Fichadas15dPIN = cmd2.Parameters["@Fichadas15dPIN"].Value as int? ?? 0;
         stats.Fichadas15dMovil = cmd2.Parameters["@Fichadas15dMovil"].Value as int? ?? 0;
+        stats.Fichadas15dManual = cmd2.Parameters["@Fichadas15dManual"].Value as int? ?? 0;
 
         return stats;
     }
@@ -337,6 +340,50 @@ public class MultiTenantProvisioningService
             cmd.Parameters.AddWithValue("@CreatedBy", createdBy);
             cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Incidencias default
+        // Azul (#2563EB) = legales/obligatorias, Naranja (#EA580C) = personales/discrecionales
+        var incidencias = new (string Nombre, string Abreviatura, string Color)[]
+        {
+            // Legales / Obligatorias
+            ("Vacaciones", "VAC", "#2563EB"),
+            ("Feriado obligatorio", "FER", "#2563EB"),
+            ("Licencia por maternidad", "MAT", "#2563EB"),
+            ("Licencia por paternidad", "PAT", "#2563EB"),
+            ("Licencia por matrimonio", "MTR", "#2563EB"),
+            ("Licencia por fallecimiento familiar", "FAL", "#2563EB"),
+            ("Licencia por mudanza", "MUD", "#2563EB"),
+            ("Licencia por examen", "EXA", "#2563EB"),
+            ("Licencia por donacion de sangre", "SAN", "#2563EB"),
+            ("Dia del gremio", "GRE", "#2563EB"),
+            // Personales / Discrecionales
+            ("Enfermedad", "ENF", "#EA580C"),
+            ("Accidente laboral", "ACC", "#EA580C"),
+            ("Ausencia con aviso", "ACA", "#EA580C"),
+            ("Ausencia sin aviso", "ASA", "#EA580C"),
+            ("Llegada tarde", "TAR", "#EA580C"),
+            ("Suspension", "SUS", "#EA580C"),
+            ("Capacitacion", "CAP", "#EA580C"),
+            ("Tramite personal", "TRA", "#EA580C"),
+            ("Licencia sin goce de sueldo", "SGS", "#EA580C"),
+            ("Trabajo remoto", "REM", "#EA580C"),
+        };
+
+        const string sqlIncidencia = @"
+            INSERT INTO Incidencia (Nombre, Abreviatura, Color, IsActive, CreatedAt, CreatedBy, EmpresaId)
+            VALUES (@Nombre, @Abreviatura, @Color, 1, @Now, @CreatedBy, @EmpresaId)";
+
+        foreach (var (nombre, abreviatura, color) in incidencias)
+        {
+            await using var cmdInc = new SqlCommand(sqlIncidencia, conn, tx);
+            cmdInc.Parameters.AddWithValue("@Nombre", nombre);
+            cmdInc.Parameters.AddWithValue("@Abreviatura", abreviatura);
+            cmdInc.Parameters.AddWithValue("@Color", color);
+            cmdInc.Parameters.AddWithValue("@Now", now);
+            cmdInc.Parameters.AddWithValue("@CreatedBy", createdBy);
+            cmdInc.Parameters.AddWithValue("@EmpresaId", empresaId);
+            await cmdInc.ExecuteNonQueryAsync();
         }
 
         // Sector default
@@ -555,5 +602,6 @@ public class EmpresaStats
     public int Fichadas15dHuella { get; set; }
     public int Fichadas15dPIN { get; set; }
     public int Fichadas15dMovil { get; set; }
+    public int Fichadas15dManual { get; set; }
     public int Fichadas15dTotal { get; set; }
 }

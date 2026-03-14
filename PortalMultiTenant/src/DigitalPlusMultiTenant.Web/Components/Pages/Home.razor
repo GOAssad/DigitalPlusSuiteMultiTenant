@@ -282,20 +282,27 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Stage 1: KPIs + datos del dia (se muestra rapido)
-        await CargarKPIs();
-        _kpiLoaded = true;
-        StateHasChanged();
+        try
+        {
+            // Stage 1: KPIs + datos del dia (se muestra rapido)
+            await CargarKPIs();
+            _kpiLoaded = true;
+            StateHasChanged();
 
-        // Stage 2: Ultimas fichadas y noticias
-        await CargarListas();
-        _listasLoaded = true;
-        StateHasChanged();
+            // Stage 2: Ultimas fichadas y noticias
+            await CargarListas();
+            _listasLoaded = true;
+            StateHasChanged();
 
-        // Stage 3: Chart semanal (query mas pesada)
-        await CargarChartSemanal();
-        _chartsDataLoaded = true;
-        StateHasChanged();
+            // Stage 3: Chart semanal (query mas pesada)
+            await CargarChartSemanal();
+            _chartsDataLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
+        {
+            // Connection closed or component disposed - user navigated away
+        }
     }
 
     private async Task CargarKPIs()

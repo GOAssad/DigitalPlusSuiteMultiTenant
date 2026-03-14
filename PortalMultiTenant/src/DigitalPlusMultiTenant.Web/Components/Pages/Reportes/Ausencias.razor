@@ -58,7 +58,14 @@
                 <label class="form-label small mb-1">Buscar</label>
                 <input type="text" class="form-control form-control-sm" placeholder="Legajo..." @bind="filtroLegajo" />
             </div>
-            <div class="col-md-2 d-flex gap-1">
+            <div class="col-md-1">
+                <label class="form-label small mb-1">&nbsp;</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" @bind="mostrarIncidencias" id="chkInc" />
+                    <label class="form-check-label small" for="chkInc">Incidencias</label>
+                </div>
+            </div>
+            <div class="col-md-1 d-flex gap-1 align-items-end">
                 <button class="btn btn-primary btn-sm" @onclick="Generar" disabled="@cargando">
                     @if (cargando)
                     {
@@ -147,6 +154,7 @@
     private int filtroSector;
     private string filtroMotivo = "";
     private string filtroLegajo = "";
+    private bool mostrarIncidencias = true;
     private bool cargando;
     private string ordenColumna = "fecha";
     private bool ordenDesc;
@@ -175,7 +183,7 @@
             var desde = DateOnly.FromDateTime(fechaDesde);
             var hasta = DateOnly.FromDateTime(fechaHasta);
             var hoy = Clock.TodayDate;
-            if (hasta >= hoy) hasta = hoy.AddDays(-1);
+            if (hasta > hoy) hasta = hoy;
 
             var legajosQuery = Db.Legajos
                 .Include(l => l.Horario).ThenInclude(h => h!.Detalles)
@@ -248,11 +256,15 @@
                         motivo = "Vacaciones";
                         motivoBadge = "bg-success";
                     }
-                    else if (incidencia != null)
+                    else if (incidencia != null && mostrarIncidencias)
                     {
                         motivo = incidencia.Incidencia?.Nombre ?? "Incidencia";
                         motivoBadge = "bg-info";
                         detalle = incidencia.Detalle ?? "";
+                    }
+                    else if (incidencia != null && !mostrarIncidencias)
+                    {
+                        continue; // tiene incidencia pero no se quieren ver
                     }
                     else
                     {

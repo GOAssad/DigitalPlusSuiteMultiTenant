@@ -13,6 +13,9 @@ public class Fichada : BaseEntity, ITenantEntity
     public string Tipo { get; set; } = null!; // "E" o "S"
     public OrigenFichada? Origen { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? CreatedBy { get; set; }
+    public string? ModificadoPor { get; set; }
+    public DateTime? ModificadoAt { get; set; }
 
     // Navigation
     public Empresa Empresa { get; set; } = null!;

@@ -48,7 +48,25 @@
         </header>
 
         <main class="page-content">
-            @Body
+            <ErrorBoundary @ref="errorBoundary">
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent Context="ex">
+                    @if (IsTransientError(ex))
+                    {
+                        <div class="alert alert-warning m-3">
+                            <i class="bi bi-arrow-repeat me-2"></i>Se perdio la conexion. <a href="." class="alert-link">Recargar pagina</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger m-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Ocurrio un error. <a href="." class="alert-link">Recargar pagina</a>
+                        </div>
+                    }
+                </ErrorContent>
+            </ErrorBoundary>
         </main>
     </div>
 </div>
@@ -61,9 +79,23 @@
 
 @code {
     private bool sidebarOpen;
+    private ErrorBoundary? errorBoundary;
+
+    protected override void OnParametersSet()
+    {
+        // Reset error boundary on navigation
+        errorBoundary?.Recover();
+    }
 
     private void ToggleSidebar()
     {
         sidebarOpen = !sidebarOpen;
+    }
+
+    private static bool IsTransientError(Exception ex)
+    {
+        return ex is InvalidOperationException ioe && ioe.Message.Contains("connection", StringComparison.OrdinalIgnoreCase)
+            || ex is ObjectDisposedException
+            || ex.InnerException is InvalidOperationException;
     }
 }

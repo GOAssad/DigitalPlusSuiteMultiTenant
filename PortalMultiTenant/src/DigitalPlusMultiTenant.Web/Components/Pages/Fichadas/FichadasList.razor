@@ -132,7 +132,8 @@ else
                                                 Domain.Enums.OrigenFichada.Demo => ("bi-play-circle", "Demo", "text-secondary"),
                                                 Domain.Enums.OrigenFichada.Manual => ("bi-pencil-square", "Manual", "text-info"),
                                                 Domain.Enums.OrigenFichada.Web => ("bi-globe", "Web", "text-dark"),
-                                                _ => ("bi-dash", "—", "text-muted")
+                                                null => ("bi-fingerprint", "Huella (legacy)", "text-primary"),
+                                                _ => ("bi-fingerprint", "Huella", "text-primary")
                                             };
                                         }
                                         <i class="bi @origenIcon @origenColor fs-5" title="@origenTitle"></i>
