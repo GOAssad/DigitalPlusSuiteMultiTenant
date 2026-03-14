@@ -21,7 +21,9 @@
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
             <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
         }
-        <a href="feriados/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Feriado</a>
+        <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+            <a href="feriados/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Feriado</a>
+        </AuthorizeView>
     </div>
 </div>
 
@@ -75,8 +77,10 @@
                                 <td>@f.Fecha.ToString("dddd", new System.Globalization.CultureInfo("es-AR"))</td>
                                 <td>@f.Nombre</td>
                                 <td class="text-end">
-                                    <a href="feriados/editar/@f.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(f)"><i class="bi bi-trash"></i></button>
+                                    <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+                                        <a href="feriados/editar/@f.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(f)"><i class="bi bi-trash"></i></button>
+                                    </AuthorizeView>
                                 </td>
                             </tr>
                         }

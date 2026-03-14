@@ -33,3 +33,13 @@ PortalWeb/Documentacion/*.bak
 PortalWeb/IIS/*.rar
 PortalWeb/IIS/*.exe
 Instaladores/InstaladorUnificado/Prerequisites/*.exe
+
+# Publish/deploy outputs
+**/publish/
+**/publish_new/
+**/pub/
+**/pub2/
+**/deploy_out/
+**/deploy_new/
+**/out/
+*.zip

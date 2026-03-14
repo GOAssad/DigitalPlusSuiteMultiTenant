@@ -8,6 +8,10 @@
     <ProjectReference Include="..\DigitalPlusMultiTenant.Application\DigitalPlusMultiTenant.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.12.1" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

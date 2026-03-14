@@ -1,10 +1,30 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-13
+**Fecha:** 2026-03-14
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-14
+- [x] Roles en Portal MT: SuperAdmin, AdminEmpresa, Operador, Consulta aplicados
+- [x] Form pages restringidos por rol (estructura=Admin, operaciones=Admin+Operador)
+- [x] Botones de accion ocultos por AuthorizeView en todas las listas
+- [x] SuperAdmin removido del combo de creacion de usuarios
+- [x] Descripcion de roles en UsuarioForm (que puede hacer cada rol)
+- [x] Portal Licencias: boton Limpiar Empresa (elimina transaccionales, mantiene entidades)
+- [x] Portal Licencias: boton Eliminar Empresa (borra absolutamente todo de MT y Admin)
+- [x] Doble confirmacion para Limpiar/Eliminar (escribir nombre de empresa)
+- [x] Portal Licencias: mini dashboard "Uso del sistema" en detalle de empresa (legajos, fichadas, usuarios, sucursales, terminales, ultima fichada, fichadas por origen, dias activos 30d, fichadas 15d por dispositivo)
+- [x] Contraste visual mejorado en ambos portales (labels uppercase bold, inputs con borde/sombra, card headers oscuros con linea dorada)
+- [x] Servicio de email SMTP con MailKit (smtp.hostinger.com:465 SSL, notify@integraia.tech)
+- [x] Pestaña "Movil" en LegajoForm: estado del dispositivo + generar codigo de activacion + envio automatico por email
+- [x] Email de activacion con template HTML profesional (codigo + boton deep link)
+- [x] Deep link en PWA: lee codigo de URL (?code=XXX) y lo pre-carga en el campo
+- [x] Boton Reintentar/Reenviar email en LegajoForm
+- [x] Fix re-activacion innecesaria: si legajo ya tiene terminal activa y cambia DeviceId (cache borrada), se actualiza automaticamente sin pedir codigo nuevo
+- [x] Icono PWA actualizado: D1 dorado sobre fondo oscuro (192px y 512px)
+- [x] .gitignore actualizado (excluye publish/, deploy zips)
 
 ### Sesion 2026-03-13 (noche)
 - [x] Rediseno PWA Mobile: tema oscuro navy, mapa GPS con anillos animados, reloj en vivo, boton teal, GPS watch continuo
@@ -133,7 +153,9 @@
 
 ## PRIORIDAD ALTA
 
-- [ ] **Registro de huellas desde el Portal Web** — Permitir enrolar huellas digitales desde el portal MT, para abandonar la app Administrador desktop
+- [ ] **SuperAdmin cross-tenant** — admin@integraia.tech debe poder seleccionar empresa y ver datos de cualquier tenant. Requiere selector de empresa + bypass query filters.
+- [ ] **Modo Kiosko para terminales moviles** — Flag ModoKiosko en TerminalesMoviles, permite que cualquier legajo de la empresa fiche desde ese dispositivo.
+- [ ] **Registro de huellas desde el Portal Web** — Agente local liviano + WebSocket. PAUSADO (la funcionalidad la cubre el Administrador desktop).
 
 ## INMEDIATO (Validacion end-to-end)
 
@@ -203,4 +225,4 @@
 
 ---
 
-*Actualizado: 2026-03-13*
+*Actualizado: 2026-03-14*

@@ -61,6 +61,7 @@ public class Program
         // Tenant service
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ITenantService, TenantService>();
+        builder.Services.AddSingleton<IEmailService, EmailService>();
 
         // Database
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

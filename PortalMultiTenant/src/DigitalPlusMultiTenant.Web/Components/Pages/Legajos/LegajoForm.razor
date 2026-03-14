@@ -7,11 +7,12 @@
 @using System.Text
 @using DigitalPlusMultiTenant.Application.Interfaces
 @using DigitalPlusMultiTenant.Domain.Entities
-@attribute [Authorize]
+@attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa,Operador")]
 @rendermode InteractiveServer
 
 @inject NavigationManager Nav
 @inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
+@inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
 
 <PageTitle>@(IsEdit ? "Editar" : "Nuevo") Legajo - DigitalPlus</PageTitle>
 
@@ -57,6 +58,19 @@
                     <i class="bi bi-calendar-week me-1"></i>Calendario
                 </button>
             </li>
+            @if (mobileHabilitado)
+            {
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(activeTab == "movil" ? "active" : "")"
+                            @onclick='() => activeTab = "movil"'>
+                        <i class="bi bi-phone me-1"></i>Movil
+                        @if (terminalMovil != null)
+                        {
+                            <span class="badge bg-success ms-1"><i class="bi bi-check"></i></span>
+                        }
+                    </button>
+                </li>
+            }
         }
     </ul>
 
@@ -362,6 +376,113 @@
                 }
             }
 
+            @* ===== TAB: MOVIL ===== *@
+            @if (activeTab == "movil" && IsEdit && mobileHabilitado)
+            {
+                <h6 class="text-muted mb-3"><i class="bi bi-phone me-1"></i>Dispositivo Movil</h6>
+
+                @if (terminalMovil != null)
+                {
+                    <div class="card border-success mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="mb-1"><i class="bi bi-check-circle-fill text-success me-1"></i>Dispositivo registrado</h6>
+                                    <dl class="row mb-0 small">
+                                        <dt class="col-sm-4">Dispositivo</dt>
+                                        <dd class="col-sm-8">@(terminalMovil.Nombre ?? "(sin nombre)")</dd>
+                                        <dt class="col-sm-4">Plataforma</dt>
+                                        <dd class="col-sm-8"><span class="badge bg-info">@(terminalMovil.Plataforma ?? "-")</span></dd>
+                                        <dt class="col-sm-4">Registrado</dt>
+                                        <dd class="col-sm-8">@terminalMovil.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</dd>
+                                        <dt class="col-sm-4">Ultimo uso</dt>
+                                        <dd class="col-sm-8">@(terminalMovil.UltimoUso?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")</dd>
+                                        <dt class="col-sm-4">Estado</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge @(terminalMovil.Activo ? "bg-success" : "bg-danger")">
+                                                @(terminalMovil.Activo ? "Activo" : "Inactivo")
+                                            </span>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary mb-3">
+                        <i class="bi bi-phone me-1"></i>Este legajo no tiene dispositivo movil registrado.
+                    </div>
+                }
+
+                @if (!model.MobileHabilitado)
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>El acceso movil no esta habilitado para este legajo. Activelo en la pestaña Datos.
+                    </div>
+                }
+                else
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="mb-2">Generar codigo de activacion</h6>
+                            <p class="text-muted small mb-3">
+                                Genera un codigo de activacion para que el empleado registre su dispositivo movil.
+                                @if (!string.IsNullOrWhiteSpace(model.Email))
+                                {
+                                    <span>Se enviara automaticamente a <strong>@model.Email</strong>.</span>
+                                }
+                                else
+                                {
+                                    <span class="text-warning">El legajo no tiene email. Debera compartir el codigo manualmente.</span>
+                                }
+                            </p>
+                            <button type="button" class="btn btn-primary btn-sm" @onclick="GenerarCodigoActivacion" disabled="@generandoCodigo">
+                                @if (generandoCodigo)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="bi bi-qr-code me-1"></i>Generar codigo
+                            </button>
+
+                            @if (codigoActivacionGenerado != null)
+                            {
+                                <div class="mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded text-center">
+                                    <div class="text-muted small mb-1">Codigo de activacion:</div>
+                                    <span style="font-family: monospace; font-size: 1.8rem; font-weight: bold; letter-spacing: 4px;">@codigoActivacionGenerado</span>
+                                    <div class="text-muted small mt-1">Valido por 24 horas</div>
+                                </div>
+                            }
+
+                            @if (movilEmailEnviado)
+                            {
+                                <div class="alert alert-success small mt-2 mb-0 py-1 d-flex align-items-center justify-content-between">
+                                    <span><i class="bi bi-check-circle me-1"></i>Email enviado a <strong>@model.Email</strong></span>
+                                    <button type="button" class="btn btn-sm btn-outline-success ms-2" @onclick="ReenviarEmail" disabled="@reenviandoEmail">
+                                        @if (reenviandoEmail) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                        <i class="bi bi-arrow-repeat me-1"></i>Reenviar
+                                    </button>
+                                </div>
+                            }
+                            @if (movilEmailError != null)
+                            {
+                                <div class="alert alert-warning small mt-2 mb-0 py-1 d-flex align-items-center justify-content-between">
+                                    <span><i class="bi bi-exclamation-triangle me-1"></i>@movilEmailError</span>
+                                    @if (codigoActivacionGenerado != null && !string.IsNullOrWhiteSpace(model.Email))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-warning ms-2" @onclick="ReenviarEmail" disabled="@reenviandoEmail">
+                                            @if (reenviandoEmail) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                            <i class="bi bi-arrow-repeat me-1"></i>Reintentar
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
             @* ===== BOTONES ===== *@
             <div class="mt-4 pt-3 border-top">
                 <button type="submit" class="btn btn-primary me-2"><i class="bi bi-check-lg me-1"></i>Guardar</button>
@@ -400,6 +521,14 @@
     private DateOnly nuevoEventoHasta = DateOnly.FromDateTime(DateTime.Today);
     private string? nuevoEventoNota;
     private List<EventoCalendario> eventosEliminados = new();
+
+    // Movil
+    private TerminalMovil? terminalMovil;
+    private string? codigoActivacionGenerado;
+    private bool generandoCodigo;
+    private bool movilEmailEnviado;
+    private string? movilEmailError;
+    private bool reenviandoEmail;
 
     // PIN
     private bool tienePin;
@@ -445,6 +574,10 @@
 
             // Calendario
             eventosCalendario = entity.EventosCalendario.ToList();
+
+            // Terminal movil
+            terminalMovil = await Db.TerminalesMoviles
+                .FirstOrDefaultAsync(t => t.LegajoId == entity.Id && t.Activo);
         }
     }
 
@@ -549,6 +682,145 @@
         byte[] bytes = Encoding.UTF8.GetBytes(salt + pin);
         byte[] hash = SHA256.HashData(bytes);
         return Convert.ToBase64String(hash);
+    }
+
+    // --- Movil ---
+    private async Task GenerarCodigoActivacion()
+    {
+        generandoCodigo = true;
+        movilEmailEnviado = false;
+        movilEmailError = null;
+        codigoActivacionGenerado = null;
+        StateHasChanged();
+
+        try
+        {
+            var codigo = GenerarCodigoAleatorio(8);
+            var activacion = new CodigoActivacionMovil
+            {
+                EmpresaId = model.EmpresaId,
+                LegajoId = model.Id,
+                Codigo = codigo,
+                FechaCreacion = DateTime.UtcNow,
+                FechaExpira = DateTime.UtcNow.AddHours(24),
+                Usado = false
+            };
+            Db.CodigosActivacionMovil.Add(activacion);
+            await Db.SaveChangesAsync();
+
+            codigoActivacionGenerado = codigo;
+
+            // Enviar email automáticamente
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                try
+                {
+                    var baseUrl = Nav.BaseUri.TrimEnd('/');
+                    var link = $"{baseUrl}/mobile/?code={codigo}";
+                    var nombre = model.Nombre ?? model.Apellido ?? "empleado";
+
+                    var html = $@"
+                        <div style='font-family: Segoe UI, Arial, sans-serif; max-width: 480px; margin: 0 auto;'>
+                            <div style='background: #0B1120; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+                                <h2 style='color: #C9A84C; margin: 0;'>Digital One</h2>
+                            </div>
+                            <div style='background: #ffffff; padding: 24px; border: 1px solid #e0e0e0;'>
+                                <p>Hola <strong>{nombre}</strong>,</p>
+                                <p>Se genero un codigo de activacion para registrar tu dispositivo movil en el sistema de fichaje:</p>
+                                <div style='background: #FFF8E1; border: 2px solid #FFB300; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;'>
+                                    <span style='font-family: monospace; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #333;'>{codigo}</span>
+                                </div>
+                                <p>O simplemente hace click en el siguiente boton:</p>
+                                <div style='text-align: center; margin: 20px 0;'>
+                                    <a href='{link}' style='background: #C9A84C; color: #050810; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;'>
+                                        Activar dispositivo
+                                    </a>
+                                </div>
+                                <p style='color: #888; font-size: 13px;'>Este codigo es valido por 24 horas. Si no solicitaste esta activacion, ignora este mensaje.</p>
+                            </div>
+                            <div style='background: #f5f5f5; padding: 12px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;'>
+                                <small style='color: #999;'>Digital One by IntegraIA Technology</small>
+                            </div>
+                        </div>";
+
+                    await EmailService.SendAsync(model.Email, "Codigo de activacion - Digital One", html);
+                    movilEmailEnviado = true;
+                }
+                catch (Exception ex)
+                {
+                    movilEmailError = $"No se pudo enviar email: {ex.Message}";
+                }
+            }
+            else
+            {
+                movilEmailError = "El legajo no tiene email cargado. Comparta el codigo manualmente.";
+            }
+        }
+        finally
+        {
+            generandoCodigo = false;
+        }
+    }
+
+    private async Task ReenviarEmail()
+    {
+        if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrEmpty(codigoActivacionGenerado)) return;
+        reenviandoEmail = true;
+        movilEmailError = null;
+        movilEmailEnviado = false;
+        StateHasChanged();
+
+        try
+        {
+            var baseUrl = Nav.BaseUri.TrimEnd('/');
+            var link = $"{baseUrl}/mobile/?code={codigoActivacionGenerado}";
+            var nombre = model.Nombre ?? model.Apellido ?? "empleado";
+
+            var html = $@"
+                <div style='font-family: Segoe UI, Arial, sans-serif; max-width: 480px; margin: 0 auto;'>
+                    <div style='background: #0B1120; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+                        <h2 style='color: #C9A84C; margin: 0;'>Digital One</h2>
+                    </div>
+                    <div style='background: #ffffff; padding: 24px; border: 1px solid #e0e0e0;'>
+                        <p>Hola <strong>{nombre}</strong>,</p>
+                        <p>Se genero un codigo de activacion para registrar tu dispositivo movil en el sistema de fichaje:</p>
+                        <div style='background: #FFF8E1; border: 2px solid #FFB300; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;'>
+                            <span style='font-family: monospace; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #333;'>{codigoActivacionGenerado}</span>
+                        </div>
+                        <p>O simplemente hace click en el siguiente boton:</p>
+                        <div style='text-align: center; margin: 20px 0;'>
+                            <a href='{link}' style='background: #C9A84C; color: #050810; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;'>
+                                Activar dispositivo
+                            </a>
+                        </div>
+                        <p style='color: #888; font-size: 13px;'>Este codigo es valido por 24 horas. Si no solicitaste esta activacion, ignora este mensaje.</p>
+                    </div>
+                    <div style='background: #f5f5f5; padding: 12px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;'>
+                        <small style='color: #999;'>Digital One by IntegraIA Technology</small>
+                    </div>
+                </div>";
+
+            await EmailService.SendAsync(model.Email, "Codigo de activacion - Digital One", html);
+            movilEmailEnviado = true;
+        }
+        catch (Exception ex)
+        {
+            movilEmailError = $"No se pudo enviar email: {ex.Message}";
+        }
+        finally
+        {
+            reenviandoEmail = false;
+        }
+    }
+
+    private static string GenerarCodigoAleatorio(int longitud)
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        var bytes = RandomNumberGenerator.GetBytes(longitud);
+        var result = new char[longitud];
+        for (int i = 0; i < longitud; i++)
+            result[i] = chars[bytes[i] % chars.Length];
+        return new string(result);
     }
 
     // --- Guardar ---

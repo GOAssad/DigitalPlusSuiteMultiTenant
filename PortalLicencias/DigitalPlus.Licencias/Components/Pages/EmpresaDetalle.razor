@@ -4,6 +4,8 @@
 @inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
 @inject NavigationManager Nav
 @inject IJSRuntime JS
+@inject DigitalPlus.Licencias.Services.MultiTenantProvisioningService MTService
+@inject IConfiguration Config
 
 <PageTitle>Detalle Empresa - DigitalPlus</PageTitle>
 
@@ -308,6 +310,277 @@ else
                     </dl>
                 </div>
             </div>
+
+            <div class="card mt-3">
+                <div class="card-header"><i class="bi bi-bar-chart me-1"></i> Uso del sistema</div>
+                <div class="card-body p-2">
+                    @if (stats == null)
+                    {
+                        <p class="text-muted small text-center py-2">Cargando...</p>
+                    }
+                    else
+                    {
+                        <div class="row g-1 text-center mb-2">
+                            <div class="col-4">
+                                <div class="border rounded p-1">
+                                    <div class="fs-5 fw-bold text-primary">@stats.LegajosActivos</div>
+                                    <small class="text-muted" style="font-size:.7rem">Legajos</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-1">
+                                    <div class="fs-5 fw-bold text-success">@stats.TotalFichadas.ToString("N0")</div>
+                                    <small class="text-muted" style="font-size:.7rem">Fichadas</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-1">
+                                    <div class="fs-5 fw-bold text-info">@stats.TotalUsuarios</div>
+                                    <small class="text-muted" style="font-size:.7rem">Usuarios</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-1 text-center mb-2">
+                            <div class="col-4">
+                                <div class="border rounded p-1">
+                                    <div class="fs-6 fw-bold">@stats.TotalSucursales</div>
+                                    <small class="text-muted" style="font-size:.7rem">Sucursales</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-1">
+                                    <div class="fs-6 fw-bold">@stats.TotalTerminales</div>
+                                    <small class="text-muted" style="font-size:.7rem">Terminales</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-1">
+                                    <div class="fs-6 fw-bold">@stats.TotalMoviles</div>
+                                    <small class="text-muted" style="font-size:.7rem">Moviles</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-2" />
+
+                        @if (stats.UltimaFichada.HasValue)
+                        {
+                            <dl class="row mb-0 small">
+                                <dt class="col-6">Ultima fichada</dt>
+                                <dd class="col-6 text-end">@stats.UltimaFichada.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                                <dt class="col-6">Fichadas ese dia</dt>
+                                <dd class="col-6 text-end"><span class="badge bg-primary">@stats.FichadasUltimoDia</span></dd>
+
+                                <dt class="col-6">Legajos ficharon</dt>
+                                <dd class="col-6 text-end"><span class="badge bg-success">@stats.LegajosUltimoDia</span></dd>
+                            </dl>
+
+                            <div class="small mt-1">
+                                <div class="text-muted mb-1" style="font-size:.75rem">Origen fichadas (ultimo dia):</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (stats.FichadasHuella > 0)
+                                    {
+                                        <span class="badge bg-primary"><i class="bi bi-fingerprint"></i> @stats.FichadasHuella</span>
+                                    }
+                                    @if (stats.FichadasPIN > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-dialpad"></i> @stats.FichadasPIN</span>
+                                    }
+                                    @if (stats.FichadasMovil > 0)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-phone"></i> @stats.FichadasMovil</span>
+                                    }
+                                    @if (stats.FichadasManual > 0)
+                                    {
+                                        <span class="badge bg-info"><i class="bi bi-pencil-square"></i> @stats.FichadasManual</span>
+                                    }
+                                    @if (stats.FichadasWeb > 0)
+                                    {
+                                        <span class="badge bg-dark"><i class="bi bi-globe"></i> @stats.FichadasWeb</span>
+                                    }
+                                    @if (stats.FichadasDemo > 0)
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-play-circle"></i> @stats.FichadasDemo</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <hr class="my-2" />
+                            <dl class="row mb-0 small">
+                                <dt class="col-8">Dias con actividad <span class="text-muted fw-normal">(ult. 30d)</span></dt>
+                                <dd class="col-4 text-end">
+                                    <span class="badge @(stats.DiasActivos30 >= 20 ? "bg-success" : stats.DiasActivos30 >= 10 ? "bg-warning text-dark" : stats.DiasActivos30 > 0 ? "bg-danger" : "bg-secondary")">
+                                        @stats.DiasActivos30 / 30
+                                    </span>
+                                </dd>
+                            </dl>
+                            <hr class="my-2" />
+                            <div class="small">
+                                <div class="text-muted mb-2" style="font-size:.75rem">Fichadas por dispositivo (ult. 15 dias):</div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-center flex-fill">
+                                        <div class="border rounded p-1 mx-1">
+                                            <i class="bi bi-fingerprint text-primary fs-5"></i>
+                                            <div class="fw-bold">@stats.Fichadas15dHuella</div>
+                                            <div class="text-muted" style="font-size:.65rem">Huella</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center flex-fill">
+                                        <div class="border rounded p-1 mx-1">
+                                            <i class="bi bi-dialpad text-warning fs-5"></i>
+                                            <div class="fw-bold">@stats.Fichadas15dPIN</div>
+                                            <div class="text-muted" style="font-size:.65rem">PIN</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center flex-fill">
+                                        <div class="border rounded p-1 mx-1">
+                                            <i class="bi bi-phone text-success fs-5"></i>
+                                            <div class="fw-bold">@stats.Fichadas15dMovil</div>
+                                            <div class="text-muted" style="font-size:.65rem">Celular</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (stats.Fichadas15dTotal > 0)
+                                {
+                                    <div class="text-muted text-center mt-1" style="font-size:.7rem">
+                                        Total: @stats.Fichadas15dTotal fichadas en 15 dias
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small text-center mb-0"><i class="bi bi-inbox me-1"></i>Sin fichadas registradas</p>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3 border-warning">
+                <div class="card-header bg-warning bg-opacity-10 text-warning-emphasis">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Zona peligrosa
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <button class="btn btn-outline-warning btn-sm" @onclick="MostrarConfirmLimpiar">
+                        <i class="bi bi-eraser me-1"></i>Limpiar Empresa
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" @onclick="MostrarConfirmEliminar">
+                        <i class="bi bi-trash me-1"></i>Eliminar Empresa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Limpiar Empresa *@
+@if (showLimpiarModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-warning">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Limpiar Empresa</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <strong>Esta accion eliminara todos los datos transaccionales de "@empresa?.Nombre":</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Fichadas</li>
+                            <li>Vacaciones</li>
+                            <li>Incidencias asignadas a legajos</li>
+                            <li>Eventos de calendario</li>
+                            <li>Terminales moviles registradas</li>
+                            <li>Codigos de activacion movil</li>
+                        </ul>
+                    </div>
+                    <p class="mb-2"><strong>Se mantienen:</strong> usuarios, sucursales, sectores, categorias, horarios, terminales, legajos, huellas, PINs, incidencias, feriados, noticias y codigo de activacion.</p>
+                    <p class="text-danger fw-bold">Esta accion no se puede deshacer.</p>
+
+                    @if (!limpiarConfirmado)
+                    {
+                        <button class="btn btn-warning w-100" @onclick="() => limpiarConfirmado = true">
+                            Entiendo, quiero continuar
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <label class="form-label fw-bold">Escriba el nombre de la empresa para confirmar:</label>
+                            <input type="text" class="form-control" @bind="confirmNombre" placeholder="@empresa?.Nombre" />
+                        </div>
+                    }
+                </div>
+                @if (limpiarConfirmado)
+                {
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
+                        <button class="btn btn-warning" disabled="@(confirmNombre != empresa?.Nombre || procesando)"
+                                @onclick="EjecutarLimpiar">
+                            @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            Limpiar Empresa
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Eliminar Empresa *@
+@if (showEliminarModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger bg-opacity-10">
+                    <h5 class="modal-title"><i class="bi bi-trash text-danger me-2"></i>Eliminar Empresa</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger mb-3">
+                        <strong>Esta accion eliminara ABSOLUTAMENTE TODO de "@empresa?.Nombre":</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Todos los datos transaccionales (fichadas, vacaciones, etc.)</li>
+                            <li>Todos los legajos, huellas, PINs</li>
+                            <li>Todas las sucursales, sectores, categorias, horarios</li>
+                            <li>Todas las terminales (desktop y moviles)</li>
+                            <li>Todos los usuarios del portal</li>
+                            <li>Todas las licencias asociadas</li>
+                            <li>La empresa misma</li>
+                        </ul>
+                    </div>
+                    <p class="text-danger fw-bold">Esta accion es IRREVERSIBLE. No quedara nada.</p>
+
+                    @if (!eliminarConfirmado)
+                    {
+                        <button class="btn btn-danger w-100" @onclick="() => eliminarConfirmado = true">
+                            Entiendo, quiero continuar
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger border-danger">
+                            <label class="form-label fw-bold">Escriba el nombre de la empresa para confirmar:</label>
+                            <input type="text" class="form-control" @bind="confirmNombre" placeholder="@empresa?.Nombre" />
+                        </div>
+                    }
+                </div>
+                @if (eliminarConfirmado)
+                {
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
+                        <button class="btn btn-danger" disabled="@(confirmNombre != empresa?.Nombre || procesando)"
+                                @onclick="EjecutarEliminar">
+                            @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            Eliminar Empresa Permanentemente
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 }
@@ -321,6 +594,15 @@ else
     private List<DigitalPlus.Licencias.Entidades.TipoIdentificacionFiscal>? tiposId;
     private string? mensaje;
     private bool codigoCopiado;
+    private DigitalPlus.Licencias.Services.EmpresaStats? stats;
+
+    // Limpiar / Eliminar
+    private bool showLimpiarModal;
+    private bool showEliminarModal;
+    private bool limpiarConfirmado;
+    private bool eliminarConfirmado;
+    private string confirmNombre = "";
+    private bool procesando;
 
     private string selectedPaisId => empresa?.PaisId?.ToString() ?? "";
     private string selectedTipoIdFiscalId => empresa?.TipoIdentificacionFiscalId?.ToString() ?? "";
@@ -338,6 +620,16 @@ else
 
         var todas = await Repo.GetLicenciasAsync(empresa.CompanyId);
         licencias = todas.Where(l => l.CompanyId == empresa.CompanyId).ToList();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                stats = await MTService.GetEmpresaStatsAsync(empresa.CompanyId);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch { /* stats quedan null, se muestra "Cargando..." */ }
+        });
     }
 
     private async Task OnPaisChangedEvent(ChangeEventArgs e)
@@ -416,4 +708,91 @@ else
         "Suspendida" => "bg-warning text-dark",
         _ => "bg-danger"
     };
+
+    private void MostrarConfirmLimpiar()
+    {
+        showLimpiarModal = true;
+        showEliminarModal = false;
+        limpiarConfirmado = false;
+        confirmNombre = "";
+        mensaje = null;
+    }
+
+    private void MostrarConfirmEliminar()
+    {
+        showEliminarModal = true;
+        showLimpiarModal = false;
+        eliminarConfirmado = false;
+        confirmNombre = "";
+        mensaje = null;
+    }
+
+    private void CerrarModales()
+    {
+        showLimpiarModal = false;
+        showEliminarModal = false;
+        limpiarConfirmado = false;
+        eliminarConfirmado = false;
+        confirmNombre = "";
+    }
+
+    private async Task EjecutarLimpiar()
+    {
+        if (empresa == null || confirmNombre != empresa.Nombre) return;
+        procesando = true;
+        StateHasChanged();
+
+        try
+        {
+            var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
+            if (mtEmpresaId == null)
+            {
+                mensaje = "No se encontro la empresa en la base de datos multi-tenant.";
+                CerrarModales();
+                return;
+            }
+
+            var registros = await MTService.LimpiarEmpresaAsync(mtEmpresaId.Value);
+            stats = await MTService.GetEmpresaStatsAsync(empresa.CompanyId);
+            CerrarModales();
+            mensaje = $"Empresa limpiada correctamente. Se eliminaron {registros} registros transaccionales.";
+        }
+        catch (Exception ex)
+        {
+            CerrarModales();
+            mensaje = $"Error al limpiar: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private async Task EjecutarEliminar()
+    {
+        if (empresa == null || confirmNombre != empresa.Nombre) return;
+        procesando = true;
+        StateHasChanged();
+
+        try
+        {
+            var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
+            if (mtEmpresaId == null)
+            {
+                mensaje = "No se encontro la empresa en la base de datos multi-tenant.";
+                CerrarModales();
+                return;
+            }
+
+            var adminConnStr = Config.GetConnectionString("DefaultConnection")!;
+            await MTService.EliminarEmpresaAsync(mtEmpresaId.Value, empresa.Id, empresa.CompanyId, adminConnStr);
+            Nav.NavigateTo("/empresas");
+        }
+        catch (Exception ex)
+        {
+            CerrarModales();
+            mensaje = $"Error al eliminar: {ex.Message}";
+            procesando = false;
+        }
+    }
 }

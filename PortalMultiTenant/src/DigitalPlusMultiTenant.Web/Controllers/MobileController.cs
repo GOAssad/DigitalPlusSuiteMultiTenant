@@ -75,10 +75,28 @@ public class MobileController : ControllerBase
             bool dispositivoRegistrado = false;
             if (!string.IsNullOrEmpty(deviceId))
             {
+                // Primero buscar por DeviceId exacto
                 dispositivoRegistrado = await _db.TerminalesMoviles
                     .IgnoreQueryFilters()
                     .AnyAsync(t => t.DeviceId == deviceId && t.LegajoId == legajo.Id
                                && t.EmpresaId == legajo.EmpresaId && t.Activo);
+
+                // Si no matchea pero el legajo tiene terminal activa, actualizar DeviceId
+                // (el usuario cambió browser/borró cache/reinstalo PWA)
+                if (!dispositivoRegistrado)
+                {
+                    var terminalExistente = await _db.TerminalesMoviles
+                        .IgnoreQueryFilters()
+                        .FirstOrDefaultAsync(t => t.LegajoId == legajo.Id
+                                           && t.EmpresaId == legajo.EmpresaId && t.Activo);
+                    if (terminalExistente != null)
+                    {
+                        terminalExistente.DeviceId = deviceId;
+                        terminalExistente.UltimoUso = DateTime.UtcNow;
+                        await _db.SaveChangesAsync();
+                        dispositivoRegistrado = true;
+                    }
+                }
             }
 
             // Generar JWT

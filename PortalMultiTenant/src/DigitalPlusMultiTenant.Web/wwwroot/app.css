@@ -130,6 +130,36 @@ h1:focus {
     border-color: rgba(201, 168, 76, 0.3);
 }
 
+/* Form contrast: labels vs inputs */
+.form-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--dp-dark-3);
+    margin-bottom: 0.25rem;
+}
+
+.form-control, .form-select {
+    background-color: #fff;
+    border: 1.5px solid #c8cdd3;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.form-control:hover, .form-select:hover {
+    border-color: #9ba3ad;
+}
+
+.card-header {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background-color: var(--dp-dark-2) !important;
+    color: var(--dp-text-light) !important;
+    border-bottom: 2px solid var(--dp-gold);
+}
+
 /* Table styling */
 .table thead th {
     background-color: var(--dp-dark-2);

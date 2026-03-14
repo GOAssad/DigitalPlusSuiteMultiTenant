@@ -458,6 +458,16 @@ function init() {
         tab.addEventListener("click", () => handleTab(tab.dataset.tab));
     });
 
+    // Check for activation code in URL (deep link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const activateCode = urlParams.get("code");
+    if (activateCode) {
+        const codeInput = document.getElementById("input-codigo");
+        if (codeInput) codeInput.value = activateCode;
+        // Clean URL without reload
+        window.history.replaceState({}, "", window.location.pathname);
+    }
+
     // Restore session
     if (state.token && state.user) {
         if (state.deviceRegistered) {

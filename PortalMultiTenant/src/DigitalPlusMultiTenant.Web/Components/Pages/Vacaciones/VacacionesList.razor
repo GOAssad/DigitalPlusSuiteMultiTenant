@@ -21,7 +21,9 @@
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
             <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
         }
-        <a href="vacaciones/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nueva Vacacion</a>
+        <AuthorizeView Roles="SuperAdmin,AdminEmpresa,Operador">
+            <a href="vacaciones/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nueva Vacacion</a>
+        </AuthorizeView>
     </div>
 </div>
 
@@ -87,7 +89,9 @@
                                 <td><span class="badge bg-info">@(v.FechaHasta.DayNumber - v.FechaDesde.DayNumber + 1)</span></td>
                                 <td class="text-muted">@v.Nota</td>
                                 <td class="text-end">
-                                    <a href="vacaciones/editar/@v.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                    <AuthorizeView Roles="SuperAdmin,AdminEmpresa,Operador">
+                                        <a href="vacaciones/editar/@v.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                    </AuthorizeView>
                                 </td>
                             </tr>
                         }

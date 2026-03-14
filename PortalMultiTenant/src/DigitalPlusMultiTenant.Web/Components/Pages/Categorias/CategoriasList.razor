@@ -21,7 +21,9 @@
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
             <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
         }
-        <a href="categorias/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nueva Categoria</a>
+        <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+            <a href="categorias/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nueva Categoria</a>
+        </AuthorizeView>
     </div>
 </div>
 
@@ -79,10 +81,12 @@
                                 <td><span class="badge bg-info">@c.Legajos.Count</span></td>
                                 <td><span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">@(c.IsActive ? "Activa" : "Inactiva")</span></td>
                                 <td class="text-end">
-                                    <a href="categorias/editar/@c.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(c)">
-                                        <i class="bi @(c.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
-                                    </button>
+                                    <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+                                        <a href="categorias/editar/@c.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(c)">
+                                            <i class="bi @(c.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
+                                        </button>
+                                    </AuthorizeView>
                                 </td>
                             </tr>
                         }

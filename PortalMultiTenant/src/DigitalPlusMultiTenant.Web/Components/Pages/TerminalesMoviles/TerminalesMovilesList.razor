@@ -8,6 +8,8 @@
 @rendermode InteractiveServer
 
 @inject ITenantService Tenant
+@inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
+@inject NavigationManager NavManager
 
 <PageTitle>Terminales Moviles - DigitalPlus</PageTitle>
 
@@ -79,17 +81,19 @@
                                 <td class="text-muted small">@(t.UltimoUso?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")</td>
                                 <td><span class="badge @(t.Activo ? "bg-success" : "bg-danger")">@(t.Activo ? "Activo" : "Inactivo")</span></td>
                                 <td class="text-end">
-                                    @if (t.Activo)
-                                    {
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Desactivar(t)"
-                                                title="Desactivar dispositivo">
-                                            <i class="bi bi-x-circle"></i>
+                                    <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+                                        @if (t.Activo)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Desactivar(t)"
+                                                    title="Desactivar dispositivo">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
+                                        <button class="btn btn-sm btn-outline-success ms-1" @onclick="() => GenerarCodigo(t.Legajo)"
+                                                title="Generar codigo de activacion">
+                                            <i class="bi bi-qr-code"></i>
                                         </button>
-                                    }
-                                    <button class="btn btn-sm btn-outline-success ms-1" @onclick="() => GenerarCodigo(t.Legajo)"
-                                            title="Generar codigo de activacion">
-                                        <i class="bi bi-qr-code"></i>
-                                    </button>
+                                    </AuthorizeView>
                                 </td>
                             </tr>
                         }
@@ -115,6 +119,18 @@
                         <span style="font-family: monospace; font-size: 1.8rem; font-weight: bold; letter-spacing: 4px;">@codigoGenerado</span>
                     </div>
                     <p class="text-muted small mb-0">Valido por 24 horas</p>
+                    @if (emailEnviado)
+                    {
+                        <div class="alert alert-success small mt-2 mb-0 py-1">
+                            <i class="bi bi-check-circle me-1"></i>Email enviado a <strong>@emailDestino</strong>
+                        </div>
+                    }
+                    else if (emailError != null)
+                    {
+                        <div class="alert alert-warning small mt-2 mb-0 py-1">
+                            <i class="bi bi-exclamation-triangle me-1"></i>@emailError
+                        </div>
+                    }
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-primary btn-sm" @onclick="CerrarModal">Cerrar</button>
@@ -133,6 +149,9 @@
     private CancellationTokenSource? _debounceToken;
     private string? codigoGenerado;
     private string? codigoEmpleado;
+    private bool emailEnviado;
+    private string? emailDestino;
+    private string? emailError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -199,6 +218,10 @@
 
     private async Task GenerarCodigo(Legajo legajo)
     {
+        emailEnviado = false;
+        emailError = null;
+        emailDestino = null;
+
         var codigo = GenerarCodigoAleatorio(8);
         var activacion = new CodigoActivacionMovil
         {
@@ -214,12 +237,62 @@
 
         codigoGenerado = codigo;
         codigoEmpleado = $"{legajo.Apellido}, {legajo.Nombre}";
+
+        // Enviar email automáticamente si el legajo tiene email
+        if (!string.IsNullOrWhiteSpace(legajo.Email))
+        {
+            try
+            {
+                var baseUrl = NavManager.BaseUri.TrimEnd('/');
+                var link = $"{baseUrl}/mobile/?code={codigo}";
+                var nombre = legajo.Nombre ?? legajo.Apellido ?? "empleado";
+
+                var html = $@"
+                    <div style='font-family: Segoe UI, Arial, sans-serif; max-width: 480px; margin: 0 auto;'>
+                        <div style='background: #0B1120; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+                            <h2 style='color: #C9A84C; margin: 0;'>Digital One</h2>
+                        </div>
+                        <div style='background: #ffffff; padding: 24px; border: 1px solid #e0e0e0;'>
+                            <p>Hola <strong>{nombre}</strong>,</p>
+                            <p>Se genero un codigo de activacion para registrar tu dispositivo movil en el sistema de fichaje:</p>
+                            <div style='background: #FFF8E1; border: 2px solid #FFB300; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;'>
+                                <span style='font-family: monospace; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #333;'>{codigo}</span>
+                            </div>
+                            <p>O simplemente hace click en el siguiente boton:</p>
+                            <div style='text-align: center; margin: 20px 0;'>
+                                <a href='{link}' style='background: #C9A84C; color: #050810; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;'>
+                                    Activar dispositivo
+                                </a>
+                            </div>
+                            <p style='color: #888; font-size: 13px;'>Este codigo es valido por 24 horas. Si no solicitaste esta activacion, ignora este mensaje.</p>
+                        </div>
+                        <div style='background: #f5f5f5; padding: 12px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;'>
+                            <small style='color: #999;'>Digital One by IntegraIA Technology</small>
+                        </div>
+                    </div>";
+
+                await EmailService.SendAsync(legajo.Email, "Codigo de activacion - Digital One", html);
+                emailEnviado = true;
+                emailDestino = legajo.Email;
+            }
+            catch (Exception ex)
+            {
+                emailError = $"No se pudo enviar email: {ex.Message}";
+            }
+        }
+        else
+        {
+            emailError = "El legajo no tiene email cargado. Comparta el codigo manualmente.";
+        }
     }
 
     private void CerrarModal()
     {
         codigoGenerado = null;
         codigoEmpleado = null;
+        emailEnviado = false;
+        emailError = null;
+        emailDestino = null;
     }
 
     private static string GenerarCodigoAleatorio(int longitud)

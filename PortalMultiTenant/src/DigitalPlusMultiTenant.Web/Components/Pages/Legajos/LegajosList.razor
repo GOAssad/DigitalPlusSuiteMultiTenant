@@ -21,7 +21,9 @@
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
             <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
         }
-        <a href="legajos/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Legajo</a>
+        <AuthorizeView Roles="SuperAdmin,AdminEmpresa,Operador">
+            <a href="legajos/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Legajo</a>
+        </AuthorizeView>
     </div>
 </div>
 
@@ -111,10 +113,12 @@
                                 <td>@l.Horario?.Nombre</td>
                                 <td><span class="badge @(l.IsActive ? "bg-success" : "bg-danger")">@(l.IsActive ? "Activo" : "Inactivo")</span></td>
                                 <td class="text-end">
-                                    <a href="legajos/editar/@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(l)">
-                                        <i class="bi @(l.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
-                                    </button>
+                                    <AuthorizeView Roles="SuperAdmin,AdminEmpresa,Operador">
+                                        <a href="legajos/editar/@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(l)">
+                                            <i class="bi @(l.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
+                                        </button>
+                                    </AuthorizeView>
                                 </td>
                             </tr>
                         }

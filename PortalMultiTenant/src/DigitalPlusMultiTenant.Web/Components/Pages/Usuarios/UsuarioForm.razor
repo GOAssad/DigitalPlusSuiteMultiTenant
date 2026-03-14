@@ -41,9 +41,13 @@
                         <option value="">-- Seleccionar --</option>
                         @foreach (var r in roles)
                         {
-                            <option value="@r">@r</option>
+                            <option value="@r">@r — @DescripcionRol(r)</option>
                         }
                     </InputSelect>
+                    @if (!string.IsNullOrEmpty(model.Rol))
+                    {
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>@DescripcionRol(model.Rol)</small>
+                    }
                 </div>
                 @if (!IsEdit)
                 {
@@ -111,7 +115,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        roles = await RoleManager.Roles.Select(r => r.Name!).OrderBy(r => r).ToListAsync();
+        roles = await RoleManager.Roles
+            .Where(r => r.Name != "SuperAdmin")
+            .Select(r => r.Name!).OrderBy(r => r).ToListAsync();
 
         if (IsEdit)
         {
@@ -182,6 +188,14 @@
         successMessage = "Contraseña actualizada";
         newPassword = null;
     }
+
+    private static string DescripcionRol(string rol) => rol switch
+    {
+        "AdminEmpresa" => "Acceso total a la empresa",
+        "Operador" => "Gestiona legajos, fichadas y vacaciones",
+        "Consulta" => "Solo lectura, reportes y exportacion",
+        _ => ""
+    };
 
     private class UsuarioModel
     {
