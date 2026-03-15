@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 8.0
-**Fecha:** 2026-03-14
+**Version:** 9.0
+**Fecha:** 2026-03-15
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -107,6 +107,7 @@ Desde el menu lateral, acceda a **Empresas**. Vera un listado con todas las empr
 - Busqueda por nombre o Company ID
 - Filtro por estado (activa, trial, suspendida)
 - Boton **Editar** para acceder al detalle de cada empresa
+- Boton **Eliminar** para eliminar una empresa directamente desde el listado (con doble confirmacion)
 
 > [CAPTURA: Listado de empresas con filtro y columnas (Nombre, CUIT, Estado, Fecha alta)]
 
@@ -557,6 +558,7 @@ La pagina de Configuracion de Planes permite definir los parametros y limites de
 | **MaxLegajos** | Cantidad maxima de legajos que la empresa puede crear | Free=5, Basic=25, Pro=100, Enterprise=0 (ilimitado) |
 | **MaxSucursales** | Cantidad maxima de sucursales | Free=1, Basic=3, Pro=10, Enterprise=0 (ilimitado) |
 | **MaxFichadasRolling30d** | Cantidad maxima de fichadas permitidas en los ultimos 30 dias (rolling) | Free=200, resto=0 (ilimitado) |
+| **MaxTerminalesMoviles** | Cantidad maxima de terminales moviles permitidas (0=ilimitado) | Free=1, Basic=3, Pro=10, Enterprise=0 (ilimitado) |
 | **MobileHabilitado** | Si permite fichado desde dispositivo movil (1=si, 0=no) | Todos=1 |
 | **DuracionDias** | Duracion de la licencia en dias desde la activacion | Free=0 (sin vencimiento), resto=365 |
 | **GraciaDias** | Dias de gracia despues del vencimiento antes de bloquear | Free=0, resto=7 |
@@ -756,6 +758,106 @@ Permite a las apps desktop verificar si la empresa esta activa. Pensado para ver
   "nombre": "Kosiuko S.A."
 }
 ```
+
+### API de Validacion Free
+
+```
+POST /api/validar-free
+```
+
+Validacion previa antes de registrar una empresa Free. Verifica que el email no este ya registrado en otra empresa.
+
+**Request:**
+
+```json
+{
+  "NombreEmpresa": "Mi Empresa S.A.",
+  "Email": "admin@miempresa.com",
+  "Pais": "Argentina"
+}
+```
+
+**Response (exito - 200):**
+
+```json
+{
+  "valid": true
+}
+```
+
+**Response (email duplicado - 400):**
+
+```json
+{
+  "error": "Ya existe una empresa registrada con ese email"
+}
+```
+
+### API de Activacion Free
+
+```
+POST /api/activar-free
+```
+
+Registra una empresa nueva con plan Free sin necesidad de codigo de activacion. El endpoint es **idempotente**: si se llama dos veces con el mismo email, la segunda vez retorna los datos de la empresa existente sin crear una nueva.
+
+**Request:**
+
+```json
+{
+  "NombreEmpresa": "Mi Empresa S.A.",
+  "Email": "admin@miempresa.com",
+  "Pais": "Argentina"
+}
+```
+
+**Response (exito - 200):**
+
+```json
+{
+  "connectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusMultiTenant;User Id=dp_app_svc;...",
+  "adminConnectionString": "Server=sd-1985882-l.ferozo.com,11434;Database=DigitalPlusAdmin;...",
+  "empresaId": 5,
+  "adminEmpresaId": 10,
+  "companyId": "mi-empresa-sa",
+  "nombreEmpresa": "Mi Empresa S.A.",
+  "databaseName": "DigitalPlusMultiTenant"
+}
+```
+
+**Rollback automatico:** Si el provisioning multi-tenant falla (por ejemplo, error de conexion a Ferozo), el sistema realiza rollback manual eliminando los datos parciales creados en DigitalPlusAdmin. No queda basura en la base de datos.
+
+**Email de bienvenida:** Al completarse exitosamente el registro, se envia automaticamente un email de bienvenida al email proporcionado con las credenciales de acceso al Portal Web (email + password temporal). El envio es fire-and-forget (no bloquea la respuesta).
+
+### API de Paises
+
+```
+GET /api/paises
+```
+
+Retorna la lista de paises disponibles para el registro Free. Usado por el instalador liviano para popular el combo de seleccion de pais.
+
+**Response (200):**
+
+```json
+[
+  { "nombre": "Argentina" },
+  { "nombre": "Chile" },
+  { "nombre": "Uruguay" },
+  ...
+]
+```
+
+### MaxTerminalesMoviles
+
+El parametro `MaxTerminalesMoviles` en PlanConfig controla la cantidad maxima de dispositivos moviles que una empresa puede registrar:
+
+- **0** = ilimitado (sin restriccion)
+- **Entero positivo** = cantidad maxima de terminales moviles permitidas
+
+La validacion se aplica en el endpoint `RegistrarDispositivo` del `MobileController`. Si la empresa alcanza el limite, el registro de nuevos dispositivos es rechazado.
+
+El checkbox **MobileHabilitado** en el detalle de empresa del Portal de Licencias habilita o deshabilita el modulo movil completo. MaxTerminalesMoviles solo aplica cuando MobileHabilitado esta activo.
 
 ### Notas generales de las APIs
 

@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 9.0
-**Fecha:** 2026-03-14
+**Version:** 10.0
+**Fecha:** 2026-03-15
 
 ---
 
@@ -143,12 +143,15 @@ Haga clic en **Finalizar**. Opcionalmente puede marcar ejecutar las aplicaciones
 
 ### 2.2 Instalador Liviano (Nube)
 
-Este es el instalador recomendado para la mayoria de las empresas. La base de datos esta alojada en la nube (no se necesita instalar nada de SQL Server en su equipo). Es rapido y liviano (~25 MB), pero requiere un **codigo de activacion** proporcionado por el administrador del sistema.
+Este es el instalador recomendado para la mayoria de las empresas. La base de datos esta alojada en la nube (no se necesita instalar nada de SQL Server en su equipo). Es rapido y liviano (~25 MB). Soporta dos modalidades de instalacion:
+
+- **Con codigo de activacion:** Para empresas que ya fueron dadas de alta por el administrador del sistema.
+- **Plan Free (sin codigo):** Para nuevas empresas que desean registrarse directamente con el plan gratuito.
 
 #### Que necesita antes de empezar
 
 1. El archivo del instalador: `DigitalPlus_Cloud_Setup_v1.0.exe`
-2. El **codigo de activacion** de su empresa (proporcionado por su proveedor)
+2. El **codigo de activacion** de su empresa (si tiene uno), **o** datos para registrarse como Free (nombre de empresa, email, pais)
 3. Conexion a internet (obligatoria durante la instalacion)
 
 #### Paso 1 - Ejecutar el instalador
@@ -175,9 +178,20 @@ Haga clic en **Siguiente**.
 
 > [CAPTURA: Pantalla de seleccion de accesos directos]
 
-#### Paso 4 - Codigo de Activacion
+#### Paso 4 - Tipo de Instalacion
 
-Esta es la pantalla mas importante del proceso.
+El instalador le presenta dos opciones:
+
+- **Tengo un codigo de activacion:** Para empresas que ya fueron dadas de alta por el administrador.
+- **Quiero registrarme con plan Free:** Para nuevas empresas que desean empezar con el plan gratuito sin necesidad de un codigo.
+
+Seleccione la opcion que corresponda y haga clic en **Siguiente**.
+
+> [CAPTURA: Pantalla de seleccion de tipo de instalacion: Codigo o Free]
+
+#### Paso 4a - Con Codigo de Activacion
+
+Si selecciono la opcion de codigo de activacion:
 
 1. Escriba o pegue el **codigo de activacion** en el campo de texto. El codigo tiene formato `XXXX-XXXX-XXXX-XXXX-XXXX-XXXX` (puede variar en longitud).
 2. Haga clic en el boton **Validar Codigo**
@@ -188,6 +202,25 @@ Esta es la pantalla mas importante del proceso.
 > [CAPTURA: Pantalla de ingreso de codigo de activacion con campo de texto y boton Validar]
 
 > **Importante:** Sin un codigo valido no podra continuar con la instalacion. Si no tiene el codigo, contacte al administrador del sistema. Cada codigo esta asociado a una empresa especifica.
+
+#### Paso 4b - Registro Free (sin codigo)
+
+Si selecciono el plan Free:
+
+1. Ingrese el **nombre de su empresa** (razon social o nombre comercial)
+2. Ingrese su **email** (sera el email del administrador y el acceso al Portal Web)
+3. Seleccione su **pais** del combo desplegable (la lista se carga dinamicamente desde el servidor via API `/api/paises`)
+4. Haga clic en **Siguiente**
+
+El sistema realiza una **validacion previa** del email (via API `/api/validar-free`). Si el email ya esta registrado en otra empresa, se muestra un mensaje de error y no permite continuar.
+
+> [CAPTURA: Pantalla de registro Free con campos: nombre empresa, email, pais]
+
+> **Importante:** El registro Free se ejecuta **despues de la instalacion** (post-install). Si el usuario cancela la instalacion antes de que finalice, no queda ningun dato parcial en el servidor. Esto evita que se cree "basura" en caso de cancelacion.
+
+Al completarse el registro exitosamente:
+- Se envia automaticamente un **email de bienvenida** con las credenciales de acceso al Portal Web (email + contraseña temporal)
+- Se muestra un **mensaje de confirmacion** indicando que las credenciales fueron enviadas al email proporcionado
 
 #### Paso 5 - Instalacion
 
