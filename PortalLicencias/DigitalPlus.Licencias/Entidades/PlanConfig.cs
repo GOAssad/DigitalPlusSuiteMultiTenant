@@ -1,0 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace DigitalPlus.Licencias.Entidades;
+
+[Table("PlanConfig")]
+public class PlanConfig
+{
+    public int Id { get; set; }
+
+    [Required, MaxLength(50)]
+    public string Plan { get; set; } = null!;
+
+    [Required, MaxLength(100)]
+    public string Parametro { get; set; } = null!;
+
+    public int Valor { get; set; }
+
+    [MaxLength(200)]
+    public string? Descripcion { get; set; }
+}

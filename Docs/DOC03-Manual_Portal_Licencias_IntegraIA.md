@@ -1,6 +1,6 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 7.0
+**Version:** 8.0
 **Fecha:** 2026-03-14
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
@@ -531,7 +531,69 @@ El SuperAdmin es el usuario de IntegraIA con acceso cross-tenant (puede acceder 
 
 ---
 
-## 13. FLUJO OPERATIVO COMPLETO
+## 13. CONFIGURACION DE PLANES
+
+### Acceso
+
+Menu lateral > **Planes**
+
+### Que es
+
+La pagina de Configuracion de Planes permite definir los parametros y limites de cada plan de licencia. Los valores se almacenan en la tabla `PlanConfig` de DigitalPlusAdmin y se aplican al crear nuevas licencias.
+
+### Planes disponibles
+
+| Plan | Descripcion |
+|---|---|
+| **Free** | Plan gratuito sin limite de tiempo. Funcionalidad limitada. |
+| **Basic** | Plan de pago basico. 1 ano de duracion. |
+| **Pro** | Plan profesional con mas capacidad. 1 ano de duracion. |
+| **Enterprise** | Plan empresarial sin limites funcionales. 1 ano de duracion. |
+
+### Parametros configurables
+
+| Parametro | Descripcion | Valores ejemplo |
+|---|---|---|
+| **MaxLegajos** | Cantidad maxima de legajos que la empresa puede crear | Free=5, Basic=25, Pro=100, Enterprise=0 (ilimitado) |
+| **MaxSucursales** | Cantidad maxima de sucursales | Free=1, Basic=3, Pro=10, Enterprise=0 (ilimitado) |
+| **MaxFichadasRolling30d** | Cantidad maxima de fichadas permitidas en los ultimos 30 dias (rolling) | Free=200, resto=0 (ilimitado) |
+| **MobileHabilitado** | Si permite fichado desde dispositivo movil (1=si, 0=no) | Todos=1 |
+| **DuracionDias** | Duracion de la licencia en dias desde la activacion | Free=0 (sin vencimiento), resto=365 |
+| **GraciaDias** | Dias de gracia despues del vencimiento antes de bloquear | Free=0, resto=7 |
+
+**Convencion:** El valor `0` en parametros de cantidad (legajos, sucursales, fichadas) significa **ilimitado**. En duracion, `0` significa **sin vencimiento**.
+
+### Como editar un parametro
+
+1. En la card del plan, haga clic en el icono de lapiz junto al valor
+2. Modifique el valor (solo acepta numeros >= 0)
+3. Haga clic en el check verde para guardar
+
+### Como agregar un nuevo parametro
+
+En la seccion inferior "Agregar parametro":
+1. Seleccione el plan
+2. Escriba el nombre del parametro (ej: `MaxTerminales`)
+3. Ingrese el valor
+4. Opcionalmente agregue una descripcion
+5. Click en "Agregar"
+
+> **Nota:** Al agregar un parametro nuevo, debe repetir la operacion para cada plan si desea que todos lo tengan.
+
+### Comportamiento al vencer un plan pago
+
+Cuando un plan Basic/Pro/Enterprise vence:
+1. Se activa un periodo de gracia (por defecto 7 dias)
+2. Durante la gracia, el sistema funciona normalmente pero muestra advertencias
+3. Despues de la gracia, el sistema se bloquea hasta renovar
+
+### Relacion con la tabla Licencias
+
+Cuando se crea una licencia para una empresa, los valores de `MaxLegajos`, `MaxSucursales` y `MaxFichadasMes` se copian desde PlanConfig. Esto permite hacer overrides por cliente si es necesario (editando la licencia individual sin cambiar el plan global).
+
+---
+
+## 14. FLUJO OPERATIVO COMPLETO
 
 ### Caso: Nuevo cliente contrata DigitalPlus
 
@@ -607,7 +669,7 @@ El SuperAdmin es el usuario de IntegraIA con acceso cross-tenant (puede acceder 
 
 ---
 
-## 14. APIs DEL PORTAL
+## 15. APIs DEL PORTAL
 
 ### API de Activacion
 
@@ -703,7 +765,7 @@ Permite a las apps desktop verificar si la empresa esta activa. Pensado para ver
 
 ---
 
-## 15. REFERENCIA TECNICA
+## 16. REFERENCIA TECNICA
 
 ### Estructura de bases de datos
 

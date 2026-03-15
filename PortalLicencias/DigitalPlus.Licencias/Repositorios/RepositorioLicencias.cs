@@ -339,6 +339,57 @@ public class RepositorioLicencias
         await _context.SaveChangesAsync();
     }
 
+    // --- Plan Config ---
+
+    public async Task<List<PlanConfig>> GetPlanConfigsAsync()
+    {
+        return await _context.PlanConfigs.OrderBy(p => p.Plan).ThenBy(p => p.Parametro).ToListAsync();
+    }
+
+    public async Task<List<string>> GetPlanesAsync()
+    {
+        return await _context.PlanConfigs.Select(p => p.Plan).Distinct().OrderBy(p => p).ToListAsync();
+    }
+
+    public async Task<Dictionary<string, int>> GetPlanValoresAsync(string plan)
+    {
+        return await _context.PlanConfigs
+            .Where(p => p.Plan == plan)
+            .ToDictionaryAsync(p => p.Parametro, p => p.Valor);
+    }
+
+    public async Task GuardarPlanConfigAsync(int id, int valor)
+    {
+        var config = await _context.PlanConfigs.FindAsync(id);
+        if (config != null)
+        {
+            config.Valor = valor;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task AgregarPlanConfigAsync(string plan, string parametro, int valor, string? descripcion)
+    {
+        _context.PlanConfigs.Add(new PlanConfig
+        {
+            Plan = plan,
+            Parametro = parametro,
+            Valor = valor,
+            Descripcion = descripcion
+        });
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task EliminarPlanConfigAsync(int id)
+    {
+        var config = await _context.PlanConfigs.FindAsync(id);
+        if (config != null)
+        {
+            _context.PlanConfigs.Remove(config);
+            await _context.SaveChangesAsync();
+        }
+    }
+
     // --- Log ---
 
     public async Task<List<LicenciaLog>> GetLogsAsync(int? licenciaId = null, int cantidad = 100)

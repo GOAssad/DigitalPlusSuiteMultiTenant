@@ -21,6 +21,8 @@ public class Licencia
     public string Plan { get; set; } = "free";
 
     public int MaxLegajos { get; set; } = 5;
+    public int MaxSucursales { get; set; } = 1;
+    public int MaxFichadasMes { get; set; } = 200;
 
     [MaxLength(100)]
     public string? ActivationCode { get; set; }

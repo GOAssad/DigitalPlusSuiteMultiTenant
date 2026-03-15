@@ -1,6 +1,6 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 8.0
+**Version:** 9.0
 **Fecha:** 2026-03-14
 
 ---
@@ -476,6 +476,16 @@ El Administrador genera reportes con Microsoft ReportViewer:
 
 Los reportes se pueden exportar a PDF y Excel.
 
+### 5.6 Reportes del Portal Web
+
+El portal web ofrece reportes adicionales:
+- **Asistencia Diaria:** Resumen de entradas y salidas por dia
+- **Llegadas Tarde:** Listado de empleados que ingresaron despues de su horario
+- **Ausencias:** Listado de empleados que no ficharon en dias laborables. Incluye checkbox "Incidencias" para mostrar u ocultar ausencias justificadas (incidencias registradas). Filtra por sector, motivo y legajo.
+- **Horas Trabajadas:** Resumen de horas por empleado y periodo
+
+Todos los reportes del portal se exportan a Excel y CSV.
+
 > [CAPTURA: Ejemplo de reporte de asistencia generado]
 
 ### 5.6 Licencias
@@ -532,12 +542,66 @@ Una vez dentro del portal, en la **barra superior** se muestra:
 | **Fichado Movil** | Configurar validacion de ubicacion (WiFi/GPS) por sucursal |
 | **PIN Movil** | Asignar, cambiar y resetear PIN de empleados (desde formulario de Legajos) |
 | **Movil (tab en Legajo)** | Ver estado del dispositivo, generar codigo de activacion con envio automatico por email |
-| **Incidencias** | Cargar permisos, ausencias, vacaciones |
+| **Incidencias** | Gestionar tipos de incidencia y registrar masivamente para todos los legajos |
 | **Feriados** | Gestionar dias feriados |
 | **Variables** | Configuracion general del sistema |
 | **Usuarios** | Gestionar accesos al portal (AdminEmpresa puede crear Operador y Consulta) |
 
 > [CAPTURA: Dashboard principal del portal web mostrando el menu de navegacion]
+
+### Roles de usuario
+
+El sistema maneja 4 roles con distintos niveles de acceso:
+
+| Rol | Puede ver | Puede crear/editar |
+|---|---|---|
+| **AdminEmpresa** | Todo | Todo dentro de su empresa |
+| **Operador** | Todo | Legajos, fichadas, vacaciones |
+| **Consulta** | Todo (solo lectura) | Nada |
+| **SuperAdmin** | Reservado para IntegraIA | Todo (cross-tenant) |
+
+Al crear un usuario desde Administracion > Usuarios, cada rol muestra una descripcion de sus capacidades.
+
+### Gestion de Legajos
+
+El formulario de edicion de un legajo tiene las siguientes solapas:
+
+**Datos:** Informacion personal (nombre, apellido, email, telefono), organizacion (sector, categoria, horario), estado, acceso movil y PIN.
+
+**Sucursales:** Asignar/desasignar sucursales al legajo. Determina en que sucursales puede fichar.
+
+**Huellas:** Visualizacion de huellas registradas (la registracion se realiza desde la app de escritorio Administrador).
+
+**Fichadas:** Historial completo de fichadas del legajo en un rango de fechas. Permite:
+- **Nueva fichada manual:** Registra una fichada con fecha, hora, tipo (Entrada/Salida) y sucursal. Queda marcada con origen "Manual" y el usuario que la creo.
+- **Editar fichada:** Modifica fecha, hora, tipo o sucursal de una fichada existente. Queda marcada con "Modificado por" y la fecha de modificacion (icono de lapiz amarillo).
+- **Eliminar fichada:** Con confirmacion previa.
+- Las fichadas manuales y las incidencias del periodo se muestran juntas en el listado.
+
+**Calendario:** Gestion de novedades del legajo:
+- **Registrar incidencia individual:** Seleccionar tipo de incidencia, rango de fechas y detalle. Se genera un registro por dia.
+- **Registrar vacaciones:** Rango de fechas y nota. Se muestra como bloque con el rango visible.
+- **Listado unificado:** Incidencias y vacaciones juntas, ordenadas por fecha, con filtro por rango y tipo.
+- **Eliminar:** Con confirmacion previa para vacaciones.
+- **Calendario personalizado:** Permite definir horarios especiales para el legajo (eventos de calendario).
+
+**Movil:** Estado del dispositivo movil, generar codigo de activacion con envio automatico por email.
+
+### Gestion de Incidencias
+
+Las incidencias representan motivos de ausencia o novedades (vacaciones, enfermedad, feriados, etc.). Al crear una empresa se cargan 20 incidencias por defecto:
+
+- **Legales (azul):** Vacaciones, feriado obligatorio, maternidad, paternidad, matrimonio, fallecimiento, mudanza, examen, donacion de sangre, dia del gremio.
+- **Personales (naranja):** Enfermedad, accidente laboral, ausencia con/sin aviso, llegada tarde, suspension, capacitacion, tramite personal, licencia sin goce de sueldo, trabajo remoto.
+
+**Registro masivo:** Desde la lista de incidencias, el boton verde permite registrar una incidencia para multiples legajos a la vez:
+1. Seleccionar rango de fechas
+2. Filtrar legajos por nombre, categoria, sector o sucursal
+3. Seleccionar/quitar todos o individualmente
+4. El sistema genera un registro por dia por legajo (evita duplicados)
+5. Barra de progreso visible durante la operacion
+
+**Eliminar masivo:** Mismo modal, boton "Eliminar del rango" borra los registros del rango seleccionado.
 
 > [CAPTURA: Ejemplo de consulta de fichadas desde el portal web]
 

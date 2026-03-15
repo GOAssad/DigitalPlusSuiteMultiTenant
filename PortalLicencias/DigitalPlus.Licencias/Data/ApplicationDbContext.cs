@@ -13,6 +13,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Empresa> Empresas { get; set; }
     public DbSet<Pais> Paises { get; set; }
     public DbSet<TipoIdentificacionFiscal> TiposIdentificacionFiscal { get; set; }
+    public DbSet<PlanConfig> PlanConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -51,6 +52,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<TipoIdentificacionFiscal>(e =>
         {
             e.ToTable(t => t.ExcludeFromMigrations());
+        });
+
+        builder.Entity<PlanConfig>(e =>
+        {
+            e.ToTable("PlanConfig", t => t.ExcludeFromMigrations());
         });
     }
 }

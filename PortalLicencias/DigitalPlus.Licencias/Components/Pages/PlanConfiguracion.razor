@@ -1,0 +1,215 @@
+@page "/planes"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+
+<PageTitle>Configuracion de Planes - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="bi bi-sliders me-2"></i>Configuracion de Planes</h3>
+</div>
+
+<p class="text-muted small mb-3">
+    Configure los parametros de cada plan de licencia. Los valores se aplican al crear nuevas licencias.
+    <strong>0 = ilimitado</strong> en cantidad de legajos, sucursales y fichadas.
+</p>
+
+@if (planes == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var plan in planes)
+        {
+            var planConfigs = configs.Where(c => c.Plan == plan).ToList();
+            var planColor = plan switch
+            {
+                "free" => "secondary",
+                "basic" => "primary",
+                "pro" => "warning",
+                "enterprise" => "success",
+                _ => "info"
+            };
+            var planIcon = plan switch
+            {
+                "free" => "bi-gift",
+                "basic" => "bi-star",
+                "pro" => "bi-star-fill",
+                "enterprise" => "bi-building",
+                _ => "bi-gear"
+            };
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <i class="bi @planIcon me-1"></i>
+                        <span class="badge bg-@planColor fs-6 text-uppercase">@plan</span>
+                    </div>
+                    <div class="card-body p-2">
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                @foreach (var c in planConfigs)
+                                {
+                                    <tr>
+                                        <td class="small" title="@c.Descripcion">
+                                            <i class="bi @GetParametroIcon(c.Parametro) me-1 text-muted"></i>@GetParametroLabel(c.Parametro)
+                                        </td>
+                                        <td style="width:80px">
+                                            @if (editandoId == c.Id)
+                                            {
+                                                <input type="number" min="0" class="form-control form-control-sm" @bind="editandoValor" />
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "text-success" : "")">
+                                                    @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "∞" : c.Valor.ToString("N0"))
+                                                </span>
+                                            }
+                                        </td>
+                                        <td style="width:30px">
+                                            @if (editandoId == c.Id)
+                                            {
+                                                <button class="btn btn-sm btn-success p-0 px-1" @onclick="GuardarEdicion">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-outline-primary p-0 px-1" @onclick="() => IniciarEdicion(c)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (mensaje != null)
+    {
+        <div class="alert alert-success mt-3 small py-2">@mensaje</div>
+    }
+
+    <hr class="mt-4" />
+
+    <h5 class="mb-3">Agregar parametro</h5>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label">Plan</label>
+            <select class="form-select form-select-sm" @bind="nuevoPlan">
+                @foreach (var p in planes)
+                {
+                    <option value="@p">@p</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Parametro</label>
+            <input type="text" class="form-control form-control-sm" @bind="nuevoParametro" placeholder="NombreParametro" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Valor</label>
+            <input type="number" class="form-control form-control-sm" @bind="nuevoValor" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Descripcion</label>
+            <input type="text" class="form-control form-control-sm" @bind="nuevaDescripcion" placeholder="Opcional..." />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary btn-sm w-100" @onclick="AgregarParametro">
+                <i class="bi bi-plus-lg me-1"></i>Agregar
+            </button>
+        </div>
+    </div>
+    <small class="text-muted">El nuevo parametro se agrega solo al plan seleccionado. Para agregarlo a todos los planes, repita la operacion.</small>
+}
+
+@code {
+    private List<string>? planes;
+    private List<DigitalPlus.Licencias.Entidades.PlanConfig> configs = new();
+    private int editandoId;
+    private int editandoValor;
+    private string? mensaje;
+
+    // Nuevo parametro
+    private string nuevoPlan = "free";
+    private string nuevoParametro = "";
+    private int nuevoValor;
+    private string? nuevaDescripcion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private static readonly string[] OrdenPlanes = ["free", "basic", "pro", "enterprise"];
+
+    private async Task CargarDatos()
+    {
+        configs = await Repo.GetPlanConfigsAsync();
+        planes = configs.Select(c => c.Plan).Distinct()
+            .OrderBy(p => Array.IndexOf(OrdenPlanes, p) is var i && i >= 0 ? i : 99)
+            .ToList();
+        if (planes.Any() && string.IsNullOrEmpty(nuevoPlan))
+            nuevoPlan = planes.First();
+    }
+
+    private void IniciarEdicion(DigitalPlus.Licencias.Entidades.PlanConfig c)
+    {
+        editandoId = c.Id;
+        editandoValor = c.Valor;
+    }
+
+    private async Task GuardarEdicion()
+    {
+        if (editandoValor < 0) editandoValor = 0;
+        await Repo.GuardarPlanConfigAsync(editandoId, editandoValor);
+        var config = configs.First(c => c.Id == editandoId);
+        config.Valor = editandoValor;
+        editandoId = 0;
+        mensaje = $"Parametro '{config.Parametro}' del plan '{config.Plan}' actualizado a {editandoValor}.";
+    }
+
+    private async Task AgregarParametro()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoParametro)) return;
+        await Repo.AgregarPlanConfigAsync(nuevoPlan, nuevoParametro.Trim(), nuevoValor, nuevaDescripcion);
+        await CargarDatos();
+        mensaje = $"Parametro '{nuevoParametro}' agregado al plan '{nuevoPlan}'.";
+        nuevoParametro = "";
+        nuevoValor = 0;
+        nuevaDescripcion = null;
+    }
+
+    private static string GetParametroIcon(string parametro) => parametro switch
+    {
+        "MaxLegajos" => "bi-people",
+        "MaxSucursales" => "bi-building",
+        "MaxFichadasRolling30d" => "bi-card-checklist",
+        "MobileHabilitado" => "bi-phone",
+        "DuracionDias" => "bi-calendar",
+        "GraciaDias" => "bi-hourglass",
+        _ => "bi-gear"
+    };
+
+    private static string GetParametroLabel(string parametro) => parametro switch
+    {
+        "MaxLegajos" => "Legajos",
+        "MaxSucursales" => "Sucursales",
+        "MaxFichadasRolling30d" => "Max fichadas/mes",
+        "MobileHabilitado" => "Movil",
+        "DuracionDias" => "Duracion (dias)",
+        "GraciaDias" => "Gracia (dias)",
+        _ => parametro
+    };
+
+    private static bool EsParametroCantidad(string parametro) =>
+        parametro is "MaxLegajos" or "MaxSucursales" or "MaxFichadasRolling30d";
+}
