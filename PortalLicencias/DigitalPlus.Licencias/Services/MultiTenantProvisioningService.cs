@@ -51,7 +51,20 @@ public class MultiTenantProvisioningService
             // 2. Asegurar que el rol AdminEmpresa existe
             var roleId = await EnsureRoleExistsAsync(conn, tx, "AdminEmpresa");
 
-            // 3. Crear usuario admin
+            // 3. Verificar si el email ya existe (puede estar en otra empresa)
+            await using (var chkCmd = new SqlCommand(
+                "SELECT COUNT(*) FROM AspNetUsers WHERE NormalizedEmail = @Email", conn, tx))
+            {
+                chkCmd.Parameters.AddWithValue("@Email", adminEmail.ToUpperInvariant());
+                var exists = (int)await chkCmd.ExecuteScalarAsync()! > 0;
+                if (exists)
+                {
+                    // Usar email alternativo para la nueva empresa
+                    adminEmail = $"admin@{codigo}.com";
+                }
+            }
+
+            // 3b. Crear usuario admin
             var userId = Guid.NewGuid().ToString();
             await InsertUserAsync(conn, tx, userId, adminEmail, passwordHash, empresaId,
                 $"Administrador {nombre}");
@@ -127,7 +140,7 @@ public class MultiTenantProvisioningService
                 EmpresaId, NombreCompleto, IsActive, AccesoAdminDesktop, MustChangePassword, CreatedAt)
             VALUES (
                 @Id, @UserName, @NormalizedUserName, @Email, @NormalizedEmail,
-                1, @PasswordHash, @SecurityStamp, @ConcurrencyStamp,
+                0, @PasswordHash, @SecurityStamp, @ConcurrencyStamp,
                 0, 0, 1, 0,
                 @EmpresaId, @NombreCompleto, 1, 1, 1, @Now)";
 
@@ -283,6 +296,22 @@ public class MultiTenantProvisioningService
         stats.Fichadas15dManual = cmd2.Parameters["@Fichadas15dManual"].Value as int? ?? 0;
 
         return stats;
+    }
+
+    /// <summary>
+    /// Verifica si un email ya existe en AspNetUsers de DigitalPlusMultiTenant.
+    /// </summary>
+    public async Task<bool> ExisteEmailAsync(string email)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(
+            "SELECT COUNT(*) FROM AspNetUsers WHERE NormalizedEmail = @Email", conn);
+        cmd.Parameters.AddWithValue("@Email", email.ToUpperInvariant());
+
+        var count = (int)(await cmd.ExecuteScalarAsync() ?? 0);
+        return count > 0;
     }
 
     /// <summary>
@@ -543,7 +572,23 @@ public class MultiTenantProvisioningService
 
         try
         {
+            // Eliminar logs de licencias (FK a Licencias)
+            await using (var cmd = new SqlCommand(
+                "DELETE ll FROM LicenciasLog ll INNER JOIN Licencias l ON ll.LicenciaId = l.Id WHERE l.CompanyId = @CompanyId",
+                adminConn, adminTx))
+            {
+                cmd.Parameters.AddWithValue("@CompanyId", companyId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
             await using (var cmd = new SqlCommand("DELETE FROM Licencias WHERE CompanyId = @CompanyId", adminConn, adminTx))
+            {
+                cmd.Parameters.AddWithValue("@CompanyId", companyId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // Eliminar codigos de licencia usados por esta empresa
+            await using (var cmd = new SqlCommand("DELETE FROM LicenseCodes WHERE UsedByCompany = @CompanyId", adminConn, adminTx))
             {
                 cmd.Parameters.AddWithValue("@CompanyId", companyId);
                 await cmd.ExecuteNonQueryAsync();
@@ -558,6 +603,55 @@ public class MultiTenantProvisioningService
             await adminTx.CommitAsync();
 
             _logger.LogWarning("ELIMINAR EMPRESA (Admin): AdminId={AdminId}, CompanyId={CompanyId} eliminada de DigitalPlusAdmin.",
+                adminEmpresaId, companyId);
+        }
+        catch
+        {
+            await adminTx.RollbackAsync();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Elimina empresa solo de DigitalPlusAdmin (cuando no existe en MT - empresa huerfana)
+    /// </summary>
+    public async Task EliminarEmpresaSoloAdminAsync(int adminEmpresaId, string companyId, string adminConnectionString)
+    {
+        await using var adminConn = new SqlConnection(adminConnectionString);
+        await adminConn.OpenAsync();
+        await using var adminTx = (SqlTransaction)await adminConn.BeginTransactionAsync();
+
+        try
+        {
+            await using (var cmd = new SqlCommand(
+                "DELETE ll FROM LicenciasLog ll INNER JOIN Licencias l ON ll.LicenciaId = l.Id WHERE l.CompanyId = @CompanyId",
+                adminConn, adminTx))
+            {
+                cmd.Parameters.AddWithValue("@CompanyId", companyId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await using (var cmd = new SqlCommand("DELETE FROM Licencias WHERE CompanyId = @CompanyId", adminConn, adminTx))
+            {
+                cmd.Parameters.AddWithValue("@CompanyId", companyId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await using (var cmd = new SqlCommand("DELETE FROM LicenseCodes WHERE UsedByCompany = @CompanyId", adminConn, adminTx))
+            {
+                cmd.Parameters.AddWithValue("@CompanyId", companyId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await using (var cmd = new SqlCommand("DELETE FROM Empresas WHERE Id = @Id", adminConn, adminTx))
+            {
+                cmd.Parameters.AddWithValue("@Id", adminEmpresaId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await adminTx.CommitAsync();
+
+            _logger.LogWarning("ELIMINAR EMPRESA (Solo Admin): AdminId={AdminId}, CompanyId={CompanyId} eliminada de DigitalPlusAdmin (no existia en MT).",
                 adminEmpresaId, companyId);
         }
         catch

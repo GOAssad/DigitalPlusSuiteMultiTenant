@@ -47,6 +47,20 @@
             </div>
         </header>
 
+        <AuthorizeView>
+            <Authorized>
+                @if (context.User.FindFirst("EmailConfirmed")?.Value == "false")
+                {
+                    <div class="alert alert-warning alert-dismissible m-3 mb-0 d-flex align-items-center" role="alert">
+                        <i class="bi bi-envelope-exclamation me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            Su email no esta verificado. <a href="Account/VerificarEmail" class="alert-link">Verificar ahora</a>
+                        </div>
+                    </div>
+                }
+            </Authorized>
+        </AuthorizeView>
+
         <main class="page-content">
             <ErrorBoundary @ref="errorBoundary">
                 <ChildContent>

@@ -100,6 +100,9 @@ public class Program
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
         builder.Services.AddMemoryCache();
 
+        // Licencias (validacion de limites)
+        builder.Services.AddScoped<ILicenciaService, LicenciaService>();
+
         // Terminal Movil (v2)
         builder.Services.AddScoped<UbicacionService>();
         builder.Services.AddControllers();

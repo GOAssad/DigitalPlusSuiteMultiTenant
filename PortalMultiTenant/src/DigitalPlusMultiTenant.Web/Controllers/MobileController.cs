@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using DigitalPlusMultiTenant.Application.Interfaces;
 using DigitalPlusMultiTenant.Domain.Entities;
 using DigitalPlusMultiTenant.Domain.Enums;
 using DigitalPlusMultiTenant.Infrastructure.Services;
@@ -20,15 +21,18 @@ public class MobileController : ControllerBase
     private readonly ApplicationDbContext _db;
     private readonly UbicacionService _ubicacionService;
     private readonly IConfiguration _config;
+    private readonly ILicenciaService _licenciaService;
 
     public MobileController(
         ApplicationDbContext db,
         UbicacionService ubicacionService,
-        IConfiguration config)
+        IConfiguration config,
+        ILicenciaService licenciaService)
     {
         _db = db;
         _ubicacionService = ubicacionService;
         _config = config;
+        _licenciaService = licenciaService;
     }
 
     // ============================================================
@@ -143,6 +147,14 @@ public class MobileController : ControllerBase
 
         if (codigo.LegajoId != legajoId)
             return BadRequest(new { ok = false, mensaje = "El código no corresponde a este empleado." });
+
+        // Validar limite de terminales moviles del plan
+        var terminalesActivas = await _db.TerminalesMoviles
+            .IgnoreQueryFilters()
+            .CountAsync(t => t.EmpresaId == empresaId && t.Activo);
+        var (tmPermitido, tmMensaje) = await _licenciaService.PuedeRegistrarTerminalMovilAsync(empresaId, terminalesActivas);
+        if (!tmPermitido)
+            return StatusCode(403, new { ok = false, codigo = "LIMITE_TERMINALES", mensaje = tmMensaje });
 
         // Desactivar dispositivos anteriores del mismo legajo
         var anteriores = await _db.TerminalesMoviles
@@ -259,7 +271,16 @@ public class MobileController : ControllerBase
             tipo = string.Equals(tipo, "Salida", StringComparison.OrdinalIgnoreCase) ? "S" : "E";
         }
 
-        // 7. Insertar fichada
+        // 7. Validar limite de fichadas del plan
+        var hace30d = DateTime.UtcNow.AddDays(-30);
+        var fichadasUlt30d = await _db.Fichadas
+            .IgnoreQueryFilters()
+            .CountAsync(f => f.EmpresaId == empresaId && f.FechaHora >= hace30d);
+        var (ficPermitido, ficMensaje) = await _licenciaService.PuedeRegistrarFichadaAsync(empresaId, fichadasUlt30d);
+        if (!ficPermitido)
+            return StatusCode(403, new { ok = false, codigo = "LIMITE_FICHADAS", mensaje = ficMensaje });
+
+        // 8. Insertar fichada
         var fichada = new Fichada
         {
             EmpresaId = empresaId,
@@ -272,7 +293,7 @@ public class MobileController : ControllerBase
         };
         _db.Fichadas.Add(fichada);
 
-        // 8. Actualizar último uso del terminal
+        // 9. Actualizar último uso del terminal
         terminal.UltimoUso = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();

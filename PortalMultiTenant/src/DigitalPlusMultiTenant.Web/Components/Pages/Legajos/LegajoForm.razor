@@ -12,6 +12,7 @@
 
 @inject NavigationManager Nav
 @inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
+@inject DigitalPlusMultiTenant.Application.Interfaces.ILicenciaService LicenciaService
 @inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
 
 <PageTitle>@(IsEdit ? "Editar" : "Nuevo") Legajo - DigitalPlus</PageTitle>
@@ -1178,6 +1179,17 @@
         }
         else
         {
+            // Validar limite de fichadas del plan
+            var hace30d = DateTime.UtcNow.AddDays(-30);
+            var fichadasUlt30d = await Db.Fichadas.CountAsync(f => f.FechaHora >= hace30d);
+            var (ficPermitido, ficLimMensaje) = await LicenciaService.PuedeRegistrarFichadaAsync(Tenant.EmpresaId, fichadasUlt30d);
+            if (!ficPermitido)
+            {
+                ficMensaje = ficLimMensaje;
+                ficMensajeOk = false;
+                return;
+            }
+
             // Nueva fichada manual
             Db.Fichadas.Add(new Fichada
             {
@@ -1509,6 +1521,18 @@
     {
         try
         {
+            // Validar limite de licencia al crear
+            if (!IsEdit)
+            {
+                var totalLegajos = await Db.Legajos.CountAsync();
+                var (permitido, mensaje) = await LicenciaService.PuedeCrearLegajoAsync(Tenant.EmpresaId, totalLegajos);
+                if (!permitido)
+                {
+                    errorMessage = mensaje;
+                    return;
+                }
+            }
+
             if (IsEdit)
             {
                 // Sucursales: sincronizar

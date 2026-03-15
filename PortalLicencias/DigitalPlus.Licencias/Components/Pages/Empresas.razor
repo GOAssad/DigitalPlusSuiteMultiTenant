@@ -2,6 +2,8 @@
 @rendermode InteractiveServer
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+@inject DigitalPlus.Licencias.Services.MultiTenantProvisioningService MTService
+@inject IConfiguration Config
 
 <PageTitle>Empresas - DigitalPlus</PageTitle>
 
@@ -16,6 +18,14 @@
                @bind="filtro" @bind:event="oninput" @onkeyup="Buscar" />
     </div>
 </div>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
+    </div>
+}
 
 @if (empresas == null)
 {
@@ -55,6 +65,7 @@ else
                     <td>@e.CreatedAt.ToString("dd/MM/yyyy")</td>
                     <td>
                         <a href="/empresas/@e.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => MostrarEliminar(e)">Eliminar</button>
                     </td>
                 </tr>
             }
@@ -62,9 +73,56 @@ else
     </table>
 }
 
+@if (empresaEliminar != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Eliminar Empresa</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarEliminar" disabled="@procesando"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <strong>Se eliminara TODO de la empresa "@empresaEliminar.Nombre":</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Todos los legajos y fichadas</li>
+                            <li>Todas las sucursales, sectores, categorias, horarios</li>
+                            <li>Todas las terminales (desktop y moviles)</li>
+                            <li>Todos los usuarios del portal</li>
+                            <li>Todas las licencias asociadas</li>
+                            <li>La empresa misma</li>
+                        </ul>
+                    </div>
+                    <p class="text-danger fw-bold">Esta accion es IRREVERSIBLE. No quedara nada.</p>
+                    <div class="alert alert-danger border-danger">
+                        <label class="form-label fw-bold">Escriba el nombre de la empresa para confirmar:</label>
+                        <input type="text" class="form-control" @bind="confirmNombre" @bind:event="oninput" placeholder="@empresaEliminar.Nombre" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarEliminar" disabled="@procesando">Cancelar</button>
+                    <button class="btn btn-danger" disabled="@(confirmNombre != empresaEliminar.Nombre || procesando)"
+                            @onclick="EjecutarEliminar">
+                        @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> @procesandoMensaje }
+                        else { <text>Eliminar Empresa Permanentemente</text> }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<DigitalPlus.Licencias.Entidades.Empresa>? empresas;
     private string? filtro;
+
+    // Eliminar
+    private DigitalPlus.Licencias.Entidades.Empresa? empresaEliminar;
+    private string confirmNombre = "";
+    private bool procesando;
+    private string? procesandoMensaje;
+    private string? mensaje;
 
     protected override async Task OnInitializedAsync()
     {
@@ -74,5 +132,67 @@ else
     private async Task Buscar()
     {
         empresas = await Repo.GetEmpresasAsync(filtro);
+    }
+
+    private void MostrarEliminar(DigitalPlus.Licencias.Entidades.Empresa empresa)
+    {
+        empresaEliminar = empresa;
+        confirmNombre = "";
+        procesando = false;
+        procesandoMensaje = null;
+        mensaje = null;
+    }
+
+    private void CerrarEliminar()
+    {
+        empresaEliminar = null;
+        confirmNombre = "";
+        procesando = false;
+        procesandoMensaje = null;
+    }
+
+    private async Task EjecutarEliminar()
+    {
+        if (empresaEliminar == null || confirmNombre != empresaEliminar.Nombre) return;
+        procesando = true;
+        procesandoMensaje = "Buscando empresa...";
+        StateHasChanged();
+        await Task.Delay(100);
+
+        try
+        {
+            var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresaEliminar.CompanyId);
+
+            if (mtEmpresaId != null)
+            {
+                procesandoMensaje = "Eliminando datos multi-tenant...";
+                StateHasChanged();
+                await Task.Delay(100);
+
+                var adminConnStr = Config.GetConnectionString("DefaultConnection")!;
+                await MTService.EliminarEmpresaAsync(mtEmpresaId.Value, empresaEliminar.Id, empresaEliminar.CompanyId, adminConnStr);
+            }
+            else
+            {
+                procesandoMensaje = "Eliminando de administracion...";
+                StateHasChanged();
+                await Task.Delay(100);
+
+                var adminConnStr = Config.GetConnectionString("DefaultConnection")!;
+                await MTService.EliminarEmpresaSoloAdminAsync(empresaEliminar.Id, empresaEliminar.CompanyId, adminConnStr);
+            }
+
+            CerrarEliminar();
+            empresas = await Repo.GetEmpresasAsync(filtro);
+        }
+        catch (Exception ex)
+        {
+            procesando = false;
+            procesandoMensaje = null;
+            CerrarEliminar();
+            mensaje = $"Error al eliminar: {ex.Message}";
+            if (ex.InnerException != null)
+                mensaje += $" | Detalle: {ex.InnerException.Message}";
+        }
     }
 }

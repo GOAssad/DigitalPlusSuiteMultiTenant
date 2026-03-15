@@ -26,6 +26,8 @@ public class CustomClaimsPrincipalFactory : UserClaimsPrincipalFactory<Applicati
         var identity = await base.GenerateClaimsAsync(user);
         identity.AddClaim(new Claim("EmpresaId", user.EmpresaId.ToString()));
 
+        identity.AddClaim(new Claim("EmailConfirmed", user.EmailConfirmed ? "true" : "false"));
+
         if (user.MustChangePassword)
             identity.AddClaim(new Claim("MustChangePassword", "true"));
 

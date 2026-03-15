@@ -1,0 +1,176 @@
+@page "/Account/VerificarEmail"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using DigitalPlusMultiTenant.Domain.Entities
+@using DigitalPlusMultiTenant.Infrastructure.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailService EmailService
+@inject NavigationManager Nav
+@inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
+
+<PageTitle>Verificar Email - DigitalPlus</PageTitle>
+
+<div class="container" style="max-width: 500px; margin-top: 50px;">
+    <div class="card">
+        <div class="card-header"><i class="bi bi-envelope-check me-2"></i>Verificar Email</div>
+        <div class="card-body">
+            @if (emailVerificado)
+            {
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>Su email ya esta verificado.
+                </div>
+                <a href="/" class="btn btn-primary">Volver al inicio</a>
+            }
+            else if (!codigoEnviado)
+            {
+                <p>Se enviara un codigo de verificacion a <strong>@userEmail</strong></p>
+                <button class="btn btn-primary" @onclick="EnviarCodigo" disabled="@enviando">
+                    @if (enviando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Enviar codigo
+                </button>
+                @if (!string.IsNullOrEmpty(mensaje))
+                {
+                    <div class="alert alert-danger mt-3">@mensaje</div>
+                }
+            }
+            else
+            {
+                <p>Ingrese el codigo de 6 digitos enviado a <strong>@userEmail</strong></p>
+                <div class="mb-3">
+                    <input type="text" class="form-control form-control-lg text-center"
+                           maxlength="6" @bind="codigoIngresado" placeholder="000000"
+                           style="letter-spacing: 0.5em; font-size: 1.5rem;" />
+                </div>
+                <button class="btn btn-primary w-100" @onclick="VerificarCodigo" disabled="@verificando">
+                    @if (verificando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Verificar
+                </button>
+                <div class="text-center mt-3">
+                    <button class="btn btn-link btn-sm" @onclick="EnviarCodigo" disabled="@enviando">Reenviar codigo</button>
+                </div>
+                @if (!string.IsNullOrEmpty(mensaje))
+                {
+                    <div class="alert @(mensajeOk ? "alert-success" : "alert-danger") mt-3">@mensaje</div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? userEmail;
+    private bool emailVerificado;
+    private bool codigoEnviado;
+    private string codigoIngresado = "";
+    private string? codigoReal;
+    private DateTime codigoExpira;
+    private bool enviando;
+    private bool verificando;
+    private string? mensaje;
+    private bool mensajeOk;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = Tenant.UserId;
+        if (string.IsNullOrEmpty(userId)) { Nav.NavigateTo("/"); return; }
+
+        var user = await UserManager.FindByIdAsync(userId);
+        if (user == null) { Nav.NavigateTo("/"); return; }
+
+        userEmail = user.Email;
+        emailVerificado = user.EmailConfirmed;
+    }
+
+    private async Task EnviarCodigo()
+    {
+        enviando = true;
+        mensaje = null;
+        StateHasChanged();
+
+        try
+        {
+            // Generar codigo de 6 digitos
+            var rng = new Random();
+            codigoReal = rng.Next(100000, 999999).ToString();
+            codigoExpira = DateTime.UtcNow.AddMinutes(10);
+
+            var htmlBody = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;'>
+                <div style='background: #1a1a2e; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+                    <h2 style='color: #d4a843; margin: 0;'>Digital One</h2>
+                </div>
+                <div style='padding: 25px; background: #f8f9fa; border: 1px solid #dee2e6;'>
+                    <p>Su codigo de verificacion es:</p>
+                    <div style='text-align: center; margin: 20px 0;'>
+                        <span style='font-size: 2rem; font-weight: bold; letter-spacing: 0.3em; background: white; padding: 10px 20px; border: 2px solid #1a1a2e; border-radius: 8px;'>{codigoReal}</span>
+                    </div>
+                    <p style='color: #666; font-size: 0.9em;'>Este codigo expira en 10 minutos.</p>
+                </div>
+                <div style='background: #1a1a2e; padding: 10px; text-align: center; border-radius: 0 0 8px 8px;'>
+                    <p style='color: #888; margin: 0; font-size: 0.8em;'>Digital One by IntegraIA Tech</p>
+                </div>
+            </div>";
+
+            await EmailService.SendAsync(userEmail!, "Codigo de verificacion - Digital One", htmlBody);
+            codigoEnviado = true;
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al enviar email: {ex.Message}";
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    private async Task VerificarCodigo()
+    {
+        verificando = true;
+        mensaje = null;
+        StateHasChanged();
+
+        try
+        {
+            if (DateTime.UtcNow > codigoExpira)
+            {
+                mensaje = "El codigo expiro. Solicite uno nuevo.";
+                codigoEnviado = false;
+                return;
+            }
+
+            if (codigoIngresado.Trim() != codigoReal)
+            {
+                mensaje = "Codigo incorrecto.";
+                return;
+            }
+
+            // Marcar email como verificado
+            var user = await UserManager.FindByIdAsync(Tenant.UserId!);
+            if (user != null)
+            {
+                user.EmailConfirmed = true;
+                await UserManager.UpdateAsync(user);
+
+                // Refrescar claims (forzar re-login para actualizar el claim)
+                await SignInManager.RefreshSignInAsync(user);
+
+                emailVerificado = true;
+                mensaje = "Email verificado correctamente.";
+                mensajeOk = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            verificando = false;
+        }
+    }
+}

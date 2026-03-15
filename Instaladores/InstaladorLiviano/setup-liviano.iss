@@ -37,6 +37,9 @@
 
 ; --- API del portal de licencias ---
 #define PortalApiUrl "https://digitalpluslicencias.azurewebsites.net/api/activar"
+#define PortalApiFreeUrl "https://digitalpluslicencias.azurewebsites.net/api/activar-free"
+#define PortalApiPaisesUrl "https://digitalpluslicencias.azurewebsites.net/api/paises"
+#define PortalApiValidarUrl "https://digitalpluslicencias.azurewebsites.net/api/validar-free"
 
 ; ============================================================
 [Setup]
@@ -289,12 +292,30 @@ Filename: "{app}\Administrador\{#AdminExe}"; \
 // Variables globales
 // ------------------------------------------------------------
 var
+  // Pagina: Seleccion de modo
+  ModoPage:         TWizardPage;
+  rbCodigo:         TNewRadioButton;
+  rbFree:           TNewRadioButton;
+  lblModoDesc:      TNewStaticText;
+
   // Pagina: Codigo de activacion
   ActivacionPage:   TWizardPage;
   lblActivacion:    TNewStaticText;
   edtActivacion:    TNewEdit;
   btnActivar:       TNewButton;
   lblActivResult:   TNewStaticText;
+
+  // Pagina: Plan Free
+  FreePage:         TWizardPage;
+  lblFreeDesc:      TNewStaticText;
+  lblFreeNombre:    TNewStaticText;
+  edtFreeNombre:    TNewEdit;
+  lblFreeEmail:     TNewStaticText;
+  edtFreeEmail:     TNewEdit;
+  lblFreePais:      TNewStaticText;
+  cmbFreePais:      TNewComboBox;
+  lblFreeResult:    TNewStaticText;
+  paisIds:          array of Integer;
 
   // Estado interno
   sConnectionString:      String;    // Connection string a DigitalPlusMultiTenant
@@ -304,6 +325,9 @@ var
   sEmpresaId:             String;    // EmpresaId del tenant en DigitalPlusMultiTenant
   sAdminEmpresaId:        String;    // Id de la empresa en DigitalPlusAdmin
   sUrlPortal:             String;    // URL del portal web de la empresa
+  bModoFree:              Boolean;   // True si eligio plan Free
+  nFreePaisId:            Integer;   // PaisId seleccionado en combo Free
+  sFreeValidacion:        String;    // Resultado de validacion previa
 
 // ============================================================
 // UTILIDADES
@@ -349,6 +373,7 @@ begin
 
   try
     WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    WinHttpReq.SetTimeouts(10000, 15000, 30000, 120000);
     WinHttpReq.Open('POST', sUrl, False);
     WinHttpReq.SetRequestHeader('Content-Type', 'application/json');
     WinHttpReq.Send(sBody);
@@ -430,10 +455,236 @@ begin
   end;
 end;
 
+// Carga la lista de paises desde la API
+procedure CargarPaises;
+var
+  WinHttpReq: Variant;
+  sResponse: String;
+  iPos, iEnd, iIdPos, iIdEnd: Integer;
+  sNombre: String;
+  nId: Integer;
+  n: Integer;
+begin
+  n := 0;
+  try
+    WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    WinHttpReq.Open('GET', '{#PortalApiPaisesUrl}', False);
+    WinHttpReq.Send('');
+
+    if WinHttpReq.Status = 200 then
+    begin
+      sResponse := WinHttpReq.ResponseText;
+      // Parse JSON array: [{"id":1,"nombre":"Argentina"},{"id":2,"nombre":"Chile"}]
+      iPos := 1;
+      while iPos < Length(sResponse) do
+      begin
+        // Buscar "id":
+        iIdPos := PosEx('"id":', sResponse, iPos);
+        if iIdPos = 0 then Break;
+        iIdPos := iIdPos + Length('"id":');
+        iIdEnd := PosEx(',', sResponse, iIdPos);
+        if iIdEnd = 0 then iIdEnd := PosEx('}', sResponse, iIdPos);
+        nId := StrToIntDef(Trim(Copy(sResponse, iIdPos, iIdEnd - iIdPos)), 0);
+
+        // Buscar "nombre":"
+        iPos := PosEx('"nombre":"', sResponse, iIdEnd);
+        if iPos = 0 then Break;
+        iPos := iPos + Length('"nombre":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd = 0 then Break;
+        sNombre := Copy(sResponse, iPos, iEnd - iPos);
+
+        // Agregar al combo
+        cmbFreePais.Items.Add(sNombre);
+        SetArrayLength(paisIds, n + 1);
+        paisIds[n] := nId;
+        n := n + 1;
+
+        iPos := iEnd + 1;
+      end;
+
+      // Seleccionar el primero por defecto
+      if cmbFreePais.Items.Count > 0 then
+        cmbFreePais.ItemIndex := 0;
+    end;
+  except
+    // Si falla, dejamos el combo vacio
+    cmbFreePais.Items.Add('(No se pudieron cargar los paises)');
+    cmbFreePais.ItemIndex := 0;
+  end;
+end;
+
+// Valida datos antes de instalar (email duplicado, nombre duplicado)
+function ValidarDatosFree(const sNombre, sEmail: String): String;
+var
+  WinHttpReq: Variant;
+  sUrl, sBody, sResponse: String;
+  StatusCode: Integer;
+  iPos, iEnd: Integer;
+begin
+  Result := ''; // vacio = OK
+
+  sUrl := '{#PortalApiValidarUrl}';
+  sBody := '{"Nombre":"' + sNombre + '","Email":"' + sEmail + '","PaisId":0}';
+
+  try
+    WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    WinHttpReq.SetTimeouts(10000, 15000, 30000, 30000);
+    WinHttpReq.Open('POST', sUrl, False);
+    WinHttpReq.SetRequestHeader('Content-Type', 'application/json');
+    WinHttpReq.Send(sBody);
+
+    StatusCode := WinHttpReq.Status;
+    sResponse := WinHttpReq.ResponseText;
+
+    if StatusCode = 400 then
+    begin
+      // Error de validacion - extraer mensaje
+      iPos := Pos('error":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('error":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          Result := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+      if Result = '' then
+        Result := 'Error de validacion';
+    end
+    else if StatusCode <> 200 then
+    begin
+      Result := 'Error de conexion (HTTP ' + IntToStr(StatusCode) + ')';
+    end;
+  except
+    Result := 'No se pudo conectar al servidor. Verifique su conexion a internet.';
+  end;
+end;
+
+// Llama al portal para registrar empresa con plan Free
+function ActivarFree(const sNombre, sEmail: String; nPaisId: Integer): Boolean;
+var
+  WinHttpReq: Variant;
+  sUrl, sBody, sResponse: String;
+  StatusCode: Integer;
+  iPos, iEnd: Integer;
+begin
+  Result := False;
+  sConnectionString := '';
+  sAdminConnectionString := '';
+  sNombreEmpresa := '';
+  sEmpresaId := '';
+  sAdminEmpresaId := '';
+  sUrlPortal := '';
+
+  sUrl := '{#PortalApiFreeUrl}';
+  sBody := '{"Nombre":"' + sNombre + '","Email":"' + sEmail + '","PaisId":' + IntToStr(nPaisId) + '}';
+
+  try
+    WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    // Timeout: resolver=10s, conectar=15s, enviar=30s, recibir=120s (provisioning puede tardar)
+    WinHttpReq.SetTimeouts(10000, 15000, 30000, 120000);
+    WinHttpReq.Open('POST', sUrl, False);
+    WinHttpReq.SetRequestHeader('Content-Type', 'application/json');
+    WinHttpReq.Send(sBody);
+
+    StatusCode := WinHttpReq.Status;
+    sResponse := WinHttpReq.ResponseText;
+
+    if StatusCode = 200 then
+    begin
+      // Extraer connectionString
+      iPos := Pos('connectionString":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('connectionString":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sConnectionString := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer adminConnectionString
+      iPos := Pos('adminConnectionString":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('adminConnectionString":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sAdminConnectionString := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer empresaId
+      iPos := Pos('empresaId":', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('empresaId":');
+        iEnd := PosEx(',', sResponse, iPos);
+        if iEnd = 0 then
+          iEnd := PosEx('}', sResponse, iPos);
+        if iEnd > iPos then
+          sEmpresaId := Trim(Copy(sResponse, iPos, iEnd - iPos));
+      end;
+
+      // Extraer adminEmpresaId
+      iPos := Pos('adminEmpresaId":', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('adminEmpresaId":');
+        iEnd := PosEx(',', sResponse, iPos);
+        if iEnd = 0 then
+          iEnd := PosEx('}', sResponse, iPos);
+        if iEnd > iPos then
+          sAdminEmpresaId := Trim(Copy(sResponse, iPos, iEnd - iPos));
+      end;
+
+      // Extraer nombreEmpresa
+      iPos := Pos('nombreEmpresa":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('nombreEmpresa":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sNombreEmpresa := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer urlPortal
+      iPos := Pos('urlPortal":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('urlPortal":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sUrlPortal := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      if (sConnectionString <> '') and (sEmpresaId <> '') and (sEmpresaId <> '0') then
+        Result := True
+      else
+        sNombreEmpresa := 'La empresa se registro pero no se pudo completar el aprovisionamiento. EmpresaId=' + sEmpresaId;
+    end
+    else if StatusCode = 409 then
+    begin
+      // Empresa ya existe
+      iPos := Pos('error":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('error":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sNombreEmpresa := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+      if sNombreEmpresa = '' then
+        sNombreEmpresa := 'Ya existe una empresa con ese nombre';
+    end;
+  except
+    // Error de conexion
+  end;
+end;
+
 // ============================================================
 // PAGINAS CUSTOM DEL WIZARD
 // ============================================================
 
+// --- Handler boton Activar Codigo ---
 procedure OnActivarClick(Sender: TObject);
 var
   sCodigo: String;
@@ -464,9 +715,46 @@ begin
   end;
 end;
 
+// (La logica de registro Free se ejecuta en NextButtonClick)
+
+// --- Pagina: Seleccion de modo ---
+procedure CreateModoPage;
+begin
+  ModoPage := CreateCustomPage(wpSelectTasks,
+    'Tipo de Instalacion',
+    'Seleccione como desea activar DigitalPlus');
+
+  lblModoDesc := TNewStaticText.Create(WizardForm);
+  lblModoDesc.Parent := ModoPage.Surface;
+  lblModoDesc.Caption :=
+    'Seleccione una opcion:';
+  lblModoDesc.Left := 0;
+  lblModoDesc.Top := 0;
+  lblModoDesc.Width := ModoPage.SurfaceWidth;
+  lblModoDesc.WordWrap := True;
+
+  rbCodigo := TNewRadioButton.Create(WizardForm);
+  rbCodigo.Parent := ModoPage.Surface;
+  rbCodigo.Caption := 'Tengo un codigo de activacion';
+  rbCodigo.Left := 10;
+  rbCodigo.Top := lblModoDesc.Top + lblModoDesc.Height + 20;
+  rbCodigo.Width := ModoPage.SurfaceWidth - 20;
+  rbCodigo.Font.Style := [fsBold];
+  rbCodigo.Checked := True;
+
+  rbFree := TNewRadioButton.Create(WizardForm);
+  rbFree.Parent := ModoPage.Surface;
+  rbFree.Caption := 'Instalar version gratuita (hasta 5 legajos)';
+  rbFree.Left := 10;
+  rbFree.Top := rbCodigo.Top + rbCodigo.Height + 15;
+  rbFree.Width := ModoPage.SurfaceWidth - 20;
+  rbFree.Font.Style := [fsBold];
+end;
+
+// --- Pagina: Codigo de activacion ---
 procedure CreateActivacionPage;
 begin
-  ActivacionPage := CreateCustomPage(wpSelectTasks,
+  ActivacionPage := CreateCustomPage(ModoPage.ID,
     'Codigo de Activacion',
     'Ingrese el codigo proporcionado por su proveedor');
 
@@ -505,6 +793,75 @@ begin
   lblActivResult.Width := ActivacionPage.SurfaceWidth;
   lblActivResult.WordWrap := True;
   lblActivResult.Caption := '';
+end;
+
+// --- Pagina: Plan Free ---
+procedure CreateFreePage;
+begin
+  FreePage := CreateCustomPage(ModoPage.ID,
+    'Version Gratuita',
+    'Complete los datos de su empresa para activar el plan Free');
+
+  lblFreeDesc := TNewStaticText.Create(WizardForm);
+  lblFreeDesc.Parent := FreePage.Surface;
+  lblFreeDesc.Caption :=
+    'El plan gratuito incluye:' + #13#10 +
+    '  - Hasta 5 legajos' + #13#10 +
+    '  - 1 sucursal' + #13#10 +
+    '  - 200 fichadas por mes' + #13#10 +
+    '  - Sin vencimiento' + #13#10 + #13#10 +
+    'Complete los datos para registrar su empresa:';
+  lblFreeDesc.Left := 0;
+  lblFreeDesc.Top := 0;
+  lblFreeDesc.Width := FreePage.SurfaceWidth;
+  lblFreeDesc.WordWrap := True;
+
+  lblFreeNombre := TNewStaticText.Create(WizardForm);
+  lblFreeNombre.Parent := FreePage.Surface;
+  lblFreeNombre.Caption := 'Nombre de la empresa:';
+  lblFreeNombre.Left := 0;
+  lblFreeNombre.Top := lblFreeDesc.Top + lblFreeDesc.Height + 15;
+
+  edtFreeNombre := TNewEdit.Create(WizardForm);
+  edtFreeNombre.Parent := FreePage.Surface;
+  edtFreeNombre.Left := 0;
+  edtFreeNombre.Top := lblFreeNombre.Top + lblFreeNombre.Height + 5;
+  edtFreeNombre.Width := 350;
+  edtFreeNombre.Font.Size := 11;
+
+  lblFreeEmail := TNewStaticText.Create(WizardForm);
+  lblFreeEmail.Parent := FreePage.Surface;
+  lblFreeEmail.Caption := 'Email del administrador:';
+  lblFreeEmail.Left := 0;
+  lblFreeEmail.Top := edtFreeNombre.Top + edtFreeNombre.Height + 15;
+
+  edtFreeEmail := TNewEdit.Create(WizardForm);
+  edtFreeEmail.Parent := FreePage.Surface;
+  edtFreeEmail.Left := 0;
+  edtFreeEmail.Top := lblFreeEmail.Top + lblFreeEmail.Height + 5;
+  edtFreeEmail.Width := 350;
+  edtFreeEmail.Font.Size := 11;
+
+  lblFreePais := TNewStaticText.Create(WizardForm);
+  lblFreePais.Parent := FreePage.Surface;
+  lblFreePais.Caption := 'Pais:';
+  lblFreePais.Left := 0;
+  lblFreePais.Top := edtFreeEmail.Top + edtFreeEmail.Height + 15;
+
+  cmbFreePais := TNewComboBox.Create(WizardForm);
+  cmbFreePais.Parent := FreePage.Surface;
+  cmbFreePais.Left := 0;
+  cmbFreePais.Top := lblFreePais.Top + lblFreePais.Height + 5;
+  cmbFreePais.Width := 350;
+  cmbFreePais.Style := csDropDownList;
+
+  lblFreeResult := TNewStaticText.Create(WizardForm);
+  lblFreeResult.Parent := FreePage.Surface;
+  lblFreeResult.Left := 0;
+  lblFreeResult.Top := cmbFreePais.Top + cmbFreePais.Height + 20;
+  lblFreeResult.Width := FreePage.SurfaceWidth;
+  lblFreeResult.WordWrap := True;
+  lblFreeResult.Caption := '';
 end;
 
 // ============================================================
@@ -607,6 +964,7 @@ end;
 procedure InitializeWizard;
 begin
   bActivacionOK := False;
+  bModoFree := False;
   sConnectionString := '';
   sAdminConnectionString := '';
   sNombreEmpresa := '';
@@ -614,12 +972,34 @@ begin
   sAdminEmpresaId := '';
   sUrlPortal := '';
 
+  CreateModoPage;
   CreateActivacionPage;
+  CreateFreePage;
+  CargarPaises;
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := False;
+  // Saltar pagina de codigo si eligio Free
+  if PageID = ActivacionPage.ID then
+    Result := bModoFree;
+  // Saltar pagina Free si eligio codigo
+  if PageID = FreePage.ID then
+    Result := not bModoFree;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
+
+  // Al salir de la pagina de modo, guardar seleccion
+  if CurPageID = ModoPage.ID then
+  begin
+    bModoFree := rbFree.Checked;
+    // Resetear activacion al cambiar de modo
+    bActivacionOK := False;
+  end;
 
   // Validar que el codigo fue activado antes de avanzar
   if CurPageID = ActivacionPage.ID then
@@ -631,19 +1011,106 @@ begin
       Result := False;
     end;
   end;
+
+  // Pagina Free: solo validar campos obligatorios (el registro se hace post-install)
+  if CurPageID = FreePage.ID then
+  begin
+    if Trim(edtFreeNombre.Text) = '' then
+    begin
+      lblFreeResult.Caption := 'Ingrese el nombre de su empresa.';
+      lblFreeResult.Font.Color := clRed;
+      Result := False;
+      Exit;
+    end;
+    if Trim(edtFreeEmail.Text) = '' then
+    begin
+      lblFreeResult.Caption := 'Ingrese un email de contacto.';
+      lblFreeResult.Font.Color := clRed;
+      Result := False;
+      Exit;
+    end;
+    if cmbFreePais.ItemIndex < 0 then
+    begin
+      lblFreeResult.Caption := 'Seleccione un pais.';
+      lblFreeResult.Font.Color := clRed;
+      Result := False;
+      Exit;
+    end;
+
+    // Guardar PaisId para usarlo en post-install
+    nFreePaisId := 0;
+    if (cmbFreePais.ItemIndex >= 0) and (cmbFreePais.ItemIndex < GetArrayLength(paisIds)) then
+      nFreePaisId := paisIds[cmbFreePais.ItemIndex];
+
+    // Validar contra el servidor (email duplicado, etc.)
+    lblFreeResult.Caption := 'Validando datos...';
+    lblFreeResult.Font.Color := clWindowText;
+    WizardForm.Update;
+
+    sFreeValidacion := ValidarDatosFree(Trim(edtFreeNombre.Text), Trim(edtFreeEmail.Text));
+    if sFreeValidacion <> '' then
+    begin
+      lblFreeResult.Caption := sFreeValidacion;
+      lblFreeResult.Font.Color := clRed;
+      Result := False;
+      Exit;
+    end;
+
+    lblFreeResult.Caption := '';
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
-    // 1. Escribir connection string en configs
-    WriteConfigs;
+    // 0. Si es modo Free, registrar la empresa ahora (post-install, archivos ya copiados)
+    if bModoFree and (not bActivacionOK) then
+    begin
+      WizardForm.StatusLabel.Caption := 'Registrando empresa en la nube...';
+      WizardForm.Update;
 
-    // 2. Cifrar configs con DPAPI
-    EncryptConfigs;
+      if ActivarFree(Trim(edtFreeNombre.Text), Trim(edtFreeEmail.Text), nFreePaisId) then
+      begin
+        bActivacionOK := True;
+        MsgBox('Empresa registrada exitosamente.' + #13#10 + #13#10 +
+          'Se enviaron las credenciales de acceso a:' + #13#10 +
+          Trim(edtFreeEmail.Text) + #13#10 + #13#10 +
+          'Utilice esas credenciales para ingresar al portal web' + #13#10 +
+          'y a la aplicacion Administrador.',
+          mbInformation, MB_OK);
+      end
+      else
+      begin
+        // Si falla, avisar pero no abortar (los archivos ya estan instalados)
+        if sNombreEmpresa <> '' then
+          MsgBox('Advertencia: ' + sNombreEmpresa + #13#10 +
+            'Los archivos se instalaron pero no se pudo registrar la empresa.' + #13#10 +
+            'Contacte a soporte para completar la activacion.',
+            mbError, MB_OK)
+        else
+          MsgBox('No se pudo registrar la empresa en la nube.' + #13#10 +
+            'Verifique su conexion a internet y contacte a soporte.',
+            mbError, MB_OK);
+      end;
+    end;
+
+    // 1. Escribir connection string en configs
+    if bActivacionOK then
+    begin
+      WizardForm.StatusLabel.Caption := 'Configurando aplicaciones...';
+      WizardForm.Update;
+      WriteConfigs;
+
+      // 2. Cifrar configs con DPAPI
+      WizardForm.StatusLabel.Caption := 'Protegiendo configuracion...';
+      WizardForm.Update;
+      EncryptConfigs;
+    end;
 
     // 3. Aplicar seguridad ACL
+    WizardForm.StatusLabel.Caption := 'Aplicando permisos de seguridad...';
+    WizardForm.Update;
     ApplySecurity;
   end;
 end;

@@ -314,9 +314,13 @@ else
             <div class="card mt-3">
                 <div class="card-header"><i class="bi bi-bar-chart me-1"></i> Uso del sistema</div>
                 <div class="card-body p-2">
-                    @if (stats == null)
+                    @if (statsError)
                     {
-                        <p class="text-muted small text-center py-2">Cargando...</p>
+                        <p class="text-muted small text-center py-2"><i class="bi bi-inbox me-1"></i>Sin datos registrados</p>
+                    }
+                    else if (stats == null)
+                    {
+                        <p class="text-muted small text-center py-2"><span class="spinner-border spinner-border-sm me-1"></span>Cargando...</p>
                     }
                     else
                     {
@@ -517,7 +521,7 @@ else
                     {
                         <div class="alert alert-danger">
                             <label class="form-label fw-bold">Escriba el nombre de la empresa para confirmar:</label>
-                            <input type="text" class="form-control" @bind="confirmNombre" placeholder="@empresa?.Nombre" />
+                            <input type="text" class="form-control" @bind="confirmNombre" @bind:event="oninput" placeholder="@empresa?.Nombre" />
                         </div>
                     }
                 </div>
@@ -572,7 +576,7 @@ else
                     {
                         <div class="alert alert-danger border-danger">
                             <label class="form-label fw-bold">Escriba el nombre de la empresa para confirmar:</label>
-                            <input type="text" class="form-control" @bind="confirmNombre" placeholder="@empresa?.Nombre" />
+                            <input type="text" class="form-control" @bind="confirmNombre" @bind:event="oninput" placeholder="@empresa?.Nombre" />
                         </div>
                     }
                 </div>
@@ -582,8 +586,8 @@ else
                         <button class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
                         <button class="btn btn-danger" disabled="@(confirmNombre != empresa?.Nombre || procesando)"
                                 @onclick="EjecutarEliminar">
-                            @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                            Eliminar Empresa Permanentemente
+                            @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> @procesandoMensaje }
+                            else { <text>Eliminar Empresa Permanentemente</text> }
                         </button>
                     </div>
                 }
@@ -602,6 +606,7 @@ else
     private string? mensaje;
     private bool codigoCopiado;
     private DigitalPlus.Licencias.Services.EmpresaStats? stats;
+    private bool statsError;
 
     // Limpiar / Eliminar
     private bool showLimpiarModal;
@@ -610,6 +615,7 @@ else
     private bool eliminarConfirmado;
     private string confirmNombre = "";
     private bool procesando;
+    private string? procesandoMensaje;
 
     private string selectedPaisId => empresa?.PaisId?.ToString() ?? "";
     private string selectedTipoIdFiscalId => empresa?.TipoIdentificacionFiscalId?.ToString() ?? "";
@@ -633,9 +639,14 @@ else
             try
             {
                 stats = await MTService.GetEmpresaStatsAsync(empresa.CompanyId);
+                if (stats == null) statsError = true;
                 await InvokeAsync(StateHasChanged);
             }
-            catch { /* stats quedan null, se muestra "Cargando..." */ }
+            catch
+            {
+                statsError = true;
+                await InvokeAsync(StateHasChanged);
+            }
         });
     }
 
@@ -779,27 +790,48 @@ else
     {
         if (empresa == null || confirmNombre != empresa.Nombre) return;
         procesando = true;
+        procesandoMensaje = "Buscando empresa...";
         StateHasChanged();
+        await Task.Delay(100);
 
         try
         {
             var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
-            if (mtEmpresaId == null)
+
+            if (mtEmpresaId != null)
             {
-                mensaje = "No se encontro la empresa en la base de datos multi-tenant.";
-                CerrarModales();
-                return;
+                procesandoMensaje = "Eliminando datos multi-tenant...";
+                StateHasChanged();
+                await Task.Delay(100);
+
+                var adminConnStr = Config.GetConnectionString("DefaultConnection")!;
+                await MTService.EliminarEmpresaAsync(mtEmpresaId.Value, empresa.Id, empresa.CompanyId, adminConnStr);
+            }
+            else
+            {
+                // Empresa huerfana: existe en Admin pero no en MT. Borrar solo de Admin.
+                procesandoMensaje = "Eliminando de administracion...";
+                StateHasChanged();
+                await Task.Delay(100);
+
+                var adminConnStr = Config.GetConnectionString("DefaultConnection")!;
+                await MTService.EliminarEmpresaSoloAdminAsync(empresa.Id, empresa.CompanyId, adminConnStr);
             }
 
-            var adminConnStr = Config.GetConnectionString("DefaultConnection")!;
-            await MTService.EliminarEmpresaAsync(mtEmpresaId.Value, empresa.Id, empresa.CompanyId, adminConnStr);
-            Nav.NavigateTo("/empresas");
+            procesandoMensaje = "Empresa eliminada. Redirigiendo...";
+            StateHasChanged();
+            await Task.Delay(500);
+
+            Nav.NavigateTo("/empresas", forceLoad: true);
         }
         catch (Exception ex)
         {
             CerrarModales();
             mensaje = $"Error al eliminar: {ex.Message}";
+            if (ex.InnerException != null)
+                mensaje += $" | Detalle: {ex.InnerException.Message}";
             procesando = false;
+            procesandoMensaje = null;
         }
     }
 }

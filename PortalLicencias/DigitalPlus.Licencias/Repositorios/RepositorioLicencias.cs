@@ -309,6 +309,22 @@ public class RepositorioLicencias
         return (await _context.Licencias.FirstAsync(l => l.CompanyId == companyId && l.MachineId == "pending"));
     }
 
+    public async Task<Licencia> CrearLicenciaParaEmpresaConLimitesAsync(
+        string companyId, string plan, int maxLegajos, int maxSucursales, int maxFichadasMes, int durationDays)
+    {
+        var now = DateTime.UtcNow;
+        DateTime? expiresAt = durationDays > 0 ? now.AddDays(durationDays) : null;
+
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.ExecuteAsync(
+            @"INSERT INTO Licencias (CompanyId, MachineId, LicenseType, [Plan], MaxLegajos, MaxSucursales, MaxFichadasMes, ExpiresAt, CreatedAt, UpdatedAt)
+              VALUES (@CompanyId, 'pending', 'active', @Plan, @MaxLegajos, @MaxSucursales, @MaxFichadasMes, @ExpiresAt, SYSUTCDATETIME(), SYSUTCDATETIME())",
+            new { CompanyId = companyId, Plan = plan, MaxLegajos = maxLegajos,
+                  MaxSucursales = maxSucursales, MaxFichadasMes = maxFichadasMes, ExpiresAt = expiresAt });
+
+        return (await _context.Licencias.FirstAsync(l => l.CompanyId == companyId && l.MachineId == "pending"));
+    }
+
     // --- Activacion por codigo (para instalador liviano) ---
 
     public async Task<Empresa?> GetEmpresaPorCompanyIdAsync(string companyId)
