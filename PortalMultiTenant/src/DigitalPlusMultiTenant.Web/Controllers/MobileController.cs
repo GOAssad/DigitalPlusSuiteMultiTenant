@@ -47,12 +47,45 @@ public class MobileController : ControllerBase
             if (string.IsNullOrWhiteSpace(request.Legajo) || string.IsNullOrWhiteSpace(request.Password))
                 return BadRequest(new { ok = false, mensaje = "Legajo y contraseña son requeridos." });
 
-            // Buscar legajo sin query filter (necesitamos EmpresaId)
-            var legajo = await _db.Legajos
-                .IgnoreQueryFilters()
-                .Include(l => l.Pin)
-                .Include(l => l.Empresa)
-                .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo && l.IsActive);
+            // Determinar EmpresaId desde el dispositivo registrado (si existe)
+            int? empresaIdFromDevice = null;
+            var deviceId = Request.Headers["X-Device-Id"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(deviceId))
+            {
+                var terminalRegistrada = await _db.TerminalesMoviles
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(t => t.DeviceId == deviceId && t.Activo);
+                if (terminalRegistrada != null)
+                    empresaIdFromDevice = terminalRegistrada.EmpresaId;
+            }
+
+            // Buscar legajo filtrando por empresa cuando es posible
+            Legajo? legajo;
+            if (empresaIdFromDevice.HasValue)
+            {
+                // Dispositivo registrado: buscar solo en su empresa
+                legajo = await _db.Legajos
+                    .IgnoreQueryFilters()
+                    .Include(l => l.Pin)
+                    .Include(l => l.Empresa)
+                    .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo
+                                           && l.EmpresaId == empresaIdFromDevice.Value && l.IsActive);
+            }
+            else
+            {
+                // Dispositivo no registrado: buscar en todas las empresas pero verificar que no sea ambiguo
+                var legajos = await _db.Legajos
+                    .IgnoreQueryFilters()
+                    .Include(l => l.Pin)
+                    .Include(l => l.Empresa)
+                    .Where(l => l.NumeroLegajo == request.Legajo && l.IsActive)
+                    .ToListAsync();
+
+                if (legajos.Count > 1)
+                    return BadRequest(new { ok = false, mensaje = "Número de legajo existe en múltiples empresas. Registre el dispositivo primero." });
+
+                legajo = legajos.FirstOrDefault();
+            }
 
             if (legajo == null)
                 return Unauthorized(new { ok = false, mensaje = "Legajo no encontrado o inactivo." });
@@ -75,7 +108,6 @@ public class MobileController : ControllerBase
                 return Unauthorized(new { ok = false, mensaje = "Contraseña incorrecta." });
 
             // Verificar si el device ya está registrado
-            var deviceId = Request.Headers["X-Device-Id"].FirstOrDefault();
             bool dispositivoRegistrado = false;
             if (!string.IsNullOrEmpty(deviceId))
             {

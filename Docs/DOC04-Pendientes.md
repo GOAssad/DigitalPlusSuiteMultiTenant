@@ -1,10 +1,36 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-14
+**Fecha:** 2026-03-16
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-16
+- [x] Portal Licencias: tab Legajos en detalle empresa (query cross-DB, tabla con buscador, carga async)
+- [x] Fix CRITICO: login movil cross-tenant — MobileController.Login filtra por empresa del dispositivo, rechaza si ambiguo
+- [x] Fix CRITICO: RRHHLegajosPin desktop — agregado @EmpresaId a VerificarPin, CambiarPin, CargarLegajo, ListaLegajosActivos
+- [x] FK compuesto en Fichada: `(LegajoId, EmpresaId) → Legajo(Id, EmpresaId)` impide mezcla cross-tenant a nivel BD
+- [x] Limpieza de 2 fichadas huerfanas (EmpresaId no coincidia con LegajoEmpresaId)
+- [x] Instalador recompilado con fix de PIN desktop
+- [x] Deploy Portal Licencias y Portal MT a Azure
+- [x] DOC01, DOC03, DOC04 actualizados
+
+### Sesion 2026-03-15 (noche)
+- [x] Administrador desktop simplificado: solo 2 pestanas (Legajo: huellas+foto, Movil)
+- [x] Pestanas removidas del Administrador: Reportes, Domicilios, Turnos
+- [x] Datos del legajo en modo solo lectura en Administrador (nombre, apellido, sector, categoria, sucursal, horario, estado)
+- [x] Boton Eliminar oculto en Administrador: legajos no se pueden borrar desde desktop
+- [x] Boton Guardar del Administrador solo persiste huellas + foto
+- [x] Alta y edicion de legajos se realiza exclusivamente desde Portal MT web
+- [x] Portal MT: foto del legajo (180x180 redondeada en formulario, 28px avatar en lista)
+- [x] Portal MT: seccion Domicilio con 7 campos (Calle, Altura, Piso, Barrio, Localidad, Provincia, CodigoPostal) en tab Datos
+- [x] Portal MT: sucursal obligatoria al crear nuevo legajo (tab Sucursales visible, validacion requiere al menos 1)
+- [x] Portal MT: CRUD completo de legajos (ahora maneja todos los datos incluyendo domicilio)
+- [x] Instalador Liviano: DisableDirPage=no (usuario puede elegir carpeta de instalacion)
+- [x] Instalador Liviano: TLS 1.2 habilitado en todas las llamadas WinHttp (fix fallos de registro en algunos sistemas)
+- [x] Instalador Liviano: registro Free idempotente (si email ya existe, retorna datos existentes sin duplicar)
+- [x] Connection strings: todos los app.config apuntan a Ferozo (localhost completamente removido)
 
 ### Sesion 2026-03-14
 - [x] Roles en Portal MT: SuperAdmin, AdminEmpresa, Operador, Consulta aplicados
@@ -153,6 +179,8 @@
 
 ## PRIORIDAD ALTA
 
+- [ ] **Importador Excel de legajos en Portal MT** — Carga masiva de legajos desde archivo Excel.
+- [x] ~~**Portal Licencias: tab Legajos en detalle empresa**~~ COMPLETADO 2026-03-16
 - [ ] **SuperAdmin cross-tenant** — admin@integraia.tech debe poder seleccionar empresa y ver datos de cualquier tenant. Requiere selector de empresa + bypass query filters.
 - [ ] **Modo Kiosko para terminales moviles** — Flag ModoKiosko en TerminalesMoviles, permite que cualquier legajo de la empresa fiche desde ese dispositivo.
 - [ ] **Registro de huellas desde el Portal Web** — Agente local liviano + WebSocket. PAUSADO (la funcionalidad la cubre el Administrador desktop).
@@ -225,4 +253,4 @@
 
 ---
 
-*Actualizado: 2026-03-14*
+*Actualizado: 2026-03-16*

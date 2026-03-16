@@ -661,6 +661,64 @@ public class MultiTenantProvisioningService
         }
     }
 
+    /// <summary>
+    /// Obtiene listado de legajos de la empresa desde DigitalPlusMultiTenant.
+    /// </summary>
+    public async Task<List<LegajoListDto>> GetLegajosAsync(string codigo)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        // Buscar EmpresaId
+        int empresaId;
+        await using (var cmd = new SqlCommand("SELECT Id FROM Empresa WHERE Codigo = @Codigo", conn))
+        {
+            cmd.Parameters.AddWithValue("@Codigo", codigo);
+            var result = await cmd.ExecuteScalarAsync();
+            if (result == null) return [];
+            empresaId = (int)result;
+        }
+
+        const string sql = @"
+            SELECT l.Id, l.NumeroLegajo, l.Apellido, l.Nombre, l.IsActive,
+                   c.Nombre AS Categoria,
+                   STUFF((
+                       SELECT ', ' + s.Nombre
+                       FROM LegajoSucursal ls
+                       INNER JOIN Sucursal s ON ls.SucursalId = s.Id
+                       WHERE ls.LegajoId = l.Id
+                       FOR XML PATH(''), TYPE).value('.','nvarchar(max)'), 1, 2, '') AS Sucursales,
+                   (SELECT COUNT(*) FROM Fichada f WHERE f.LegajoId = l.Id AND f.EmpresaId = @EmpresaId) AS TotalFichadas,
+                   (SELECT MAX(f.FechaHora) FROM Fichada f WHERE f.LegajoId = l.Id AND f.EmpresaId = @EmpresaId) AS UltimaFichada
+            FROM Legajo l
+            LEFT JOIN Categoria c ON l.CategoriaId = c.Id
+            WHERE l.EmpresaId = @EmpresaId
+            ORDER BY l.Apellido, l.Nombre";
+
+        var legajos = new List<LegajoListDto>();
+        await using var cmd2 = new SqlCommand(sql, conn);
+        cmd2.Parameters.AddWithValue("@EmpresaId", empresaId);
+
+        await using var reader = await cmd2.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            legajos.Add(new LegajoListDto
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                NumeroLegajo = reader.GetInt32(reader.GetOrdinal("NumeroLegajo")),
+                Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive")),
+                Categoria = reader.IsDBNull(reader.GetOrdinal("Categoria")) ? null : reader.GetString(reader.GetOrdinal("Categoria")),
+                Sucursales = reader.IsDBNull(reader.GetOrdinal("Sucursales")) ? null : reader.GetString(reader.GetOrdinal("Sucursales")),
+                TotalFichadas = reader.GetInt32(reader.GetOrdinal("TotalFichadas")),
+                UltimaFichada = reader.IsDBNull(reader.GetOrdinal("UltimaFichada")) ? null : reader.GetDateTime(reader.GetOrdinal("UltimaFichada")),
+            });
+        }
+
+        return legajos;
+    }
+
     private static string GenerateTempPassword()
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -672,6 +730,19 @@ public class MultiTenantProvisioningService
                 span[i] = chars[b[i] % chars.Length];
         });
     }
+}
+
+public class LegajoListDto
+{
+    public int Id { get; set; }
+    public int NumeroLegajo { get; set; }
+    public string Apellido { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public string? Categoria { get; set; }
+    public string? Sucursales { get; set; }
+    public int TotalFichadas { get; set; }
+    public DateTime? UltimaFichada { get; set; }
+    public bool IsActive { get; set; }
 }
 
 public class EmpresaStats

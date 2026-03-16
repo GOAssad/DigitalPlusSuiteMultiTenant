@@ -23,6 +23,7 @@ namespace Acceso.Clases.Datos.RRHH
         {
             var par = new SqlParameter[]
             {
+                new SqlParameter("@EmpresaId", SqlDbType.Int) { Value = Global.Datos.TenantContext.EmpresaId },
                 new SqlParameter("@sLegajoID", SqlDbType.NVarChar) { Value = legajoId }
             };
 
@@ -72,6 +73,7 @@ namespace Acceso.Clases.Datos.RRHH
 
             var par = new SqlParameter[]
             {
+                new SqlParameter("@EmpresaId", SqlDbType.Int) { Value = Global.Datos.TenantContext.EmpresaId },
                 new SqlParameter("@sLegajoID", SqlDbType.NVarChar) { Value = legajoId },
                 new SqlParameter("@PinHash", SqlDbType.NVarChar) { Value = hash },
                 new SqlParameter("@PinSalt", SqlDbType.NVarChar) { Value = salt }
@@ -97,6 +99,7 @@ namespace Acceso.Clases.Datos.RRHH
         {
             var par = new SqlParameter[]
             {
+                new SqlParameter("@EmpresaId", SqlDbType.Int) { Value = Global.Datos.TenantContext.EmpresaId },
                 new SqlParameter("@sLegajoID", SqlDbType.NVarChar) { Value = legajoId }
             };
 
@@ -120,7 +123,11 @@ namespace Acceso.Clases.Datos.RRHH
         /// </summary>
         public static DataTable ListaLegajosActivos()
         {
-            return Global.Datos.SQLServer.EjecutarSPSelect("EscritorioLegajosActivos_Lista");
+            var par = new SqlParameter[]
+            {
+                new SqlParameter("@EmpresaId", SqlDbType.Int) { Value = Global.Datos.TenantContext.EmpresaId }
+            };
+            return Global.Datos.SQLServer.EjecutarSPSelect("EscritorioLegajosActivos_Lista", par);
         }
 
         /// <summary>

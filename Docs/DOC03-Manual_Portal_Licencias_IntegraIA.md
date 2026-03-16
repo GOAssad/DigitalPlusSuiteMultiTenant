@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 9.0
-**Fecha:** 2026-03-15
+**Version:** 10.0
+**Fecha:** 2026-03-16
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -244,6 +244,19 @@ En la barra lateral derecha del detalle de empresa, la card **"Uso del sistema"*
 - **Origen fichadas (ultimo dia):** Badges con iconos (huella, PIN, movil, manual, web, demo)
 - **Dias con actividad (ult. 30d):** Badge verde (>=20), amarillo (>=10), rojo (<10)
 - **Fichadas por dispositivo (ult. 15 dias):** Huella, PIN, Celular con iconos y contadores
+
+### Legajos de la empresa
+
+Debajo del layout principal se muestra una card **"Legajos de la empresa"** con informacion cross-database desde DigitalPlusMultiTenant:
+
+- **Badge** con cantidad total de legajos
+- **Buscador** por nombre, apellido o numero de legajo (filtro en tiempo real)
+- **Tabla scrollable** (max 500px) con columnas: Nro, Apellido, Nombre, Categoria, Sucursales, Fichadas (badge), Ultima fichada, Estado (Activo/Inactivo)
+- Legajos inactivos se muestran con fila gris
+- Carga asincronica en background (no bloquea la UI)
+- Estados: spinner de carga, mensaje "sin legajos", error de conexion
+
+> Esta informacion es de solo lectura. Para gestionar legajos, usar el Portal Multi-Tenant.
 
 ### Zona peligrosa
 

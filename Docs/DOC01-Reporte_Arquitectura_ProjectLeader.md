@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 11.0
-**Fecha:** 2026-03-14
+**Version:** 13.0
+**Fecha:** 2026-03-16
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -38,10 +38,10 @@ APLICACIONES DE ESCRITORIO (Windows)
 |  (TEntradaSalida)   |    |     (Acceso)        |
 |  WinForms .NET 4.8  |    |  WinForms .NET 4.8  |
 |                     |    |                     |
-| - Fichada x huella  |    | - ABM Legajos       |
-| - Fichada x PIN     |    | - Enrolamiento      |
-| - Modo Demo         |    | - Config. sistema   |
-| - Semaforo visual   |    | - Reportes          |
+| - Fichada x huella  |    | - Huellas + Foto    |
+| - Fichada x PIN     |    | - Datos read-only   |
+| - Modo Demo         |    | - Tab Movil         |
+| - Semaforo visual   |    |                     |
 +----------+----------+    +----------+----------+
            |                          |
            +------------+-------------+
@@ -162,22 +162,18 @@ INFRAESTRUCTURA CLOUD
 | **Stack** | C# / .NET Framework 4.8 / WinForms |
 | **Solucion** | `DigitalOneAdministrador.sln` |
 | **Ejecutable** | `Acceso.exe` |
-| **Proposito** | Gestion completa del sistema |
+| **Proposito** | Enrolamiento de huellas digitales y captura de foto. Datos de legajo en modo solo lectura. |
 
-**Funcionalidades:**
-- ABM de Legajos (empleados) con foto por camara web (se persiste en BD como VARBINARY)
-- Enrolamiento de huellas digitales
-- Gestion de PIN por empleado (asignar, resetear, forzar cambio)
-- Tab "PINs" muestra TODOS los legajos (no solo vencidos)
-- Filtro combo en tab PINs: Todos, Con PIN activo, Sin PIN, Vencidos, Cambio pendiente
-- Boton "Resetear PIN" para borrar PINs olvidados
-- Boton "Forzar cambio" marca PinMustChange=1 para que el empleado cambie su PIN en el proximo fichaje
-- Gestion de Sucursales, Categorias, Horarios, Sectores
-- Gestion de Incidencias (permisos, ausencias, vacaciones)
-- Configuracion del sistema (modo PIN, modo Demo, expiracion de PIN)
-- Reportes con Microsoft ReportViewer
-- Exportacion a Excel (SpreadsheetLight / DocumentFormat.OpenXml)
-- Generacion de PDF (iText 7)
+**Funcionalidades (simplificado desde v12.0):**
+- **Solo 2 pestanas:** "Legajo" (huellas + foto) y "Movil" (gestion de terminal movil)
+- Enrolamiento de huellas digitales (requiere lector DigitalPersona conectado)
+- Captura de foto del empleado via camara web (se persiste en BD como VARBINARY)
+- **Datos del legajo en modo solo lectura:** nombre, apellido, sector, categoria, sucursal, horario, estado se muestran pero no se pueden editar
+- Boton Guardar solo persiste huellas y foto (no datos del legajo)
+- Boton Eliminar oculto: los legajos no se pueden eliminar desde la app desktop
+- **Alta y edicion de legajos se realiza exclusivamente desde el Portal MT web** (incluyendo domicilio, sucursales, PIN, etc.)
+- Pestanas removidas: Reportes, Domicilios, Turnos
+- Tab "Movil": generar codigo de activacion, desactivar dispositivo movil
 - Verificacion de estado de empresa al iniciar: si la empresa esta suspendida en DigitalPlusAdmin, muestra mensaje y cierra la app
 - Sistema de licencias integrado. En modo multi-tenant la validacion de licencia esta DESHABILITADA (la activacion se realiza desde el instalador)
 - Informacion de licencia en barra de estado y menu
@@ -195,9 +191,13 @@ INFRAESTRUCTURA CLOUD
 | **Proposito** | Gestion administrativa multi-tenant via web |
 
 **Funcionalidades:**
-- Arquitectura multi-tenant con filtro por EmpresaId en todas las consultas
+- Arquitectura multi-tenant con filtro por EmpresaId en todas las consultas, protegida por FK compuesto en tabla Fichada
 - Dashboard con estadisticas, noticias y logo de empresa
-- Gestion de Legajos, Fichadas, Horarios, Categorias
+- **CRUD completo de Legajos** (alta, edicion, domicilio, sucursales, PIN). Es el punto unico de gestion de datos de legajo (el Administrador desktop es solo lectura)
+- Foto del legajo: muestra la foto capturada desde Administrador desktop (180x180 redondeada en formulario, 28px avatar en lista)
+- Domicilio del legajo: 7 campos (Calle, Altura, Piso, Barrio, Localidad, Provincia, CodigoPostal) en tab Datos
+- Sucursal obligatoria: al crear un nuevo legajo, el tab Sucursales es visible y la validacion requiere al menos 1 sucursal asignada
+- Gestion de Fichadas, Horarios, Categorias
 - Gestion de Sectores, Sucursales, Terminales
 - Feriados, Incidencias, Vacaciones
 - Noticias y Variables del sistema
@@ -380,7 +380,7 @@ Las tablas usan **nombres singulares** y todas las tablas principales incluyen `
 
 **Tablas principales (con EmpresaId):**
 - `Legajo` - Empleados (NumeroLegajo, Apellido, Nombre, IsActive, MobileHabilitado, PIN, PinExpiraEn, PinMustChange)
-- `Fichada` - Registro de fichadas (FechaHora en lugar de Registro)
+- `Fichada` - Registro de fichadas (FechaHora en lugar de Registro). FK compuesto `(LegajoId, EmpresaId) → Legajo(Id, EmpresaId)` impide mezcla cross-tenant a nivel BD
 - `Sucursal` - Sucursales (Direccion, Localidad, Provincia, Telefono, Email + geoconfig GPS)
 - `Horario` - Horarios
 - `Categoria` - Categorias
@@ -672,7 +672,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ---
 
-## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-13)
+## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-16)
 
 ### Completado
 
@@ -732,6 +732,10 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Fix re-activacion DeviceId:** Si legajo ya tiene terminal activa y cambia DeviceId (cache borrada), el login actualiza automaticamente sin pedir codigo nuevo
 - **Contraste visual mejorado:** Labels uppercase bold, inputs con borde/sombra, card headers oscuros con linea dorada en ambos portales
 - **Icono PWA actualizado:** D1 dorado sobre fondo oscuro (192px/512px)
+- **Portal Licencias: Tab Legajos en detalle empresa:** Lista cross-DB con NumeroLegajo, Apellido, Nombre, Categoria, Sucursales, Fichadas, Ultima fichada, Estado. Buscador en tiempo real. Carga async
+- **Fix critico cross-tenant login movil:** MobileController.Login ahora filtra por empresa del dispositivo registrado. Si dispositivo no registrado y legajo ambiguo, rechaza
+- **Fix cross-tenant PIN desktop:** RRHHLegajosPin ahora pasa @EmpresaId a todos los stored procedures (VerificarPin, CambiarPin, CargarLegajo, ListaLegajosActivos)
+- **FK compuesto cross-tenant en Fichada:** `Fichada(LegajoId, EmpresaId) → Legajo(Id, EmpresaId)` impide insertar fichadas con legajo de otra empresa a nivel BD
 
 ### En progreso
 
