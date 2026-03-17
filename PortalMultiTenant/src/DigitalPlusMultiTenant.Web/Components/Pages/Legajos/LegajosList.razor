@@ -107,7 +107,19 @@
                         {
                             <tr>
                                 <td><span class="badge bg-secondary">@l.NumeroLegajo</span></td>
-                                <td><strong>@l.Apellido</strong>, @l.Nombre</td>
+                                <td class="d-flex align-items-center gap-2">
+                                    @if (l.Foto != null && l.Foto.Length > 0)
+                                    {
+                                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(l.Foto)"
+                                             class="rounded-circle" style="width:28px;height:28px;object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center"
+                                              style="width:28px;height:28px;"><i class="bi bi-person text-muted"></i></span>
+                                    }
+                                    <span><strong>@l.Apellido</strong>, @l.Nombre</span>
+                                </td>
                                 <td>@l.Sector?.Nombre</td>
                                 <td>@l.Categoria?.Nombre</td>
                                 <td>@l.Horario?.Nombre</td>
@@ -197,6 +209,7 @@
 
     // Debounce
     private CancellationTokenSource? _debounceToken;
+    private bool _cargando;
 
     protected override async Task OnInitializedAsync()
     {
@@ -211,7 +224,7 @@
         _debounceToken = new CancellationTokenSource();
         try
         {
-            await Task.Delay(300, _debounceToken.Token);
+            await Task.Delay(400, _debounceToken.Token);
             pagina = 1;
             await CargarDatos();
         }
@@ -220,6 +233,7 @@
 
     private async Task Buscar()
     {
+        _debounceToken?.Cancel();
         pagina = 1;
         await CargarDatos();
     }
@@ -254,6 +268,10 @@
 
     private async Task CargarDatos()
     {
+        if (_cargando) return;
+        _cargando = true;
+        try
+        {
         var query = Db.Legajos
             .Include(l => l.Sector)
             .Include(l => l.Categoria)
@@ -293,6 +311,8 @@
             .Skip((pagina - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+        }
+        finally { _cargando = false; }
     }
 
     private async Task ExportarExcel()

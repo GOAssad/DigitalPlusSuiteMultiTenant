@@ -8,6 +8,8 @@ public class EventoCalendario : BaseEntity, ITenantEntity
     public int LegajoId { get; set; }
     public DateOnly FechaDesde { get; set; }
     public DateOnly FechaHasta { get; set; }
+    public TimeOnly HoraDesde { get; set; }
+    public TimeOnly HoraHasta { get; set; }
     public string? Nota { get; set; }
 
     // Navigation

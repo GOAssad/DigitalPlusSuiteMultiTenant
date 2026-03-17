@@ -38,15 +38,15 @@
                 <i class="bi bi-person me-1"></i>Datos
             </button>
         </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link @(activeTab == "sucursales" ? "active" : "")"
+                    @onclick='() => activeTab = "sucursales"'>
+                <i class="bi bi-building me-1"></i>Sucursales
+                <span class="badge @(sucursalesAsignadas.Count == 0 ? "bg-danger" : "bg-primary") ms-1">@sucursalesAsignadas.Count</span>
+            </button>
+        </li>
         @if (IsEdit)
         {
-            <li class="nav-item">
-                <button type="button" class="nav-link @(activeTab == "sucursales" ? "active" : "")"
-                        @onclick='() => activeTab = "sucursales"'>
-                    <i class="bi bi-building me-1"></i>Sucursales
-                    <span class="badge bg-primary ms-1">@sucursalesAsignadas.Count</span>
-                </button>
-            </li>
             <li class="nav-item">
                 <button type="button" class="nav-link @(activeTab == "huellas" ? "active" : "")"
                         @onclick='() => activeTab = "huellas"'>
@@ -88,6 +88,20 @@
             @* ===== TAB: DATOS ===== *@
             @if (activeTab == "datos")
             {
+                @* ===== FOTO ===== *@
+                @if (IsEdit && model.Foto != null && model.Foto.Length > 0)
+                {
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body text-center py-3">
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(model.Foto)"
+                                 alt="Foto del legajo"
+                                 class="rounded"
+                                 style="max-height: 180px; max-width: 180px; object-fit: cover;" />
+                            <div class="text-muted small mt-1">Foto capturada desde la app de escritorio</div>
+                        </div>
+                    </div>
+                }
+
                 <h6 class="text-muted mb-3"><i class="bi bi-person me-1"></i>Datos personales</h6>
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
@@ -180,6 +194,40 @@
                     }
                 </div>
 
+                <h6 class="text-muted mb-3"><i class="bi bi-geo-alt me-1"></i>Domicilio</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-5">
+                        <label class="form-label">Calle</label>
+                        <input type="text" class="form-control" @bind="domCalle" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Altura</label>
+                        <input type="text" class="form-control" @bind="domAltura" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Piso</label>
+                        <input type="text" class="form-control" @bind="domPiso" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Barrio</label>
+                        <input type="text" class="form-control" @bind="domBarrio" />
+                    </div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Localidad</label>
+                        <input type="text" class="form-control" @bind="domLocalidad" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Provincia</label>
+                        <input type="text" class="form-control" @bind="domProvincia" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Codigo Postal</label>
+                        <input type="text" class="form-control" @bind="domCodigoPostal" />
+                    </div>
+                </div>
+
                 @if (mobileHabilitado && IsEdit)
                 {
                     <h6 class="text-muted mb-3"><i class="bi bi-phone me-1"></i>PIN Movil</h6>
@@ -216,7 +264,7 @@
             }
 
             @* ===== TAB: SUCURSALES ===== *@
-            @if (activeTab == "sucursales" && IsEdit)
+            @if (activeTab == "sucursales")
             {
                 <h6 class="text-muted mb-3"><i class="bi bi-building me-1"></i>Sucursales asignadas</h6>
                 <div class="row">
@@ -439,74 +487,123 @@
             @* ===== TAB: CALENDARIO ===== *@
             @if (activeTab == "calendario" && IsEdit)
             {
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="form-check form-switch">
-                            <InputCheckbox @bind-Value="model.HasCalendarioPersonalizado" class="form-check-input" />
-                            <label class="form-check-label fw-semibold">Calendario personalizado</label>
-                        </div>
-                        <small class="text-muted">
-                            @if (model.HasCalendarioPersonalizado)
-                            {
-                                <span>Este legajo usa un calendario personalizado en lugar del horario general.</span>
-                            }
-                            else
-                            {
-                                <span>El legajo sigue el horario general asignado en la pestaña Datos.</span>
-                            }
-                        </small>
+                @* ===== GRILLA CALENDARIO MENSUAL ===== *@
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CalMesAnterior">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <h5 class="mb-0 text-capitalize" style="min-width:180px;text-align:center;">
+                            @calMes.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-AR"))
+                        </h5>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CalMesSiguiente">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm ms-2" @onclick="CalMesHoy">Hoy</button>
                     </div>
+                    @if (model.Horario != null)
+                    {
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-clock me-1"></i>Horario: @model.Horario.Nombre
+                        </span>
+                    }
                 </div>
 
-                @if (model.HasCalendarioPersonalizado)
+                <table class="table table-bordered mb-3" style="table-layout:fixed;">
+                    <thead>
+                        <tr class="text-center bg-light">
+                            <th>Lu</th>
+                            <th>Ma</th>
+                            <th>Mi</th>
+                            <th>Ju</th>
+                            <th>Vi</th>
+                            <th class="text-danger">Sa</th>
+                            <th class="text-danger">Do</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var dias = GetCalDias();
+                            var hoy = DateOnly.FromDateTime(DateTime.Today);
+                        }
+                        @for (int fila = 0; fila < dias.Count / 7; fila++)
+                        {
+                            <tr>
+                                @for (int col = 0; col < 7; col++)
+                                {
+                                    var dia = dias[fila * 7 + col];
+                                    if (dia == null)
+                                    {
+                                        <td class="bg-light" style="height:90px;"></td>
+                                    }
+                                    else
+                                    {
+                                        var d = dia.Value;
+                                        var esHoy = d == hoy;
+                                        var eventos = GetEventosDia(d);
+                                        var horarioDia = GetHorarioDia(d);
+                                        var esFinDeSemana = col >= 5;
+                                        <td style="height:90px;vertical-align:top;padding:4px;cursor:pointer;@(esHoy ? "background-color:#fff3cd;" : esFinDeSemana ? "background-color:#f8f9fa;" : "")"
+                                            @onclick="() => CalAbrirNuevo(d)">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <span class="fw-bold small @(esHoy ? "text-warning" : "")">@d.Day</span>
+                                                @if (horarioDia != null)
+                                                {
+                                                    <span class="badge bg-light text-muted border" style="font-size:0.65rem;">
+                                                        @horarioDia.HoraDesde.ToString("HH:mm")-@horarioDia.HoraHasta.ToString("HH:mm")
+                                                    </span>
+                                                }
+                                            </div>
+                                            @foreach (var ev in eventos)
+                                            {
+                                                <div class="rounded px-1 mt-1 small text-white text-truncate" title="@ev.Nota"
+                                                     style="background-color:#0d6efd;font-size:0.7rem;cursor:pointer;"
+                                                     @onclick:stopPropagation="true"
+                                                     @onclick="() => CalAbrirEditar(ev)">
+                                                    <i class="bi bi-calendar-event"></i>
+                                                    @ev.HoraDesde.ToString("HH:mm")-@ev.HoraHasta.ToString("HH:mm")
+                                                    @if (!string.IsNullOrEmpty(ev.Nota))
+                                                    {
+                                                        <span> @ev.Nota</span>
+                                                    }
+                                                </div>
+                                            }
+                                        </td>
+                                    }
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @* Lista compacta de eventos del mes *@
+                @if (GetEventosMes().Count > 0)
                 {
-                    <hr />
-                    <h6 class="text-muted mb-3"><i class="bi bi-calendar-event me-1"></i>Eventos del calendario</h6>
-
-                    <div class="row g-3 mb-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label">Fecha desde</label>
-                            <input type="date" class="form-control" @bind="nuevoEventoDesde" />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Fecha hasta</label>
-                            <input type="date" class="form-control" @bind="nuevoEventoHasta" />
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Nota</label>
-                            <input type="text" class="form-control" @bind="nuevoEventoNota" placeholder="Motivo..." />
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-primary w-100" @onclick="AgregarEvento">
-                                <i class="bi bi-plus-lg me-1"></i>Agregar
-                            </button>
-                        </div>
-                    </div>
-
-                    @if (eventosCalendario.Count == 0)
-                    {
-                        <div class="alert alert-info small">No hay eventos personalizados para este legajo.</div>
-                    }
-                    else
-                    {
+                    <h6 class="text-muted mb-2"><i class="bi bi-list-ul me-1"></i>Eventos del mes (@GetEventosMes().Count)</h6>
+                    <div class="table-responsive mb-3">
                         <table class="table table-sm table-hover">
                             <thead class="table-light">
                                 <tr>
                                     <th>Desde</th>
                                     <th>Hasta</th>
+                                    <th>Horario</th>
                                     <th>Nota</th>
-                                    <th style="width:60px"></th>
+                                    <th style="width:80px"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var ev in eventosCalendario.OrderBy(e => e.FechaDesde))
+                                @foreach (var ev in GetEventosMes())
                                 {
                                     <tr>
                                         <td>@ev.FechaDesde.ToString("dd/MM/yyyy")</td>
                                         <td>@ev.FechaHasta.ToString("dd/MM/yyyy")</td>
-                                        <td>@ev.Nota</td>
+                                        <td>@ev.HoraDesde.ToString("HH:mm") - @ev.HoraHasta.ToString("HH:mm")</td>
+                                        <td class="text-muted small">@ev.Nota</td>
                                         <td>
-                                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => EliminarEvento(ev)">
+                                            <button type="button" class="btn btn-outline-primary btn-sm me-1" @onclick="() => CalAbrirEditar(ev)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => CalEliminarEvento(ev)">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
@@ -514,7 +611,61 @@
                                 }
                             </tbody>
                         </table>
-                    }
+                    </div>
+                }
+
+                @* ===== MODAL EVENTO ===== *@
+                @if (calShowModal)
+                {
+                    <div class="modal d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        @(calEditando != null ? "Editar" : "Nuevo") evento
+                                    </h5>
+                                    <button type="button" class="btn-close" @onclick="() => calShowModal = false"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="form-label">Fecha desde</label>
+                                            <input type="date" class="form-control" @bind="calModalDesde" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label">Fecha hasta</label>
+                                            <input type="date" class="form-control" @bind="calModalHasta" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label">Hora desde</label>
+                                            <input type="time" class="form-control" @bind="calModalHoraDesde" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label">Hora hasta</label>
+                                            <input type="time" class="form-control" @bind="calModalHoraHasta" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Nota</label>
+                                            <input type="text" class="form-control" @bind="calModalNota" placeholder="Inventario, reemplazo, etc..." />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    @if (calEditando != null)
+                                    {
+                                        <button type="button" class="btn btn-outline-danger me-auto" @onclick="() => { CalEliminarEvento(calEditando); calShowModal = false; }">
+                                            <i class="bi bi-trash me-1"></i>Eliminar
+                                        </button>
+                                    }
+                                    <button type="button" class="btn btn-secondary" @onclick="() => calShowModal = false">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" @onclick="CalGuardarEvento">
+                                        <i class="bi bi-check-lg me-1"></i>Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 }
 
                 <hr />
@@ -869,6 +1020,15 @@
     private string activeTab = "datos";
     private bool mobileHabilitado;
 
+    // Domicilio
+    private string? domCalle;
+    private string? domAltura;
+    private string? domPiso;
+    private string? domBarrio;
+    private string? domLocalidad;
+    private string? domProvincia;
+    private string? domCodigoPostal;
+
     // Sucursales
     private List<Sucursal> sucursalesAsignadas = new();
     private List<Sucursal> sucursalesDisponibles = new();
@@ -878,10 +1038,15 @@
 
     // Calendario
     private List<EventoCalendario> eventosCalendario = new();
-    private DateOnly nuevoEventoDesde = DateOnly.FromDateTime(DateTime.Today);
-    private DateOnly nuevoEventoHasta = DateOnly.FromDateTime(DateTime.Today);
-    private string? nuevoEventoNota;
     private List<EventoCalendario> eventosEliminados = new();
+    private DateOnly calMes = DateOnly.FromDateTime(DateTime.Today);
+    private bool calShowModal;
+    private EventoCalendario? calEditando;
+    private DateOnly calModalDesde = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly calModalHasta = DateOnly.FromDateTime(DateTime.Today);
+    private TimeOnly calModalHoraDesde = new(9, 0);
+    private TimeOnly calModalHoraHasta = new(18, 0);
+    private string? calModalNota;
 
     // Movil
     private TerminalMovil? terminalMovil;
@@ -942,6 +1107,7 @@
         sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
         categorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
         horarios = await Db.Horarios.Where(h => h.IsActive).OrderBy(h => h.Nombre).ToListAsync();
+        sucursalesDisponibles = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
 
         if (IsEdit)
         {
@@ -949,6 +1115,8 @@
                 .Include(l => l.LegajoSucursales).ThenInclude(ls => ls.Sucursal)
                 .Include(l => l.Huellas)
                 .Include(l => l.EventosCalendario)
+                .Include(l => l.Domicilio)
+                .Include(l => l.Horario!).ThenInclude(h => h.Detalles)
                 .FirstOrDefaultAsync(l => l.Id == Id);
 
             if (entity == null) { Nav.NavigateTo("legajos"); return; }
@@ -961,10 +1129,19 @@
                 .ToList();
 
             var asignadasIds = sucursalesAsignadas.Select(s => s.Id).ToHashSet();
-            sucursalesDisponibles = await Db.Sucursales
-                .Where(s => s.IsActive && !asignadasIds.Contains(s.Id))
-                .OrderBy(s => s.Nombre)
-                .ToListAsync();
+            sucursalesDisponibles = sucursalesDisponibles.Where(s => !asignadasIds.Contains(s.Id)).ToList();
+
+            // Domicilio
+            if (entity.Domicilio != null)
+            {
+                domCalle = entity.Domicilio.Calle;
+                domAltura = entity.Domicilio.Altura;
+                domPiso = entity.Domicilio.Piso;
+                domBarrio = entity.Domicilio.Barrio;
+                domLocalidad = entity.Domicilio.Localidad;
+                domProvincia = entity.Domicilio.Provincia;
+                domCodigoPostal = entity.Domicilio.CodigoPostal;
+            }
 
             // Huellas
             huellas = entity.Huellas.ToList();
@@ -1012,29 +1189,128 @@
     }
 
     // --- Calendario ---
-    private void AgregarEvento()
+    private void CalMesAnterior() => calMes = calMes.AddMonths(-1);
+    private void CalMesSiguiente() => calMes = calMes.AddMonths(1);
+    private void CalMesHoy() => calMes = DateOnly.FromDateTime(DateTime.Today);
+
+    private List<DateOnly?> GetCalDias()
     {
-        if (nuevoEventoDesde > nuevoEventoHasta) return;
-
-        eventosCalendario.Add(new EventoCalendario
-        {
-            LegajoId = model.Id,
-            EmpresaId = model.EmpresaId,
-            FechaDesde = nuevoEventoDesde,
-            FechaHasta = nuevoEventoHasta,
-            Nota = nuevoEventoNota
-        });
-
-        nuevoEventoDesde = DateOnly.FromDateTime(DateTime.Today);
-        nuevoEventoHasta = DateOnly.FromDateTime(DateTime.Today);
-        nuevoEventoNota = null;
+        var primero = new DateOnly(calMes.Year, calMes.Month, 1);
+        var diasEnMes = DateTime.DaysInMonth(calMes.Year, calMes.Month);
+        // Lunes=0 ... Domingo=6
+        var offset = ((int)primero.DayOfWeek + 6) % 7;
+        var celdas = new List<DateOnly?>();
+        for (int i = 0; i < offset; i++) celdas.Add(null);
+        for (int d = 1; d <= diasEnMes; d++) celdas.Add(new DateOnly(calMes.Year, calMes.Month, d));
+        while (celdas.Count % 7 != 0) celdas.Add(null);
+        return celdas;
     }
 
-    private void EliminarEvento(EventoCalendario ev)
+    private List<EventoCalendario> GetEventosDia(DateOnly dia)
+        => eventosCalendario.Where(e => dia >= e.FechaDesde && dia <= e.FechaHasta).ToList();
+
+    private HorarioDetalle? GetHorarioDia(DateOnly dia)
+    {
+        if (model.Horario?.Detalles == null) return null;
+        var diaSemana = dia.DayOfWeek switch
+        {
+            DayOfWeek.Sunday => Domain.Enums.DiaSemana.Domingo,
+            DayOfWeek.Monday => Domain.Enums.DiaSemana.Lunes,
+            DayOfWeek.Tuesday => Domain.Enums.DiaSemana.Martes,
+            DayOfWeek.Wednesday => Domain.Enums.DiaSemana.Miercoles,
+            DayOfWeek.Thursday => Domain.Enums.DiaSemana.Jueves,
+            DayOfWeek.Friday => Domain.Enums.DiaSemana.Viernes,
+            DayOfWeek.Saturday => Domain.Enums.DiaSemana.Sabado,
+            _ => Domain.Enums.DiaSemana.Lunes
+        };
+        return model.Horario.Detalles.FirstOrDefault(d => d.DiaSemana == diaSemana && !d.IsCerrado);
+    }
+
+    private void CalAbrirNuevo(DateOnly dia)
+    {
+        calEditando = null;
+        calModalDesde = dia;
+        calModalHasta = dia;
+        calModalHoraDesde = new(9, 0);
+        calModalHoraHasta = new(18, 0);
+        calModalNota = null;
+        calShowModal = true;
+    }
+
+    private void CalAbrirEditar(EventoCalendario ev)
+    {
+        calEditando = ev;
+        calModalDesde = ev.FechaDesde;
+        calModalHasta = ev.FechaHasta;
+        calModalHoraDesde = ev.HoraDesde;
+        calModalHoraHasta = ev.HoraHasta;
+        calModalNota = ev.Nota;
+        calShowModal = true;
+    }
+
+    private async Task CalGuardarEvento()
+    {
+        if (calModalDesde > calModalHasta) return;
+
+        if (calEditando != null)
+        {
+            calEditando.FechaDesde = calModalDesde;
+            calEditando.FechaHasta = calModalHasta;
+            calEditando.HoraDesde = calModalHoraDesde;
+            calEditando.HoraHasta = calModalHoraHasta;
+            calEditando.Nota = calModalNota;
+            if (calEditando.Id > 0)
+            {
+                var tracked = await Db.EventosCalendario.FindAsync(calEditando.Id);
+                if (tracked != null)
+                {
+                    tracked.FechaDesde = calModalDesde;
+                    tracked.FechaHasta = calModalHasta;
+                    tracked.HoraDesde = calModalHoraDesde;
+                    tracked.HoraHasta = calModalHoraHasta;
+                    tracked.Nota = calModalNota;
+                    await Db.SaveChangesAsync();
+                }
+            }
+        }
+        else
+        {
+            var nuevo = new EventoCalendario
+            {
+                LegajoId = model.Id,
+                EmpresaId = model.EmpresaId,
+                FechaDesde = calModalDesde,
+                FechaHasta = calModalHasta,
+                HoraDesde = calModalHoraDesde,
+                HoraHasta = calModalHoraHasta,
+                Nota = calModalNota
+            };
+            Db.EventosCalendario.Add(nuevo);
+            await Db.SaveChangesAsync();
+            eventosCalendario.Add(nuevo);
+        }
+        calShowModal = false;
+    }
+
+    private async Task CalEliminarEvento(EventoCalendario ev)
     {
         eventosCalendario.Remove(ev);
-        if (ev.Id > 0) eventosEliminados.Add(ev);
+        if (ev.Id > 0)
+        {
+            var tracked = await Db.EventosCalendario.FindAsync(ev.Id);
+            if (tracked != null)
+            {
+                Db.EventosCalendario.Remove(tracked);
+                await Db.SaveChangesAsync();
+            }
+        }
     }
+
+    private List<EventoCalendario> GetEventosMes()
+        => eventosCalendario
+            .Where(e => e.FechaHasta >= new DateOnly(calMes.Year, calMes.Month, 1)
+                && e.FechaDesde <= new DateOnly(calMes.Year, calMes.Month, DateTime.DaysInMonth(calMes.Year, calMes.Month)))
+            .OrderBy(e => e.FechaDesde).ToList();
 
     // --- PIN ---
     private async Task GuardarPin()
@@ -1521,6 +1797,14 @@
     {
         try
         {
+            // Validar sucursal obligatoria
+            if (!sucursalesAsignadas.Any())
+            {
+                errorMessage = "Debe asignar al menos una sucursal al legajo.";
+                activeTab = "sucursales";
+                return;
+            }
+
             // Validar limite de licencia al crear
             if (!IsEdit)
             {
@@ -1533,8 +1817,33 @@
                 }
             }
 
+            // Domicilio: sincronizar
+            var tieneDomicilio = !string.IsNullOrWhiteSpace(domCalle) || !string.IsNullOrWhiteSpace(domAltura)
+                || !string.IsNullOrWhiteSpace(domLocalidad) || !string.IsNullOrWhiteSpace(domProvincia);
+
             if (IsEdit)
             {
+                var domExistente = await Db.LegajoDomicilios.FirstOrDefaultAsync(d => d.LegajoId == model.Id);
+                if (tieneDomicilio)
+                {
+                    if (domExistente == null)
+                    {
+                        domExistente = new LegajoDomicilio { LegajoId = model.Id };
+                        Db.LegajoDomicilios.Add(domExistente);
+                    }
+                    domExistente.Calle = domCalle;
+                    domExistente.Altura = domAltura;
+                    domExistente.Piso = domPiso;
+                    domExistente.Barrio = domBarrio;
+                    domExistente.Localidad = domLocalidad;
+                    domExistente.Provincia = domProvincia;
+                    domExistente.CodigoPostal = domCodigoPostal;
+                }
+                else if (domExistente != null)
+                {
+                    Db.LegajoDomicilios.Remove(domExistente);
+                }
+
                 // Sucursales: sincronizar
                 var existentes = await Db.LegajoSucursales
                     .Where(ls => ls.LegajoId == model.Id)
@@ -1562,9 +1871,38 @@
                 {
                     Db.EventosCalendario.Add(ev);
                 }
+
+                // Calendario: actualizar editados
+                foreach (var ev in eventosCalendario.Where(e => e.Id > 0))
+                {
+                    var tracked = await Db.EventosCalendario.FindAsync(ev.Id);
+                    if (tracked != null)
+                    {
+                        tracked.FechaDesde = ev.FechaDesde;
+                        tracked.FechaHasta = ev.FechaHasta;
+                        tracked.HoraDesde = ev.HoraDesde;
+                        tracked.HoraHasta = ev.HoraHasta;
+                        tracked.Nota = ev.Nota;
+                    }
+                }
             }
             else
             {
+                if (tieneDomicilio)
+                {
+                    model.Domicilio = new LegajoDomicilio
+                    {
+                        Calle = domCalle,
+                        Altura = domAltura,
+                        Piso = domPiso,
+                        Barrio = domBarrio,
+                        Localidad = domLocalidad,
+                        Provincia = domProvincia,
+                        CodigoPostal = domCodigoPostal
+                    };
+                }
+                // Asignar sucursales al nuevo legajo
+                model.LegajoSucursales = sucursalesAsignadas.Select(s => new LegajoSucursal { SucursalId = s.Id }).ToList();
                 Db.Legajos.Add(model);
             }
 
