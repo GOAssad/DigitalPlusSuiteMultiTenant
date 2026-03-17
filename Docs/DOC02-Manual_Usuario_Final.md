@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 10.0
-**Fecha:** 2026-03-15
+**Version:** 12.0
+**Fecha:** 2026-03-17
 
 ---
 
@@ -153,6 +153,8 @@ Este es el instalador recomendado para la mayoria de las empresas. La base de da
 1. El archivo del instalador: `DigitalPlus_Cloud_Setup_v1.0.exe`
 2. El **codigo de activacion** de su empresa (si tiene uno), **o** datos para registrarse como Free (nombre de empresa, email, pais)
 3. Conexion a internet (obligatoria durante la instalacion)
+
+> **Nota:** Durante la instalacion puede elegir la carpeta de destino. Si necesita reinstalar con el mismo email (plan Free), el sistema detecta que ya existe y retorna los datos existentes sin crear duplicados.
 
 #### Paso 1 - Ejecutar el instalador
 
@@ -399,24 +401,33 @@ En la barra inferior del Fichador se muestra informacion segun el tipo de instal
 
 ### Pantalla principal
 
-Al abrir el Administrador, vera un menu lateral con todas las opciones disponibles. En la parte superior del menu se muestra el **logo de su empresa** (si fue cargado por el administrador del sistema). En la parte inferior del menu aparece el logo de Integra IA.
+Al abrir el Administrador, vera un menu lateral con las opciones disponibles. En la parte superior del menu se muestra el **logo de su empresa** (si fue cargado por el administrador del sistema). En la parte inferior del menu aparece el logo de Integra IA.
 
 El menu incluye accesos directos a las **redes sociales y pagina web** de su empresa (si fueron configuradas). Estos links se cargan automaticamente desde el sistema y abren el navegador web al hacer clic.
 
+> **Importante:** El Administrador desktop tiene un rol simplificado: **solo se usa para registrar huellas digitales y tomar fotos** de los empleados. Todos los datos del legajo (nombre, apellido, sector, categoria, sucursal, horario, domicilio, etc.) se gestionan desde el **Portal Web**. En el Administrador, estos datos se muestran en modo solo lectura.
+
 > [CAPTURA: Pantalla principal del Administrador con menu lateral, logo de empresa y links de redes sociales]
 
-### 5.1 Gestion de Legajos (Empleados)
+### 5.1 Legajos - Huellas y Foto
 
-Desde **RRHH > Legajos** puede:
+El formulario de legajos tiene **2 pestanas**:
 
-- **Agregar** un nuevo empleado: nombre, legajo, categoria, horario, sector, sucursal
-- **Modificar** datos de un empleado existente
-- **Eliminar** un empleado (baja logica)
+**Pestana "Legajo":**
+- Muestra los datos del empleado en **modo solo lectura** (nombre, apellido, sector, categoria, sucursal, horario, estado)
+- **Registrar huellas digitales** (requiere lector DigitalPersona conectado)
 - **Tomar foto** del empleado usando la camara web
-- **Registrar huellas** digitales (requiere lector conectado)
-- **Asignar/Resetear PIN**
+- El boton **Guardar** solo persiste las huellas y la foto, no modifica los datos del legajo
+- No hay boton de eliminar: los legajos no se pueden dar de baja desde la app desktop
 
-> [CAPTURA: Formulario de Legajos mostrando los campos de datos del empleado]
+**Pestana "Movil":**
+- Ver estado del dispositivo movil del empleado
+- Generar codigo de activacion para vincular un smartphone
+- Desactivar dispositivo movil
+
+> Para dar de alta empleados, modificar sus datos o gestionar domicilios, sucursales y PINs, utilice el **Portal Web**.
+
+> [CAPTURA: Formulario de Legajos mostrando datos en modo solo lectura y panel de camara/huellas]
 
 #### Registrar huellas
 
@@ -428,90 +439,9 @@ Desde **RRHH > Legajos** puede:
 
 > [CAPTURA: Dialogo de enrolamiento de huellas digitales]
 
-#### Asignar PIN
+### 5.2 Reportes del Portal Web
 
-1. Seleccione el empleado en la lista
-2. Haga clic en el boton **PIN**
-3. Ingrese un PIN de 4 a 6 digitos
-4. Confirme el PIN
-
-> [CAPTURA: Dialogo de asignacion de PIN con campo de ingreso]
-
-### 5.2 Gestion de Fichadas
-
-Desde **RRHH > Fichadas** puede:
-
-- Ver todas las fichadas registradas
-- Filtrar por empleado, fecha, tipo (Entrada/Salida)
-- Agregar fichadas manuales (en caso de olvido del empleado)
-- Ver llegadas tarde
-
-> [CAPTURA: Pantalla de consulta de fichadas con filtros y grilla de datos]
-
-### 5.3 Tablas del Sistema
-
-| Opcion | Que gestiona |
-|---|---|
-| **Sucursales** | Ubicaciones fisicas de la empresa |
-| **Categorias** | Clasificacion de empleados (ej: Operario, Administrativo) |
-| **Horarios** | Definicion de horarios de trabajo |
-| **Sectores** | Areas de la empresa (ej: Produccion, RRHH) |
-| **Incidencias** | Tipos de ausencia (vacaciones, enfermedad, permiso) |
-| **Feriados** | Dias no laborables |
-
-> [CAPTURA: Pantalla de ABM de Sucursales como ejemplo de tabla del sistema]
-
-### 5.4 Configuracion del Sistema
-
-Desde el boton de **Configuracion** (icono de engranaje) accede a:
-
-#### Pestana Fichada
-- **Modo PIN:** Habilitar o deshabilitar fichada por PIN
-- **Expiracion de PIN:** Cantidad de dias para que el PIN expire (0 = no expira)
-- **Modo Demo:** Habilitar o deshabilitar modo demostracion
-
-> [CAPTURA: Pantalla de Configuracion - Pestana Fichada con checkboxes y opciones]
-
-#### Pestana PINs
-Muestra **todos los legajos** con su estado de PIN. En la parte superior hay un combo de filtro con las siguientes opciones:
-
-- **Todos:** Muestra todos los legajos
-- **Con PIN activo:** Solo legajos con PIN vigente
-- **Sin PIN:** Legajos que no tienen PIN asignado
-- **Vencidos:** Legajos cuyo PIN ha expirado
-- **Cambio pendiente:** Legajos a los que el administrador les forzo un cambio de PIN
-
-> [CAPTURA: Pantalla de Configuracion - Pestana PINs con combo de filtro y grilla]
-
-La grilla muestra las siguientes columnas:
-
-| Columna | Descripcion |
-|---|---|
-| **Legajo** | Numero de legajo del empleado |
-| **Nombre** | Nombre completo del empleado |
-| **Estado PIN** | Activo / Sin PIN / Vencido / Cambio pendiente |
-| **Ultimo cambio** | Fecha del ultimo cambio de PIN |
-
-Debajo de la grilla hay dos botones de accion:
-
-- **Forzar cambio de PIN:** Marca los legajos seleccionados con PinMustChange. La proxima vez que el empleado ingrese su numero de legajo en el Fichador, debera establecer un nuevo PIN. No se le pedira el PIN anterior.
-- **Resetear PIN:** Elimina el PIN del empleado por completo. La proxima vez que ingrese su legajo en el Fichador, se le solicitara que cree un PIN nuevo. Use esta opcion cuando un empleado olvido su PIN.
-
-> [CAPTURA: Botones "Forzar cambio de PIN" y "Resetear PIN" en la pestana PINs]
-
-### 5.5 Reportes
-
-El Administrador genera reportes con Microsoft ReportViewer:
-- Asistencia por periodo
-- Horas trabajadas
-- Llegadas tarde
-- Horas extras
-
-Los reportes se pueden exportar a PDF y Excel.
-
-### 5.6 Reportes del Portal Web
-
-El portal web ofrece reportes adicionales:
+El portal web ofrece reportes:
 - **Asistencia Diaria:** Resumen de entradas y salidas por dia
 - **Llegadas Tarde:** Listado de empleados que ingresaron despues de su horario
 - **Ausencias:** Listado de empleados que no ficharon en dias laborables. Incluye checkbox "Incidencias" para mostrar u ocultar ausencias justificadas (incidencias registradas). Filtra por sector, motivo y legajo.
@@ -521,7 +451,7 @@ Todos los reportes del portal se exportan a Excel y CSV.
 
 > [CAPTURA: Ejemplo de reporte de asistencia generado]
 
-### 5.6 Licencias
+### 5.3 Licencias
 
 Desde el menu **Licencias** puede:
 - Ver el estado actual de la licencia
@@ -599,9 +529,9 @@ Al crear un usuario desde Administracion > Usuarios, cada rol muestra una descri
 
 El formulario de edicion de un legajo tiene las siguientes solapas:
 
-**Datos:** Informacion personal (nombre, apellido, email, telefono), organizacion (sector, categoria, horario), estado, acceso movil y PIN.
+**Datos:** Informacion personal (nombre, apellido, email, telefono), organizacion (sector, categoria, horario), estado, acceso movil y PIN. Incluye seccion **Domicilio** con 7 campos: Calle, Altura, Piso, Barrio, Localidad, Provincia, CodigoPostal. Si el legajo tiene una **foto** (capturada desde Administrador desktop), se muestra como imagen redondeada de 180x180 pixeles. En la lista de legajos, la foto aparece como avatar de 28px.
 
-**Sucursales:** Asignar/desasignar sucursales al legajo. Determina en que sucursales puede fichar.
+**Sucursales:** Asignar/desasignar sucursales al legajo. Determina en que sucursales puede fichar. **Al crear un nuevo legajo, es obligatorio asignar al menos una sucursal** (el tab Sucursales se muestra visible durante la creacion).
 
 **Huellas:** Visualizacion de huellas registradas (la registracion se realiza desde la app de escritorio Administrador).
 
@@ -611,12 +541,18 @@ El formulario de edicion de un legajo tiene las siguientes solapas:
 - **Eliminar fichada:** Con confirmacion previa.
 - Las fichadas manuales y las incidencias del periodo se muestran juntas en el listado.
 
-**Calendario:** Gestion de novedades del legajo:
-- **Registrar incidencia individual:** Seleccionar tipo de incidencia, rango de fechas y detalle. Se genera un registro por dia.
-- **Registrar vacaciones:** Rango de fechas y nota. Se muestra como bloque con el rango visible.
-- **Listado unificado:** Incidencias y vacaciones juntas, ordenadas por fecha, con filtro por rango y tipo.
-- **Eliminar:** Con confirmacion previa para vacaciones.
-- **Calendario personalizado:** Permite definir horarios especiales para el legajo (eventos de calendario).
+**Calendario:** Vista mensual tipo Google Calendar con grilla visual:
+- **Grilla mensual:** Muestra los dias del mes en formato de calendario con navegacion entre meses y boton "Hoy". Los headers de dias son Lu Ma Mi Ju Vi Sa Do (sabado y domingo en rojo).
+- **Horario habitual:** En cada celda del dia se muestra el horario asignado al legajo como badge gris (ej: "09:00-18:00"), tomado del Horario y HorarioDetalle configurados en la pestana Datos.
+- **Eventos de calendario:** Alteraciones temporales del horario habitual (extensiones, convocatorias especiales, reemplazos). Se muestran como pills azules sobre la celda del dia con hora y descripcion. Los eventos **no anulan** el horario habitual, son una capa adicional. Cada evento tiene: fecha desde/hasta, hora desde/hasta y nota descriptiva.
+- **Crear evento:** Click en cualquier dia abre un modal con campos de fecha, hora y nota. El evento se guarda directamente en la base de datos.
+- **Editar evento:** Click sobre un evento existente abre el modal con los datos cargados para modificar.
+- **Eliminar evento:** Desde el modal de edicion o desde la lista de eventos del mes.
+- **Lista de eventos del mes:** Debajo de la grilla se muestra una tabla resumen con todos los eventos del mes actual, con botones para editar y eliminar.
+- **Novedades:** Debajo del calendario se mantiene la seccion de novedades con:
+  - **Registrar incidencia individual:** Seleccionar tipo de incidencia, rango de fechas y detalle. Se genera un registro por dia.
+  - **Registrar vacaciones:** Rango de fechas y nota. Se muestra como bloque con el rango visible.
+  - **Listado unificado:** Incidencias y vacaciones juntas, ordenadas por fecha, con filtro por rango y tipo.
 
 **Movil:** Estado del dispositivo movil, generar codigo de activacion con envio automatico por email.
 

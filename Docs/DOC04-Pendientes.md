@@ -1,10 +1,18 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-16
+**Fecha:** 2026-03-17
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-17
+- [x] Calendario visual tipo Google Calendar en tab Legajo (grilla mensual, eventos con HoraDesde/HoraHasta, guardado directo a BD)
+- [x] EventoCalendario: agregados HoraDesde y HoraHasta (TimeOnly), migracion EF + ALTER TABLE Ferozo
+- [x] Eliminado switch HasCalendarioPersonalizado de UI (todos los legajos tienen calendario, eventos son capa adicional)
+- [x] Fix concurrencia buscador LegajosList (guard _cargando + cancelar debounce en Buscar)
+- [x] Deploy Portal MT a Azure
+- [x] DOC02 actualizado a v12.0
 
 ### Sesion 2026-03-16
 - [x] Portal Licencias: tab Legajos en detalle empresa (query cross-DB, tabla con buscador, carga async)
@@ -253,4 +261,4 @@
 
 ---
 
-*Actualizado: 2026-03-16*
+*Actualizado: 2026-03-17*
