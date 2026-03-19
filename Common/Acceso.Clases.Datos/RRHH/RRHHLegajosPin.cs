@@ -159,6 +159,40 @@ namespace Acceso.Clases.Datos.RRHH
             return string.Equals(valor, "true", StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Busca un legajo activo por su QrToken (GUID).
+        /// Retorna true si lo encuentra, y carga nLegajoID/sLegajoID/sLegajoNombre.
+        /// </summary>
+        public bool BuscarPorQrToken(string qrToken)
+        {
+            if (string.IsNullOrEmpty(qrToken))
+                return false;
+
+            // Validar que sea un GUID valido para prevenir inyeccion SQL
+            Guid parsedGuid;
+            if (!Guid.TryParse(qrToken, out parsedGuid))
+                return false;
+
+            int empresaId = Global.Datos.TenantContext.EmpresaId;
+            // Comparar sin guiones (N format) porque la BD puede tener con o sin guiones
+            string tokenSinGuiones = parsedGuid.ToString("N");
+            string sql = "SELECT l.Id, CAST(l.NumeroLegajo AS NVARCHAR) AS sLegajoID, " +
+                         "l.Apellido + ', ' + l.Nombre AS sLegajoNombre " +
+                         "FROM Legajo l " +
+                         "WHERE REPLACE(l.QrToken, '-', '') = '" + tokenSinGuiones + "' " +
+                         "AND l.EmpresaId = " + empresaId + " AND l.IsActive = 1";
+
+            DataTable dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(sql);
+            if (dt.Rows.Count == 0)
+                return false;
+
+            var row = dt.Rows[0];
+            nLegajoID = Convert.ToInt32(row["Id"]);
+            sLegajoID = row["sLegajoID"].ToString();
+            sLegajoNombre = row["sLegajoNombre"].ToString();
+            return true;
+        }
+
         private static string ComputeHash(string pin, string salt)
         {
             using (var sha256 = SHA256.Create())

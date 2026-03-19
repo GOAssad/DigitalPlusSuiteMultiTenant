@@ -128,7 +128,6 @@
                                     }
                                 </td>
                                 <td>@(r.Salida.HasValue ? r.Salida.Value.ToString("HH:mm") : "-")</td>
-                                <td>@OrigenBadge(r.OrigenEntrada)</td>
                                 <td>
                                     @if (r.HorasTrabajadas.HasValue)
                                     {
@@ -140,6 +139,7 @@
                                         <span class="text-muted">-</span>
                                     }
                                 </td>
+                                <td>@OrigenBadge(r.OrigenEntrada)</td>
                                 <td>
                                     @if (r.EsAusente)
                                     {
@@ -306,7 +306,7 @@
                         HorasTrabajadas = horas,
                         LlegaTarde = llegaTarde,
                         EsAusente = esAusente,
-                        OrigenEntrada = entrada?.Origen?.ToString() ?? ""
+                        OrigenEntrada = string.Join(", ", fichadasDia.Select(f => f.Origen).Where(o => !string.IsNullOrEmpty(o)).Distinct())
                     });
                 }
             }
@@ -355,20 +355,28 @@
         }).ToList();
     }
 
-    private MarkupString OrigenBadge(string origen)
+    private MarkupString OrigenBadge(string origenes)
     {
-        var (text, css) = origen switch
+        if (string.IsNullOrEmpty(origenes))
+            return new MarkupString("<span class=\"text-muted\">—</span>");
+
+        var badges = new System.Text.StringBuilder();
+        foreach (var origen in origenes.Split(',', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries))
         {
-            "Huella" => ("Huella", "bg-primary"),
-            "PIN" => ("PIN", "bg-warning text-dark"),
-            "Demo" => ("Demo", "bg-secondary"),
-            "Manual" => ("Manual", "bg-info"),
-            "Web" => ("Web", "bg-dark"),
-            _ => ("", "")
-        };
-        return string.IsNullOrEmpty(text)
-            ? new MarkupString("<span class=\"text-muted\">—</span>")
-            : new MarkupString($"<span class=\"badge {css}\">{text}</span>");
+            var (text, css) = origen switch
+            {
+                "Huella" => ("Huella", "bg-primary"),
+                "PIN" => ("PIN", "bg-warning text-dark"),
+                "Demo" => ("Demo", "bg-secondary"),
+                "Manual" => ("Manual", "bg-info"),
+                "Web" => ("Web", "bg-dark"),
+                "QR" => ("QR", "bg-dark"),
+                "Movil" => ("Movil", "bg-success"),
+                _ => (origen, "bg-secondary")
+            };
+            badges.Append($"<span class=\"badge {css} me-1\">{text}</span>");
+        }
+        return new MarkupString(badges.ToString());
     }
 
     private MarkupString SortIcon(string columna)

@@ -408,15 +408,15 @@
                                     <td>@f.FechaHora.ToString("HH:mm:ss")</td>
                                     <td><span class="badge @(f.Tipo == "E" ? "bg-success" : "bg-danger")">@(f.Tipo == "E" ? "Entrada" : "Salida")</span></td>
                                     <td>
-                                        @{ var (ficIcon, ficTitle, ficColor) = f.Origen switch
+                                        @{ var (ficIcon, ficTitle, ficColor) = (f.Origen ?? "") switch
                                         {
-                                            Domain.Enums.OrigenFichada.Huella => ("bi-fingerprint", "Huella", "text-primary"),
-                                            Domain.Enums.OrigenFichada.PIN => ("bi-dialpad", "PIN", "text-warning"),
-                                            Domain.Enums.OrigenFichada.Movil => ("bi-phone", "Movil", "text-success"),
-                                            Domain.Enums.OrigenFichada.Manual => ("bi-pencil-square", "Manual", "text-info"),
-                                            Domain.Enums.OrigenFichada.Web => ("bi-globe", "Web", "text-dark"),
-                                            Domain.Enums.OrigenFichada.Demo => ("bi-play-circle", "Demo", "text-secondary"),
-                                            null => ("bi-fingerprint", "Huella (legacy)", "text-primary"),
+                                            "Huella" => ("bi-fingerprint", "Huella", "text-primary"),
+                                            "PIN" => ("bi-keyboard", "PIN", "text-warning"),
+                                            "Movil" => ("bi-phone", "Movil", "text-success"),
+                                            "Manual" => ("bi-pencil-square", "Manual", "text-info"),
+                                            "Web" => ("bi-globe", "Web", "text-dark"),
+                                            "QR" => ("bi-qr-code", "QR", "text-dark"),
+                                            "Demo" => ("bi-play-circle", "Demo", "text-secondary"),
                                             _ => ("bi-fingerprint", "Huella", "text-primary")
                                         }; }
                                         <i class="bi @ficIcon @ficColor" title="@ficTitle"></i>
@@ -427,7 +427,7 @@
                                     </td>
                                     <td class="small text-muted">@f.Sucursal?.Nombre</td>
                                     <td class="small text-muted">
-                                        @if (f.Origen == Domain.Enums.OrigenFichada.Manual)
+                                        @if (f.Origen == "Manual")
                                         {
                                             <span>por @f.CreatedBy</span>
                                         }
@@ -1474,7 +1474,7 @@
                 SucursalId = ficModalSucursalId,
                 FechaHora = fechaHora,
                 Tipo = ficModalTipo,
-                Origen = Domain.Enums.OrigenFichada.Manual,
+                Origen = nameof(Domain.Enums.OrigenFichada.Manual),
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = Tenant.UserName
             });
@@ -1903,6 +1903,8 @@
                 }
                 // Asignar sucursales al nuevo legajo
                 model.LegajoSucursales = sucursalesAsignadas.Select(s => new LegajoSucursal { SucursalId = s.Id }).ToList();
+                // Auto-generar QrToken
+                model.QrToken = Guid.NewGuid().ToString("N");
                 Db.Legajos.Add(model);
             }
 

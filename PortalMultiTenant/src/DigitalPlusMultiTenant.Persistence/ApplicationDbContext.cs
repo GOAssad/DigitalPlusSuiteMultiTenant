@@ -84,6 +84,23 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.Entity<SucursalGeoconfig>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
         builder.Entity<CodigoActivacionMovil>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
 
+        // QrToken: indice unico filtrado (solo no-nulos)
+        builder.Entity<Legajo>()
+            .HasIndex(l => l.QrToken)
+            .IsUnique()
+            .HasFilter("[QrToken] IS NOT NULL");
+
+        builder.Entity<Legajo>()
+            .Property(l => l.QrToken)
+            .HasMaxLength(64);
+
+        // TerminalMovil: FK opcional a Sucursal (para modo kiosko)
+        builder.Entity<TerminalMovil>()
+            .HasOne(t => t.Sucursal)
+            .WithMany()
+            .HasForeignKey(t => t.SucursalId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Precision para coordenadas GPS
         builder.Entity<SucursalGeoconfig>().Property(e => e.Latitud).HasColumnType("decimal(10,7)");
         builder.Entity<SucursalGeoconfig>().Property(e => e.Longitud).HasColumnType("decimal(10,7)");

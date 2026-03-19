@@ -326,8 +326,8 @@
                     DiasLaborables = diasLaborables,
                     HorasTotal = horasTotal,
                     LlegadasTarde = llegadasTarde,
-                    FichadasHuella = fichadasLeg.Count(f => f.Origen == Domain.Enums.OrigenFichada.Huella),
-                    FichadasPin = fichadasLeg.Count(f => f.Origen == Domain.Enums.OrigenFichada.PIN)
+                    FichadasHuella = fichadasLeg.Count(f => f.Origen == "Huella" || f.Origen == null),
+                    FichadasPin = fichadasLeg.Count(f => f.Origen == "PIN")
                 });
             }
 

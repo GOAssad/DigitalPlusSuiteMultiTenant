@@ -11,6 +11,7 @@ using DigitalPlusMultiTenant.Domain.Entities;
 using DigitalPlusMultiTenant.Domain.Enums;
 using DigitalPlusMultiTenant.Infrastructure.Services;
 using DigitalPlusMultiTenant.Persistence;
+using DigitalPlusMultiTenant.Web.Helpers;
 
 namespace DigitalPlusMultiTenant.Web.Controllers;
 
@@ -320,7 +321,7 @@ public class MobileController : ControllerBase
             SucursalId = ubicacion.SucursalId!.Value,
             FechaHora = request.Timestamp,
             Tipo = tipo,
-            Origen = OrigenFichada.Movil,
+            Origen = nameof(OrigenFichada.Movil),
             CreatedAt = DateTime.UtcNow
         };
         _db.Fichadas.Add(fichada);
@@ -390,6 +391,194 @@ public class MobileController : ControllerBase
             dispositivoActivo,
             ultimaFichada = ultima,
             fichadasHoy
+        });
+    }
+
+    // ============================================================
+    // POST /api/mobile/fichar-qr
+    // Fichada por QR desde kiosko (web o desktop)
+    // ============================================================
+    [AllowAnonymous]
+    [HttpPost("fichar-qr")]
+    public async Task<IActionResult> FicharQR([FromBody] FicharQrRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.QrToken))
+                return BadRequest(new { ok = false, mensaje = "QR token es requerido." });
+
+            var deviceId = request.DeviceId ?? Request.Headers["X-Device-Id"].FirstOrDefault();
+            if (string.IsNullOrEmpty(deviceId))
+                return BadRequest(new { ok = false, codigo = "DISPOSITIVO_REQUERIDO", mensaje = "DeviceId es requerido." });
+
+            // 1. Buscar terminal kiosko activa
+            var terminal = await _db.TerminalesMoviles
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(t => t.DeviceId == deviceId && t.Activo && t.ModoKiosko);
+
+            if (terminal == null)
+                return StatusCode(403, new { ok = false, codigo = "KIOSKO_NO_ENCONTRADO", mensaje = "Dispositivo no registrado como kiosko o desactivado." });
+
+            if (!terminal.SucursalId.HasValue)
+                return StatusCode(403, new { ok = false, codigo = "KIOSKO_SIN_SUCURSAL", mensaje = "El kiosko no tiene sucursal asignada. Contacte al administrador." });
+
+            // 2. Buscar legajo por QrToken (cross-tenant, luego validar empresa)
+            var legajo = await _db.Legajos
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(l => l.QrToken == request.QrToken && l.IsActive);
+
+            if (legajo == null)
+                return NotFound(new { ok = false, codigo = "QR_INVALIDO", mensaje = "QR no reconocido o legajo inactivo." });
+
+            // 3. Validar misma empresa (barrera multi-tenant)
+            if (legajo.EmpresaId != terminal.EmpresaId)
+                return StatusCode(403, new { ok = false, codigo = "QR_INVALIDO", mensaje = "QR no reconocido o legajo inactivo." });
+
+            // 4. Validar legajo asignado a la sucursal del kiosko
+            var enSucursal = await _db.LegajoSucursales
+                .IgnoreQueryFilters()
+                .AnyAsync(ls => ls.LegajoId == legajo.Id && ls.SucursalId == terminal.SucursalId.Value);
+
+            if (!enSucursal)
+                return StatusCode(403, new { ok = false, codigo = "SUCURSAL_NO_ASIGNADA",
+                    mensaje = "No está habilitado para fichar en esta sucursal." });
+
+            // 5. Cooldown: evitar doble escaneo (30 segundos, compara contra CreatedAt que es UTC)
+            var ahora = Clock.Now;
+            var cooldownUtc = DateTime.UtcNow.AddSeconds(-30);
+            var fichadaReciente = await _db.Fichadas
+                .IgnoreQueryFilters()
+                .AnyAsync(f => f.LegajoId == legajo.Id && f.EmpresaId == legajo.EmpresaId
+                            && f.CreatedAt > cooldownUtc);
+            if (fichadaReciente)
+                return BadRequest(new { ok = false, codigo = "COOLDOWN", mensaje = "Ya se registró una fichada hace menos de 30 segundos." });
+
+            // 6. Determinar tipo (Entrada/Salida) automático
+            var hoy = ahora.Date;
+            var ultimaFichada = await _db.Fichadas
+                .IgnoreQueryFilters()
+                .Where(f => f.LegajoId == legajo.Id && f.EmpresaId == legajo.EmpresaId && f.FechaHora >= hoy)
+                .OrderByDescending(f => f.FechaHora)
+                .FirstOrDefaultAsync();
+
+            var tipo = ultimaFichada?.Tipo == "E" ? "S" : "E";
+
+            // 7. Validar limite de fichadas del plan
+            var hace30d = DateTime.UtcNow.AddDays(-30);
+            var fichadasUlt30d = await _db.Fichadas
+                .IgnoreQueryFilters()
+                .CountAsync(f => f.EmpresaId == legajo.EmpresaId && f.FechaHora >= hace30d);
+            var (ficPermitido, ficMensaje) = await _licenciaService.PuedeRegistrarFichadaAsync(legajo.EmpresaId, fichadasUlt30d);
+            if (!ficPermitido)
+                return StatusCode(403, new { ok = false, codigo = "LIMITE_FICHADAS", mensaje = ficMensaje });
+
+            // 8. Insertar fichada
+            var fichada = new Fichada
+            {
+                EmpresaId = legajo.EmpresaId,
+                LegajoId = legajo.Id,
+                SucursalId = terminal.SucursalId.Value,
+                FechaHora = ahora,
+                Tipo = tipo,
+                Origen = nameof(OrigenFichada.QR),
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.Fichadas.Add(fichada);
+
+            // 9. Actualizar último uso del terminal
+            terminal.UltimoUso = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            // 10. Obtener nombre sucursal para respuesta
+            var sucursalNombre = await _db.Sucursales
+                .IgnoreQueryFilters()
+                .Where(s => s.Id == terminal.SucursalId.Value)
+                .Select(s => s.Nombre)
+                .FirstOrDefaultAsync();
+
+            return Ok(new
+            {
+                ok = true,
+                fichadaId = fichada.Id,
+                legajoId = legajo.Id,
+                nombre = $"{legajo.Apellido}, {legajo.Nombre}",
+                foto = legajo.Foto != null ? Convert.ToBase64String(legajo.Foto) : null,
+                tipo = tipo == "E" ? "Entrada" : "Salida",
+                sucursalNombre,
+                fechaHora = fichada.FechaHora,
+                mensaje = $"{(tipo == "E" ? "Entrada" : "Salida")} registrada correctamente."
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { ok = false, mensaje = $"Error interno: {ex.Message}" });
+        }
+    }
+
+    // ============================================================
+    // GET /api/mobile/mi-qr
+    // Devuelve el QR token del empleado logueado (para mostrar en PWA)
+    // ============================================================
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [HttpGet("mi-qr")]
+    public async Task<IActionResult> MiQR()
+    {
+        var (empresaId, legajoId) = ExtraerClaims();
+        if (legajoId == 0)
+            return Unauthorized(new { ok = false, mensaje = "Token inválido." });
+
+        var legajo = await _db.Legajos
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(l => l.Id == legajoId && l.EmpresaId == empresaId);
+
+        if (legajo == null)
+            return NotFound(new { ok = false, mensaje = "Legajo no encontrado." });
+
+        // Auto-generar QrToken si no tiene
+        if (string.IsNullOrEmpty(legajo.QrToken))
+        {
+            legajo.QrToken = Guid.NewGuid().ToString("N");
+            await _db.SaveChangesAsync();
+        }
+
+        return Ok(new
+        {
+            ok = true,
+            qrToken = legajo.QrToken,
+            nombre = $"{legajo.Apellido}, {legajo.Nombre}",
+            legajoId = legajo.Id
+        });
+    }
+
+    // ============================================================
+    // GET /api/mobile/kiosko-info
+    // Info del kiosko para la UI (nombre empresa, sucursal, etc)
+    // ============================================================
+    [AllowAnonymous]
+    [HttpGet("kiosko-info")]
+    public async Task<IActionResult> KioskoInfo()
+    {
+        var deviceId = Request.Headers["X-Device-Id"].FirstOrDefault();
+        if (string.IsNullOrEmpty(deviceId))
+            return BadRequest(new { ok = false, mensaje = "Header X-Device-Id es requerido." });
+
+        var terminal = await _db.TerminalesMoviles
+            .IgnoreQueryFilters()
+            .Include(t => t.Empresa)
+            .Include(t => t.Sucursal)
+            .FirstOrDefaultAsync(t => t.DeviceId == deviceId && t.Activo && t.ModoKiosko);
+
+        if (terminal == null)
+            return NotFound(new { ok = false, mensaje = "Kiosko no encontrado o desactivado." });
+
+        return Ok(new
+        {
+            ok = true,
+            empresaNombre = terminal.Empresa.Nombre,
+            sucursalNombre = terminal.Sucursal?.Nombre,
+            sucursalId = terminal.SucursalId,
+            terminalNombre = terminal.Nombre
         });
     }
 
@@ -466,6 +655,8 @@ public class MobileController : ControllerBase
         string PublicKey,
         string? NombreDispositivo,
         string? Plataforma);
+
+    public record FicharQrRequest(string QrToken, string? DeviceId);
 
     public record FichadaRequest(
         DateTime Timestamp,

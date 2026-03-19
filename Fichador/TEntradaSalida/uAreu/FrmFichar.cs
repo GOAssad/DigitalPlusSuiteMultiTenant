@@ -1,5 +1,7 @@
 using Acceso.Clases.Datos.Generales;
 using Acceso.Clases.Datos.RRHH;
+using AForge.Video;
+using AForge.Video.DirectShow;
 using DigitalPlus.Licensing;
 using System;
 using System.Configuration;
@@ -7,6 +9,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using ZXing;
 
 namespace Acceso.uAreu
 {
@@ -30,13 +33,25 @@ namespace Acceso.uAreu
         private LicenseManager _licenseManager;
         private System.Windows.Forms.Timer _licenseTimer;
 
-        private enum ModoFichada { Huella, Pin, Demo }
+        private enum ModoFichada { Huella, Pin, Demo, QR }
         private ModoFichada _modoActual;
         private bool _lectorDisponible;
         private bool _lectorFisico; // true solo cuando OnReaderConnect se dispara
         private bool _pinHabilitado;
         private bool _demoHabilitado;
         private System.Windows.Forms.Timer _timerDetectarLector;
+
+        // QR - camara y decodificacion
+        private VideoCaptureDevice _videoDevice;
+        private FilterInfoCollection _videoDevices;
+        private BarcodeReader _qrReader;
+        private bool _qrHabilitado;
+        private DateTime _ultimoQrLeido = DateTime.MinValue;
+        private string _ultimoQrToken = "";
+        private System.Windows.Forms.Timer _timerQrDecode;
+        private Bitmap _frameActual;
+        private readonly object _frameLock = new object();
+        private volatile bool _cerrando;
 
         public FrmFichar()
         {
@@ -107,6 +122,18 @@ namespace Acceso.uAreu
                 _demoHabilitado = true;
             }
 
+            // Detectar camaras USB para modo QR
+            try
+            {
+                HuellaLog.Write("DetectarModoInicial() Buscando camaras...");
+                DetectarCamarasQR();
+            }
+            catch (Exception ex)
+            {
+                _qrHabilitado = false;
+                HuellaLog.Write("DetectarModoInicial() EXCEPCION camaras: " + ex.GetType().Name + " - " + ex.Message);
+            }
+
             if (_lectorDisponible)
             {
                 // El SDK se inicializo OK, pero eso no significa que haya lector fisico.
@@ -155,6 +182,12 @@ namespace Acceso.uAreu
                 lblEstado.Text = "No se detecto lector de huellas.";
                 lblEstado.ForeColor = Color.DarkOrange;
             }
+            else if (_qrHabilitado)
+            {
+                CambiarModo(ModoFichada.QR);
+                lblEstado.Text = "No se detecto lector de huellas.";
+                lblEstado.ForeColor = Color.DarkOrange;
+            }
             else if (_demoHabilitado)
             {
                 CambiarModo(ModoFichada.Demo);
@@ -178,11 +211,16 @@ namespace Acceso.uAreu
 
         private void CambiarModo(ModoFichada modo)
         {
+            // Detener camara si salimos de modo QR
+            if (_modoActual == ModoFichada.QR && modo != ModoFichada.QR)
+                DetenerCamara();
+
             _modoActual = modo;
 
             panelLector.Visible = (modo == ModoFichada.Huella);
             panelPin.Visible = (modo == ModoFichada.Pin);
             panelDemo.Visible = (modo == ModoFichada.Demo);
+            panelQR.Visible = (modo == ModoFichada.QR);
 
             // Limpiar estado anterior
             sBienVenidaAux = string.Empty;
@@ -207,6 +245,14 @@ namespace Acceso.uAreu
                 }
             }
 
+            // Iniciar camara si entramos a modo QR
+            if (modo == ModoFichada.QR)
+            {
+                IniciarCamara();
+                lblEstado.Text = "Presente su QR frente a la camara";
+                lblEstado.ForeColor = Color.DimGray;
+            }
+
             // Link para cambiar modo
             ActualizarLinkModo();
 
@@ -224,52 +270,77 @@ namespace Acceso.uAreu
             }
         }
 
+        private static readonly Color ModoActivoBg = Color.FromArgb(201, 168, 76);
+        private static readonly Color ModoActivoFg = Color.FromArgb(13, 17, 28);
+        private static readonly Color ModoInactivoBg = Color.FromArgb(30, 34, 54);
+        private static readonly Color ModoInactivoFg = Color.FromArgb(140, 140, 170);
+        private static readonly Color ModoOcultoBg = Color.FromArgb(16, 20, 36);
+
         private void ActualizarLinkModo()
         {
             try
             {
-                // Suspender layout para evitar conflicto de Region durante repaint
-                lnkCambiarModo.SuspendLayout();
-
-                var modos = new System.Collections.Generic.List<string>();
-
-                if (_modoActual != ModoFichada.Huella && _lectorDisponible)
-                    modos.Add("Huella");
-                if (_modoActual != ModoFichada.Pin && _pinHabilitado)
-                    modos.Add("PIN");
-                if (_modoActual != ModoFichada.Demo && _demoHabilitado)
-                    modos.Add("Demo");
-
-                if (modos.Count > 0)
-                    lnkCambiarModo.Text = "Cambiar a modo: " + string.Join(" | ", modos);
-                else
-                    lnkCambiarModo.Text = "";
-
-                lnkCambiarModo.ResumeLayout(true);
+                // Actualizar botones de modo visual
+                ActualizarBotonModo(btnModoHuella, ModoFichada.Huella, _lectorDisponible);
+                ActualizarBotonModo(btnModoPin, ModoFichada.Pin, true);
+                ActualizarBotonModo(btnModoQR, ModoFichada.QR, _qrHabilitado);
+                ActualizarBotonModo(btnModoDemo, ModoFichada.Demo, _demoHabilitado);
             }
-            catch (ArgumentException)
+            catch { }
+        }
+
+        private void ActualizarBotonModo(System.Windows.Forms.Label btn, ModoFichada modo, bool disponible)
+        {
+            if (!disponible)
             {
-                // GDI+ Region conflict durante repaint — ignorar, se corrige en el proximo tick
+                btn.Visible = false;
+                return;
+            }
+            btn.Visible = true;
+            if (_modoActual == modo)
+            {
+                btn.BackColor = ModoActivoBg;
+                btn.ForeColor = ModoActivoFg;
+            }
+            else
+            {
+                btn.BackColor = ModoInactivoBg;
+                btn.ForeColor = ModoInactivoFg;
             }
         }
 
         private void lnkCambiarModo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            // Rotar entre modos disponibles
-            if (_modoActual == ModoFichada.Huella)
+            // Rotar: Huella -> PIN -> Demo -> QR -> Huella...
+            ModoFichada? siguiente = null;
+
+            // Orden de rotacion
+            var orden = new[] { ModoFichada.Huella, ModoFichada.Pin, ModoFichada.Demo, ModoFichada.QR };
+            int idxActual = Array.IndexOf(orden, _modoActual);
+
+            for (int i = 1; i < orden.Length; i++)
             {
-                if (_pinHabilitado) CambiarModo(ModoFichada.Pin);
-                else if (_demoHabilitado) CambiarModo(ModoFichada.Demo);
+                var candidato = orden[(idxActual + i) % orden.Length];
+                if (ModoDisponible(candidato))
+                {
+                    siguiente = candidato;
+                    break;
+                }
             }
-            else if (_modoActual == ModoFichada.Pin)
+
+            if (siguiente.HasValue)
+                CambiarModo(siguiente.Value);
+        }
+
+        private bool ModoDisponible(ModoFichada modo)
+        {
+            switch (modo)
             {
-                if (_demoHabilitado) CambiarModo(ModoFichada.Demo);
-                else if (_lectorDisponible) CambiarModo(ModoFichada.Huella);
-            }
-            else // Demo
-            {
-                if (_lectorDisponible) CambiarModo(ModoFichada.Huella);
-                else if (_pinHabilitado) CambiarModo(ModoFichada.Pin);
+                case ModoFichada.Huella: return _lectorDisponible;
+                case ModoFichada.Pin: return true; // PIN siempre disponible
+                case ModoFichada.Demo: return _demoHabilitado;
+                case ModoFichada.QR: return _qrHabilitado;
+                default: return false;
             }
         }
 
@@ -429,6 +500,173 @@ namespace Acceso.uAreu
 
         #endregion
 
+        #region Fichada por QR (camara USB)
+
+        private void DetectarCamarasQR()
+        {
+            _videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            int count = _videoDevices != null ? _videoDevices.Count : 0;
+            HuellaLog.Write("DetectarCamarasQR() count=" + count);
+            _qrHabilitado = (count > 0);
+            if (_qrHabilitado)
+            {
+                for (int i = 0; i < _videoDevices.Count; i++)
+                    HuellaLog.Write("  Camara[" + i + "]: " + _videoDevices[i].Name);
+                _qrReader = new BarcodeReader();
+                _qrReader.Options.PossibleFormats = new[] { BarcodeFormat.QR_CODE };
+                HuellaLog.Write("DetectarCamarasQR() QR habilitado OK");
+            }
+            else
+            {
+                HuellaLog.Write("DetectarCamarasQR() No se encontraron camaras");
+            }
+        }
+
+        private void IniciarCamara()
+        {
+            try
+            {
+                if (_videoDevices == null || _videoDevices.Count == 0) return;
+
+                _videoDevice = new VideoCaptureDevice(_videoDevices[0].MonikerString);
+                _videoDevice.NewFrame += VideoDevice_NewFrame;
+                _videoDevice.Start();
+
+                _timerQrDecode = new System.Windows.Forms.Timer();
+                _timerQrDecode.Interval = 250;
+                _timerQrDecode.Tick += TimerQrDecode_Tick;
+                _timerQrDecode.Start();
+
+                HuellaLog.Write("IniciarCamara() OK - " + _videoDevices[0].Name);
+            }
+            catch (Exception ex)
+            {
+                HuellaLog.Write("IniciarCamara() ERROR: " + ex.Message);
+                lblEstado.Text = "Error al iniciar camara";
+                lblEstado.ForeColor = Color.Red;
+            }
+        }
+
+        private void DetenerCamara()
+        {
+            if (_timerQrDecode != null)
+            {
+                _timerQrDecode.Stop();
+                _timerQrDecode.Dispose();
+                _timerQrDecode = null;
+            }
+
+            if (_videoDevice != null)
+            {
+                try { _videoDevice.NewFrame -= VideoDevice_NewFrame; } catch { }
+                try
+                {
+                    if (_videoDevice.IsRunning)
+                        _videoDevice.SignalToStop();
+                }
+                catch { }
+                _videoDevice = null;
+            }
+
+            lock (_frameLock)
+            {
+                if (_frameActual != null)
+                {
+                    _frameActual.Dispose();
+                    _frameActual = null;
+                }
+            }
+
+            try { if (!_cerrando && picCamara != null) picCamara.Image = null; } catch { }
+        }
+
+        private void VideoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            if (_cerrando || _videoDevice == null) return;
+
+            try
+            {
+                lock (_frameLock)
+                {
+                    if (_frameActual != null)
+                        _frameActual.Dispose();
+                    _frameActual = (Bitmap)eventArgs.Frame.Clone();
+                }
+
+                if (_cerrando || this.IsDisposed || !this.IsHandleCreated) return;
+                var display = (Bitmap)eventArgs.Frame.Clone();
+                this.BeginInvoke(new Function(delegate ()
+                {
+                    try
+                    {
+                        if (_cerrando || picCamara == null) { display.Dispose(); return; }
+                        var old = picCamara.Image;
+                        picCamara.Image = display;
+                        if (old != null) old.Dispose();
+                    }
+                    catch { display.Dispose(); }
+                }));
+            }
+            catch { }
+        }
+
+        private void TimerQrDecode_Tick(object sender, EventArgs e)
+        {
+            Bitmap frame = null;
+            lock (_frameLock)
+            {
+                if (_frameActual != null)
+                    frame = (Bitmap)_frameActual.Clone();
+            }
+
+            if (frame == null) return;
+
+            try
+            {
+                var result = _qrReader.Decode(frame);
+                if (result != null && !string.IsNullOrEmpty(result.Text))
+                {
+                    string token = result.Text.Trim();
+
+                    // Cooldown: mismo QR no repite en 5 segundos
+                    if (token == _ultimoQrToken && (DateTime.Now - _ultimoQrLeido).TotalSeconds < 5)
+                        return;
+
+                    _ultimoQrToken = token;
+                    _ultimoQrLeido = DateTime.Now;
+
+                    HuellaLog.Write("QR detectado: " + token);
+
+                    var pinHelper = new RRHHLegajosPin();
+                    if (pinHelper.BuscarPorQrToken(token))
+                    {
+                        HuellaLog.Write("QR legajo encontrado: " + pinHelper.sLegajoNombre + " (ID=" + pinHelper.nLegajoID + ")");
+                        RegistrarFichada(pinHelper.nLegajoID, pinHelper.sLegajoID, pinHelper.sLegajoNombre);
+                    }
+                    else
+                    {
+                        HuellaLog.Write("QR no encontrado en EmpresaId=" + Global.Datos.TenantContext.EmpresaId);
+                        ActivarSemaforo(1);
+                        etiquetaNombre.Text = "QR leido pero no corresponde a esta empresa";
+                        etiquetaNombre.ForeColor = Color.FromArgb(220, 50, 50);
+                        lblEstado.Text = "QR no reconocido";
+                        lblEstado.ForeColor = Color.FromArgb(220, 50, 50);
+                        timer.Enabled = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                HuellaLog.Write("TimerQrDecode ERROR: " + ex.Message);
+            }
+            finally
+            {
+                frame.Dispose();
+            }
+        }
+
+        #endregion
+
         #region Registrar Fichada (comun a todos los modos)
 
         private void RegistrarFichada(int nLegajoID, string sLegajoID, string nombre)
@@ -448,7 +686,7 @@ namespace Acceso.uAreu
                 catch { }
                 oFichada.nSucursalID = sucursalId;
                 oFichada.nLegajoID = nLegajoID;
-                // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2
+                // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2, QR=0
                 oFichada.sOrigen = _modoActual == ModoFichada.Pin ? "PIN" : _modoActual.ToString();
                 HuellaLog.Write("RegistrarFichada() antes de Actualizar, sucursalId=" + sucursalId);
 
@@ -638,10 +876,48 @@ namespace Acceso.uAreu
             txtLegajoId.KeyDown += (s, ev) => { if (ev.KeyCode == Keys.Enter) { txtPin.Focus(); ev.SuppressKeyPress = true; } };
             // Solo digitos en PIN
             txtPin.KeyPress += (s, ev) => { if (!char.IsDigit(ev.KeyChar) && !char.IsControl(ev.KeyChar)) ev.Handled = true; };
+
+            // Botones de modo
+            btnModoHuella.Click += (s, ev) => { if (_lectorDisponible) CambiarModo(ModoFichada.Huella); };
+            btnModoPin.Click += (s, ev) => { CambiarModo(ModoFichada.Pin); };
+            btnModoQR.Click += (s, ev) => { if (_qrHabilitado) CambiarModo(ModoFichada.QR); };
+            btnModoDemo.Click += (s, ev) => { if (_demoHabilitado) CambiarModo(ModoFichada.Demo); };
         }
 
         private void CaptureForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            _cerrando = true;
+
+            // Detener timer QR primero
+            if (_timerQrDecode != null)
+            {
+                _timerQrDecode.Stop();
+                _timerQrDecode.Dispose();
+                _timerQrDecode = null;
+            }
+
+            // Desuscribir y soltar referencia a la camara sin esperar
+            if (_videoDevice != null)
+            {
+                try { _videoDevice.NewFrame -= VideoDevice_NewFrame; } catch { }
+                try
+                {
+                    if (_videoDevice.IsRunning)
+                        _videoDevice.SignalToStop();
+                }
+                catch { }
+                _videoDevice = null;
+            }
+
+            lock (_frameLock)
+            {
+                if (_frameActual != null)
+                {
+                    _frameActual.Dispose();
+                    _frameActual = null;
+                }
+            }
+
             Stop();
             Verificator = null;
         }
@@ -870,17 +1146,15 @@ namespace Acceso.uAreu
         {
             picAvatar.Visible = false;
             lblIniciales.Visible = false;
-            // Restaurar nombre centrado
-            etiquetaNombre.Location = new Point(5, 496);
-            etiquetaNombre.Size = new Size(520, 38);
+            etiquetaNombre.Location = new Point(5, 538);
+            etiquetaNombre.Size = new Size(610, 36);
             etiquetaNombre.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
         }
 
         private void PosicionarConAvatar()
         {
-            // Desplazar nombre a la derecha del avatar (64px avatar + margen)
-            etiquetaNombre.Location = new Point(128, 496);
-            etiquetaNombre.Size = new Size(395, 64);
+            etiquetaNombre.Location = new Point(148, 538);
+            etiquetaNombre.Size = new Size(460, 58);
             etiquetaNombre.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
         }
 
@@ -903,7 +1177,7 @@ namespace Acceso.uAreu
             panelLector.Region = new Region(pathLector);
         }
 
-        private static readonly Color SemaforoApagado = Color.FromArgb(60, 60, 60);
+        private static readonly Color SemaforoApagado = Color.FromArgb(40, 44, 60);
         private static readonly Color SemaforoRojo = Color.FromArgb(220, 50, 50);
         private static readonly Color SemaforoAmarillo = Color.FromArgb(232, 201, 122);
         private static readonly Color SemaforoVerde = Color.FromArgb(50, 180, 80);

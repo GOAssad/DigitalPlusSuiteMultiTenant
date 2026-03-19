@@ -7,5 +7,6 @@ public enum OrigenFichada
     Demo,
     Manual,
     Web,
-    Movil
+    Movil,
+    QR
 }

@@ -51,6 +51,7 @@ AppPublisher={#AppPublisher}
 AppCopyright=Copyright (C) 2026 {#AppPublisher}
 
 DefaultDirName=C:\DigitalPlusCloud
+DisableDirPage=no
 DefaultGroupName=DigitalPlus
 AllowNoIcons=yes
 
@@ -115,6 +116,10 @@ Source: "{#FichBin}\DigitalPlus.Licensing.dll";      DestDir: "{app}\Fichadas"; 
 
 ; --- NuGet ---
 Source: "{#FichBin}\FontAwesome.Sharp.dll";          DestDir: "{app}\Fichadas"; Flags: ignoreversion
+Source: "{#FichBin}\AForge.dll";                     DestDir: "{app}\Fichadas"; Flags: ignoreversion
+Source: "{#FichBin}\AForge.Video.dll";               DestDir: "{app}\Fichadas"; Flags: ignoreversion
+Source: "{#FichBin}\AForge.Video.DirectShow.dll";    DestDir: "{app}\Fichadas"; Flags: ignoreversion
+Source: "{#FichBin}\zxing.dll";                      DestDir: "{app}\Fichadas"; Flags: ignoreversion
 
 ; --- DLLs del SDK DigitalPersona ---
 Source: "{#FichBin}\DPFPDevNET.dll";                 DestDir: "{app}\Fichadas"; Flags: ignoreversion
@@ -373,6 +378,7 @@ begin
 
   try
     WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    WinHttpReq.Option(9) := $0A80;
     WinHttpReq.SetTimeouts(10000, 15000, 30000, 120000);
     WinHttpReq.Open('POST', sUrl, False);
     WinHttpReq.SetRequestHeader('Content-Type', 'application/json');
@@ -468,6 +474,7 @@ begin
   n := 0;
   try
     WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    WinHttpReq.Option(9) := $0A80;
     WinHttpReq.Open('GET', '{#PortalApiPaisesUrl}', False);
     WinHttpReq.Send('');
 
@@ -529,6 +536,7 @@ begin
 
   try
     WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    WinHttpReq.Option(9) := $0A80;
     WinHttpReq.SetTimeouts(10000, 15000, 30000, 30000);
     WinHttpReq.Open('POST', sUrl, False);
     WinHttpReq.SetRequestHeader('Content-Type', 'application/json');
@@ -581,6 +589,8 @@ begin
 
   try
     WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    // Habilitar TLS 1.2 (0x0800) + TLS 1.1 (0x0200) + TLS 1.0 (0x0080)
+    WinHttpReq.Option(9) := $0A80;
     // Timeout: resolver=10s, conectar=15s, enviar=30s, recibir=120s (provisioning puede tardar)
     WinHttpReq.SetTimeouts(10000, 15000, 30000, 120000);
     WinHttpReq.Open('POST', sUrl, False);

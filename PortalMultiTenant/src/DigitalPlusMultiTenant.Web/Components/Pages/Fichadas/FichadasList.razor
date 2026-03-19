@@ -124,21 +124,21 @@ else
                                     </td>
                                     <td class="text-center">
                                         @{
-                                            var (origenIcon, origenTitle, origenColor) = f.Origen switch
+                                            var (origenIcon, origenTitle, origenColor) = (f.Origen ?? "") switch
                                             {
-                                                Domain.Enums.OrigenFichada.Huella => ("bi-fingerprint", "Huella", "text-primary"),
-                                                Domain.Enums.OrigenFichada.PIN => ("bi-dialpad", "PIN", "text-warning"),
-                                                Domain.Enums.OrigenFichada.Movil => ("bi-phone", "Movil", "text-success"),
-                                                Domain.Enums.OrigenFichada.Demo => ("bi-play-circle", "Demo", "text-secondary"),
-                                                Domain.Enums.OrigenFichada.Manual => ("bi-pencil-square", "Manual", "text-info"),
-                                                Domain.Enums.OrigenFichada.Web => ("bi-globe", "Web", "text-dark"),
-                                                null => ("bi-fingerprint", "Huella (legacy)", "text-primary"),
+                                                "Huella" => ("bi-fingerprint", "Huella", "text-primary"),
+                                                "PIN" => ("bi-keyboard", "PIN", "text-warning"),
+                                                "Movil" => ("bi-phone", "Movil", "text-success"),
+                                                "QR" => ("bi-qr-code", "QR", "text-dark"),
+                                                "Demo" => ("bi-play-circle", "Demo", "text-secondary"),
+                                                "Manual" => ("bi-pencil-square", "Manual", "text-info"),
+                                                "Web" => ("bi-globe", "Web", "text-dark"),
                                                 _ => ("bi-fingerprint", "Huella", "text-primary")
                                             };
                                         }
                                         <i class="bi @origenIcon @origenColor fs-5" title="@origenTitle"></i>
                                     </td>
-                                    <td>@(f.Terminal?.Nombre ?? (f.Origen == Domain.Enums.OrigenFichada.Movil ? "Dispositivo movil" : "—"))</td>
+                                    <td>@(f.Terminal?.Nombre ?? (f.Origen == "Movil" ? "Dispositivo movil" : "—"))</td>
                                 </tr>
                             }
                         }
@@ -221,10 +221,17 @@ else
         sucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
     }
 
+    private bool _cargando;
     private async Task Buscar()
     {
-        pagina = 1;
-        await CargarDatos();
+        if (_cargando) return;
+        _cargando = true;
+        try
+        {
+            pagina = 1;
+            await CargarDatos();
+        }
+        finally { _cargando = false; }
     }
 
     private async Task IrPagina(int p)

@@ -11,7 +11,7 @@ public class Fichada : BaseEntity, ITenantEntity
     public int? TerminalId { get; set; }
     public DateTime FechaHora { get; set; }
     public string Tipo { get; set; } = null!; // "E" o "S"
-    public OrigenFichada? Origen { get; set; }
+    public string? Origen { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? CreatedBy { get; set; }
     public string? ModificadoPor { get; set; }
