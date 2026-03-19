@@ -1,8 +1,8 @@
 # DIGITAL ONE - Terminal Móvil (Etapa 2)
 ## Documento de Arquitectura y Especificación para Implementación
 
-**Version:** 4.0
-**Fecha:** 2026-03-14
+**Version:** 6.0
+**Fecha:** 2026-03-18
 **Generado por:** Claude Sonnet 4.6 / Claude Opus 4.6
 **Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
 **Estado:** COMPLETADO. Backend, PWA y administración funcionales. Probado end-to-end. Email de activación automático implementado.
@@ -732,4 +732,55 @@ Los navegadores web (Chrome, Safari, Firefox) **no permiten leer el BSSID** (MAC
 
 ---
 
-*Fin del documento — Terminal Móvil Digital One v3.0*
+### Sesion 2026-03-18: Modo Kiosko + Fichada QR
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| Legajo.QrToken (GUID, unique index) | HECHO | Backfill NEWID() para legajos existentes, auto-genera al crear |
+| TerminalMovil: ModoKiosko, SucursalId | HECHO | LegajoId nullable, PublicKey nullable para kioskos |
+| OrigenFichada.QR | HECHO | Nuevo valor en enum |
+| POST /api/mobile/fichar-qr | HECHO | Valida device kiosko + QrToken + empresa + sucursal + cooldown |
+| GET /api/mobile/mi-qr | HECHO | Devuelve QrToken del empleado logueado |
+| GET /api/mobile/kiosko-info | HECHO | Info del kiosko para UI |
+| Portal: Registrar Kiosko | HECHO | Modal con nombre + sucursal + DeviceID auto-generado |
+| Portal: QR por legajo | HECHO | Modal con QR visual + foto + datos |
+| Portal: Imprimir QR masivo | HECHO | Genera tarjetas de credenciales para impresion |
+| PWA: tab "Mi QR" | HECHO | Tercera tab con QR grande usando qrcode-generator |
+| Kiosko web /kiosko/ | HECHO | Setup DeviceID, scanner html5-qrcode, overlay resultado 3seg |
+| KioskoHabilitado (empresa) | HECHO | Flag en Empresa, switch en Portal Licencias, claim en login |
+| Icono QR en fichadas | HECHO | bi-qr-code en LegajoForm, FichadasList, AsistenciaDiaria |
+| Hora fichada: Clock.Now | HECHO | Argentina time en vez de UTC (pendiente: timezone por sucursal) |
+| Cooldown 30seg | HECHO | Compara CreatedAt (UTC) para evitar mezcla timezones |
+| Fix cross-tenant PIN SPs | HECHO | Verificar y Cambiar ahora filtran por @EmpresaId |
+| Fix cambio de plan | HECHO | Aplica PlanConfig al cambiar plan |
+| Kiosko manifest.json fullscreen | HECHO | Instalable como PWA en tablets |
+| JS libs: qrcode.min.js, html5-qrcode.min.js | HECHO | Generador QR (20KB) + Scanner camara (375KB) |
+
+### COMPLETADO: Fase 6 — Fichador Desktop QR (commit 3c234b3)
+
+Lectura de QR por camara USB en Fichador WinForms (.NET Framework 4.8):
+- **AForge.Video.DirectShow 2.2.5** para captura de camara USB/integrada
+- **ZXing.Net 0.16.9** para decodificar QR desde frames (timer 250ms)
+- Nuevo modo `ModoFichada.QR` junto a Huella/PIN/Demo
+- DAL: `RRHHLegajosPin.BuscarPorQrToken()` con validacion GUID y comparacion sin guiones (REPLACE)
+- Deteccion automatica: si hay camara, modo QR disponible; si no, se oculta
+- Cooldown 5 segundos: mismo QR no repite fichada
+- sOrigen = "QR" enviado al SP
+- **Rediseno completo dark theme:** Fondo navy #0D111C, cards #161C30, botones de modo pill horizontales, form 620x660
+- **Fix deadlock cierre:** Flag `volatile bool _cerrando` + `BeginInvoke` (no `Invoke`) en VideoDevice_NewFrame
+- **Instalador:** DLLs AForge y ZXing incluidas en setup-liviano.iss
+- **Fichada.Origen ahora es string?** (no enum) para compatibilidad directa con BD nvarchar
+- **Fix icono PIN:** bi-dialpad no existe en Bootstrap Icons → bi-keyboard
+- **Fix Asistencia Diaria:** Columnas invertidas + muestra todos los origenes del dia
+
+### Pendiente: TimeZone por Sucursal
+
+Actualmente FechaHora usa `Clock.Now` (hardcodeado Argentina UTC-3). Para soporte multi-pais:
+- Agregar campo `TimeZone` (string) a tabla Sucursal
+- Default: "America/Argentina/Buenos_Aires"
+- Selector de timezone en form de sucursal del Portal MT
+- Usar en todos los endpoints de fichada (QR, movil, etc)
+
+---
+
+*Fin del documento — Terminal Móvil Digital One v5.0*

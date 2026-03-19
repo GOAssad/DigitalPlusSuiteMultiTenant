@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 12.0
-**Fecha:** 2026-03-17
+**Version:** 14.0
+**Fecha:** 2026-03-18
 
 ---
 
@@ -275,13 +275,15 @@ Si el lector ya estaba conectado antes de instalar, desconectelo y vuelva a cone
 
 ### Pantalla principal
 
-Al abrir el Fichador, vera la pantalla de fichaje con:
-- Nombre de la sucursal asignada
-- Reloj con fecha y hora actual
-- Area de semaforo visual
-- Panel de fichada (segun el modo activo)
+Al abrir el Fichador, vera la pantalla de fichaje con diseño oscuro profesional:
+- **Barra superior:** Reloj digital grande con logos de empresa e Integra IA
+- **Nombre de empresa y fecha** debajo del reloj
+- **Barra de modos:** Botones horizontales que muestran los modos disponibles (Huella, PIN, QR, Demo). El modo activo se resalta en dorado. Solo se muestran los modos disponibles segun el hardware conectado
+- **Semaforo visual:** Tres circulos (rojo/amarillo/verde) indican el estado de la fichada
+- **Panel de fichada:** Cambia segun el modo activo
+- **Barra inferior:** Nombre de sucursal asignada
 
-> [CAPTURA: Pantalla principal del Fichador mostrando sucursal, reloj y semaforo]
+> [CAPTURA: Pantalla principal del Fichador con tema oscuro mostrando barra de modos]
 
 ### 4.1 Fichada por Huella Digital
 
@@ -369,13 +371,40 @@ Este modo permite fichadas sin hardware biometrico ni PIN. Solo para demostracio
 
 > [CAPTURA: Panel de modo demostracion con lista de empleados]
 
-### 4.4 Deteccion automatica de modo
+### 4.4 Fichada por QR (Camara)
 
-El Fichador detecta automaticamente si hay un lector de huellas conectado:
-- **Lector detectado:** Usa modo Huella
-- **Sin lector + PIN habilitado:** Cambia automaticamente a modo PIN
-- **Sin lector + Demo habilitado:** Cambia a modo Demo
-- Si se desconecta el lector durante el uso, cambia de modo en tiempo real
+Si la computadora tiene una camara web (USB o integrada), el modo QR estara disponible:
+
+1. Click en el boton **QR** en la barra de modos
+2. Se activa la camara y aparece la vista previa en pantalla
+3. El empleado muestra su **codigo QR personal** frente a la camara
+4. El sistema lee el QR, valida que pertenezca a un empleado de la empresa y registra la fichada
+5. **Semaforo verde** + nombre del empleado y ENTRADA/SALIDA
+
+> [CAPTURA: Fichador en modo QR mostrando la camara activa]
+
+**Importante:**
+- El mismo QR no se puede usar dos veces en 5 segundos (cooldown anti-duplicados)
+- Si el QR no corresponde a un empleado de esta empresa, aparece "QR leido pero no corresponde a esta empresa"
+- El QR del empleado se genera desde el Portal Web (seccion Legajos) o desde la PWA mobile (tab "Mi QR")
+
+### 4.5 Cambio de modo
+
+La barra de modos en la parte superior del panel muestra los modos disponibles como botones:
+- **Huella:** Solo si hay lector de huellas conectado
+- **PIN:** Siempre disponible
+- **QR:** Solo si hay camara web detectada
+- **Demo:** Solo si esta habilitado por el administrador
+
+El modo activo se muestra en dorado. Click en cualquier otro boton para cambiar de modo al instante.
+
+### 4.6 Deteccion automatica de hardware
+
+El Fichador detecta automaticamente el hardware disponible:
+- **Lector de huellas detectado:** Arranca en modo Huella
+- **Sin lector + camara:** Arranca en modo QR
+- **Sin lector + sin camara:** Arranca en modo PIN
+- Si se conecta/desconecta el lector durante el uso, cambia de modo automaticamente
 
 ### 4.5 Informacion de licencia
 
@@ -656,7 +685,38 @@ Vaya a **Panel de Control > Programas > Desinstalar un programa**, seleccione **
 
 ---
 
-## 9. SOPORTE TECNICO
+## 9. MODO KIOSKO Y FICHADA POR QR
+
+### Que es el Modo Kiosko
+
+El modo kiosko permite instalar una **tablet o dispositivo compartido** en una sucursal para que multiples empleados fichen mediante un codigo QR personal. A diferencia de la fichada movil (que usa GPS del celular), el kiosko esta fijo en un lugar y la presencia fisica del empleado frente a la camara es la validacion.
+
+### Circuito completo
+
+1. **Configurar el kiosko:** Desde el Portal Web, ir a **Estructura > Terminales Moviles > Registrar Kiosko**. Asignar nombre, sucursal y copiar el Device ID generado.
+2. **Abrir el kiosko:** En el dispositivo (tablet/PC), abrir `https://[portal]/kiosko/` e ingresar el Device ID. La camara se activa automaticamente.
+3. **Credencial QR del empleado:** Cada legajo tiene un QR unico. Se puede ver desde:
+   - **Portal Web:** Lista de legajos, boton QR (icono ◻) por cada legajo
+   - **PWA Mobile:** Tab "Mi QR" (tercera pestaña)
+   - **Impreso:** Boton "Imprimir QR" genera credenciales en formato tarjeta
+4. **Fichar:** El empleado muestra su QR frente a la camara del kiosko. El sistema valida que pertenezca a la sucursal del kiosko y registra Entrada o Salida automaticamente.
+5. **Confirmacion:** Aparece un overlay verde con nombre, foto y tipo (Entrada/Salida) durante 3 segundos.
+
+### Requisitos
+
+- La empresa debe tener **Modo Kiosco habilitado** (activado desde Portal de Licencias)
+- El legajo debe estar **asignado a la sucursal** del kiosko
+- El dispositivo kiosko necesita **camara** y **conexion a internet**
+
+### Imprimir credenciales QR
+
+Desde el Portal Web > Legajos:
+- **QR individual:** Click en el boton QR de un legajo > Imprimir
+- **QR masivo:** Click en "Imprimir QR" (boton arriba de la lista) para imprimir credenciales de todos los legajos visibles en la pagina
+
+---
+
+## 10. SOPORTE TECNICO
 
 Ante cualquier inconveniente, contacte al administrador del sistema con la siguiente informacion:
 

@@ -1,10 +1,44 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-17
+**Fecha:** 2026-03-18
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-18 (noche)
+- [x] **Fichador desktop QR (Fase 6):** Modo QR con camara USB en Fichador WinForms (AForge.Video.DirectShow + ZXing.Net)
+- [x] **Rediseno Fichador dark theme:** Full dark theme, botones de modo pill, form 620x660, cards azul profundo
+- [x] BuscarPorQrToken() en RRHHLegajosPin con validacion GUID y comparacion sin guiones (REPLACE)
+- [x] Fix cierre form con camara: flag _cerrando + BeginInvoke elimina deadlock AForge/UI thread
+- [x] Fichada.Origen cambiado de OrigenFichada? (enum) a string? para compatibilidad con BD nvarchar
+- [x] Fix icono PIN: bi-dialpad no existe en Bootstrap Icons → bi-keyboard
+- [x] Fix Asistencia Diaria: columnas Horas/Origen invertidas, Origen ahora muestra todos los origenes del dia
+- [x] Fix concurrencia FichadasList: guard _cargando evita doble click en Buscar
+- [x] Instalador Liviano: incluye DLLs AForge y ZXing
+- [x] Deploy Portal MT a Azure
+- [x] DOC01-DOC05 actualizados
+- [x] Commit 3c234b3 pushed
+
+### Sesion 2026-03-18
+- [x] **Modo Kiosko + Fichada QR completo (Fases 1-5):**
+  - BD: Legajo.QrToken (GUID, unique index), TerminalMovil.ModoKiosko + SucursalId, OrigenFichada.QR
+  - Backend: POST /api/mobile/fichar-qr, GET /api/mobile/mi-qr, GET /api/mobile/kiosko-info
+  - Portal Admin: Registrar Kiosko (modal), boton QR por legajo, impresion masiva de credenciales
+  - PWA Mobile: tab "Mi QR" con QR grande del empleado
+  - Kiosko Web: /kiosko/ con html5-qrcode (scanner camara), setup Device ID, overlay resultado
+- [x] KioskoHabilitado: flag por empresa (Licencias + MT), claim, menu condicional
+- [x] Fix cambio de plan: ActualizarLicenciaAsync aplica PlanConfig al cambiar plan (MaxLegajos, MaxSucursales, MaxFichadasMes)
+- [x] Fix cross-tenant PIN SPs: EscritorioLegajoPIN_Verificar y _Cambiar ahora filtran por @EmpresaId
+- [x] Fix Forzar cambio PIN: reemplazado SP inexistente por UPDATE inline con EmpresaId
+- [x] UX dialogo PIN Administrador: mensaje explica [Si]=Resetear, [No]=Eliminar, [Cancelar]=Nada
+- [x] Hora fichada QR: Clock.Now (Argentina) en vez de DateTime.UtcNow
+- [x] Cooldown QR: compara CreatedAt (UTC) en vez de FechaHora para evitar mezcla timezones
+- [x] Icono QR en fichadas: bi-qr-code en LegajoForm, FichadasList, AsistenciaDiaria
+- [x] JS libraries: qrcode.min.js (generador), qr-helper.js (render+print), html5-qrcode.min.js (scanner)
+- [x] Deploy Portal MT y Portal Licencias a Azure
+- [x] Instalador recompilado con fix PIN SPs
+- [x] DOC01-DOC05 actualizados
 
 ### Sesion 2026-03-17
 - [x] Calendario visual tipo Google Calendar en tab Legajo (grilla mensual, eventos con HoraDesde/HoraHasta, guardado directo a BD)
@@ -190,7 +224,7 @@
 - [ ] **Importador Excel de legajos en Portal MT** — Carga masiva de legajos desde archivo Excel.
 - [x] ~~**Portal Licencias: tab Legajos en detalle empresa**~~ COMPLETADO 2026-03-16
 - [ ] **SuperAdmin cross-tenant** — admin@integraia.tech debe poder seleccionar empresa y ver datos de cualquier tenant. Requiere selector de empresa + bypass query filters.
-- [ ] **Modo Kiosko para terminales moviles** — Flag ModoKiosko en TerminalesMoviles, permite que cualquier legajo de la empresa fiche desde ese dispositivo.
+- [x] ~~**Modo Kiosko para terminales moviles**~~ COMPLETADO 2026-03-18
 - [ ] **Registro de huellas desde el Portal Web** — Agente local liviano + WebSocket. PAUSADO (la funcionalidad la cubre el Administrador desktop).
 
 ## INMEDIATO (Validacion end-to-end)
@@ -214,6 +248,10 @@
 
 ## FUNCIONALIDAD (Proximas sesiones)
 
+- [ ] **Fichador desktop QR (Fase 6)** — Agregar camara QR al Fichador WinForms (AForge.Video.DirectShow + ZXing.Net)
+- [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
+- [ ] **Generar PIN desde Portal MT** — Form de legajo web no permite asignar/cambiar PIN actualmente
+- [ ] **Upgrade de plan: validaciones** — Al cambiar de Free a plan mayor, recordar regenerar codigo activacion y obligar verificar email
 - [ ] **Verificar durabilidad de licencias** - Analizar si la licencia es por terminal (MachineId) o permite instalacion ilimitada. Definir politica.
 - [ ] **Adaptar InstaladorUnificado para trial web** - Que el usuario pueda registrarse desde la web, descargar el instalador y probar en modo LOCAL con SQL Express.
 - [ ] **Link al portal web en Administrador** - Agregar en la app Administrador un acceso directo que abra el portal web multi-tenant en el navegador.
@@ -261,4 +299,4 @@
 
 ---
 
-*Actualizado: 2026-03-17*
+*Actualizado: 2026-03-18*

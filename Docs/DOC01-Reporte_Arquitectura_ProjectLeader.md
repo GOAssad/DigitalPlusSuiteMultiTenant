@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 13.0
-**Fecha:** 2026-03-16
+**Version:** 15.0
+**Fecha:** 2026-03-18
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -672,7 +672,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ---
 
-## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-16)
+## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-18)
 
 ### Completado
 
@@ -736,13 +736,30 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Fix critico cross-tenant login movil:** MobileController.Login ahora filtra por empresa del dispositivo registrado. Si dispositivo no registrado y legajo ambiguo, rechaza
 - **Fix cross-tenant PIN desktop:** RRHHLegajosPin ahora pasa @EmpresaId a todos los stored procedures (VerificarPin, CambiarPin, CargarLegajo, ListaLegajosActivos)
 - **FK compuesto cross-tenant en Fichada:** `Fichada(LegajoId, EmpresaId) → Legajo(Id, EmpresaId)` impide insertar fichadas con legajo de otra empresa a nivel BD
+- **Modo Kiosko + Fichada QR:** Terminal kiosko (ModoKiosko=1, SucursalId fija) para fichada por QR en dispositivos compartidos (tablets). QrToken por legajo (GUID, unique index). Endpoint `POST /api/mobile/fichar-qr` con validacion empresa+sucursal+cooldown. UI kiosko web en `/kiosko/` con html5-qrcode para escaneo de camara
+- **PWA "Mi QR":** Tercera tab en PWA mobile donde el empleado ve su QR para mostrar en el kiosko
+- **KioskoHabilitado:** Flag por empresa (Empresa.KioskoHabilitado) con switch en Portal Licencias, claim en login, menu condicional
+- **QR en Portal MT:** Boton QR por legajo en lista (modal con QR visual), impresion masiva de credenciales QR, auto-generacion de QrToken al crear legajo
+- **Fix cross-tenant PIN SPs:** `EscritorioLegajoPIN_Verificar` y `EscritorioLegajoPIN_Cambiar` ahora filtran por @EmpresaId
+- **Fix cambio de plan:** Al cambiar plan en Portal Licencias, ahora aplica automaticamente limites de PlanConfig (MaxLegajos, MaxSucursales, MaxFichadasMes)
+- **Origen QR en fichadas:** Icono bi-qr-code en LegajoForm, FichadasList y AsistenciaDiaria
+- **Hora fichada QR:** Usa Clock.Now (Argentina) en vez de DateTime.UtcNow. Cooldown compara contra CreatedAt (UTC)
+- **Fichador desktop QR (Fase 6):** Modo QR con camara USB en Fichador WinForms. AForge.Video.DirectShow + ZXing.Net. Timer 250ms decode, cooldown 5seg, BuscarPorQrToken() con GUID validation
+- **Rediseno Fichador dark theme:** Full dark theme (#0D111C), botones de modo pill (Huella/PIN/QR/Demo), form 620x660, cards azul profundo, acentos dorados, TextBoxes oscuros
+- **Fix cierre Fichador con camara:** Flag volatile `_cerrando` + `BeginInvoke` (no `Invoke`) elimina deadlock entre thread AForge y UI thread al cerrar form
+- **Fichada.Origen cambiado a string:** Propiedad `string?` en vez de `OrigenFichada?` (enum). BD es nvarchar, desktop escribe "PIN"/"QR"/"Huella" via SP. Razor compara strings directos
+- **Fix icono PIN:** `bi-dialpad` no existe en Bootstrap Icons, cambiado a `bi-keyboard`
+- **Fix Asistencia Diaria:** Columnas Horas/Origen estaban invertidas en el body. Origen ahora muestra todos los origenes distintos del dia (multiples badges)
+- **Fix concurrencia FichadasList:** Guard `_cargando` evita doble click en Buscar que lanzaba 2 queries concurrentes al DbContext
+- **Instalador Liviano:** Incluye DLLs AForge.dll, AForge.Video.dll, AForge.Video.DirectShow.dll, zxing.dll
 
 ### En progreso
 
 - Migracion de seguridad SQL: deshabilitar sa (pendiente estabilizacion)
 
 ### Pendiente
-
+- **TimeZone por Sucursal:** Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
+- **Generar PIN desde Portal MT:** Form de legajo web actualmente no permite asignar/cambiar PIN
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
 - Link al portal web multi-tenant en menu del Administrador
