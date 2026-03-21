@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 10.0
-**Fecha:** 2026-03-16
+**Version:** 12.0
+**Fecha:** 2026-03-18
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -217,7 +217,16 @@ Envie al cliente los siguientes elementos (por email, WhatsApp, etc.):
 
 Al hacer clic en una empresa del listado, se abre su ficha completa.
 
-### Datos editables
+### Navegacion por tabs
+
+El detalle de empresa organiza la columna principal en **dos tabs**:
+
+| Tab | Contenido |
+|---|---|
+| **Datos** | Formulario de edicion de la empresa (datos generales, fiscales, contacto, identidad, notas) + boton Guardar |
+| **Legajos** | Listado de legajos de la empresa consultados cross-database desde DigitalPlusMultiTenant |
+
+### Tab Datos
 
 Todos los datos ingresados en el alta son editables:
 - Nombre, datos fiscales, contacto, direccion
@@ -230,9 +239,14 @@ En la seccion "Datos generales" hay un toggle para activar/desactivar modulos op
 
 - **Fichado Movil habilitado:** Permite a los empleados de la empresa fichar ingreso/egreso desde el celular. Si esta desactivado:
   - El login mobile (`/api/mobile/login`) rechaza el acceso con mensaje "La empresa no tiene habilitado el modulo movil"
-  - En el Portal MT, las opciones "Terminales Moviles" y "Fichado Movil" se ocultan del menu lateral
+  - En el Portal MT, la opcion "Fichado Movil" se oculta del menu lateral
   - El checkbox "Acceso movil" por legajo no aparece en el formulario de Legajos del Portal MT
-  - **Nota:** El usuario debe cerrar sesion y volver a iniciarla en el Portal MT para ver los cambios en el menu (el flag se carga como claim al momento del login)
+
+- **Modo Kiosco habilitado:** Permite fichar mediante QR en terminales compartidas (tablets/PCs en sucursales). Si esta desactivado:
+  - No se pueden registrar terminales en modo kiosko
+  - La pagina `/kiosko/` no funciona para esa empresa
+
+- **Nota:** "Terminales Moviles" aparece en el menu del Portal MT si Mobile **o** Kiosco esta habilitado. El usuario debe cerrar sesion y volver a iniciarla para ver los cambios (los flags se cargan como claims al momento del login).
 
 ### Dashboard "Uso del sistema"
 
@@ -245,18 +259,20 @@ En la barra lateral derecha del detalle de empresa, la card **"Uso del sistema"*
 - **Dias con actividad (ult. 30d):** Badge verde (>=20), amarillo (>=10), rojo (<10)
 - **Fichadas por dispositivo (ult. 15 dias):** Huella, PIN, Celular con iconos y contadores
 
-### Legajos de la empresa
+### Tab Legajos
 
-Debajo del layout principal se muestra una card **"Legajos de la empresa"** con informacion cross-database desde DigitalPlusMultiTenant:
+El tab **Legajos** muestra informacion cross-database consultada en tiempo real desde DigitalPlusMultiTenant:
 
-- **Badge** con cantidad total de legajos
-- **Buscador** por nombre, apellido o numero de legajo (filtro en tiempo real)
+- **Badge en el tab** con cantidad total de legajos de la empresa
+- **Buscador** por nombre, apellido o numero de legajo (filtro en tiempo real con `oninput`)
 - **Tabla scrollable** (max 500px) con columnas: Nro, Apellido, Nombre, Categoria, Sucursales, Fichadas (badge), Ultima fichada, Estado (Activo/Inactivo)
-- Legajos inactivos se muestran con fila gris
+- Legajos inactivos se muestran con fila gris (`table-secondary`)
 - Carga asincronica en background (no bloquea la UI)
-- Estados: spinner de carga, mensaje "sin legajos", error de conexion
+- **Estados de carga:** spinner mientras carga, mensaje "sin legajos" si la empresa no tiene, error con detalle y boton "Reintentar" si falla la conexion
 
-> Esta informacion es de solo lectura. Para gestionar legajos, usar el Portal Multi-Tenant.
+> Esta informacion es de **solo lectura**. Para gestionar legajos (alta, baja, modificacion), usar el Portal Multi-Tenant de la empresa.
+
+> [CAPTURA: Tab Legajos mostrando listado con buscador y tabla de legajos]
 
 ### Zona peligrosa
 

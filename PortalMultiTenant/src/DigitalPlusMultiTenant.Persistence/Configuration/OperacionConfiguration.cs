@@ -63,6 +63,9 @@ public class EventoCalendarioConfiguration : IEntityTypeConfiguration<EventoCale
 
         builder.HasOne(e => e.Legajo).WithMany(e => e.EventosCalendario)
             .HasForeignKey(e => e.LegajoId).OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Sucursal).WithMany()
+            .HasForeignKey(e => e.SucursalId).OnDelete(DeleteBehavior.SetNull);
     }
 }
 

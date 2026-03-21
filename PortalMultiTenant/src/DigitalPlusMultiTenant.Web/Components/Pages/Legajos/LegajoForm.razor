@@ -42,7 +42,7 @@
             <button type="button" class="nav-link @(activeTab == "sucursales" ? "active" : "")"
                     @onclick='() => activeTab = "sucursales"'>
                 <i class="bi bi-building me-1"></i>Sucursales
-                <span class="badge @(sucursalesAsignadas.Count == 0 ? "bg-danger" : "bg-primary") ms-1">@sucursalesAsignadas.Count</span>
+                <span class="badge @(legajoSucursales.Count == 0 ? "bg-danger" : "bg-primary") ms-1">@legajoSucursales.Count</span>
             </button>
         </li>
         @if (IsEdit)
@@ -267,54 +267,79 @@
             @if (activeTab == "sucursales")
             {
                 <h6 class="text-muted mb-3"><i class="bi bi-building me-1"></i>Sucursales asignadas</h6>
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="card">
-                            <div class="card-header py-2 bg-light">
-                                <small class="fw-semibold">Disponibles</small>
-                            </div>
-                            <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                                @if (sucursalesDisponibles.Count == 0)
-                                {
-                                    <div class="list-group-item text-muted small">Todas las sucursales estan asignadas</div>
-                                }
-                                @foreach (var s in sucursalesDisponibles)
-                                {
-                                    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                            @onclick="() => AsignarSucursal(s)">
-                                        @s.Nombre
-                                        <i class="bi bi-arrow-right text-success"></i>
-                                    </button>
-                                }
-                            </div>
-                        </div>
+
+                <div class="card mb-2">
+                    <div class="card-header py-2 bg-light">
+                        <small class="fw-semibold">Disponibles</small>
                     </div>
-                    <div class="col-md-2 d-flex align-items-center justify-content-center">
-                        <i class="bi bi-arrow-left-right text-muted fs-4"></i>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="card border-success">
-                            <div class="card-header py-2 bg-success bg-opacity-10">
-                                <small class="fw-semibold text-success">Asignadas (@sucursalesAsignadas.Count)</small>
-                            </div>
-                            <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                                @if (sucursalesAsignadas.Count == 0)
-                                {
-                                    <div class="list-group-item text-muted small">Sin sucursales asignadas</div>
-                                }
-                                @foreach (var s in sucursalesAsignadas)
-                                {
-                                    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                            @onclick="() => DesasignarSucursal(s)">
-                                        <span><i class="bi bi-check-circle-fill text-success me-1"></i>@s.Nombre</span>
-                                        <i class="bi bi-x text-danger"></i>
-                                    </button>
-                                }
-                            </div>
-                        </div>
+                    <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                        @if (sucursalesDisponibles.Count == 0)
+                        {
+                            <div class="list-group-item text-muted small">Todas las sucursales estan asignadas</div>
+                        }
+                        @foreach (var s in sucursalesDisponibles)
+                        {
+                            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                    @onclick="() => AsignarSucursal(s)">
+                                @s.Nombre
+                                <i class="bi bi-arrow-down text-success"></i>
+                            </button>
+                        }
                     </div>
                 </div>
-                <small class="text-muted mt-2 d-block">Click en una sucursal para moverla. Los cambios se guardan con el boton Guardar.</small>
+
+                <div class="text-center my-2">
+                    <i class="bi bi-arrow-down-up text-muted fs-5"></i>
+                </div>
+
+                <div>
+                        <div class="card border-success">
+                            <div class="card-header py-2 bg-success bg-opacity-10">
+                                <small class="fw-semibold text-success">Asignadas (@legajoSucursales.Count)</small>
+                            </div>
+                            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                @if (legajoSucursales.Count == 0)
+                                {
+                                    <div class="p-3 text-muted small">Sin sucursales asignadas</div>
+                                }
+                                else
+                                {
+                                    <table class="table table-sm table-hover mb-0 align-middle">
+                                        <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                                            <tr>
+                                                <th>Sucursal</th>
+                                                <th class="text-center" style="width:42px;" title="Huella digital"><i class="bi bi-fingerprint"></i></th>
+                                                <th class="text-center" style="width:42px;" title="PIN"><i class="bi bi-keyboard"></i></th>
+                                                <th class="text-center" style="width:42px;" title="Codigo QR"><i class="bi bi-qr-code"></i></th>
+                                                <th class="text-center" style="width:42px;" title="Movil / GPS"><i class="bi bi-phone"></i></th>
+                                                <th class="text-center" style="width:42px;" title="Kiosko"><i class="bi bi-display"></i></th>
+                                                <th style="width:30px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var ls in legajoSucursales)
+                                            {
+                                                <tr>
+                                                    <td><i class="bi bi-check-circle-fill text-success me-1"></i>@ls.Sucursal.Nombre</td>
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteHuella" /></td>
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermitePin" /></td>
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteQr" /></td>
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteMovil" /></td>
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteKiosko" /></td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" @onclick="() => DesasignarSucursal(ls)" title="Quitar">
+                                                            <i class="bi bi-x"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                <small class="text-muted mt-2 d-block">Click en una sucursal disponible para asignarla. Los cambios se guardan con el boton Guardar.</small>
             }
 
             @* ===== TAB: HUELLAS ===== *@
@@ -556,13 +581,20 @@
                                             </div>
                                             @foreach (var ev in eventos)
                                             {
-                                                <div class="rounded px-1 mt-1 small text-white text-truncate" title="@ev.Nota"
+                                                var sucNombre = ev.SucursalId.HasValue ? SucursalesAsignadas.FirstOrDefault(s => s.Id == ev.SucursalId)?.Nombre : null;
+                                                var evTitle = (sucNombre != null ? sucNombre + " - " : "") + ev.Nota;
+                                                <div class="rounded px-1 mt-1 small text-white text-truncate"
+                                                     title="@evTitle"
                                                      style="background-color:#0d6efd;font-size:0.7rem;cursor:pointer;"
                                                      @onclick:stopPropagation="true"
                                                      @onclick="() => CalAbrirEditar(ev)">
                                                     <i class="bi bi-calendar-event"></i>
                                                     @ev.HoraDesde.ToString("HH:mm")-@ev.HoraHasta.ToString("HH:mm")
-                                                    @if (!string.IsNullOrEmpty(ev.Nota))
+                                                    @if (sucNombre != null)
+                                                    {
+                                                        <span class="opacity-75"> @sucNombre</span>
+                                                    }
+                                                    else if (!string.IsNullOrEmpty(ev.Nota))
                                                     {
                                                         <span> @ev.Nota</span>
                                                     }
@@ -587,6 +619,7 @@
                                     <th>Desde</th>
                                     <th>Hasta</th>
                                     <th>Horario</th>
+                                    <th>Sucursal</th>
                                     <th>Nota</th>
                                     <th style="width:80px"></th>
                                 </tr>
@@ -598,6 +631,7 @@
                                         <td>@ev.FechaDesde.ToString("dd/MM/yyyy")</td>
                                         <td>@ev.FechaHasta.ToString("dd/MM/yyyy")</td>
                                         <td>@ev.HoraDesde.ToString("HH:mm") - @ev.HoraHasta.ToString("HH:mm")</td>
+                                        <td class="small">@(ev.Sucursal?.Nombre ?? (ev.SucursalId.HasValue ? SucursalesAsignadas.FirstOrDefault(s => s.Id == ev.SucursalId)?.Nombre : ""))</td>
                                         <td class="text-muted small">@ev.Nota</td>
                                         <td>
                                             <button type="button" class="btn btn-outline-primary btn-sm me-1" @onclick="() => CalAbrirEditar(ev)">
@@ -644,6 +678,16 @@
                                         <div class="col-6">
                                             <label class="form-label">Hora hasta</label>
                                             <input type="time" class="form-control" @bind="calModalHoraHasta" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Sucursal</label>
+                                            <select class="form-select" @bind="calModalSucursalId">
+                                                <option value="">Sin sucursal</option>
+                                                @foreach (var s in SucursalesAsignadas)
+                                                {
+                                                    <option value="@s.Id">@s.Nombre</option>
+                                                }
+                                            </select>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label">Nota</label>
@@ -1030,7 +1074,8 @@
     private string? domCodigoPostal;
 
     // Sucursales
-    private List<Sucursal> sucursalesAsignadas = new();
+    private List<LegajoSucursal> legajoSucursales = new();
+    private List<Sucursal> SucursalesAsignadas => legajoSucursales.Select(ls => ls.Sucursal).ToList();
     private List<Sucursal> sucursalesDisponibles = new();
 
     // Huellas
@@ -1047,6 +1092,7 @@
     private TimeOnly calModalHoraDesde = new(9, 0);
     private TimeOnly calModalHoraHasta = new(18, 0);
     private string? calModalNota;
+    private int? calModalSucursalId;
 
     // Movil
     private TerminalMovil? terminalMovil;
@@ -1114,7 +1160,7 @@
             var entity = await Db.Legajos
                 .Include(l => l.LegajoSucursales).ThenInclude(ls => ls.Sucursal)
                 .Include(l => l.Huellas)
-                .Include(l => l.EventosCalendario)
+                .Include(l => l.EventosCalendario).ThenInclude(e => e.Sucursal)
                 .Include(l => l.Domicilio)
                 .Include(l => l.Horario!).ThenInclude(h => h.Detalles)
                 .FirstOrDefaultAsync(l => l.Id == Id);
@@ -1123,12 +1169,11 @@
             model = entity;
 
             // Sucursales
-            sucursalesAsignadas = entity.LegajoSucursales
-                .Select(ls => ls.Sucursal)
-                .OrderBy(s => s.Nombre)
+            legajoSucursales = entity.LegajoSucursales
+                .OrderBy(ls => ls.Sucursal.Nombre)
                 .ToList();
 
-            var asignadasIds = sucursalesAsignadas.Select(s => s.Id).ToHashSet();
+            var asignadasIds = legajoSucursales.Select(ls => ls.SucursalId).ToHashSet();
             sucursalesDisponibles = sucursalesDisponibles.Where(s => !asignadasIds.Contains(s.Id)).ToList();
 
             // Domicilio
@@ -1177,14 +1222,14 @@
     private void AsignarSucursal(Sucursal s)
     {
         sucursalesDisponibles.Remove(s);
-        sucursalesAsignadas.Add(s);
-        sucursalesAsignadas = sucursalesAsignadas.OrderBy(x => x.Nombre).ToList();
+        legajoSucursales.Add(new LegajoSucursal { SucursalId = s.Id, Sucursal = s });
+        legajoSucursales = legajoSucursales.OrderBy(ls => ls.Sucursal.Nombre).ToList();
     }
 
-    private void DesasignarSucursal(Sucursal s)
+    private void DesasignarSucursal(LegajoSucursal ls)
     {
-        sucursalesAsignadas.Remove(s);
-        sucursalesDisponibles.Add(s);
+        legajoSucursales.Remove(ls);
+        sucursalesDisponibles.Add(ls.Sucursal);
         sucursalesDisponibles = sucursalesDisponibles.OrderBy(x => x.Nombre).ToList();
     }
 
@@ -1234,6 +1279,7 @@
         calModalHoraDesde = new(9, 0);
         calModalHoraHasta = new(18, 0);
         calModalNota = null;
+        calModalSucursalId = SucursalesAsignadas.FirstOrDefault()?.Id;
         calShowModal = true;
     }
 
@@ -1245,6 +1291,7 @@
         calModalHoraDesde = ev.HoraDesde;
         calModalHoraHasta = ev.HoraHasta;
         calModalNota = ev.Nota;
+        calModalSucursalId = ev.SucursalId;
         calShowModal = true;
     }
 
@@ -1259,6 +1306,7 @@
             calEditando.HoraDesde = calModalHoraDesde;
             calEditando.HoraHasta = calModalHoraHasta;
             calEditando.Nota = calModalNota;
+            calEditando.SucursalId = calModalSucursalId;
             if (calEditando.Id > 0)
             {
                 var tracked = await Db.EventosCalendario.FindAsync(calEditando.Id);
@@ -1269,6 +1317,7 @@
                     tracked.HoraDesde = calModalHoraDesde;
                     tracked.HoraHasta = calModalHoraHasta;
                     tracked.Nota = calModalNota;
+                    tracked.SucursalId = calModalSucursalId;
                     await Db.SaveChangesAsync();
                 }
             }
@@ -1283,7 +1332,8 @@
                 FechaHasta = calModalHasta,
                 HoraDesde = calModalHoraDesde,
                 HoraHasta = calModalHoraHasta,
-                Nota = calModalNota
+                Nota = calModalNota,
+                SucursalId = calModalSucursalId
             };
             Db.EventosCalendario.Add(nuevo);
             await Db.SaveChangesAsync();
@@ -1380,8 +1430,8 @@
     {
         activeTab = "fichadas";
         if (ficSucursales.Count == 0)
-            ficSucursales = sucursalesAsignadas.Any()
-                ? sucursalesAsignadas
+            ficSucursales = SucursalesAsignadas.Any()
+                ? SucursalesAsignadas
                 : await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
         if (ficItems == null)
             await CargarFichadas();
@@ -1798,7 +1848,7 @@
         try
         {
             // Validar sucursal obligatoria
-            if (!sucursalesAsignadas.Any())
+            if (!SucursalesAsignadas.Any())
             {
                 errorMessage = "Debe asignar al menos una sucursal al legajo.";
                 activeTab = "sucursales";
@@ -1850,12 +1900,17 @@
                     .ToListAsync();
                 Db.LegajoSucursales.RemoveRange(existentes);
 
-                foreach (var s in sucursalesAsignadas)
+                foreach (var ls in legajoSucursales)
                 {
                     Db.LegajoSucursales.Add(new LegajoSucursal
                     {
                         LegajoId = model.Id,
-                        SucursalId = s.Id
+                        SucursalId = ls.SucursalId,
+                        PermiteHuella = ls.PermiteHuella,
+                        PermitePin = ls.PermitePin,
+                        PermiteQr = ls.PermiteQr,
+                        PermiteMovil = ls.PermiteMovil,
+                        PermiteKiosko = ls.PermiteKiosko
                     });
                 }
 
@@ -1883,6 +1938,7 @@
                         tracked.HoraDesde = ev.HoraDesde;
                         tracked.HoraHasta = ev.HoraHasta;
                         tracked.Nota = ev.Nota;
+                        tracked.SucursalId = ev.SucursalId;
                     }
                 }
             }
@@ -1902,7 +1958,15 @@
                     };
                 }
                 // Asignar sucursales al nuevo legajo
-                model.LegajoSucursales = sucursalesAsignadas.Select(s => new LegajoSucursal { SucursalId = s.Id }).ToList();
+                model.LegajoSucursales = legajoSucursales.Select(ls => new LegajoSucursal
+                {
+                    SucursalId = ls.SucursalId,
+                    PermiteHuella = ls.PermiteHuella,
+                    PermitePin = ls.PermitePin,
+                    PermiteQr = ls.PermiteQr,
+                    PermiteMovil = ls.PermiteMovil,
+                    PermiteKiosko = ls.PermiteKiosko
+                }).ToList();
                 // Auto-generar QrToken
                 model.QrToken = Guid.NewGuid().ToString("N");
                 Db.Legajos.Add(model);

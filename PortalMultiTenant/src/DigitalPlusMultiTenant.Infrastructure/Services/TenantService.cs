@@ -59,6 +59,9 @@ public class TenantService : ITenantService
     public bool MobileHabilitado =>
         GetUser()?.FindFirst("MobileHabilitado")?.Value == "true";
 
+    public bool KioskoHabilitado =>
+        GetUser()?.FindFirst("KioskoHabilitado")?.Value == "true";
+
     public string? UserId =>
         GetUser()?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

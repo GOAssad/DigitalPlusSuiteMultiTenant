@@ -150,6 +150,7 @@
         <nav class="tab-bar">
             <button class="tab active" data-tab="home">⏱ Fichar</button>
             <button class="tab" data-tab="historial">☰ Historial</button>
+            <button class="tab" data-tab="miqr">◻ Mi QR</button>
         </nav>
     </div>
 
@@ -180,6 +181,40 @@
         <nav class="tab-bar">
             <button class="tab" data-tab="home">⏱ Fichar</button>
             <button class="tab active" data-tab="historial">☰ Historial</button>
+            <button class="tab" data-tab="miqr">◻ Mi QR</button>
+        </nav>
+    </div>
+
+    <!-- MI QR -->
+    <div id="screen-miqr" class="screen">
+        <div class="app-header">
+            <div class="app-brand">
+                <div class="brand-dots">
+                    <span class="dot dot-lg"></span>
+                    <span class="dot dot-md"></span>
+                    <span class="dot dot-sm"></span>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-name">Digital One</div>
+                    <div class="brand-sub">Mi Credencial</div>
+                </div>
+            </div>
+            <button id="btn-logout3" class="btn-menu" title="Cerrar sesión">✕</button>
+        </div>
+        <div class="accent-line"></div>
+        <div class="miqr-content">
+            <div class="miqr-card">
+                <div id="miqr-nombre" class="miqr-nombre"></div>
+                <div id="miqr-legajo" class="miqr-legajo"></div>
+                <div id="miqr-code" class="miqr-code"></div>
+                <div class="miqr-hint">Muestre este código en el lector para fichar</div>
+            </div>
+            <div id="miqr-error" class="error-banner hidden"></div>
+        </div>
+        <nav class="tab-bar">
+            <button class="tab" data-tab="home">⏱ Fichar</button>
+            <button class="tab" data-tab="historial">☰ Historial</button>
+            <button class="tab active" data-tab="miqr">◻ Mi QR</button>
         </nav>
     </div>
 
@@ -188,6 +223,7 @@
         <div class="spinner"></div>
     </div>
 
+    <script src="/js/qrcode.min.js"></script>
     <script src="/mobile/app.js"></script>
 </body>
 </html>

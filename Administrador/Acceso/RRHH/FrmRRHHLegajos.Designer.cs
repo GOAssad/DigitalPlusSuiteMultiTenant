@@ -115,10 +115,7 @@
             this.panelCamara.SuspendLayout();
             this.panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picFotoCamara)).BeginInit();
-            this.PageReportes.SuspendLayout();
-            this.PageDomicilios.SuspendLayout();
-            this.PageTurnos.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgFechasTurno)).BeginInit();
+            // PageReportes, PageDomicilios, PageTurnos removed (read-only mode)
             this.PanelLegajosCabrcera.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContenedor)).BeginInit();
             this.splitContenedor.Panel1.SuspendLayout();
@@ -161,7 +158,8 @@
             this.chkActivo.Text = "Activo";
             this.chkActivo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.chkActivo.UseVisualStyleBackColor = false;
-            // 
+            this.chkActivo.Enabled = false;
+            //
             // lblInactivo
             // 
             this.lblInactivo.AutoSize = true;
@@ -198,7 +196,7 @@
             this.controlEntidadSimpleCategorias.Name = "controlEntidadSimpleCategorias";
             this.controlEntidadSimpleCategorias.SinImagen = false;
             this.controlEntidadSimpleCategorias.Size = new System.Drawing.Size(500, 86);
-            this.controlEntidadSimpleCategorias.SoloLectura = false;
+            this.controlEntidadSimpleCategorias.SoloLectura = true;
             this.controlEntidadSimpleCategorias.SqlAyuda = "Select Id CategoriaID, Nombre Descripcion from Categoria WHERE EmpresaId = ";
             this.controlEntidadSimpleCategorias.TabIndex = 3;
             this.controlEntidadSimpleCategorias.TablaSQL = "Categoria";
@@ -230,7 +228,7 @@
             this.controlEntidadSimpleUbicaciones.Name = "controlEntidadSimpleUbicaciones";
             this.controlEntidadSimpleUbicaciones.SinImagen = false;
             this.controlEntidadSimpleUbicaciones.Size = new System.Drawing.Size(500, 86);
-            this.controlEntidadSimpleUbicaciones.SoloLectura = false;
+            this.controlEntidadSimpleUbicaciones.SoloLectura = true;
             this.controlEntidadSimpleUbicaciones.SqlAyuda = "Select Id Ubicacion, Nombre Descripcion from Sector WHERE EmpresaId = ";
             this.controlEntidadSimpleUbicaciones.TabIndex = 2;
             this.controlEntidadSimpleUbicaciones.TablaSQL = "Sector";
@@ -262,7 +260,7 @@
             this.controlEntidadSucursal.Name = "controlEntidadSucursal";
             this.controlEntidadSucursal.SinImagen = false;
             this.controlEntidadSucursal.Size = new System.Drawing.Size(500, 86);
-            this.controlEntidadSucursal.SoloLectura = false;
+            this.controlEntidadSucursal.SoloLectura = true;
             this.controlEntidadSucursal.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Sucursal WHERE EmpresaId = ";
             this.controlEntidadSucursal.TabIndex = 1;
             this.controlEntidadSucursal.TablaSQL = "Sucursal";
@@ -294,7 +292,7 @@
             this.controlEntidadHorario.Name = "controlEntidadHorario";
             this.controlEntidadHorario.SinImagen = false;
             this.controlEntidadHorario.Size = new System.Drawing.Size(500, 86);
-            this.controlEntidadHorario.SoloLectura = false;
+            this.controlEntidadHorario.SoloLectura = true;
             this.controlEntidadHorario.SqlAyuda = "Select Id Codigo, Nombre Descripcion from Horario WHERE EmpresaId = ";
             this.controlEntidadHorario.TabIndex = 0;
             this.controlEntidadHorario.TablaSQL = "Horario";
@@ -604,9 +602,6 @@
             // 
             this.tabControl1.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
             this.tabControl1.Controls.Add(this.PageLegajo);
-            this.tabControl1.Controls.Add(this.PageReportes);
-            this.tabControl1.Controls.Add(this.PageDomicilios);
-            this.tabControl1.Controls.Add(this.PageTurnos);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.HotTrack = true;
             this.tabControl1.ItemSize = new System.Drawing.Size(200, 40);
@@ -920,7 +915,7 @@
             this.PageTurnos.TabIndex = 4;
             this.PageTurnos.Text = "Turnos";
             this.PageTurnos.UseVisualStyleBackColor = true;
-            this.PageTurnos.Click += new System.EventHandler(this.PageTurnos_Click);
+            // this.PageTurnos.Click removed
             // 
             // chkSeguimiento
             // 
@@ -958,7 +953,7 @@
             this.btnBorrarTurnos.Text = "Borrar todo";
             this.btnBorrarTurnos.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnBorrarTurnos.UseVisualStyleBackColor = true;
-            this.btnBorrarTurnos.Click += new System.EventHandler(this.btnBorrarTurnos_Click);
+            // this.btnBorrarTurnos.Click removed
             // 
             // btnArrow
             // 
@@ -972,7 +967,7 @@
             this.btnArrow.Size = new System.Drawing.Size(112, 64);
             this.btnArrow.TabIndex = 12;
             this.btnArrow.UseVisualStyleBackColor = true;
-            this.btnArrow.Click += new System.EventHandler(this.btnArrow_Click);
+            // this.btnArrow.Click removed
             // 
             // monthCalendar2
             // 
@@ -1019,8 +1014,7 @@
             this.dgFechasTurno.RowTemplate.Height = 24;
             this.dgFechasTurno.Size = new System.Drawing.Size(265, 604);
             this.dgFechasTurno.TabIndex = 8;
-            this.dgFechasTurno.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgFechasTurno_CellContentClick);
-            this.dgFechasTurno.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgFechasTurno_CellDoubleClick);
+            // dgFechasTurno event handlers removed
             // 
             // Fecha
             // 
@@ -1158,6 +1152,7 @@
             this.textoEtiquetaNombre.Size = new System.Drawing.Size(343, 34);
             this.textoEtiquetaNombre.TabIndex = 2;
             this.textoEtiquetaNombre.Valor = null;
+            this.textoEtiquetaNombre.Enabled = false;
             this.textoEtiquetaNombre.Leave += new System.EventHandler(this.textoEtiquetaNombre_Leave);
             // 
             // textoEtiquetaApellido
@@ -1170,6 +1165,7 @@
             this.textoEtiquetaApellido.Size = new System.Drawing.Size(350, 34);
             this.textoEtiquetaApellido.TabIndex = 1;
             this.textoEtiquetaApellido.Valor = null;
+            this.textoEtiquetaApellido.Enabled = false;
             this.textoEtiquetaApellido.Leave += new System.EventHandler(this.textoEtiquetaApellido_Leave);
             // 
             // splitContenedor
@@ -1195,7 +1191,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.BotonEditarVisible = true;
-            this.BotonEliminarVisible = true;
+            this.BotonEliminarVisible = false;
             this.BotonGuardarEnable = true;
             this.BotonGuardarVisible = true;
             this.ClientSize = new System.Drawing.Size(1709, 812);
@@ -1224,11 +1220,7 @@
             this.panelCamara.PerformLayout();
             this.panel4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.picFotoCamara)).EndInit();
-            this.PageReportes.ResumeLayout(false);
-            this.PageDomicilios.ResumeLayout(false);
-            this.PageTurnos.ResumeLayout(false);
-            this.PageTurnos.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgFechasTurno)).EndInit();
+            // PageReportes, PageDomicilios, PageTurnos ResumeLayout removed (read-only mode)
             this.PanelLegajosCabrcera.ResumeLayout(false);
             this.PanelLegajosCabrcera.PerformLayout();
             this.splitContenedor.Panel1.ResumeLayout(false);

@@ -9,7 +9,9 @@
 
 @inject IJSRuntime JS
 @inject ITenantService Tenant
+@inject ILicenciaService LicenciaService
 @using DigitalPlusMultiTenant.Web.Helpers
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Legajos - DigitalPlus</PageTitle>
 
@@ -18,10 +20,13 @@
     <div>
         @if (legajos?.Any() == true)
         {
+            <button class="btn btn-outline-dark btn-sm me-1" @onclick="ImprimirTodosQR" title="Imprimir credenciales QR de todos los legajos visibles"><i class="bi bi-qr-code me-1"></i>Imprimir QR</button>
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
-            <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+            <button class="btn btn-outline-secondary btn-sm me-1" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
         }
         <AuthorizeView Roles="SuperAdmin,AdminEmpresa,Operador">
+            <button class="btn btn-outline-primary btn-sm me-1" @onclick="DescargarPlantilla" title="Descargar plantilla Excel para importación"><i class="bi bi-download me-1"></i>Plantilla</button>
+            <button class="btn btn-warning btn-sm me-2" @onclick="() => mostrarImportar = true"><i class="bi bi-upload me-1"></i>Importar</button>
             <a href="legajos/crear" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nuevo Legajo</a>
         </AuthorizeView>
     </div>
@@ -126,6 +131,10 @@
                                 <td><span class="badge @(l.IsActive ? "bg-success" : "bg-danger")">@(l.IsActive ? "Activo" : "Inactivo")</span></td>
                                 <td class="text-end">
                                     <AuthorizeView Roles="SuperAdmin,AdminEmpresa,Operador">
+                                        <button class="btn btn-sm btn-outline-dark me-1" @onclick="() => MostrarQR(l)"
+                                                title="Ver QR">
+                                            <i class="bi bi-qr-code"></i>
+                                        </button>
                                         <a href="legajos/editar/@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
                                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(l)">
                                             <i class="bi @(l.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
@@ -187,6 +196,167 @@
         </div>
     }
 </div>
+
+@* ===== MODAL: IMPORTAR EXCEL ===== *@
+@if (mostrarImportar)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload me-2"></i>Importar Legajos desde Excel</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarImportar" disabled="@importando"></button>
+                </div>
+                <div class="modal-body">
+                    @if (importRows == null)
+                    {
+                        @* Step 1: Upload file *@
+                        <div class="text-center py-4">
+                            <i class="bi bi-file-earmark-excel fs-1 text-success d-block mb-3"></i>
+                            <p class="text-muted mb-3">Seleccioná un archivo Excel (.xlsx) con los legajos a importar.<br/>
+                            <small>Podés descargar la <a href="#" @onclick="DescargarPlantilla" @onclick:preventDefault>plantilla</a> con los valores válidos.</small></p>
+                            <InputFile OnChange="OnArchivoSeleccionado" accept=".xlsx" class="form-control w-auto d-inline-block" disabled="@cargandoArchivo" />
+                            @if (cargandoArchivo)
+                            {
+                                <div class="mt-3"><div class="spinner-border spinner-border-sm text-primary"></div> Leyendo archivo...</div>
+                            }
+                            @if (importError != null)
+                            {
+                                <div class="alert alert-danger mt-3 text-start">@importError</div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        @* Step 2: Preview *@
+                        var validos = importRows.Count(r => r.IsValid);
+                        var errores = importRows.Count(r => !r.IsValid);
+                        var skipped = importRows.Count(r => r.Errores.Any(e => e == "Legajo ya existe"));
+
+                        <div class="d-flex gap-3 mb-3">
+                            <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle me-1"></i>@validos válidos</span>
+                            @if (errores > 0)
+                            {
+                                <span class="badge bg-danger fs-6 px-3 py-2"><i class="bi bi-x-circle me-1"></i>@errores con errores</span>
+                            }
+                            @if (skipped > 0)
+                            {
+                                <span class="badge bg-secondary fs-6 px-3 py-2"><i class="bi bi-skip-forward me-1"></i>@skipped ya existentes</span>
+                            }
+                        </div>
+
+                        @if (importLicenciaMsg != null)
+                        {
+                            <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i>@importLicenciaMsg</div>
+                        }
+
+                        @if (importResultado != null)
+                        {
+                            <div class="alert alert-success"><i class="bi bi-check2-all me-1"></i>@importResultado</div>
+                        }
+
+                        <div class="table-responsive" style="max-height: 400px;">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width:40px">Fila</th>
+                                        <th>Legajo</th>
+                                        <th>Apellido</th>
+                                        <th>Nombre</th>
+                                        <th>Sector</th>
+                                        <th>Categoría</th>
+                                        <th>Horario</th>
+                                        <th>Sucursales</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in importRows)
+                                    {
+                                        <tr class="@(row.IsValid ? "" : "table-danger")">
+                                            <td class="text-muted small">@row.Fila</td>
+                                            <td>@row.NumeroLegajo</td>
+                                            <td>@row.Apellido</td>
+                                            <td>@row.Nombre</td>
+                                            <td>@row.SectorNombre</td>
+                                            <td>@row.CategoriaNombre</td>
+                                            <td>@row.HorarioNombre</td>
+                                            <td>@row.SucursalesTexto</td>
+                                            <td>
+                                                @if (row.IsValid)
+                                                {
+                                                    <i class="bi bi-check-circle text-success" title="OK"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-danger small" title="@string.Join("; ", row.Errores)">
+                                                        <i class="bi bi-x-circle"></i> @row.Errores.First()
+                                                        @if (row.Errores.Count > 1) { <span> (+@(row.Errores.Count - 1))</span> }
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (importRows != null && importResultado == null)
+                    {
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="ResetImportar" disabled="@importando">
+                            <i class="bi bi-arrow-left me-1"></i>Cambiar archivo
+                        </button>
+                    }
+                    <button class="btn btn-secondary btn-sm" @onclick="CerrarImportar" disabled="@importando">Cerrar</button>
+                    @if (importRows != null && importRows.Any(r => r.IsValid) && importResultado == null && importLicenciaMsg == null)
+                    {
+                        <button class="btn btn-success btn-sm" @onclick="EjecutarImportacion" disabled="@importando">
+                            @if (importando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                            }
+                            <i class="bi bi-check-lg me-1"></i>Importar @importRows.Count(r => r.IsValid) legajos
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ===== MODAL: VER QR ===== *@
+@if (qrLegajo != null)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Credencial QR</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarQR"></button>
+                </div>
+                <div class="modal-body text-center">
+                    @if (qrLegajo.Foto != null && qrLegajo.Foto.Length > 0)
+                    {
+                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(qrLegajo.Foto)"
+                             class="rounded-circle mb-2" style="width:64px;height:64px;object-fit:cover;" />
+                    }
+                    <div class="fw-bold">@qrLegajo.Apellido, @qrLegajo.Nombre</div>
+                    <div class="text-muted small mb-3">Legajo: @qrLegajo.NumeroLegajo</div>
+                    <div id="qr-container" class="d-flex justify-content-center mb-2"></div>
+                    <div class="text-muted small">@qrLegajo.QrToken</div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button class="btn btn-outline-dark btn-sm" @onclick="() => ImprimirQRIndividual(qrLegajo)">
+                        <i class="bi bi-printer me-1"></i>Imprimir
+                    </button>
+                    <button class="btn btn-primary btn-sm" @onclick="CerrarQR">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<Legajo>? legajos;
@@ -360,5 +530,214 @@
         }
         for (var i = start; i <= end; i++)
             yield return i;
+    }
+
+    // --- QR ---
+    private Legajo? qrLegajo;
+
+    private async Task MostrarQR(Legajo legajo)
+    {
+        // Auto-generar QrToken si no tiene
+        if (string.IsNullOrEmpty(legajo.QrToken))
+        {
+            legajo.QrToken = Guid.NewGuid().ToString("N");
+            await Db.SaveChangesAsync();
+        }
+        qrLegajo = legajo;
+        StateHasChanged();
+        // Renderizar QR después del render
+        await Task.Delay(50);
+        await JS.InvokeVoidAsync("qrHelper.render", "qr-container", legajo.QrToken, 5);
+    }
+
+    private void CerrarQR() => qrLegajo = null;
+
+    private async Task ImprimirQRIndividual(Legajo legajo)
+    {
+        var data = new[]
+        {
+            new
+            {
+                qrToken = legajo.QrToken,
+                nombre = $"{legajo.Apellido}, {legajo.Nombre}",
+                numeroLegajo = legajo.NumeroLegajo,
+                foto = legajo.Foto != null ? Convert.ToBase64String(legajo.Foto) : (string?)null
+            }
+        };
+        await JS.InvokeVoidAsync("qrHelper.printCredenciales", (object)data);
+    }
+
+    private async Task ImprimirTodosQR()
+    {
+        if (legajos == null || !legajos.Any()) return;
+
+        // Asegurar que todos tengan QrToken
+        var sinToken = legajos.Where(l => string.IsNullOrEmpty(l.QrToken)).ToList();
+        foreach (var l in sinToken)
+            l.QrToken = Guid.NewGuid().ToString("N");
+        if (sinToken.Any())
+            await Db.SaveChangesAsync();
+
+        var data = legajos.Select(l => new
+        {
+            qrToken = l.QrToken,
+            nombre = $"{l.Apellido}, {l.Nombre}",
+            numeroLegajo = l.NumeroLegajo,
+            foto = l.Foto != null ? Convert.ToBase64String(l.Foto) : (string?)null
+        }).ToArray();
+
+        await JS.InvokeVoidAsync("qrHelper.printCredenciales", (object)data);
+    }
+
+    // ===== IMPORTAR EXCEL =====
+    private bool mostrarImportar;
+    private bool cargandoArchivo;
+    private bool importando;
+    private string? importError;
+    private string? importLicenciaMsg;
+    private string? importResultado;
+    private List<ImportRow>? importRows;
+
+    private async Task DescargarPlantilla()
+    {
+        var allSectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        var allCategorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
+        var allHorarios = await Db.Horarios.Where(h => h.IsActive).OrderBy(h => h.Nombre).ToListAsync();
+        var allSucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+
+        var bytes = ExcelImporter.GenerarPlantilla(allSectores, allCategorias, allHorarios, allSucursales);
+        await JS.InvokeVoidAsync("downloadFile", "plantilla_legajos.xlsx", Convert.ToBase64String(bytes),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task OnArchivoSeleccionado(InputFileChangeEventArgs e)
+    {
+        importError = null;
+        importRows = null;
+        importResultado = null;
+        importLicenciaMsg = null;
+        cargandoArchivo = true;
+        StateHasChanged();
+
+        try
+        {
+            var file = e.File;
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                importError = "El archivo es demasiado grande (máximo 5 MB).";
+                return;
+            }
+            if (!file.Name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                importError = "Solo se aceptan archivos .xlsx";
+                return;
+            }
+
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+            var fileBytes = ms.ToArray();
+
+            var allSectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+            var allCategorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
+            var allHorarios = await Db.Horarios.Where(h => h.IsActive).OrderBy(h => h.Nombre).ToListAsync();
+            var allSucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+
+            var existentes = await Db.Legajos.Select(l => l.NumeroLegajo).ToListAsync();
+            var existentesSet = new HashSet<string>(existentes, StringComparer.OrdinalIgnoreCase);
+
+            importRows = ExcelImporter.ParsearExcel(fileBytes, allSectores, allCategorias, allHorarios, allSucursales, existentesSet);
+
+            if (importRows.Count == 0)
+            {
+                importError = "No se encontraron filas con datos en el archivo.";
+                importRows = null;
+                return;
+            }
+
+            // Check license limit
+            var validCount = importRows.Count(r => r.IsValid);
+            if (validCount > 0)
+            {
+                var totalActual = existentes.Count;
+                var (permitido, mensaje) = await LicenciaService.PuedeCrearLegajoAsync(Tenant.EmpresaId, totalActual + validCount - 1);
+                if (!permitido)
+                    importLicenciaMsg = $"No se puede importar: {mensaje}";
+            }
+        }
+        catch (Exception ex)
+        {
+            importError = $"Error al leer el archivo: {ex.Message}";
+        }
+        finally
+        {
+            cargandoArchivo = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task EjecutarImportacion()
+    {
+        if (importRows == null || importando) return;
+
+        var validos = importRows.Where(r => r.IsValid).ToList();
+        if (validos.Count == 0) return;
+
+        importando = true;
+        StateHasChanged();
+
+        try
+        {
+            var count = 0;
+            foreach (var row in validos)
+            {
+                var legajo = new Legajo
+                {
+                    NumeroLegajo = row.NumeroLegajo,
+                    Apellido = row.Apellido,
+                    Nombre = row.Nombre,
+                    SectorId = row.SectorId!.Value,
+                    CategoriaId = row.CategoriaId!.Value,
+                    HorarioId = row.HorarioId,
+                    Email = row.Email,
+                    Telefono = row.Telefono,
+                    FechaIngreso = row.FechaIngreso,
+                    IsActive = true,
+                    MobileHabilitado = false,
+                    QrToken = Guid.NewGuid().ToString("N"),
+                    LegajoSucursales = row.SucursalIds.Select(sid => new LegajoSucursal { SucursalId = sid }).ToList()
+                };
+                Db.Legajos.Add(legajo);
+                count++;
+            }
+
+            await Db.SaveChangesAsync();
+            importResultado = $"Se importaron {count} legajos correctamente.";
+
+            // Refresh the list
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            importError = $"Error al importar: {ex.Message}";
+        }
+        finally
+        {
+            importando = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ResetImportar()
+    {
+        importRows = null;
+        importError = null;
+        importResultado = null;
+        importLicenciaMsg = null;
+    }
+
+    private void CerrarImportar()
+    {
+        mostrarImportar = false;
+        ResetImportar();
     }
 }

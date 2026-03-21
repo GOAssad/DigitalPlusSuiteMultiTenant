@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 15.0
-**Fecha:** 2026-03-18
+**Version:** 16.0
+**Fecha:** 2026-03-20
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -608,6 +608,11 @@ C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 - **v1.0** — Suite completa funcional: Fichador (Huella/PIN/Demo), Administrador, Portal MT, Portal Licencias, Instaladores, Azure Functions. Probado en produccion con Kosiuko y New Family.
 - **v2.0** — Incorpora Terminal Movil como PWA (fichado desde smartphone con GPS + validacion de ubicacion). Backend, PWA y admin completos. Control MobileHabilitado a nivel empresa y legajo.
 
+**Versionado automatico de builds:**
+- Todas las aplicaciones (Fichador, Administrador, Portal MT, Portal Licencias) incluyen numero de version automatico con formato `1.0.0-YYYYMMDDHHMI`
+- El script `Tools/update-build-number.ps1` genera/actualiza `BuildInfo.cs` en cada proyecto con la fecha y hora de compilacion
+- La clase `BuildInfo` expone `BuildInfo.Version` para mostrar en UI (About, title bar, footer)
+
 **Como restaurar desde un tag:**
 ```bash
 # Ver el estado del proyecto en ese punto
@@ -672,7 +677,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ---
 
-## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-18)
+## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-20)
 
 ### Completado
 
@@ -752,6 +757,12 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Fix Asistencia Diaria:** Columnas Horas/Origen estaban invertidas en el body. Origen ahora muestra todos los origenes distintos del dia (multiples badges)
 - **Fix concurrencia FichadasList:** Guard `_cargando` evita doble click en Buscar que lanzaba 2 queries concurrentes al DbContext
 - **Instalador Liviano:** Incluye DLLs AForge.dll, AForge.Video.dll, AForge.Video.DirectShow.dll, zxing.dll
+- **Sistema de versionado automatico:** `BuildInfo.cs` generado por `Tools/update-build-number.ps1` con formato `1.0.0-YYYYMMDDHHMI` en todas las apps (Fichador, Administrador, Portal MT, Portal Licencias)
+- **Fix credenciales en endpoint /api/activar:** Ahora devuelve email+password del usuario admin creado, para que el instalador pueda mostrarlos al usuario
+- **Boton "Activar Dispositivo" en Terminales Moviles:** Permite generar codigo de activacion sin necesidad de tener una terminal previa registrada
+- **Fix cross-tenant login movil con codigo de activacion:** Validacion corregida para que el codigo de activacion solo funcione dentro de la empresa correcta
+- **Fix timezone fichada movil:** Usa `Clock.Now` (hora Argentina) en vez de `DateTime.UtcNow` para registrar la hora correcta
+- **Anti-duplicado en SP EscritorioFichadasSPSALIDA:** Hint `UPDLOCK` + cooldown de 30 segundos para evitar fichadas duplicadas por doble-click o lecturas rapidas
 
 ### En progreso
 

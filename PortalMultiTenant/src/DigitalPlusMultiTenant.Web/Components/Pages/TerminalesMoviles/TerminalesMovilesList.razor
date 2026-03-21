@@ -10,11 +10,22 @@
 @inject ITenantService Tenant
 @inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
 @inject NavigationManager NavManager
+@inject IJSRuntime JS
 
 <PageTitle>Terminales Moviles - DigitalPlus</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-phone me-2"></i>Terminales Moviles</h4>
+    <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" @onclick="MostrarActivarDispositivo">
+                <i class="bi bi-phone me-1"></i>Activar Dispositivo
+            </button>
+            <button class="btn btn-primary btn-sm" @onclick="MostrarRegistrarKiosko">
+                <i class="bi bi-display me-1"></i>Registrar Kiosko
+            </button>
+        </div>
+    </AuthorizeView>
 </div>
 
 <div class="card border-0 shadow-sm mb-3">
@@ -43,8 +54,9 @@
             <table class="table table-hover table-sm mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th>Tipo</th>
                         <th role="button" @onclick='() => SetOrden("empleado")'>
-                            Empleado @SortIcon("empleado")
+                            Empleado / Sucursal @SortIcon("empleado")
                         </th>
                         <th role="button" @onclick='() => SetOrden("dispositivo")'>
                             Dispositivo @SortIcon("dispositivo")
@@ -63,18 +75,41 @@
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="7" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
+                        <tr><td colspan="8" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-phone fs-3 d-block mb-2"></i>No hay terminales moviles registradas</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-phone fs-3 d-block mb-2"></i>No hay terminales moviles registradas</td></tr>
                     }
                     else
                     {
                         @foreach (var t in items)
                         {
                             <tr>
-                                <td>@t.Legajo.Apellido, @t.Legajo.Nombre <span class="badge bg-secondary ms-1">@t.Legajo.NumeroLegajo</span></td>
+                                <td>
+                                    @if (t.ModoKiosko)
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-display me-1"></i>Kiosko</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>Personal</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (t.ModoKiosko)
+                                    {
+                                        <i class="bi bi-geo-alt text-muted me-1"></i>@(t.Sucursal?.Nombre ?? "(sin sucursal)")
+                                    }
+                                    else if (t.Legajo != null)
+                                    {
+                                        @t.Legajo.Apellido@(", ")@t.Legajo.Nombre <span class="badge bg-secondary ms-1">@t.Legajo.NumeroLegajo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">(sin asignar)</span>
+                                    }
+                                </td>
                                 <td>@(t.Nombre ?? "(sin nombre)")</td>
                                 <td><span class="badge bg-info">@(t.Plataforma ?? "-")</span></td>
                                 <td class="text-muted small">@t.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
@@ -89,10 +124,13 @@
                                                 <i class="bi bi-x-circle"></i>
                                             </button>
                                         }
-                                        <button class="btn btn-sm btn-outline-success ms-1" @onclick="() => GenerarCodigo(t.Legajo)"
-                                                title="Generar codigo de activacion">
-                                            <i class="bi bi-qr-code"></i>
-                                        </button>
+                                        @if (!t.ModoKiosko && t.Legajo != null)
+                                        {
+                                            <button class="btn btn-sm btn-outline-success ms-1" @onclick="() => GenerarCodigo(t.Legajo)"
+                                                    title="Generar codigo de activacion">
+                                                <i class="bi bi-qr-code"></i>
+                                            </button>
+                                        }
                                     </AuthorizeView>
                                 </td>
                             </tr>
@@ -140,8 +178,112 @@
     </div>
 }
 
+@* ===== MODAL: ACTIVAR DISPOSITIVO (seleccionar legajo) ===== *@
+@if (mostrarModalActivar)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-phone me-2"></i>Activar Dispositivo Movil</h5>
+                    <button type="button" class="btn-close" @onclick="() => mostrarModalActivar = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Buscar legajo</label>
+                        <input type="text" class="form-control" placeholder="Nombre o apellido..."
+                               @bind="activarFiltro" @bind:event="oninput" @bind:after="FiltrarLegajosActivar" />
+                    </div>
+                    @if (legajosActivar != null && legajosActivar.Count > 0)
+                    {
+                        <div class="list-group" style="max-height: 300px; overflow-y: auto;">
+                            @foreach (var l in legajosActivar)
+                            {
+                                <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                        @onclick="() => SeleccionarLegajoActivar(l)">
+                                    <div>
+                                        <strong>@l.Apellido, @l.Nombre</strong>
+                                        <small class="text-muted ms-2">#@l.NumeroLegajo</small>
+                                    </div>
+                                    @if (l.MobileHabilitado)
+                                    {
+                                        <span class="badge bg-success">Mobile</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Sin mobile</span>
+                                    }
+                                </button>
+                            }
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(activarFiltro) && activarFiltro.Length >= 2)
+                    {
+                        <p class="text-muted small">No se encontraron legajos.</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted small">Escriba al menos 2 caracteres para buscar.</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => mostrarModalActivar = false">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ===== MODAL: REGISTRAR KIOSKO ===== *@
+@if (mostrarModalKiosko)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-display me-2"></i>Registrar Terminal Kiosko</h5>
+                    <button type="button" class="btn-close" @onclick="() => mostrarModalKiosko = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del kiosko <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" placeholder="Ej: Kiosko Recepcion" @bind="kioskoNombre" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sucursal <span class="text-danger">*</span></label>
+                        <select class="form-select" @bind="kioskoSucursalId">
+                            <option value="0">Seleccione una sucursal...</option>
+                            @foreach (var s in sucursales)
+                            {
+                                <option value="@s.Id">@s.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Device ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" placeholder="Se genera automaticamente al abrir el kiosko" @bind="kioskoDeviceId" />
+                        <div class="form-text">Identificador unico del dispositivo. Se asigna automaticamente cuando el kiosko se conecta por primera vez.</div>
+                    </div>
+                    @if (kioskoError != null)
+                    {
+                        <div class="alert alert-danger small py-1">@kioskoError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => mostrarModalKiosko = false">Cancelar</button>
+                    <button class="btn btn-primary btn-sm" @onclick="RegistrarKiosko" disabled="@guardandoKiosko">
+                        @if (guardandoKiosko) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        <i class="bi bi-check-lg me-1"></i>Registrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<TerminalMovil>? items;
+    private List<Sucursal> sucursales = new();
     private string filtro = "";
     private string filtroActivo = "true";
     private string ordenColumna = "empleado";
@@ -153,8 +295,17 @@
     private string? emailDestino;
     private string? emailError;
 
+    // Kiosko
+    private bool mostrarModalKiosko;
+    private string kioskoNombre = "";
+    private int kioskoSucursalId;
+    private string kioskoDeviceId = "";
+    private string? kioskoError;
+    private bool guardandoKiosko;
+
     protected override async Task OnInitializedAsync()
     {
+        sucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
         await CargarDatos();
     }
 
@@ -186,7 +337,7 @@
 
     private async Task CargarDatos()
     {
-        var query = Db.TerminalesMoviles.Include(t => t.Legajo).AsQueryable();
+        var query = Db.TerminalesMoviles.Include(t => t.Legajo).Include(t => t.Sucursal).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filtro))
         {
@@ -303,5 +454,114 @@
         for (int i = 0; i < longitud; i++)
             result[i] = chars[bytes[i] % chars.Length];
         return new string(result);
+    }
+
+    // --- Activar Dispositivo ---
+    private bool mostrarModalActivar;
+    private string activarFiltro = "";
+    private List<Legajo>? legajosActivar;
+    private CancellationTokenSource? _activarDebounce;
+
+    private void MostrarActivarDispositivo()
+    {
+        activarFiltro = "";
+        legajosActivar = null;
+        mostrarModalActivar = true;
+    }
+
+    private async Task FiltrarLegajosActivar()
+    {
+        _activarDebounce?.Cancel();
+        _activarDebounce = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(400, _activarDebounce.Token);
+        }
+        catch (TaskCanceledException) { return; }
+
+        if (string.IsNullOrWhiteSpace(activarFiltro) || activarFiltro.Trim().Length < 2)
+        {
+            legajosActivar = null;
+            return;
+        }
+        var f = activarFiltro.Trim().ToLower();
+        legajosActivar = await Db.Legajos
+            .Where(l => l.IsActive && (l.Apellido.ToLower().Contains(f) || l.Nombre.ToLower().Contains(f)))
+            .OrderBy(l => l.Apellido).ThenBy(l => l.Nombre)
+            .Take(20)
+            .ToListAsync();
+    }
+
+    private async Task SeleccionarLegajoActivar(Legajo legajo)
+    {
+        mostrarModalActivar = false;
+
+        if (!legajo.MobileHabilitado)
+        {
+            legajo.MobileHabilitado = true;
+            await Db.SaveChangesAsync();
+        }
+
+        await GenerarCodigo(legajo);
+    }
+
+    // --- Kiosko ---
+    private void MostrarRegistrarKiosko()
+    {
+        kioskoNombre = "";
+        kioskoSucursalId = 0;
+        kioskoDeviceId = "KIOSKO-" + Guid.NewGuid().ToString("N")[..12].ToUpper();
+        kioskoError = null;
+        guardandoKiosko = false;
+        mostrarModalKiosko = true;
+    }
+
+    private async Task RegistrarKiosko()
+    {
+        kioskoError = null;
+        if (string.IsNullOrWhiteSpace(kioskoNombre))
+        {
+            kioskoError = "Ingrese un nombre para el kiosko.";
+            return;
+        }
+        if (kioskoSucursalId == 0)
+        {
+            kioskoError = "Seleccione una sucursal.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(kioskoDeviceId))
+        {
+            kioskoError = "El Device ID es requerido.";
+            return;
+        }
+
+        guardandoKiosko = true;
+        try
+        {
+            var terminal = new TerminalMovil
+            {
+                EmpresaId = Tenant.EmpresaId,
+                DeviceId = kioskoDeviceId.Trim(),
+                Nombre = kioskoNombre.Trim(),
+                Plataforma = "Kiosko",
+                ModoKiosko = true,
+                SucursalId = kioskoSucursalId,
+                FechaRegistro = DateTime.UtcNow,
+                Activo = true
+            };
+            Db.TerminalesMoviles.Add(terminal);
+            await Db.SaveChangesAsync();
+
+            mostrarModalKiosko = false;
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            kioskoError = ex.InnerException?.Message ?? ex.Message;
+        }
+        finally
+        {
+            guardandoKiosko = false;
+        }
     }
 }

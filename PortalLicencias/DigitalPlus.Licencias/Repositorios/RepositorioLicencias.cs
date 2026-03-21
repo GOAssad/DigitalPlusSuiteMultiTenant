@@ -56,11 +56,31 @@ public class RepositorioLicencias
 
     public async Task ActualizarLicenciaAsync(int id, string plan, int maxLegajos, DateTime? expiresAt)
     {
-        await using var conn = new SqlConnection(_connectionString);
-        await conn.ExecuteAsync(
-            @"UPDATE Licencias SET [Plan] = @Plan, MaxLegajos = @MaxLegajos,
-              ExpiresAt = @ExpiresAt, UpdatedAt = SYSUTCDATETIME() WHERE Id = @Id",
-            new { Id = id, Plan = plan, MaxLegajos = maxLegajos, ExpiresAt = expiresAt });
+        // Si cambió el plan, aplicar límites de PlanConfig automáticamente
+        var lic = await _context.Licencias.FindAsync(id);
+        if (lic != null && lic.Plan != plan)
+        {
+            var valores = await GetPlanValoresAsync(plan);
+            if (valores.TryGetValue("MaxLegajos", out var ml)) maxLegajos = ml;
+            var maxSuc = valores.GetValueOrDefault("MaxSucursales", 0);
+            var maxFich = valores.GetValueOrDefault("MaxFichadasRolling30d", 0);
+
+            await using var conn = new SqlConnection(_connectionString);
+            await conn.ExecuteAsync(
+                @"UPDATE Licencias SET [Plan] = @Plan, MaxLegajos = @MaxLegajos,
+                  MaxSucursales = @MaxSucursales, MaxFichadasMes = @MaxFichadasMes,
+                  ExpiresAt = @ExpiresAt, UpdatedAt = SYSUTCDATETIME() WHERE Id = @Id",
+                new { Id = id, Plan = plan, MaxLegajos = maxLegajos,
+                      MaxSucursales = maxSuc, MaxFichadasMes = maxFich, ExpiresAt = expiresAt });
+        }
+        else
+        {
+            await using var conn = new SqlConnection(_connectionString);
+            await conn.ExecuteAsync(
+                @"UPDATE Licencias SET [Plan] = @Plan, MaxLegajos = @MaxLegajos,
+                  ExpiresAt = @ExpiresAt, UpdatedAt = SYSUTCDATETIME() WHERE Id = @Id",
+                new { Id = id, Plan = plan, MaxLegajos = maxLegajos, ExpiresAt = expiresAt });
+        }
     }
 
     public async Task ExtenderLicenciaAsync(int id, int dias)

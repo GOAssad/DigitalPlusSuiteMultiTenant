@@ -1,4 +1,4 @@
-; ============================================================
+﻿; ============================================================
 ; DigitalPlus Suite - Instalador Liviano v1.0
 ; Herramienta: Inno Setup 6.x
 ; Generado:    2026-03-07
@@ -14,7 +14,7 @@
 
 ; --- Identidad del instalador liviano ---
 #define AppName       "DigitalPlus Suite (Cloud)"
-#define AppVersion    "1.0"
+#define AppVersion    "1.0.0-202603202038"
 #define AppPublisher  "DigitalOnePlus"
 #define AppId         "{{A1B2C3D4-5E6F-7A8B-9C0D-E1F2A3B4C5D6}"
 
@@ -330,6 +330,8 @@ var
   sEmpresaId:             String;    // EmpresaId del tenant en DigitalPlusMultiTenant
   sAdminEmpresaId:        String;    // Id de la empresa en DigitalPlusAdmin
   sUrlPortal:             String;    // URL del portal web de la empresa
+  sAdminEmail:            String;    // Email del admin (viene del portal)
+  sAdminPassword:         String;    // Password del admin (viene del portal)
   bModoFree:              Boolean;   // True si eligio plan Free
   nFreePaisId:            Integer;   // PaisId seleccionado en combo Free
   sFreeValidacion:        String;    // Resultado de validacion previa
@@ -372,6 +374,8 @@ begin
   sEmpresaId := '';
   sAdminEmpresaId := '';
   sUrlPortal := '';
+  sAdminEmail := '';
+  sAdminPassword := '';
 
   sUrl := '{#PortalApiUrl}';
   sBody := '{"Codigo":"' + sCodigo + '"}';
@@ -451,6 +455,26 @@ begin
         iEnd := PosEx('"', sResponse, iPos);
         if iEnd > iPos then
           sUrlPortal := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer email del admin
+      iPos := Pos('"email":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('"email":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sAdminEmail := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Extraer password del admin
+      iPos := Pos('"password":"', sResponse);
+      if iPos > 0 then
+      begin
+        iPos := iPos + Length('"password":"');
+        iEnd := PosEx('"', sResponse, iPos);
+        if iEnd > iPos then
+          sAdminPassword := Copy(sResponse, iPos, iEnd - iPos);
       end;
 
       if (sConnectionString <> '') and (sEmpresaId <> '') then
@@ -1116,6 +1140,19 @@ begin
       WizardForm.StatusLabel.Caption := 'Protegiendo configuracion...';
       WizardForm.Update;
       EncryptConfigs;
+
+      // 3. Mostrar credenciales de acceso (si vienen del servidor)
+      if (not bModoFree) and (sAdminEmail <> '') then
+      begin
+        MsgBox('Instalacion completada exitosamente.' + #13#10 + #13#10 +
+          'Credenciales de acceso:' + #13#10 +
+          'Usuario: ' + sAdminEmail + #13#10 +
+          'Contrasena: ' + sAdminPassword + #13#10 + #13#10 +
+          'Utilice estas credenciales para ingresar al portal web' + #13#10 +
+          'y a la aplicacion Administrador.' + #13#10 + #13#10 +
+          'IMPORTANTE: Debera cambiar la contrasena en el primer inicio de sesion.',
+          mbInformation, MB_OK);
+      end;
     end;
 
     // 3. Aplicar seguridad ACL

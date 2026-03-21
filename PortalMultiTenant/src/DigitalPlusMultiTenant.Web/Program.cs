@@ -137,7 +137,8 @@ public class Program
                 && !context.Request.Path.StartsWithSegments("/Account/Logout")
                 && !context.Request.Path.StartsWithSegments("/_blazor")
                 && !context.Request.Path.StartsWithSegments("/_framework")
-                && !context.Request.Path.StartsWithSegments("/mobile"))
+                && !context.Request.Path.StartsWithSegments("/mobile")
+                && !context.Request.Path.StartsWithSegments("/kiosko"))
             {
                 context.Response.Redirect("/Account/ForceChangePassword");
                 return;
@@ -145,14 +146,14 @@ public class Program
             await next();
         });
 
-        // PWA mobile: /mobile/ y /mobile -> servir index.html
+        // PWA mobile y kiosko: servir index.html
         app.Use(async (context, next) =>
         {
             var path = context.Request.Path.Value;
             if (path == "/mobile" || path == "/mobile/")
-            {
                 context.Request.Path = "/mobile/index.html";
-            }
+            else if (path == "/kiosko" || path == "/kiosko/")
+                context.Request.Path = "/kiosko/index.html";
             await next();
         });
         app.UseStaticFiles();

@@ -42,11 +42,14 @@
                     <NavLink class="sidebar-link sub" href="terminales">
                         <i class="bi bi-pc-display"></i> Terminales
                     </NavLink>
-                    @if (Tenant.MobileHabilitado)
+                    @if (Tenant.MobileHabilitado || Tenant.KioskoHabilitado)
                     {
                         <NavLink class="sidebar-link sub" href="terminales-moviles">
                             <i class="bi bi-phone"></i> Terminales Moviles
                         </NavLink>
+                    }
+                    @if (Tenant.MobileHabilitado)
+                    {
                         <NavLink class="sidebar-link sub" href="fichado-movil">
                             <i class="bi bi-geo-alt"></i> Fichado Movil
                         </NavLink>
@@ -143,6 +146,9 @@
             </NavLink>
         </NotAuthorized>
     </AuthorizeView>
+    <div class="sidebar-version">
+        <small class="text-muted">v@(DigitalPlusMultiTenant.Web.BuildInfo.FullVersion)</small>
+    </div>
 </nav>
 
 @code {

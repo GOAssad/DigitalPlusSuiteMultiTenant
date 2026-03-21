@@ -315,6 +315,28 @@ public class MultiTenantProvisioningService
     }
 
     /// <summary>
+    /// Busca el email del usuario admin de una empresa por EmpresaId.
+    /// </summary>
+    public async Task<string?> BuscarAdminEmailPorEmpresaIdAsync(int empresaId)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT TOP 1 u.Email
+            FROM AspNetUsers u
+            INNER JOIN AspNetUserRoles ur ON u.Id = ur.UserId
+            INNER JOIN AspNetRoles r ON ur.RoleId = r.Id
+            WHERE u.EmpresaId = @EmpresaId AND r.NormalizedName = 'ADMINEMPRESA'
+            ORDER BY u.CreatedAt";
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result as string;
+    }
+
+    /// <summary>
     /// Busca el EmpresaId en DigitalPlusMultiTenant por el Codigo de la empresa.
     /// </summary>
     public async Task<int?> BuscarEmpresaIdPorCodigoAsync(string codigo)
@@ -705,7 +727,7 @@ public class MultiTenantProvisioningService
             legajos.Add(new LegajoListDto
             {
                 Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                NumeroLegajo = reader.GetInt32(reader.GetOrdinal("NumeroLegajo")),
+                NumeroLegajo = reader.GetString(reader.GetOrdinal("NumeroLegajo")),
                 Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
                 Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                 IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive")),
@@ -735,7 +757,7 @@ public class MultiTenantProvisioningService
 public class LegajoListDto
 {
     public int Id { get; set; }
-    public int NumeroLegajo { get; set; }
+    public string NumeroLegajo { get; set; } = "";
     public string Apellido { get; set; } = "";
     public string Nombre { get; set; } = "";
     public string? Categoria { get; set; }

@@ -1,10 +1,44 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-18
+**Fecha:** 2026-03-20
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-20 (noche)
+- [x] **Sistema de versionado automatico:** Script `Tools/update-build-number.ps1` genera BuildInfo.cs con timestamp YYYYMMDDHHMI en todos los proyectos
+  - Fichador: version en barra titulo + label esquina inferior derecha (7pt, discreto)
+  - Administrador: version en panel de bienvenida sidebar
+  - Portal MT: version en login (debajo del copyright) + pie del sidebar
+  - Portal Licencias: version en login (debajo del copyright) + pie del sidebar
+  - Instalador: nombre del .exe incluye version (DigitalPlus_Cloud_Setup_v1.0.0-YYYYMMDDHHMI.exe)
+  - BuildInfo.cs compartido via Global.Datos (desktop) y por proyecto (portales Blazor)
+- [x] **Fix credenciales en activacion por codigo:** Endpoint `/api/activar` ahora devuelve email+password y envia email de bienvenida (igual que /api/activar-free)
+  - Nuevo metodo BuscarAdminEmailPorEmpresaIdAsync en MultiTenantProvisioningService
+  - Instalador parsea email/password y muestra MsgBox con credenciales
+- [x] **Boton "Activar Dispositivo" en Terminales Moviles:** Modal con buscador de legajos para generar codigo de activacion sin terminal previo
+  - Debounce 400ms para evitar concurrencia DbContext
+  - Auto-activa MobileHabilitado al seleccionar legajo
+- [x] **Fix cross-tenant login movil con codigo activacion:** Login acepta `codigoActivacion` para resolver empresa cuando legajo existe en multiples empresas
+  - PWA captura `?code=XXXX` de la URL del email y lo envia junto con el login
+- [x] **Fix timezone fichada movil:** FechaHora ahora usa Clock.Now (hora Argentina) en vez de request.Timestamp (UTC)
+  - Queries de "hoy" usan Clock.Today en vez de DateTime.UtcNow.Date
+- [x] **Anti-duplicado SP EscritorioFichadasSPSALIDA:** UPDLOCK + HOLDLOCK, ignora fichadas < 30 segundos
+- [x] Deploy Portal MT, Portal Licencias a Azure
+- [x] Instalador recompilado con version 1.0.0-202603202038
+
+### Sesion 2026-03-20
+- [x] **Importador Excel de legajos en Portal MT:** Carga masiva desde archivo .xlsx
+  - Plantilla descargable con headers + hoja "Valores válidos" (Sectores, Categorías, Horarios, Sucursales del tenant)
+  - Preview con validación fila por fila: campos requeridos, existencia de sector/categoría/horario/sucursal, duplicados
+  - Filas válidas en blanco, filas con error en rojo con detalle
+  - Legajos existentes se omiten (skip, no update)
+  - Validación de límite de licencia antes de importar
+  - QrToken auto-generado, MobileHabilitado=false, IsActive=true
+  - Múltiples sucursales separadas por `;`
+  - Archivos: ExcelImporter.cs (nuevo), LegajosList.razor (modal importación)
+  - DOC02 actualizado a v15.0
 
 ### Sesion 2026-03-18 (noche)
 - [x] **Fichador desktop QR (Fase 6):** Modo QR con camara USB en Fichador WinForms (AForge.Video.DirectShow + ZXing.Net)
@@ -221,7 +255,7 @@
 
 ## PRIORIDAD ALTA
 
-- [ ] **Importador Excel de legajos en Portal MT** — Carga masiva de legajos desde archivo Excel.
+- [x] **Importador Excel de legajos en Portal MT** — COMPLETADO (sesion 2026-03-20)
 - [x] ~~**Portal Licencias: tab Legajos en detalle empresa**~~ COMPLETADO 2026-03-16
 - [ ] **SuperAdmin cross-tenant** — admin@integraia.tech debe poder seleccionar empresa y ver datos de cualquier tenant. Requiere selector de empresa + bypass query filters.
 - [x] ~~**Modo Kiosko para terminales moviles**~~ COMPLETADO 2026-03-18
@@ -248,7 +282,12 @@
 
 ## FUNCIONALIDAD (Proximas sesiones)
 
-- [ ] **Fichador desktop QR (Fase 6)** — Agregar camara QR al Fichador WinForms (AForge.Video.DirectShow + ZXing.Net)
+- [ ] **PRIORIDAD: Validar permisos de fichada por sucursal** — Los campos PermiteHuella/PermitePin/PermiteQr/PermiteMovil/PermiteKiosko de LegajoSucursal ya existen en BD y se configuran desde el Portal MT, pero todavia NO se validan en los puntos de fichada. Hay que modificar:
+  - **Fichador desktop (SP EscritorioFichadasSPSALIDA):** JOIN con LegajoSucursal, verificar PermiteHuella/PermitePin/PermiteQr segun el modo activo y la sucursal del terminal
+  - **MobileController `/api/mobile/fichada`:** verificar PermiteMovil para la sucursal resuelta por GPS
+  - **MobileController `/api/mobile/fichar-qr` (kiosko):** verificar PermiteKiosko para la sucursal del terminal kiosko
+  - Sin esta validacion, los checkboxes de la UI no tienen efecto real en el registro de fichadas
+- [x] ~~**Fichador desktop QR (Fase 6)**~~ COMPLETADO 2026-03-18
 - [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
 - [ ] **Generar PIN desde Portal MT** — Form de legajo web no permite asignar/cambiar PIN actualmente
 - [ ] **Upgrade de plan: validaciones** — Al cambiar de Free a plan mayor, recordar regenerar codigo activacion y obligar verificar email
@@ -299,4 +338,4 @@
 
 ---
 
-*Actualizado: 2026-03-18*
+*Actualizado: 2026-03-20*

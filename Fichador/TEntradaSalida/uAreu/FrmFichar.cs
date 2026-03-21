@@ -56,6 +56,17 @@ namespace Acceso.uAreu
         public FrmFichar()
         {
             InitializeComponent();
+
+            // Version label - discreto, esquina inferior derecha
+            var lblBuild = new System.Windows.Forms.Label();
+            lblBuild.Text = "v" + Global.Datos.BuildInfo.FullVersion;
+            lblBuild.Font = new System.Drawing.Font("Segoe UI", 7F);
+            lblBuild.ForeColor = System.Drawing.Color.FromArgb(80, 80, 100);
+            lblBuild.AutoSize = true;
+            lblBuild.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            lblBuild.Location = new System.Drawing.Point(this.ClientSize.Width - 175, this.ClientSize.Height - 16);
+            this.Controls.Add(lblBuild);
+            lblBuild.BringToFront();
         }
 
         public FrmFichar(LicenseManager licenseManager) : this()
@@ -840,7 +851,7 @@ namespace Acceso.uAreu
             if (!string.IsNullOrEmpty(nombreEmpresa))
             {
                 lblEmpresa.Text = nombreEmpresa;
-                this.Text = "Digital One v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + " - " + nombreEmpresa;
+                this.Text = "Digital One v" + Global.Datos.BuildInfo.FullVersion + " - " + nombreEmpresa;
             }
 
             CargarLogos();
@@ -1328,7 +1339,7 @@ namespace Acceso.uAreu
                     if (!string.IsNullOrEmpty(empresa.Nombre))
                     {
                         lblEmpresa.Text = empresa.Nombre;
-                        this.Text = "Digital One v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + " - " + empresa.Nombre;
+                        this.Text = "Digital One v" + Global.Datos.BuildInfo.FullVersion + " - " + empresa.Nombre;
                     }
                 }
             }

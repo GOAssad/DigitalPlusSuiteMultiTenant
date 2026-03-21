@@ -85,6 +85,7 @@ public class Empresa
 
     // Módulos opcionales
     public bool MobileHabilitado { get; set; }
+    public bool KioskoHabilitado { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

@@ -61,7 +61,7 @@ public class MobileController : ControllerBase
             }
 
             // Buscar legajo filtrando por empresa cuando es posible
-            Legajo? legajo;
+            Legajo? legajo = null;
             if (empresaIdFromDevice.HasValue)
             {
                 // Dispositivo registrado: buscar solo en su empresa
@@ -74,18 +74,38 @@ public class MobileController : ControllerBase
             }
             else
             {
-                // Dispositivo no registrado: buscar en todas las empresas pero verificar que no sea ambiguo
-                var legajos = await _db.Legajos
-                    .IgnoreQueryFilters()
-                    .Include(l => l.Pin)
-                    .Include(l => l.Empresa)
-                    .Where(l => l.NumeroLegajo == request.Legajo && l.IsActive)
-                    .ToListAsync();
+                // Dispositivo no registrado: intentar resolver empresa desde código de activación
+                if (!string.IsNullOrWhiteSpace(request.CodigoActivacion))
+                {
+                    var codigoAct = await _db.CodigosActivacionMovil
+                        .IgnoreQueryFilters()
+                        .FirstOrDefaultAsync(c => c.Codigo == request.CodigoActivacion
+                                               && !c.Usado && c.FechaExpira > DateTime.UtcNow);
+                    if (codigoAct != null)
+                    {
+                        legajo = await _db.Legajos
+                            .IgnoreQueryFilters()
+                            .Include(l => l.Pin)
+                            .Include(l => l.Empresa)
+                            .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo
+                                                   && l.EmpresaId == codigoAct.EmpresaId && l.IsActive);
+                    }
+                }
 
-                if (legajos.Count > 1)
-                    return BadRequest(new { ok = false, mensaje = "Número de legajo existe en múltiples empresas. Registre el dispositivo primero." });
+                if (legajo == null)
+                {
+                    var legajos = await _db.Legajos
+                        .IgnoreQueryFilters()
+                        .Include(l => l.Pin)
+                        .Include(l => l.Empresa)
+                        .Where(l => l.NumeroLegajo == request.Legajo && l.IsActive)
+                        .ToListAsync();
 
-                legajo = legajos.FirstOrDefault();
+                    if (legajos.Count > 1)
+                        return BadRequest(new { ok = false, mensaje = "Número de legajo existe en múltiples empresas. Registre el dispositivo primero." });
+
+                    legajo = legajos.FirstOrDefault();
+                }
             }
 
             if (legajo == null)
@@ -286,11 +306,12 @@ public class MobileController : ControllerBase
         if (!ubicacion.Ok)
             return StatusCode(403, new { ok = false, codigo = "UBICACION_INVALIDA", mensaje = ubicacion.Error });
 
-        // 6. Determinar tipo (Entrada/Salida)
+        // 6. Determinar tipo (Entrada/Salida) usando hora Argentina
+        var ahoraLocal = Clock.Now;
         string tipo = request.TipoFichada;
         if (string.Equals(tipo, "Auto", StringComparison.OrdinalIgnoreCase))
         {
-            var hoy = DateTime.UtcNow.Date;
+            var hoy = Clock.Today;
             var ultimaFichada = await _db.Fichadas
                 .IgnoreQueryFilters()
                 .Where(f => f.LegajoId == legajoId && f.EmpresaId == empresaId && f.FechaHora >= hoy)
@@ -305,7 +326,7 @@ public class MobileController : ControllerBase
         }
 
         // 7. Validar limite de fichadas del plan
-        var hace30d = DateTime.UtcNow.AddDays(-30);
+        var hace30d = Clock.Now.AddDays(-30);
         var fichadasUlt30d = await _db.Fichadas
             .IgnoreQueryFilters()
             .CountAsync(f => f.EmpresaId == empresaId && f.FechaHora >= hace30d);
@@ -313,13 +334,13 @@ public class MobileController : ControllerBase
         if (!ficPermitido)
             return StatusCode(403, new { ok = false, codigo = "LIMITE_FICHADAS", mensaje = ficMensaje });
 
-        // 8. Insertar fichada
+        // 8. Insertar fichada (FechaHora en hora local Argentina, consistente con desktop)
         var fichada = new Fichada
         {
             EmpresaId = empresaId,
             LegajoId = legajoId,
             SucursalId = ubicacion.SucursalId!.Value,
-            FechaHora = request.Timestamp,
+            FechaHora = ahoraLocal,
             Tipo = tipo,
             Origen = nameof(OrigenFichada.Movil),
             CreatedAt = DateTime.UtcNow
@@ -372,7 +393,7 @@ public class MobileController : ControllerBase
                            && t.EmpresaId == empresaId && t.Activo);
         }
 
-        var hoy = DateTime.UtcNow.Date;
+        var hoy = Clock.Today;
         var fichadasHoy = await _db.Fichadas
             .IgnoreQueryFilters()
             .Where(f => f.LegajoId == legajoId && f.EmpresaId == empresaId && f.FechaHora >= hoy)
@@ -647,7 +668,7 @@ public class MobileController : ControllerBase
     // Request DTOs
     // ============================================================
 
-    public record LoginRequest(string Legajo, string Password);
+    public record LoginRequest(string Legajo, string Password, string? CodigoActivacion = null);
 
     public record RegistrarDispositivoRequest(
         string Codigo,

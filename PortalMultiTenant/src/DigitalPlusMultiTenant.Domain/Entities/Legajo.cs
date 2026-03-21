@@ -14,6 +14,7 @@ public class Legajo : TenantEntity
     public bool HasCalendarioPersonalizado { get; set; }
     public bool MobileHabilitado { get; set; }
     public byte[]? Foto { get; set; }
+    public string? QrToken { get; set; }
     public string? Email { get; set; }
     public string? Telefono { get; set; }
     public DateOnly? FechaIngreso { get; set; }

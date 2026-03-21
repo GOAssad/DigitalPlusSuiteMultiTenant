@@ -22,6 +22,7 @@ let state = {
 let clockInterval = null;
 let gpsWatchId = null;
 let lastGpsCoords = null;
+let pendingActivationCode = null;
 
 function generateDeviceId() {
     let id;
@@ -77,6 +78,7 @@ function logout() {
     state.token = null;
     state.user = null;
     state.deviceRegistered = false;
+    qrTokenLoaded = false;
     Storage.remove("token");
     Storage.remove("user");
     Storage.remove("deviceRegistered");
@@ -243,9 +245,13 @@ async function handleLogin(e) {
     showLoading(true);
 
     try {
+        // Enviar código de activación si existe (resuelve empresa en caso de legajo duplicado)
+        const codigoInput = document.getElementById("input-codigo");
+        const codigoActivacion = pendingActivationCode || (codigoInput ? codigoInput.value.trim() : null) || null;
+
         const data = await api("/login", {
             method: "POST",
-            body: { legajo, password: pin },
+            body: { legajo, password: pin, codigoActivacion },
             auth: false,
         });
 
@@ -426,6 +432,43 @@ async function handleRefresh() {
     }
 }
 
+// --- Mi QR ---
+let qrTokenLoaded = false;
+
+async function loadMiQR() {
+    const nombreEl = document.getElementById("miqr-nombre");
+    const legajoEl = document.getElementById("miqr-legajo");
+    const codeEl = document.getElementById("miqr-code");
+
+    if (state.user) {
+        nombreEl.textContent = state.user.nombreEmpleado;
+        legajoEl.textContent = "Legajo: " + state.user.legajoId;
+    }
+
+    if (qrTokenLoaded) return;
+
+    try {
+        const data = await api("/mi-qr");
+        if (data.ok && data.qrToken) {
+            codeEl.innerHTML = "";
+            var qr = qrcode(0, "M");
+            qr.addData(data.qrToken);
+            qr.make();
+            codeEl.innerHTML = qr.createSvgTag(6, 0);
+            // Make QR white on dark background
+            var svg = codeEl.querySelector("svg");
+            if (svg) {
+                svg.style.background = "#fff";
+                svg.style.borderRadius = "12px";
+                svg.style.padding = "12px";
+            }
+            qrTokenLoaded = true;
+        }
+    } catch (err) {
+        showError("miqr-error", err.message);
+    }
+}
+
 // --- Tabs ---
 function handleTab(tabName) {
     if (tabName === "home") {
@@ -438,6 +481,11 @@ function handleTab(tabName) {
         stopGpsWatch();
         showScreen("historial");
         loadEstado();
+    } else if (tabName === "miqr") {
+        stopClock();
+        stopGpsWatch();
+        showScreen("miqr");
+        loadMiQR();
     }
 }
 
@@ -452,6 +500,7 @@ function init() {
     document.getElementById("btn-refresh").addEventListener("click", handleRefresh);
     document.getElementById("btn-logout").addEventListener("click", logout);
     document.getElementById("btn-logout2").addEventListener("click", logout);
+    document.getElementById("btn-logout3").addEventListener("click", logout);
 
     // Tabs
     document.querySelectorAll(".tab").forEach(tab => {
@@ -462,6 +511,7 @@ function init() {
     const urlParams = new URLSearchParams(window.location.search);
     const activateCode = urlParams.get("code");
     if (activateCode) {
+        pendingActivationCode = activateCode;
         const codeInput = document.getElementById("input-codigo");
         if (codeInput) codeInput.value = activateCode;
         // Clean URL without reload

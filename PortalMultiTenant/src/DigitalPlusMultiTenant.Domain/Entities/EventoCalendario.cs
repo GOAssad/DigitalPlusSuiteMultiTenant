@@ -11,8 +11,10 @@ public class EventoCalendario : BaseEntity, ITenantEntity
     public TimeOnly HoraDesde { get; set; }
     public TimeOnly HoraHasta { get; set; }
     public string? Nota { get; set; }
+    public int? SucursalId { get; set; }
 
     // Navigation
     public Empresa Empresa { get; set; } = null!;
     public Legajo Legajo { get; set; } = null!;
+    public Sucursal? Sucursal { get; set; }
 }

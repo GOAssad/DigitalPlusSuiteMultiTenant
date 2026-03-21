@@ -22,8 +22,7 @@ namespace Acceso.RRHH
     public partial class FrmRRHHLegajos : Acceso.FrmBaseFormulario
     {
         private readonly RRHHLegajos olegajo = new Acceso.Clases.Datos.RRHH.RRHHLegajos();
-        private readonly RRHHLegajosTurnos oTurno = new RRHHLegajosTurnos();
-        private readonly List<RRHHLegajosTurnos> oListaTurnos = new List<RRHHLegajosTurnos>();
+        // oTurno y oListaTurnos removed (turnos tab removed, read-only mode)
         private readonly RRHHFichadasDao oAusencias = new RRHHFichadasDao();
 
         private AppData Data;                   // keeps application-wide data
@@ -184,7 +183,10 @@ namespace Acceso.RRHH
                 opciones = new[] { "Asignar PIN", "Cancelar" };
 
             string msg = pinHelper.HasPin
-                ? "El legajo " + legajoId + " tiene PIN asignado.\n¿Que desea hacer?"
+                ? "El legajo " + legajoId + " tiene PIN asignado.\n\n" +
+                  "[Sí] = Resetear PIN (forzar cambio)\n" +
+                  "[No] = Eliminar PIN\n" +
+                  "[Cancelar] = No hacer nada"
                 : "El legajo " + legajoId + " no tiene PIN.\n¿Desea asignar uno?";
 
             if (!pinHelper.HasPin)
@@ -215,7 +217,7 @@ namespace Acceso.RRHH
                 {
                     // Forzar cambio
                     Global.Datos.SQLServer.EjecutarSPsinRespuesta(
-                        "EXEC EscritorioLegajoPIN_ForzarCambio '" + legajoId + "'", false);
+                        "UPDATE lp SET lp.PinMustChange = 1 FROM LegajoPin lp INNER JOIN Legajo l ON lp.LegajoId = l.Id WHERE l.NumeroLegajo = '" + legajoId.Replace("'", "''") + "' AND l.EmpresaId = " + Global.Datos.TenantContext.EmpresaId, false);
                     MessageBox.Show("Se marco cambio obligatorio de PIN para este legajo.",
                         "PIN", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -270,8 +272,7 @@ namespace Acceso.RRHH
                 videoSourcePlayer1.Visible = false;
             }
 
-            //Saco el control de Reportes 
-            tabControl1.TabPages.Remove(tabControl1.TabPages["PageReportes"]);
+            // Tabs de Reportes, Domicilios y Turnos removidos en Designer (modo solo huellas+foto)
 
             //deshabilito todos los controles hasta que se cargue un usuario
             HabilitarDeshabilitarControles();
@@ -334,16 +335,13 @@ namespace Acceso.RRHH
             {
                 //si no existe limpio los campos de tipo controlentidad, el resto se blanquea desde las clases
                 controlEntidadHorario.LimpiarCamposForzoso();
-                ctrTurnosLegajos.LimpiarCamposForzoso();
 
                 controlEntidadSucursal.LimpiarCamposForzoso();
                 controlEntidadSimpleUbicaciones.LimpiarCamposForzoso();
                 controlEntidadSimpleCategorias.LimpiarCamposForzoso();
-                ctrEntidadPaises1.LimpiarCamposForzoso();
             }
 
 
-            EstatusBotonReportes();
             HabilitarDeshabilitarControles();
 
 
@@ -372,7 +370,6 @@ namespace Acceso.RRHH
             }
 
             controlEntidadHorario.BuscarRegistroElegido(olegajo.sHorarioID);
-            ctrTurnosLegajos.BuscarRegistroElegido(olegajo.sHorarioID);
 
             controlEntidadSucursal.textoCodigo.Text = olegajo.sSucursalID;
             controlEntidadSucursal.BuscarRegistroElegido(olegajo.sSucursalID);
@@ -402,42 +399,10 @@ namespace Acceso.RRHH
             }
 
 
-            ///Gustavo 13/05/2021 - Domicilios
-            ///Solapa de Domicilios
+            // Domicilios y Turnos removidos (modo solo huellas+foto)
 
 
-
-            textoCalle.Valor = olegajo.oDomicilio.sCalle;
-            textoAltura.Valor = olegajo.oDomicilio.sAltura;
-            textoBarrio.Valor = olegajo.oDomicilio.sBarrio;
-            textoPiso.Valor = olegajo.oDomicilio.sPiso;
-            textoLocalidad.Valor = olegajo.oDomicilio.sLocalidad;
-            textoProvincia.Valor = olegajo.oDomicilio.sProvincia;
-            // GRALPaises no existe en DigitalPlus — domicilios se ignoran
-
-
-            ///--Fin Domicilios
-
-            //Ahora los turnos cargados
-            lblBuscando.Text = "Buscando turnos...";
-            oTurno.sLegajoID = olegajo.sLegajoID;
-            oTurno.Inicializar();
-            llenarCalenarioTurnos();
-
-
-            //18/05/2022
-            // Me fijo si habilito los controles o no segun si es administrador o si no es, si tiene permiso para ver las fichadas del legajo
-            if (ObjGlobal.oUsuario.nNivel == 1)
-                controlEntidadSucursal.Enabled = true;
-            else
-            {
-                if (ObjGlobal.oUsuario.PerteneceASucursal(controlEntidadSucursal.ValorCodigo, ObjGlobal.oUsuario.sUsuarioID))
-                    controlEntidadSucursal.Enabled = true;
-                else
-                {
-                    controlEntidadSucursal.Enabled = false;
-                }
-            }
+            // Sucursal es read-only, no se controla permisos de edicion
 
                 lblBuscando.Visible = false;
 
@@ -523,54 +488,7 @@ namespace Acceso.RRHH
 
             if (olegajo.Actualizar())
             {
-                ///Gustavo 13/05/2021
-                ///Domicilios
-
-                olegajo.oDomicilio.sLegajoID = olegajo.sLegajoID;
-                olegajo.oDomicilio.sAltura = textoAltura.Valor;
-                olegajo.oDomicilio.sCalle = textoCalle.Valor;
-                olegajo.oDomicilio.sLocalidad = textoLocalidad.Valor;
-                olegajo.oDomicilio.sPiso = textoPiso.Valor;
-                olegajo.oDomicilio.sProvincia = textoProvincia.Valor;
-                olegajo.oDomicilio.sBarrio = textoBarrio.Valor;
-
-                if (ctrEntidadPaises1.textoCodigo.Text == string.Empty)
-                {
-                    ctrEntidadPaises1.textoCodigo.Text = "0";
-                }
-
-                olegajo.oDomicilio.nPaisID = Convert.ToInt16(ctrEntidadPaises1.textoCodigo.Text);
-
-                if (olegajo.oDomicilio.sCalle.Length + olegajo.oDomicilio.sAltura.Length > 0)
-                {
-                    if (!olegajo.oDomicilio.Actualizar())
-                    {
-                        InformarError("No se pudo almacenar el domicilio del Legajo " + "\n\r" +
-                            "De todas formas se guardo el resto de la informacion " + "\n\r" +
-                            olegajo.oDomicilio.sMensaje);
-
-                        lblGuardando.Visible = false;
-
-                        return false;
-                    }
-
-                    ///--Fin Domicilios
-                }
-                //Guardo los turnos
-                oTurno.sLegajoID = olegajo.sLegajoID;
-                oTurno.sHorarioID = olegajo.sHorarioID;
-
-                //borro todo
-                oTurno.BorrarTodos();
-
-                foreach (DataGridViewRow item in dgFechasTurno.Rows)
-                {
-                    oTurno.dEntrada = Convert.ToDateTime(item.Cells[0].Value);
-                    oTurno.dSalida = Convert.ToDateTime(item.Cells[0].Value);
-                    oTurno.Actualizar();
-
-                }
-
+                // Domicilios y Turnos removidos (modo solo huellas+foto)
 
                 bool lhuellas;
                 lhuellas = GuardarHuellas();
@@ -703,31 +621,12 @@ namespace Acceso.RRHH
             textoEtiquetaNombre.Text = string.Empty;
 
             olegajo.QueDedos = 0;
-            olegajo.Existe = false;  //esto lo pongo para deshabilitar los botones de los reportes
-            EstatusBotonReportes();
+            olegajo.Existe = false;
             actualizarDedos();
-
-            ///Gustavo 13/05/2021
-            ///
-            textoAltura.Valor = string.Empty;
-            textoCalle.Valor = string.Empty;
-            textoBarrio.Valor = string.Empty;
-            textoLocalidad.Valor = string.Empty;
-            textoPiso.Valor = string.Empty;
-            textoProvincia.Valor = string.Empty;
-            txtCodPost.Valor = string.Empty;
-            /// Fin 13/05/2021
-            /// 
-
-            listSeguimiento.DataSource = null;
-            listSeguimiento.Items.Clear();
 
             ApagoCamara();
             olegajo.Existe = false;
-            EstatusBotonReportes();
             HabilitarDeshabilitarControles();
-
-            btnBorrarTurnos.PerformClick();
 
         }
 
@@ -851,9 +750,13 @@ namespace Acceso.RRHH
         {
             if (cboCamera.Items.Count > 0)
             {
-                if (videoCaptureDevice.IsRunning)
+                if (videoCaptureDevice != null)
                 {
-                    videoCaptureDevice.Stop();
+                    videoCaptureDevice.NewFrame -= VideoCaptureDevice_NewFrame;
+                    if (videoCaptureDevice.IsRunning)
+                    {
+                        videoCaptureDevice.Stop();
+                    }
                 }
 
                 if (videoSourcePlayer1.IsRunning)
@@ -909,32 +812,57 @@ namespace Acceso.RRHH
 
         private void btnInicioCamara_Click(object sender, EventArgs e)
         {
-            picFotoCamara.Visible = false;
-            videoSourcePlayer1.Visible = true;
+            videoSourcePlayer1.Visible = false;
+            picFotoCamara.Visible = true;
             btnTomarFoto.Enabled = true;
 
             videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cboCamera.SelectedIndex].MonikerString);
-            videoSourcePlayer1.VideoSource = videoCaptureDevice;
+
+            // Seleccionar resolucion 4:3 (640x480 o similar) para mejor encuadre en el panel
+            if (videoCaptureDevice.VideoCapabilities != null && videoCaptureDevice.VideoCapabilities.Length > 0)
+            {
+                // Buscar la mejor resolucion 4:3 (aspect ratio <= 1.4)
+                var caps4x3 = videoCaptureDevice.VideoCapabilities
+                    .Where(c => (double)c.FrameSize.Width / c.FrameSize.Height <= 1.4)
+                    .OrderByDescending(c => c.FrameSize.Width)
+                    .FirstOrDefault();
+
+                if (caps4x3 != null)
+                    videoCaptureDevice.VideoResolution = caps4x3;
+                else
+                    videoCaptureDevice.VideoResolution = videoCaptureDevice.VideoCapabilities[0];
+            }
+
+            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
             videoCaptureDevice.Start();
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
+        {
+            try
+            {
+                picFotoCamara.Image = (Bitmap)eventArgs.Frame.Clone();
+            }
+            catch { }
         }
 
         private void btnTomarFoto_Click(object sender, EventArgs e)
         {
-            Bitmap img = videoSourcePlayer1.GetCurrentVideoFrame();
-            picFotoCamara.Image = img;
-            picFotoCamara.Visible = true;
+            // Capturar el frame actual que ya se muestra en picFotoCamara
+            Bitmap img = picFotoCamara.Image != null ? new Bitmap(picFotoCamara.Image) : null;
+            if (img == null) return;
 
             DialogResult dialogResult = MessageBox.Show("Me Gusta como Salio la Foto", "DigitalOne", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.No)
             {
-                picFotoCamara.Image = null;
-                picFotoCamara.Visible = false;
-                return;
+                return; // sigue mostrando el video en vivo
             }
 
-            // Detener la cámara y hacer una copia independiente del bitmap
+            // Detener la cámara y mantener la foto capturada
+            if (videoCaptureDevice != null)
+                videoCaptureDevice.NewFrame -= VideoCaptureDevice_NewFrame;
             ApagoCamara();
-            picFotoCamara.Image = new Bitmap(img);
+            picFotoCamara.Image = img;
             btnEliminarFoto.Enabled = true;
             btnTomarFoto.Enabled = false;
         }
@@ -975,70 +903,11 @@ namespace Acceso.RRHH
             oFrmRep.ShowDialog();
         }
 
-        private void EstatusBotonReportes()
-        {
-
-            //ACA TIENE QUE IR EL MAXIMO ENTRE PRINCIPIO DE AÑO Y FECHA DE INGRESO DEL LEGAJO Y FECHA DE INICIO DEL SISTEMA
-            //****************FALTA LA FECHA DE INGRESO EN EL LEGAJO ************************************************
-            DateTime fromDate = new DateTime(DateTime.Now.Year, 1, 1);
-            DateTime fechaVar = Acceso.Clases.Datos.Generales.GRALVariablesGlobales.FechaInicio;
-
-            if (fechaVar > DateTime.Now)
-            {
-                //InformarError("La Fecha de inicio no puede ser mayor a la fecha actual " + "\n\r" +
-                //    "La fecha de inicio pasa a ser el primer dia del año");
-
-                fechaVar = DateTime.Today.AddDays(-30);
-            }
-
-
-            fromDate = fromDate.CompareTo(fechaVar) > 0
-                    ? fromDate : fechaVar;
-
-            lblFecha.Text = "Desde Fecha: " + fromDate.ToShortDateString();
-
-            DateTime ToDate = DateTime.Now;
-
-
-            if (olegajo.Existe)
-            {
-                olegajo.CantidadAusencias(fromDate, ToDate);
-
-                lblAusencias.Text = olegajo.Ausencias.ToString();
-                lblIncidencias.Text = olegajo.Incidencias.ToString();
-                lblPresencias.Text = olegajo.TotalFichadas.ToString();
-                lblEficiencia.Text = olegajo.Eficiencia.ToString("#.##");
-
-                ActualizarSeguimiento();
-
-            }
-            else
-            {
-                lblAusencias.Text = "0";
-                lblIncidencias.Text = "0";
-                lblPresencias.Text = "0";
-                lblEficiencia.Text = "0.00";
-            }
-        }
-
-        private void ActualizarSeguimiento()
-        {
-            listSeguimiento.DataSource = null;
-            listSeguimiento.Items.Clear();
-
-            if (olegajo.Existe)
-            {
-                //Ahora busco la actividad diaria
-                listSeguimiento.DataSource = olegajo.ActividadDiaria();
-                listSeguimiento.DisplayMember = "Accion";
-            }
-
-
-        }
+        // EstatusBotonReportes y ActualizarSeguimiento removidos (tab reportes removido)
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            ActualizarSeguimiento();
+            // ActualizarSeguimiento removido (tab reportes removido)
         }
 
         private void PanelIndicadores_Paint(object sender, PaintEventArgs e)
@@ -1150,173 +1019,12 @@ namespace Acceso.RRHH
 
 
 
-        private void llenarCalenarioTurnos()
-        {
-            DateTime FechaAux;
-            DataGridViewRow row;
+        // llenarCalenarioTurnos removido (tab turnos removido)
+        // btnArrow_Click removido (tab turnos removido)
 
-            //Vaciar el dataGrid
-            dgFechasTurno.Rows.Clear();
-            //vaciar el calendario
-            monthCalendar2.RemoveAllBoldedDates();
+        // dgFechasTurno events, PageTurnos_Click, btnBorrarTurnos_Click removidos (tab turnos removido)
 
-            string dia;
-
-            foreach (DataRow item in oTurno.dtLegajosTurnos.Rows)
-            {
-                FechaAux = Convert.ToDateTime(item["dEntrada"]);
-                monthCalendar2.AddBoldedDate(FechaAux);
-
-                dia = FechaAux.ToString("dddd");
-
-                row = (DataGridViewRow)dgFechasTurno.Rows[0].Clone();
-                row.Cells[0].Value = FechaAux;
-                row.Cells[1].Value = dia;
-                dgFechasTurno.Rows.Add(row);
-            }
-
-            monthCalendar2.UpdateBoldedDates();
-
-
-        }
-        private void btnArrow_Click(object sender, EventArgs e)
-        {
-            DateTime inicio = monthCalendar1.SelectionStart;
-            DateTime final = monthCalendar1.SelectionEnd;
-            monthCalendar1.UpdateBoldedDates();
-
-            DateTime FechaAux;
-            DataGridViewRow row;
-
-            string dia;
-            //Selecciono en el Calendario Final las Fechas
-            TimeSpan dias = final - inicio;
-            for (int i = 0; i <= dias.Days; i++)
-            {
-                FechaAux = inicio.AddDays(i);
-
-                //dia de la semana
-                dia = FechaAux.ToString("dddd");
-
-
-                bool exist
-                    = dgFechasTurno.Rows.Cast<DataGridViewRow>().Any(r => Convert.ToDateTime(r.Cells[0].Value).ToShortDateString() == FechaAux.ToShortDateString());
-
-                if (!exist)
-                {
-                    monthCalendar2.AddBoldedDate(FechaAux);
-                    row = (DataGridViewRow)dgFechasTurno.Rows[0].Clone();
-                    row.Cells[0].Value = FechaAux;
-                    row.Cells[1].Value = dia;
-                    dgFechasTurno.Rows.Add(row);
-                }
-
-            }
-            monthCalendar2.UpdateBoldedDates();
-
-        }
-
-        private void dgFechasTurno_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
-            {
-                return;
-            }
-
-            dragRow = e.RowIndex;
-
-            if (dragLabel == null)
-            {
-                dragLabel = new Label();
-            }
-
-            {
-                //MessageBox.Show("Borrar " + dgFechasTurno[e.ColumnIndex, dragRow].Value.ToString());
-                dgFechasTurno.Rows.RemoveAt(dragRow);
-
-
-                //Ahora paso lo que queda en la grid en el calendario
-                DateTime FechaAux = new DateTime();
-                monthCalendar2.RemoveAllBoldedDates();
-                monthCalendar2.UpdateBoldedDates();
-
-                foreach (DataGridViewRow row in dgFechasTurno.Rows)
-                {
-
-                    FechaAux = Convert.ToDateTime(row.Cells[0].Value);
-
-                    monthCalendar2.AddBoldedDate(FechaAux);
-                }
-
-                monthCalendar2.UpdateBoldedDates();
-
-            }
-        }
-
-        private void PageTurnos_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void btnBorrarTurnos_Click(object sender, EventArgs e)
-        {
-            monthCalendar1.RemoveAllBoldedDates();
-            monthCalendar2.RemoveAllBoldedDates();
-
-            monthCalendar2.UpdateBoldedDates();
-            monthCalendar1.UpdateBoldedDates();
-
-            dgFechasTurno.Rows.Clear();
-        }
-
-        private void trackNumerico1_ScrollChanged(object sender, EventArgs e)
-        {
-            // cuando muevo esto tengo que filtrar en el datagridview segun las fechas
-            //FiltroGridFechasTurnos();
-        }
-
-        private void FiltroGridFechasTurnos()
-        {
-
-            DataView dv = oTurno.dtLegajosTurnos.DefaultView;
-
-            //string cadenaFiltro;
-            //string fromDate = DateTime.Today.AddDays(trackNumerico1.Valor).ToShortDateString();
-
-            //cadenaFiltro = "dEntrada > #" + fromDate + "#";
-            //dv.RowFilter = cadenaFiltro;
-
-            dv.RowFilter = string.Format(CultureInfo.InvariantCulture.DateTimeFormat,
-                     "dEntrada > #{0}#", new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0));
-
-
-            dgFechasTurno.DataSource = dv.ToTable();
-
-
-            //    if (txtFiltro.TextLength <= 1)
-            //    {
-            //        GetdataFromDatabase();
-            //        CantidadRegistros();
-            //        return;
-            //    }
-
-            //    lblBuscando.Visible = true;
-
-            //    DataView dv = dt.DefaultView;
-            //    dv.RowFilter = string.Format("sApellido like '%{0}%' or sNombre like '%{0}%'", txtFiltro.Text.Trim());
-            //    dataGridView1.DataSource = dv.ToTable();
-            //    CantidadRegistros();
-
-            //    lblBuscando.Visible = false;
-
-
-        }
-
-        private void dgFechasTurno_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
+        // trackNumerico1_ScrollChanged, FiltroGridFechasTurnos, dgFechasTurno_CellContentClick removidos
 
 
 

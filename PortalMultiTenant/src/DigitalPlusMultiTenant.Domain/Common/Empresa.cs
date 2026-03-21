@@ -10,6 +10,7 @@ public class Empresa : AuditableEntity
     public string? Cuit { get; set; }
     public bool IsActive { get; set; } = true;
     public bool MobileHabilitado { get; set; }
+    public bool KioskoHabilitado { get; set; }
 
     // Navigation
     public ICollection<Sucursal> Sucursales { get; set; } = [];

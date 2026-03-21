@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 14.0
-**Fecha:** 2026-03-18
+**Version:** 16.0
+**Fecha:** 2026-03-20
 
 ---
 
@@ -200,10 +200,13 @@ Si selecciono la opcion de codigo de activacion:
 3. Espere la respuesta del servidor (requiere internet):
    - **Verde:** "Codigo valido. Empresa: [nombre de su empresa]" — Puede continuar con la instalacion
    - **Rojo:** "Codigo invalido o expirado" — Verifique que el codigo este bien escrito. Si persiste, contacte a su proveedor.
+4. Al activar exitosamente, el instalador muestra un **dialogo con las credenciales de administrador** (email y contrasena) para acceder al Portal Web. Estas mismas credenciales se envian automaticamente al email del administrador de la empresa.
 
 > [CAPTURA: Pantalla de ingreso de codigo de activacion con campo de texto y boton Validar]
 
-> **Importante:** Sin un codigo valido no podra continuar con la instalacion. Si no tiene el codigo, contacte al administrador del sistema. Cada codigo esta asociado a una empresa especifica.
+> [CAPTURA: Dialogo post-activacion mostrando credenciales de acceso al Portal Web]
+
+> **Importante:** Sin un codigo valido no podra continuar con la instalacion. Si no tiene el codigo, contacte al administrador del sistema. Cada codigo esta asociado a una empresa especifica. Anote las credenciales mostradas en el dialogo de activacion o revise su email.
 
 #### Paso 4b - Registro Free (sin codigo)
 
@@ -530,7 +533,7 @@ Una vez dentro del portal, en la **barra superior** se muestra:
 | **Sectores** | Gestionar sectores/areas |
 | **Sucursales** | Gestionar ubicaciones |
 | **Terminales** | Ver terminales de fichaje registradas |
-| **Terminales Moviles** | Gestionar dispositivos moviles registrados, generar codigos de activacion |
+| **Terminales Moviles** | Gestionar dispositivos moviles registrados, activar dispositivos para empleados |
 | **Fichado Movil** | Configurar validacion de ubicacion (WiFi/GPS) por sucursal |
 | **PIN Movil** | Asignar, cambiar y resetear PIN de empleados (desde formulario de Legajos) |
 | **Movil (tab en Legajo)** | Ver estado del dispositivo, generar codigo de activacion con envio automatico por email |
@@ -555,6 +558,30 @@ El sistema maneja 4 roles con distintos niveles de acceso:
 Al crear un usuario desde Administracion > Usuarios, cada rol muestra una descripcion de sus capacidades.
 
 ### Gestion de Legajos
+
+#### Importacion masiva desde Excel
+
+Desde la lista de legajos, los usuarios con rol SuperAdmin, AdminEmpresa u Operador pueden importar legajos de forma masiva desde un archivo Excel (.xlsx):
+
+1. **Descargar plantilla:** Click en el boton **"Plantilla"** para descargar un archivo Excel con:
+   - **Hoja "Legajos":** Encabezados de las columnas esperadas (NumeroLegajo, Apellido, Nombre, Sector, Categoria, Horario, Sucursales, Email, Telefono, FechaIngreso), una fila de ejemplo y una fila de notas indicando cuales son requeridos.
+   - **Hoja "Valores validos":** Listado de Sectores, Categorias, Horarios y Sucursales cargados en el sistema. Usar estos nombres exactos al completar la plantilla.
+
+2. **Completar la plantilla:** Llenar las filas con los datos de los empleados. Notas:
+   - **NumeroLegajo, Apellido, Nombre, Sector, Categoria y Sucursales** son obligatorios.
+   - **Sucursales:** Si el legajo pertenece a mas de una sucursal, separar los nombres con punto y coma (`;`). Ejemplo: `Central; Deposito`.
+   - **Horario:** Opcional. Dejar vacio si no se asigna horario.
+   - Si un NumeroLegajo ya existe en el sistema, esa fila se omite automaticamente (no se actualiza ni genera error).
+
+3. **Importar:** Click en el boton **"Importar"**, seleccionar el archivo .xlsx. El sistema muestra una vista previa:
+   - Filas **validas** en blanco con icono verde.
+   - Filas **con errores** resaltadas en rojo con descripcion del problema (sector inexistente, campo vacio, etc.).
+   - Resumen: cantidad de validos, con errores y ya existentes.
+   - Si la cantidad de legajos a importar excede el limite del plan de licencia, se muestra una advertencia y no se permite importar.
+
+4. **Confirmar:** Click en **"Importar N legajos"** para insertar solo las filas validas. Los legajos importados se crean con estado Activo, acceso movil deshabilitado y credencial QR auto-generada.
+
+#### Formulario de legajo
 
 El formulario de edicion de un legajo tiene las siguientes solapas:
 
@@ -584,6 +611,20 @@ El formulario de edicion de un legajo tiene las siguientes solapas:
   - **Listado unificado:** Incidencias y vacaciones juntas, ordenadas por fecha, con filtro por rango y tipo.
 
 **Movil:** Estado del dispositivo movil, generar codigo de activacion con envio automatico por email.
+
+### Activar Dispositivo Movil para un Empleado
+
+Desde la pagina **Terminales Moviles** del Portal Web, el administrador puede generar codigos de activacion para vincular el smartphone de un empleado:
+
+1. Haga clic en el boton **"Activar Dispositivo"**
+2. Se abre un buscador de empleados. Escriba el nombre o numero de legajo para filtrar
+3. Seleccione el empleado deseado de la lista
+4. El sistema genera un **codigo de activacion unico** para ese empleado
+5. El codigo se envia automaticamente al **email del empleado** con instrucciones para activar la PWA en su telefono
+
+> **Nota:** El empleado debe tener un email cargado en su legajo para recibir el codigo. Si no tiene email, el codigo se muestra en pantalla para que el administrador lo comunique manualmente.
+
+Tambien puede generar el codigo desde la pestana **Movil** dentro del formulario de edicion de un legajo individual.
 
 ### Gestion de Incidencias
 
@@ -718,8 +759,13 @@ Desde el Portal Web > Legajos:
 
 ## 10. SOPORTE TECNICO
 
+### Version de la aplicacion
+
+Todas las aplicaciones de DigitalPlus (Fichador, Administrador, Portal Web y Portal de Licencias) muestran su **version de build** en formato `v1.0.0-YYYYMMDDHHMI`, donde `YYYYMMDDHHMI` corresponde a la fecha y hora de compilacion. Este dato es util para identificar exactamente que version esta instalada al reportar problemas o verificar actualizaciones.
+
 Ante cualquier inconveniente, contacte al administrador del sistema con la siguiente informacion:
 
+- **Version de la aplicacion** (visible en la barra de titulo o seccion "Acerca de")
 - Mensaje de error exacto (captura de pantalla si es posible)
 - Nombre del equipo
 - Que estaba haciendo cuando ocurrio el error

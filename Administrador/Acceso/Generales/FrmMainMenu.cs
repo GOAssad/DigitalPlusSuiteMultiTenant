@@ -383,7 +383,7 @@ namespace Acceso.Ventas
 
             // Version
             var lblVer = new Label();
-            lblVer.Text = "v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            lblVer.Text = "v" + Global.Datos.BuildInfo.FullVersion;
             lblVer.Font = new Font("Segoe UI", 10F);
             lblVer.ForeColor = Color.FromArgb(100, 100, 120);
             lblVer.Size = new Size(pw, 24);

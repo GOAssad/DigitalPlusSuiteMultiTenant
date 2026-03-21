@@ -1,8 +1,8 @@
 # DIGITAL ONE - Terminal Móvil (Etapa 2)
 ## Documento de Arquitectura y Especificación para Implementación
 
-**Version:** 6.0
-**Fecha:** 2026-03-18
+**Version:** 7.0
+**Fecha:** 2026-03-20
 **Generado por:** Claude Sonnet 4.6 / Claude Opus 4.6
 **Continuación de:** DOC01-Reporte_Arquitectura_ProjectLeader.md
 **Estado:** COMPLETADO. Backend, PWA y administración funcionales. Probado end-to-end. Email de activación automático implementado.
@@ -182,6 +182,7 @@ Autentica al empleado y retorna un JWT de sesión móvil.
 - Validar contra tabla `Legajo` (no contra Identity de portal web — los empleados no son usuarios web).
 - El `EmpresaId` se resuelve del `Legajo` autenticado.
 - Incluir `DeviceId` en el header `X-Device-Id` para detectar si ya está registrado.
+- El login acepta un parámetro opcional `codigoActivacion` para resolver la empresa correcta cuando el número de legajo existe en múltiples empresas. La PWA captura el parámetro `?code=XXXX` desde el deep link del email de activación y lo envía junto con la solicitud de login.
 
 ---
 
@@ -289,6 +290,10 @@ X-Signature: {firma_base64}   // firma RSA del body con la clave privada del dev
 8. UPDATE TerminalMovil SET UltimoUso = GETDATE() WHERE Id = @terminalMovilId
 9. Retornar respuesta 200
 ```
+
+**Notas adicionales de implementación:**
+- `FechaHora` se asigna usando `Clock.Now` (hora local Argentina) en lugar de `request.Timestamp` (UTC) para mantener consistencia con las apps desktop que también escriben en hora local.
+- El SP `EscritorioFichadasSPSALIDA` tiene protección anti-duplicado: usa `UPDLOCK` para serializar inserciones concurrentes e ignora fichadas que disten menos de 30 segundos de la última fichada registrada para el mismo legajo.
 
 ---
 
@@ -459,6 +464,14 @@ Agregar en el menú del Portal Multi-Tenant:
 - **`/terminales-moviles`** — listado de dispositivos activos por empresa
   - Columnas: Empleado, Dispositivo, Plataforma, Último uso, Estado
   - Acciones: Desactivar, Generar nuevo código de activación
+
+### 7.3 Botón "Activar Dispositivo" en Portal MT
+
+El Portal Multi-Tenant incluye un botón **"Activar Dispositivo"** que permite generar códigos de activación para cualquier empleado, no solo para terminales ya existentes.
+
+- El botón abre un modal con un **buscador de empleados** (con debounce de 400ms para evitar queries excesivas mientras el usuario escribe).
+- Al seleccionar un empleado, se genera el código de activación y se **habilita automáticamente `MobileHabilitado`** en el legajo si no lo estaba.
+- Esto simplifica el flujo: el administrador no necesita ir primero a editar el legajo para habilitar el fichado móvil.
 
 ---
 

@@ -33,7 +33,7 @@ public class CustomClaimsPrincipalFactory : UserClaimsPrincipalFactory<Applicati
 
         var empresa = await _db.Empresas.AsNoTracking()
             .Where(e => e.Id == user.EmpresaId)
-            .Select(e => new { e.Nombre, e.MobileHabilitado })
+            .Select(e => new { e.Nombre, e.MobileHabilitado, e.KioskoHabilitado })
             .FirstOrDefaultAsync();
         if (empresa != null)
         {
@@ -41,6 +41,8 @@ public class CustomClaimsPrincipalFactory : UserClaimsPrincipalFactory<Applicati
                 identity.AddClaim(new Claim("EmpresaNombre", empresa.Nombre));
             if (empresa.MobileHabilitado)
                 identity.AddClaim(new Claim("MobileHabilitado", "true"));
+            if (empresa.KioskoHabilitado)
+                identity.AddClaim(new Claim("KioskoHabilitado", "true"));
         }
 
         return identity;

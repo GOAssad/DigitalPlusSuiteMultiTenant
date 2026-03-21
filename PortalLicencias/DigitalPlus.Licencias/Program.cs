@@ -145,7 +145,8 @@ app.MapPost("/api/validar-free", async (ActivarFreeRequest req,
 // API para instalador liviano: activar codigo y obtener connection string
 app.MapPost("/api/activar", async (ActivarRequest req,
     RepositorioLicencias repo, DatabaseProvisioningService provisioning,
-    MultiTenantProvisioningService mtProvisioning, IConfiguration config) =>
+    MultiTenantProvisioningService mtProvisioning, IConfiguration config,
+    IEmailService emailService) =>
 {
     if (string.IsNullOrWhiteSpace(req.Codigo))
         return Results.BadRequest(new { error = "Codigo requerido" });
@@ -164,6 +165,53 @@ app.MapPost("/api/activar", async (ActivarRequest req,
     // EmpresaId real en DigitalPlusMultiTenant (diferente al Id en DigitalPlusAdmin)
     var tenantEmpresaId = await mtProvisioning.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
 
+    // Buscar email del admin creado para esta empresa
+    string? adminEmail = null;
+    if (tenantEmpresaId.HasValue)
+        adminEmail = await mtProvisioning.BuscarAdminEmailPorEmpresaIdAsync(tenantEmpresaId.Value);
+
+    // Enviar email de bienvenida con credenciales (si hay email de contacto)
+    var emailTo = empresa.Email ?? adminEmail;
+    if (!string.IsNullOrWhiteSpace(emailTo))
+    {
+        var emailNombre = empresa.Nombre;
+        var emailPortalUrl = empresa.UrlPortal ?? "https://digitalplusportalmt.azurewebsites.net";
+        var emailAdminUser = adminEmail ?? $"admin@{empresa.CompanyId}.com";
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var htmlBody = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <div style='background: #1a1a2e; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+                        <h1 style='color: #d4a843; margin: 0;'>Digital One</h1>
+                        <p style='color: #ccc; margin: 5px 0 0;'>Bienvenido a DigitalPlus</p>
+                    </div>
+                    <div style='padding: 25px; background: #f8f9fa; border: 1px solid #dee2e6;'>
+                        <h2 style='color: #333;'>Hola!</h2>
+                        <p>Su empresa <strong>{emailNombre}</strong> fue activada exitosamente.</p>
+                        <div style='background: white; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; margin: 20px 0;'>
+                            <h3 style='margin-top: 0; color: #1a1a2e;'>Credenciales de acceso</h3>
+                            <p><strong>Portal Web:</strong> <a href='{emailPortalUrl}'>{emailPortalUrl}</a></p>
+                            <p><strong>Usuario:</strong> {emailAdminUser}</p>
+                            <p><strong>Contrasena:</strong> Admin123</p>
+                            <p style='color: #dc3545; font-size: 0.9em;'><strong>Importante:</strong> Debera cambiar la contrasena en el primer inicio de sesion.</p>
+                        </div>
+                        <div style='background: white; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; margin: 20px 0;'>
+                            <h3 style='margin-top: 0; color: #1a1a2e;'>Aplicacion de escritorio</h3>
+                            <p>Las mismas credenciales funcionan para la aplicacion <strong>Administrador</strong> de escritorio.</p>
+                        </div>
+                    </div>
+                    <div style='background: #1a1a2e; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;'>
+                        <p style='color: #888; margin: 0; font-size: 0.8em;'>Digital One by IntegraIA Tech</p>
+                    </div>
+                </div>";
+                await emailService.SendAsync(emailTo, "Bienvenido a Digital One - Credenciales de acceso", htmlBody);
+            }
+            catch { /* fire and forget */ }
+        });
+    }
+
     return Results.Ok(new
     {
         connectionString = tenantConnectionString,
@@ -173,7 +221,9 @@ app.MapPost("/api/activar", async (ActivarRequest req,
         companyId = empresa.CompanyId,
         nombreEmpresa = empresa.Nombre,
         databaseName = empresa.DatabaseName,
-        urlPortal = empresa.UrlPortal ?? ""
+        urlPortal = empresa.UrlPortal ?? "",
+        email = adminEmail ?? "",
+        password = "Admin123"
     });
 });
 
