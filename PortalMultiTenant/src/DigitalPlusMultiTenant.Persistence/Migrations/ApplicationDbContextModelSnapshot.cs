@@ -748,6 +748,31 @@ namespace DigitalPlusMultiTenant.Persistence.Migrations
                     b.Property<int>("LegajoId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("PermiteHuella")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("PermiteKiosko")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("PermiteMovil")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("PermitePin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("PermiteQr")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<int>("SucursalId")
                         .HasColumnType("int");
 

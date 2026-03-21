@@ -6,6 +6,7 @@ namespace Acceso.Generales
         private System.Windows.Forms.Label lblTitulo;
         private System.Windows.Forms.Label lblEstadoValor;
         private System.Windows.Forms.Label lblInfo;
+        private System.Windows.Forms.Label lblCodigoActual;
         private System.Windows.Forms.GroupBox grpActivacion;
         private System.Windows.Forms.Label lblCodigoLabel;
         private System.Windows.Forms.TextBox txtCodigo;
@@ -23,6 +24,7 @@ namespace Acceso.Generales
             this.lblTitulo = new System.Windows.Forms.Label();
             this.lblEstadoValor = new System.Windows.Forms.Label();
             this.lblInfo = new System.Windows.Forms.Label();
+            this.lblCodigoActual = new System.Windows.Forms.Label();
             this.grpActivacion = new System.Windows.Forms.GroupBox();
             this.lblCodigoLabel = new System.Windows.Forms.Label();
             this.txtCodigo = new System.Windows.Forms.TextBox();
@@ -56,6 +58,16 @@ namespace Acceso.Generales
             this.lblInfo.Name = "lblInfo";
             this.lblInfo.Size = new System.Drawing.Size(500, 120);
             this.lblInfo.Text = "";
+            //
+            // lblCodigoActual
+            //
+            this.lblCodigoActual.Font = new System.Drawing.Font("Consolas", 10F);
+            this.lblCodigoActual.ForeColor = System.Drawing.Color.FromArgb(120, 200, 120);
+            this.lblCodigoActual.Location = new System.Drawing.Point(30, 210);
+            this.lblCodigoActual.Name = "lblCodigoActual";
+            this.lblCodigoActual.Size = new System.Drawing.Size(500, 22);
+            this.lblCodigoActual.Text = "";
+            this.lblCodigoActual.Visible = false;
             //
             // grpActivacion
             //
@@ -111,6 +123,7 @@ namespace Acceso.Generales
             this.Controls.Add(this.lblTitulo);
             this.Controls.Add(this.lblEstadoValor);
             this.Controls.Add(this.lblInfo);
+            this.Controls.Add(this.lblCodigoActual);
             this.Controls.Add(this.grpActivacion);
             this.Name = "FrmLicencia";
             this.Text = "Licencias";

@@ -194,6 +194,7 @@ namespace Acceso.Clases.Datos.RRHH
             par[3].ParameterName = "@sAccion";
             par[3].Value = string.Empty;
             par[3].SqlDbType = SqlDbType.VarChar;
+            par[3].Size = 50;
             par[3].Direction = ParameterDirection.Output;
 
             par[4] = new SqlParameter();

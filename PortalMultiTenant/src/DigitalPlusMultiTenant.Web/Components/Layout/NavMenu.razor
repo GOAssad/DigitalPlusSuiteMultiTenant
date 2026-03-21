@@ -129,11 +129,14 @@
                         <i class="bi bi-chevron-down nav-chevron"></i>
                     </button>
                     <div class="nav-group-items @(IsGroupOpen("admin") ? "show" : "")">
+                        <NavLink class="sidebar-link sub" href="configuracion/empresa">
+                            <i class="bi bi-building-gear"></i> Empresa
+                        </NavLink>
                         <NavLink class="sidebar-link sub" href="usuarios">
                             <i class="bi bi-person-lock"></i> Usuarios
                         </NavLink>
                         <NavLink class="sidebar-link sub" href="configuracion">
-                            <i class="bi bi-gear"></i> Configuracion
+                            <i class="bi bi-gear"></i> Variables
                         </NavLink>
                     </div>
                 </div>
@@ -186,6 +189,7 @@
         ["feriados"] = "operacion",
         ["noticias"] = "operacion",
         ["usuarios"] = "admin",
+        ["configuracion/empresa"] = "admin",
         ["configuracion"] = "admin",
     };
 

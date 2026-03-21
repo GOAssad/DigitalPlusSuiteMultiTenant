@@ -112,11 +112,46 @@ CREATE PROCEDURE EscritorioFichadasSPSALIDA
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    -- Validar permisos de fichada por sucursal
+    IF @nSucursalID > 0
+    BEGIN
+        -- Verificar que el legajo esta asignado a esta sucursal
+        IF NOT EXISTS (SELECT 1 FROM LegajoSucursal WHERE LegajoId = @nLegajoID AND SucursalId = @nSucursalID)
+        BEGIN
+            SET @sAccion = 'DENEGADO';
+            RETURN;
+        END
+
+        -- Verificar permiso especifico por origen
+        IF @Origen IS NOT NULL
+        BEGIN
+            DECLARE @permitido BIT = 1;
+
+            SELECT @permitido = CASE
+                WHEN @Origen = 'Huella' THEN PermiteHuella
+                WHEN @Origen = 'PIN'    THEN PermitePin
+                WHEN @Origen = 'QR'     THEN PermiteQr
+                WHEN @Origen = 'Movil'  THEN PermiteMovil
+                WHEN @Origen = 'Kiosko' THEN PermiteKiosko
+                ELSE 1
+            END
+            FROM LegajoSucursal
+            WHERE LegajoId = @nLegajoID AND SucursalId = @nSucursalID;
+
+            IF @permitido = 0
+            BEGIN
+                SET @sAccion = 'DENEGADO';
+                RETURN;
+            END
+        END
+    END
+
     DECLARE @UltimoTipo VARCHAR(1);
 
     -- Determinar si es Entrada o Salida basado en la última fichada del día
     SELECT TOP 1 @UltimoTipo = Tipo
-    FROM Fichada
+    FROM Fichada WITH (UPDLOCK)
     WHERE LegajoId = @nLegajoID
       AND CAST(FechaHora AS DATE) = CAST(@dRegistro AS DATE)
       AND EmpresaId = @EmpresaId
@@ -126,6 +161,17 @@ BEGIN
         SET @sAccion = 'E';
     ELSE
         SET @sAccion = 'S';
+
+    -- Anti-duplicado: ignorar fichadas < 30 segundos
+    IF EXISTS (
+        SELECT 1 FROM Fichada WITH (UPDLOCK)
+        WHERE LegajoId = @nLegajoID
+          AND EmpresaId = @EmpresaId
+          AND ABS(DATEDIFF(SECOND, FechaHora, @dRegistro)) < 30
+    )
+    BEGIN
+        RETURN;
+    END
 
     INSERT INTO Fichada (EmpresaId, LegajoId, SucursalId, FechaHora, Tipo, Origen, CreatedAt)
     VALUES (@EmpresaId, @nLegajoID, @nSucursalID, @dRegistro, @sAccion, @Origen, GETUTCDATE());

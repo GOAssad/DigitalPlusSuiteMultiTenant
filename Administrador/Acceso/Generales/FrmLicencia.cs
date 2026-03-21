@@ -37,6 +37,26 @@ namespace Acceso.Generales
             string nombreEmpresa = ObtenerNombreEmpresa();
             int legajosActuales = Program.ContarLegajos();
 
+            // Mostrar codigo de activacion actual si existe
+            string codigoActual = "";
+            try
+            {
+                var empresa = EmpresaInfoService.ObtenerEmpresa();
+                if (empresa != null && !string.IsNullOrEmpty(empresa.CodigoActivacion))
+                    codigoActual = empresa.CodigoActivacion;
+            }
+            catch { }
+
+            if (!string.IsNullOrEmpty(codigoActual))
+            {
+                lblCodigoActual.Text = "Codigo actual: " + codigoActual;
+                lblCodigoActual.Visible = true;
+            }
+            else
+            {
+                lblCodigoActual.Visible = false;
+            }
+
             if (mgr == null || mgr.CurrentTicket == null)
             {
                 lblInfo.Text = string.Format("Empresa: {0}\nLegajos actuales: {1}\n\nNo hay informacion de licencia disponible.\nIngrese un codigo para activar.", nombreEmpresa, legajosActuales);

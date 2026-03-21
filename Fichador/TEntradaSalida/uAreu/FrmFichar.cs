@@ -39,6 +39,7 @@ namespace Acceso.uAreu
         private bool _lectorFisico; // true solo cuando OnReaderConnect se dispara
         private bool _pinHabilitado;
         private bool _demoHabilitado;
+        private bool _modoCambiadoPorUsuario;
         private System.Windows.Forms.Timer _timerDetectarLector;
 
         // QR - camara y decodificacion
@@ -175,7 +176,10 @@ namespace Acceso.uAreu
             {
                 // Pasaron 3 segundos y no se detecto lector fisico
                 _lectorDisponible = false;
-                CambiarModoSinLector();
+                if (!_modoCambiadoPorUsuario)
+                    CambiarModoSinLector();
+                else
+                    ActualizarLinkModo(); // Solo actualizar botones, no cambiar modo
             }
             else
             {
@@ -699,19 +703,31 @@ namespace Acceso.uAreu
                 oFichada.nLegajoID = nLegajoID;
                 // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2, QR=0
                 oFichada.sOrigen = _modoActual == ModoFichada.Pin ? "PIN" : _modoActual.ToString();
-                HuellaLog.Write("RegistrarFichada() antes de Actualizar, sucursalId=" + sucursalId);
+                HuellaLog.Write("RegistrarFichada() nLegajoID=" + nLegajoID + " sucursalId=" + sucursalId + " origen=" + oFichada.sOrigen + " empresaId=" + Global.Datos.TenantContext.EmpresaId);
 
                 if (oFichada.Actualizar())
                 {
-                    HuellaLog.Write("RegistrarFichada() OK - EntraSale=" + oFichada.sEntraSale);
-                    sCadenaEntraSale = oFichada.sEntraSale == "E" ? "ENTRADA" : "SALIDA";
-                    sBienVenidaAux = oFichada.sEntraSale == "E"
-                        ? "Bienvenido " + sNombre
-                        : "Hasta Luego " + sNombre;
-                    MakeReport();
-                    MostrarAvatar(nLegajoID, nombre);
-                    ActivarSemaforo(3);
-                    controlcolor = true;
+                    // Verificar si el SP denegó por permisos de sucursal
+                    if (oFichada.sEntraSale == "DENEGADO")
+                    {
+                        HuellaLog.Write("RegistrarFichada() DENEGADO por permisos de sucursal");
+                        sBienVenidaAux = "Fichada no permitida en esta sucursal";
+                        sCadenaEntraSale = string.Empty;
+                        MakeReport();
+                        ActivarSemaforo(1);
+                    }
+                    else
+                    {
+                        HuellaLog.Write("RegistrarFichada() OK - EntraSale=" + oFichada.sEntraSale);
+                        sCadenaEntraSale = oFichada.sEntraSale == "E" ? "ENTRADA" : "SALIDA";
+                        sBienVenidaAux = oFichada.sEntraSale == "E"
+                            ? "Bienvenido " + sNombre
+                            : "Hasta Luego " + sNombre;
+                        MakeReport();
+                        MostrarAvatar(nLegajoID, nombre);
+                        ActivarSemaforo(3);
+                        controlcolor = true;
+                    }
                 }
                 else
                 {
@@ -889,10 +905,10 @@ namespace Acceso.uAreu
             txtPin.KeyPress += (s, ev) => { if (!char.IsDigit(ev.KeyChar) && !char.IsControl(ev.KeyChar)) ev.Handled = true; };
 
             // Botones de modo
-            btnModoHuella.Click += (s, ev) => { if (_lectorDisponible) CambiarModo(ModoFichada.Huella); };
-            btnModoPin.Click += (s, ev) => { CambiarModo(ModoFichada.Pin); };
-            btnModoQR.Click += (s, ev) => { if (_qrHabilitado) CambiarModo(ModoFichada.QR); };
-            btnModoDemo.Click += (s, ev) => { if (_demoHabilitado) CambiarModo(ModoFichada.Demo); };
+            btnModoHuella.Click += (s, ev) => { if (_lectorDisponible) { _modoCambiadoPorUsuario = true; CambiarModo(ModoFichada.Huella); } };
+            btnModoPin.Click += (s, ev) => { _modoCambiadoPorUsuario = true; CambiarModo(ModoFichada.Pin); };
+            btnModoQR.Click += (s, ev) => { if (_qrHabilitado) { _modoCambiadoPorUsuario = true; CambiarModo(ModoFichada.QR); } };
+            btnModoDemo.Click += (s, ev) => { if (_demoHabilitado) { _modoCambiadoPorUsuario = true; CambiarModo(ModoFichada.Demo); } };
         }
 
         private void CaptureForm_FormClosed(object sender, FormClosedEventArgs e)

@@ -41,6 +41,12 @@ public class LegajoSucursalConfiguration : IEntityTypeConfiguration<LegajoSucurs
         builder.ToTable("LegajoSucursal");
         builder.HasKey(e => new { e.LegajoId, e.SucursalId });
 
+        builder.Property(e => e.PermiteHuella).HasDefaultValue(true);
+        builder.Property(e => e.PermitePin).HasDefaultValue(true);
+        builder.Property(e => e.PermiteQr).HasDefaultValue(true);
+        builder.Property(e => e.PermiteMovil).HasDefaultValue(true);
+        builder.Property(e => e.PermiteKiosko).HasDefaultValue(true);
+
         builder.HasOne(e => e.Legajo).WithMany(e => e.LegajoSucursales)
             .HasForeignKey(e => e.LegajoId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(e => e.Sucursal).WithMany(e => e.LegajoSucursales)

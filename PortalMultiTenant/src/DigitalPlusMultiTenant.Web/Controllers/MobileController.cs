@@ -279,15 +279,25 @@ public class MobileController : ControllerBase
         if (diff > 5)
             return BadRequest(new { ok = false, codigo = "TIMESTAMP_INVALIDO", mensaje = "El timestamp tiene más de 5 minutos de diferencia con el servidor." });
 
-        // 4. Obtener sucursales asignadas al legajo
+        // 4. Obtener sucursales asignadas al legajo (solo las que permiten fichada movil)
         var sucursalesAsignadas = await _db.LegajoSucursales
             .IgnoreQueryFilters()
-            .Where(ls => ls.LegajoId == legajoId)
+            .Where(ls => ls.LegajoId == legajoId && ls.PermiteMovil)
             .Select(ls => ls.SucursalId)
             .ToListAsync();
 
         if (!sucursalesAsignadas.Any())
-            return StatusCode(403, new { ok = false, codigo = "SIN_SUCURSAL", mensaje = "No tiene sucursales asignadas. Contacte a su administrador." });
+        {
+            // Verificar si tiene sucursales pero sin permiso movil
+            var tieneSucursales = await _db.LegajoSucursales
+                .IgnoreQueryFilters()
+                .AnyAsync(ls => ls.LegajoId == legajoId);
+            var mensaje = tieneSucursales
+                ? "No tiene habilitada la fichada móvil en ninguna sucursal asignada."
+                : "No tiene sucursales asignadas. Contacte a su administrador.";
+            var codigo = tieneSucursales ? "FICHADA_NO_PERMITIDA" : "SIN_SUCURSAL";
+            return StatusCode(403, new { ok = false, codigo, mensaje });
+        }
 
         // 5. Resolver sucursal por ubicación (solo las asignadas al legajo)
         var geoConfigs = await _db.SucursalGeoconfigs
@@ -455,14 +465,18 @@ public class MobileController : ControllerBase
             if (legajo.EmpresaId != terminal.EmpresaId)
                 return StatusCode(403, new { ok = false, codigo = "QR_INVALIDO", mensaje = "QR no reconocido o legajo inactivo." });
 
-            // 4. Validar legajo asignado a la sucursal del kiosko
-            var enSucursal = await _db.LegajoSucursales
+            // 4. Validar legajo asignado a la sucursal del kiosko y permiso QR
+            var asignacion = await _db.LegajoSucursales
                 .IgnoreQueryFilters()
-                .AnyAsync(ls => ls.LegajoId == legajo.Id && ls.SucursalId == terminal.SucursalId.Value);
+                .FirstOrDefaultAsync(ls => ls.LegajoId == legajo.Id && ls.SucursalId == terminal.SucursalId.Value);
 
-            if (!enSucursal)
+            if (asignacion == null)
                 return StatusCode(403, new { ok = false, codigo = "SUCURSAL_NO_ASIGNADA",
                     mensaje = "No está habilitado para fichar en esta sucursal." });
+
+            if (!asignacion.PermiteQr)
+                return StatusCode(403, new { ok = false, codigo = "FICHADA_NO_PERMITIDA",
+                    mensaje = "No tiene habilitada la fichada por QR en esta sucursal." });
 
             // 5. Cooldown: evitar doble escaneo (30 segundos, compara contra CreatedAt que es UTC)
             var ahora = Clock.Now;

@@ -1,0 +1,233 @@
+@page "/configuracion/empresa"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Data.SqlClient
+@using Dapper
+@using DigitalPlusMultiTenant.Application.Interfaces
+@attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa")]
+@rendermode InteractiveServer
+
+@inject ITenantService Tenant
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
+
+<PageTitle>Empresa - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-building-gear me-2"></i>Configuracion de Empresa</h4>
+</div>
+
+@if (cargando)
+{
+    <div class="text-center py-5">
+        <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Message="Cargando configuracion..." />
+    </div>
+}
+else if (empresa == null)
+{
+    <div class="alert alert-danger">No se pudo cargar la informacion de la empresa.</div>
+}
+else
+{
+    @* ── Codigo de Activacion ── *@
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-transparent">
+            <h6 class="mb-0"><i class="bi bi-key me-2"></i>Codigo de Activacion</h6>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(codigoActivacion))
+            {
+                <div class="d-flex align-items-center gap-3">
+                    <code class="fs-5 px-3 py-2 bg-light rounded border user-select-all">@codigoActivacion</code>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="CopiarCodigo" title="Copiar al portapapeles">
+                        <i class="bi bi-clipboard me-1"></i>Copiar
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    Use este codigo para reinstalar las aplicaciones de escritorio o activar nuevos dispositivos.
+                </small>
+            }
+            else
+            {
+                <span class="text-muted">No hay codigo de activacion asignado.</span>
+            }
+        </div>
+    </div>
+
+    @* ── Datos de la Empresa ── *@
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-transparent">
+            <h6 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Datos de la Empresa</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small">Nombre de la empresa</label>
+                    <input type="text" class="form-control" @bind="empresa.Nombre" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Nombre fantasia</label>
+                    <input type="text" class="form-control" @bind="empresa.NombreFantasia" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">CUIT / Identificacion fiscal</label>
+                    <input type="text" class="form-control" @bind="empresa.Cuit" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">Codigo</label>
+                    <input type="text" class="form-control" value="@empresa.Codigo" disabled />
+                    <small class="text-muted">Identificador unico, no editable</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Modulos y Funcionalidades ── *@
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-transparent">
+            <h6 class="mb-0"><i class="bi bi-toggles me-2"></i>Modulos y Funcionalidades</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="chkMobile" @bind="empresa.MobileHabilitado" />
+                        <label class="form-check-label" for="chkMobile">
+                            <i class="bi bi-phone me-1"></i>Fichado Movil habilitado
+                        </label>
+                    </div>
+                    <small class="text-muted ms-4">Permite a los empleados fichar ingreso/egreso desde el celular</small>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="chkKiosko" @bind="empresa.KioskoHabilitado" />
+                        <label class="form-check-label" for="chkKiosko">
+                            <i class="bi bi-display me-1"></i>Modo Kiosko habilitado
+                        </label>
+                    </div>
+                    <small class="text-muted ms-4">Permite habilitar terminales en modo kiosko para fichada por QR</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Boton Guardar ── *@
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" @onclick="Guardar" disabled="@guardando">
+            @if (guardando)
+            {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+            }
+            <i class="bi bi-check-lg me-1"></i>Guardar cambios
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert @(esError ? "alert-danger" : "alert-success") mt-3 alert-dismissible">
+            @mensaje
+            <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
+        </div>
+    }
+}
+
+@code {
+    private DigitalPlusMultiTenant.Domain.Common.Empresa? empresa;
+    private string? codigoActivacion;
+    private bool cargando = true;
+    private bool guardando;
+    private string? mensaje;
+    private bool esError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+        try
+        {
+            // Cargar empresa de BD local (DigitalPlusMultiTenant)
+            empresa = await Db.Empresas
+                .FirstOrDefaultAsync(e => e.Id == Tenant.EmpresaId);
+
+            // Cargar codigo de activacion de BD admin (DigitalPlusAdmin)
+            if (empresa != null)
+            {
+                try
+                {
+                    var adminCs = Configuration.GetConnectionString("AdminConnection");
+                    if (!string.IsNullOrEmpty(adminCs))
+                    {
+                        await using var conn = new SqlConnection(adminCs);
+                        codigoActivacion = await conn.QueryFirstOrDefaultAsync<string>(
+                            "SELECT CodigoActivacion FROM Empresas WHERE CompanyId = @CompanyId",
+                            new { CompanyId = empresa.Codigo });
+                    }
+                }
+                catch { /* admin DB no disponible, no bloquear */ }
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error cargando datos: " + ex.Message;
+            esError = true;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (empresa == null) return;
+        guardando = true;
+        mensaje = null;
+
+        try
+        {
+            // 1. Guardar en BD local (DigitalPlusMultiTenant)
+            await Db.SaveChangesAsync();
+
+            // 2. Sincronizar nombre en BD admin (DigitalPlusAdmin)
+            try
+            {
+                var adminCs = Configuration.GetConnectionString("AdminConnection");
+                if (!string.IsNullOrEmpty(adminCs))
+                {
+                    await using var conn = new SqlConnection(adminCs);
+                    await conn.ExecuteAsync(
+                        "UPDATE Empresas SET Nombre = @Nombre WHERE CompanyId = @CompanyId",
+                        new { Nombre = empresa.Nombre, CompanyId = empresa.Codigo });
+                }
+            }
+            catch { /* admin DB sync failed, non-blocking */ }
+
+            mensaje = "Configuracion guardada correctamente.";
+            esError = false;
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error al guardar: " + ex.Message;
+            esError = true;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task CopiarCodigo()
+    {
+        if (!string.IsNullOrEmpty(codigoActivacion))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", codigoActivacion);
+            mensaje = "Codigo copiado al portapapeles.";
+            esError = false;
+        }
+    }
+}
