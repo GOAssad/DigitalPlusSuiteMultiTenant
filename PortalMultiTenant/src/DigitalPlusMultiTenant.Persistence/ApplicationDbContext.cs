@@ -45,6 +45,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<Feriado> Feriados => Set<Feriado>();
     public DbSet<Noticia> Noticias => Set<Noticia>();
     public DbSet<VariableSistema> VariablesSistema => Set<VariableSistema>();
+    public DbSet<SolicitudSoporte> SolicitudesSoporte => Set<SolicitudSoporte>();
 
     // Terminal Movil (v2)
     public DbSet<TerminalMovil> TerminalesMoviles => Set<TerminalMovil>();
@@ -83,6 +84,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.Entity<TerminalMovil>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
         builder.Entity<SucursalGeoconfig>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
         builder.Entity<CodigoActivacionMovil>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
+        builder.Entity<SolicitudSoporte>().HasQueryFilter(e => e.EmpresaId == CurrentEmpresaId);
 
         // QrToken: indice unico filtrado (solo no-nulos)
         builder.Entity<Legajo>()

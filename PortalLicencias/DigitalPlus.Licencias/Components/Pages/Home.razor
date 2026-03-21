@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+@inject DigitalPlus.Licencias.Services.MultiTenantProvisioningService MTService
 
 <PageTitle>Dashboard - DigitalPlus Licencias</PageTitle>
 
@@ -134,12 +135,82 @@ else
             </div>
         </div>
     </div>
+
+    @* Solicitudes de clientes *@
+    <div class="row g-3 mt-1">
+        <div class="col-md-12">
+            <div class="card @(solicitudes?.Count > 0 ? "border-warning" : "")">
+                <div class="card-header @(solicitudes?.Count > 0 ? "bg-warning bg-opacity-10 text-warning-emphasis" : "")">
+                    <i class="bi bi-envelope-exclamation me-1"></i>Solicitudes de clientes
+                    @if (solicitudes?.Count > 0)
+                    {
+                        <span class="badge bg-warning text-dark ms-2">@solicitudes.Count</span>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (solicitudes == null || solicitudes.Count == 0)
+                    {
+                        <p class="p-3 text-muted">Sin solicitudes pendientes</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Fecha</th>
+                                    <th>Empresa</th>
+                                    <th>Tipo</th>
+                                    <th>Solicitado por</th>
+                                    <th>Motivo</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in solicitudes)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-secondary">@s.Id</span></td>
+                                        <td>@s.FechaSolicitud.ToString("dd/MM HH:mm")</td>
+                                        <td><strong>@s.EmpresaNombre</strong></td>
+                                        <td>
+                                            @if (s.Tipo == "Limpieza")
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-eraser me-1"></i>Limpieza</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger"><i class="bi bi-trash me-1"></i>Eliminacion</span>
+                                            }
+                                        </td>
+                                        <td>@s.SolicitadoPor</td>
+                                        <td class="text-truncate" style="max-width:300px" title="@s.Motivo">@s.Motivo</td>
+                                        <td><span class="badge bg-info">@s.Estado</span></td>
+                                        <td>
+                                            @if (s.AdminEmpresaId.HasValue)
+                                            {
+                                                <a href="/empresas/@s.AdminEmpresaId" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
     private DigitalPlus.Licencias.Repositorios.DashboardStats? stats;
     private List<DigitalPlus.Licencias.Entidades.LicenciaLog>? logs;
     private List<DigitalPlus.Licencias.Entidades.Licencia>? porVencer;
+    private List<DigitalPlus.Licencias.Services.SolicitudSoporteDto>? solicitudes;
 
     protected override async Task OnInitializedAsync()
     {
@@ -152,5 +223,21 @@ else
             .Where(l => l.LicenseType == "active" && l.ExpiresAt.HasValue && l.ExpiresAt > now && l.ExpiresAt < now.AddDays(30))
             .OrderBy(l => l.ExpiresAt)
             .ToList();
+
+        try
+        {
+            solicitudes = await MTService.GetSolicitudesPendientesAsync();
+            // Resolver AdminEmpresaId para links
+            if (solicitudes.Count > 0)
+            {
+                var empresasAdmin = await Repo.GetEmpresasAsync();
+                foreach (var s in solicitudes)
+                {
+                    var admin = empresasAdmin.FirstOrDefault(e => e.CompanyId == s.EmpresaCodigo);
+                    if (admin != null) s.AdminEmpresaId = admin.Id;
+                }
+            }
+        }
+        catch { solicitudes = []; }
     }
 }

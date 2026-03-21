@@ -53,6 +53,9 @@
             <table class="table table-hover table-sm mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th role="button" @onclick='() => SetOrden("codigo")'>
+                            Codigo @SortIcon("codigo")
+                        </th>
                         <th role="button" @onclick='() => SetOrden("nombre")'>
                             Nombre @SortIcon("nombre")
                         </th>
@@ -66,17 +69,18 @@
                 <tbody>
                     @if (items == null)
                     {
-                        <tr><td colspan="4" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
+                        <tr><td colspan="5" class="text-center py-4"><DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Small="true" Message="" /></td></tr>
                     }
                     else if (!items.Any())
                     {
-                        <tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay sectores</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay sectores</td></tr>
                     }
                     else
                     {
                         @foreach (var s in items)
                         {
                             <tr>
+                                <td><span class="badge bg-secondary">@s.Codigo</span></td>
                                 <td>@s.Nombre</td>
                                 <td><span class="badge bg-info">@s.Legajos.Count</span></td>
                                 <td><span class="badge @(s.IsActive ? "bg-success" : "bg-danger")">@(s.IsActive ? "Activo" : "Inactivo")</span></td>
@@ -147,6 +151,7 @@
 
         var ordered = ordenColumna switch
         {
+            "codigo" => ordenDesc ? query.OrderByDescending(s => s.Codigo) : query.OrderBy(s => s.Codigo),
             "legajos" => ordenDesc ? query.OrderByDescending(s => s.Legajos.Count) : query.OrderBy(s => s.Legajos.Count),
             _ => ordenDesc ? query.OrderByDescending(s => s.Nombre) : query.OrderBy(s => s.Nombre),
         };
@@ -163,9 +168,9 @@
         else if (filtroActivo == "false") filtros.Add("Estado: Inactivos");
         var bytes = ExcelExporter.Generar(items,
             new ExcelExportConfig { Titulo = "Sectores", NombreEmpresa = Tenant.EmpresaNombre, Filtros = filtros,
-                Encabezados = ["Nombre", "Legajos", "Estado"],
-                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Numero, ExcelColFormat.Texto] },
-            s => [s.Nombre, s.Legajos.Count, s.IsActive ? "Activo" : "Inactivo"]);
+                Encabezados = ["Codigo", "Nombre", "Legajos", "Estado"],
+                Formatos = [ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Numero, ExcelColFormat.Texto] },
+            s => [s.Codigo, s.Nombre, s.Legajos.Count, s.IsActive ? "Activo" : "Inactivo"]);
         await JS.InvokeVoidAsync("downloadFile", "sectores.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
@@ -173,8 +178,8 @@
     {
         if (items == null) return;
         var bytes = CsvExporter.ToCsvBytes(items,
-            ["Nombre", "Legajos", "Estado"],
-            s => [s.Nombre, s.Legajos.Count.ToString(), s.IsActive ? "Activo" : "Inactivo"]);
+            ["Codigo", "Nombre", "Legajos", "Estado"],
+            s => [s.Codigo, s.Nombre, s.Legajos.Count.ToString(), s.IsActive ? "Activo" : "Inactivo"]);
         await JS.InvokeVoidAsync("downloadFile", "sectores.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 

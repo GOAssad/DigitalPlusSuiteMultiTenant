@@ -22,7 +22,12 @@
         <EditForm Model="model" OnValidSubmit="Save" FormName="categoriaForm">
             <DataAnnotationsValidator />
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-2">
+                    <label class="form-label">Codigo</label>
+                    <InputText @bind-Value="model.Codigo" class="form-control" />
+                    <ValidationMessage For="() => model.Codigo" class="text-danger small" />
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Nombre</label>
                     <InputText @bind-Value="model.Nombre" class="form-control" />
                     <ValidationMessage For="() => model.Nombre" class="text-danger small" />

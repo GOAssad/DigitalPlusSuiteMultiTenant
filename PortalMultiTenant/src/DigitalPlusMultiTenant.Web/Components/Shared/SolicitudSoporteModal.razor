@@ -1,0 +1,131 @@
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using DigitalPlusMultiTenant.Domain.Entities
+@using DigitalPlusMultiTenant.Persistence
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+
+@if (solicitudModal != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);z-index:9999">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                @if (solicitudModal.Estado == "Pendiente" || solicitudModal.Estado == "EnProceso")
+                {
+                    <div class="modal-header bg-warning bg-opacity-10">
+                        <h6 class="modal-title"><i class="bi bi-hourglass-split me-2 text-warning"></i>Solicitud en proceso</h6>
+                    </div>
+                    <div class="modal-body">
+                        <p>Su solicitud <strong>#@solicitudModal.Id</strong> de <strong>@solicitudModal.Tipo</strong>
+                            del <strong>@solicitudModal.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</strong>
+                            esta siendo procesada por el equipo de IntegraIA.</p>
+                        <div class="d-flex align-items-center gap-2 text-muted small">
+                            <span class="badge bg-warning">@solicitudModal.Estado</span>
+                            <span>Solicitado por: @solicitudModal.SolicitadoPor</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary btn-sm" @onclick="CerrarModal">Entendido</button>
+                    </div>
+                }
+                else if (solicitudModal.Estado == "Completada")
+                {
+                    <div class="modal-header bg-success bg-opacity-10">
+                        <h6 class="modal-title"><i class="bi bi-check-circle-fill me-2 text-success"></i>Solicitud completada</h6>
+                    </div>
+                    <div class="modal-body">
+                        <p>Su solicitud <strong>#@solicitudModal.Id</strong> de <strong>@solicitudModal.Tipo</strong>,
+                            solicitada por <strong>@solicitudModal.SolicitadoPor</strong>
+                            el <strong>@solicitudModal.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</strong>,
+                            fue realizada con exito.</p>
+                        @if (!string.IsNullOrEmpty(solicitudModal.Comentario))
+                        {
+                            <div class="alert alert-info small py-2 mb-0">
+                                <i class="bi bi-chat-left-text me-1"></i>@solicitudModal.Comentario
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success btn-sm" @onclick="MarcarVisto">Aceptar</button>
+                    </div>
+                }
+                else if (solicitudModal.Estado == "Rechazada")
+                {
+                    <div class="modal-header bg-danger bg-opacity-10">
+                        <h6 class="modal-title"><i class="bi bi-x-circle-fill me-2 text-danger"></i>Solicitud rechazada</h6>
+                    </div>
+                    <div class="modal-body">
+                        <p>Su solicitud <strong>#@solicitudModal.Id</strong> de <strong>@solicitudModal.Tipo</strong>,
+                            solicitada por <strong>@solicitudModal.SolicitadoPor</strong>
+                            el <strong>@solicitudModal.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</strong>,
+                            fue rechazada.</p>
+                        @if (!string.IsNullOrEmpty(solicitudModal.Comentario))
+                        {
+                            <div class="alert alert-warning small py-2 mb-0">
+                                <i class="bi bi-chat-left-text me-1"></i>@solicitudModal.Comentario
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary btn-sm" @onclick="MarcarVisto">Aceptar</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private SolicitudSoporte? solicitudModal;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated != true) return;
+
+            var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (role != "AdminEmpresa" && role != "SuperAdmin") return;
+
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            // Buscar solicitudes no vistas (prioridad: Completada/Rechazada primero, luego Pendiente/EnProceso)
+            solicitudModal = await db.SolicitudesSoporte
+                .Where(s => !s.VistoPorUsuario)
+                .OrderByDescending(s => s.Estado == "Completada" || s.Estado == "Rechazada" ? 1 : 0)
+                .ThenByDescending(s => s.FechaSolicitud)
+                .FirstOrDefaultAsync();
+
+            if (solicitudModal != null)
+                await InvokeAsync(StateHasChanged);
+        }
+        catch { }
+    }
+
+    private void CerrarModal()
+    {
+        solicitudModal = null;
+    }
+
+    private async Task MarcarVisto()
+    {
+        if (solicitudModal == null) return;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var entity = await db.SolicitudesSoporte.FindAsync(solicitudModal.Id);
+            if (entity != null)
+            {
+                entity.VistoPorUsuario = true;
+                await db.SaveChangesAsync();
+            }
+        }
+        catch { }
+        solicitudModal = null;
+    }
+}

@@ -960,6 +960,15 @@ else
             }
 
             var registros = await MTService.LimpiarEmpresaAsync(mtEmpresaId.Value);
+
+            // Completar solicitudes pendientes y crear noticia
+            try
+            {
+                await MTService.CompletarSolicitudesPendientesAsync(mtEmpresaId.Value, "Limpieza",
+                    $"Limpieza completada. Se eliminaron {registros} registros transaccionales.");
+            }
+            catch { /* no bloquear si falla */ }
+
             stats = await MTService.GetEmpresaStatsAsync(empresa.CompanyId);
             CerrarModales();
             mensaje = $"Empresa limpiada correctamente. Se eliminaron {registros} registros transaccionales.";
@@ -989,6 +998,14 @@ else
 
             if (mtEmpresaId != null)
             {
+                // Completar solicitudes antes de eliminar (despues ya no existiran)
+                try
+                {
+                    await MTService.CompletarSolicitudesPendientesAsync(mtEmpresaId.Value, "Eliminacion",
+                        "Empresa eliminada completamente.");
+                }
+                catch { }
+
                 procesandoMensaje = "Eliminando datos multi-tenant...";
                 StateHasChanged();
                 await Task.Delay(100);

@@ -69,6 +69,13 @@
                         <label class="form-check-label">Activo</label>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label">Escritorio</label>
+                    <div class="form-check form-switch mt-2">
+                        <InputCheckbox @bind-Value="model.AccesoAdminDesktop" class="form-check-input" />
+                        <label class="form-check-label">Acceso Administrador desktop</label>
+                    </div>
+                </div>
             </div>
             <div class="mt-4">
                 <button type="submit" class="btn btn-primary me-2"><i class="bi bi-check-lg me-1"></i>Guardar</button>
@@ -126,8 +133,12 @@
             model.Email = user.Email ?? "";
             model.NombreCompleto = user.NombreCompleto;
             model.IsActive = user.IsActive;
+            model.AccesoAdminDesktop = user.AccesoAdminDesktop;
             var userRoles = await UserManager.GetRolesAsync(user);
             model.Rol = userRoles.FirstOrDefault();
+            // Si el rol actual no esta en la lista (ej: SuperAdmin), agregarlo para que el combo lo muestre
+            if (!string.IsNullOrEmpty(model.Rol) && !roles.Contains(model.Rol))
+                roles.Insert(0, model.Rol);
         }
     }
 
@@ -142,6 +153,7 @@
                 if (user == null) { errorMessage = "Usuario no encontrado"; return; }
                 user.NombreCompleto = model.NombreCompleto;
                 user.IsActive = model.IsActive;
+                user.AccesoAdminDesktop = model.AccesoAdminDesktop;
                 var result = await UserManager.UpdateAsync(user);
                 if (!result.Succeeded) { errorMessage = string.Join(", ", result.Errors.Select(e => e.Description)); return; }
 
@@ -163,6 +175,7 @@
                     NombreCompleto = model.NombreCompleto,
                     EmpresaId = Tenant.EmpresaId,
                     IsActive = model.IsActive,
+                    AccesoAdminDesktop = model.AccesoAdminDesktop,
                     CreatedAt = DateTime.UtcNow
                 };
                 var result = await UserManager.CreateAsync(user, model.Password);
@@ -207,5 +220,6 @@
         public string? Password { get; set; }
         public string? ConfirmPassword { get; set; }
         public bool IsActive { get; set; }
+        public bool AccesoAdminDesktop { get; set; }
     }
 }

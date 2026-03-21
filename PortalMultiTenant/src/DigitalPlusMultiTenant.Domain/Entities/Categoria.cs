@@ -4,6 +4,7 @@ namespace DigitalPlusMultiTenant.Domain.Entities;
 
 public class Categoria : TenantEntity
 {
+    public string Codigo { get; set; } = null!;
     public string Nombre { get; set; } = null!;
     public bool IsActive { get; set; } = true;
 

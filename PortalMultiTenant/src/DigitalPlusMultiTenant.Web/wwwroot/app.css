@@ -81,6 +81,21 @@ h1:focus {
     font-size: 1.4rem;
 }
 
+.kpi-card {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    color: inherit;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important;
+}
+
+.kpi-card:active {
+    transform: translateY(0);
+}
+
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }

@@ -5,12 +5,16 @@
 @using Microsoft.Data.SqlClient
 @using Dapper
 @using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa")]
 @rendermode InteractiveServer
 
 @inject ITenantService Tenant
 @inject IConfiguration Configuration
 @inject IJSRuntime JS
+@inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Empresa - DigitalPlus</PageTitle>
 
@@ -130,6 +134,112 @@ else
             <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
         </div>
     }
+
+    @* ── Zona Peligrosa ── *@
+    <div class="card border-danger shadow-sm mt-5">
+        <div class="card-header bg-danger bg-opacity-10 border-danger">
+            <h6 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Zona peligrosa</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                @* Limpiar datos *@
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <h6 class="text-warning"><i class="bi bi-eraser-fill me-2"></i>Limpiar datos transaccionales</h6>
+                        <p class="text-muted small mb-2">
+                            Solicitar a IntegraIA que elimine fichadas, eventos y datos transaccionales.
+                            Se conservan legajos, sectores, categorias, horarios y sucursales.
+                        </p>
+                        <div class="mb-2">
+                            <label class="form-label small">Motivo de la solicitud</label>
+                            <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: Necesitamos reiniciar las fichadas para comenzar el periodo..."
+                                      @bind="motivoLimpiar"></textarea>
+                        </div>
+                        <button class="btn btn-outline-warning btn-sm" @onclick="() => mostrarConfirmLimpiar = true"
+                                disabled="@(string.IsNullOrWhiteSpace(motivoLimpiar) || enviandoSolicitud)">
+                            <i class="bi bi-send me-1"></i>Solicitar limpieza
+                        </button>
+                    </div>
+                </div>
+                @* Eliminar empresa *@
+                <div class="col-md-6">
+                    <div class="border border-danger rounded p-3 h-100">
+                        <h6 class="text-danger"><i class="bi bi-trash3-fill me-2"></i>Eliminar empresa</h6>
+                        <p class="text-muted small mb-2">
+                            Solicitar a IntegraIA la eliminacion completa de la empresa y todos sus datos.
+                            Esta accion es irreversible.
+                        </p>
+                        <div class="mb-2">
+                            <label class="form-label small">Motivo de la solicitud</label>
+                            <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: La empresa ya no utiliza el sistema..."
+                                      @bind="motivoEliminar"></textarea>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => mostrarConfirmEliminar = true"
+                                disabled="@(string.IsNullOrWhiteSpace(motivoEliminar) || enviandoSolicitud)">
+                            <i class="bi bi-send me-1"></i>Solicitar eliminacion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Modal Confirmar Limpieza ── *@
+@if (mostrarConfirmLimpiar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h6 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar solicitud de limpieza</h6>
+                    <button type="button" class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small">Para confirmar, escriba el nombre de la empresa: <strong>@empresa?.Nombre</strong></p>
+                    <input type="text" class="form-control" placeholder="Nombre de la empresa" @bind="confirmNombre" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="CerrarModales">Cancelar</button>
+                    <button class="btn btn-warning btn-sm" @onclick="EnviarSolicitudLimpiar"
+                            disabled="@(confirmNombre != empresa?.Nombre || enviandoSolicitud)">
+                        @if (enviandoSolicitud) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Confirmar y enviar solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Modal Confirmar Eliminacion ── *@
+@if (mostrarConfirmEliminar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger bg-opacity-10">
+                    <h6 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar solicitud de eliminacion</h6>
+                    <button type="button" class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger small py-2">
+                        <strong>Atencion:</strong> Esta solicitud pedira la eliminacion completa e irreversible de la empresa y todos sus datos.
+                    </div>
+                    <p class="small">Para confirmar, escriba el nombre de la empresa: <strong>@empresa?.Nombre</strong></p>
+                    <input type="text" class="form-control" placeholder="Nombre de la empresa" @bind="confirmNombre" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="CerrarModales">Cancelar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="EnviarSolicitudEliminar"
+                            disabled="@(confirmNombre != empresa?.Nombre || enviandoSolicitud)">
+                        @if (enviandoSolicitud) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Confirmar y enviar solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
@@ -229,5 +339,119 @@ else
             mensaje = "Codigo copiado al portapapeles.";
             esError = false;
         }
+    }
+
+    // ── Zona Peligrosa ──
+    private string? motivoLimpiar;
+    private string? motivoEliminar;
+    private string? confirmNombre;
+    private bool mostrarConfirmLimpiar;
+    private bool mostrarConfirmEliminar;
+    private bool enviandoSolicitud;
+
+    private void CerrarModales()
+    {
+        mostrarConfirmLimpiar = false;
+        mostrarConfirmEliminar = false;
+        confirmNombre = null;
+    }
+
+    private async Task<string> ObtenerEmailUsuario()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        return authState.User.Identity?.Name ?? "desconocido";
+    }
+
+    private async Task EnviarSolicitud(string tipo, string motivo)
+    {
+        if (empresa == null || confirmNombre != empresa.Nombre) return;
+        enviandoSolicitud = true;
+        try
+        {
+            var emailUsuario = await ObtenerEmailUsuario();
+            var ahora = Clock.Now;
+            var esLimpieza = tipo == "Limpieza";
+
+            // 1. Crear SolicitudSoporte
+            var solicitud = new SolicitudSoporte
+            {
+                EmpresaId = empresa.Id,
+                Tipo = tipo,
+                Motivo = motivo,
+                SolicitadoPor = emailUsuario,
+                FechaSolicitud = ahora,
+                Estado = "Pendiente"
+            };
+            Db.SolicitudesSoporte.Add(solicitud);
+
+            // 2. Crear Noticia
+            var hoy = DateOnly.FromDateTime(ahora);
+            Db.Noticias.Add(new Noticia
+            {
+                EmpresaId = empresa.Id,
+                Titulo = esLimpieza
+                    ? "Solicitud de limpieza de datos enviada"
+                    : "Solicitud de eliminacion de empresa enviada",
+                Contenido = $"Solicitado por {emailUsuario}. Motivo: {motivo}. Estado: Pendiente.",
+                FechaDesde = hoy,
+                FechaHasta = hoy.AddDays(30),
+                CreatedAt = ahora,
+                CreatedBy = emailUsuario
+            });
+
+            await Db.SaveChangesAsync();
+
+            // 3. Enviar email a IntegraIA
+            var tipoLabel = esLimpieza ? "limpieza" : "ELIMINACION";
+            var tipoHtml = esLimpieza
+                ? "<td style='padding:4px 12px;color:orange;font-weight:bold;'>LIMPIEZA (conservar estructura)</td>"
+                : "<td style='padding:4px 12px;color:red;font-weight:bold;'>ELIMINACION COMPLETA</td>";
+            var subject = $"[DigitalPlus] Solicitud de {tipoLabel} - {empresa.Nombre} (#{solicitud.Id})";
+            var body = $@"
+                <h2{(esLimpieza ? "" : " style='color:red;'")}>Solicitud de {(esLimpieza ? "Limpieza de Datos" : "Eliminacion de Empresa")}</h2>
+                <table style='border-collapse:collapse;'>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Solicitud #:</td><td style='padding:4px 12px;'>{solicitud.Id}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Empresa:</td><td style='padding:4px 12px;'>{empresa.Nombre}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Codigo:</td><td style='padding:4px 12px;'>{empresa.Codigo}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>EmpresaId:</td><td style='padding:4px 12px;'>{empresa.Id}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Solicitado por:</td><td style='padding:4px 12px;'>{emailUsuario}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Fecha:</td><td style='padding:4px 12px;'>{ahora:dd/MM/yyyy HH:mm}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Tipo:</td>{tipoHtml}</tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Motivo:</td><td style='padding:4px 12px;'>{motivo}</td></tr>
+                </table>
+                {(esLimpieza ? "" : "<p style='margin-top:16px;color:red;font-weight:bold;'>ATENCION: El cliente solicita la eliminacion completa e irreversible de esta empresa.</p>")}
+                <p style='color:#666;font-size:12px;'>Este email fue generado automaticamente desde el Portal Multi-Tenant.</p>";
+
+            _ = Task.Run(async () =>
+            {
+                try { await EmailService.SendAsync("notify@integraia.tech", subject, body); }
+                catch { }
+            });
+
+            CerrarModales();
+            mensaje = $"Solicitud #{solicitud.Id} de {tipoLabel} enviada correctamente. El equipo de IntegraIA procesara su pedido.";
+            esError = false;
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error al enviar la solicitud: " + ex.Message;
+            esError = true;
+        }
+        finally
+        {
+            enviandoSolicitud = false;
+        }
+    }
+
+    private async Task EnviarSolicitudLimpiar()
+    {
+        await EnviarSolicitud("Limpieza", motivoLimpiar!);
+        motivoLimpiar = null;
+    }
+
+    private async Task EnviarSolicitudEliminar()
+    {
+        await EnviarSolicitud("Eliminacion", motivoEliminar!);
+        motivoEliminar = null;
     }
 }

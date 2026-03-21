@@ -112,3 +112,20 @@ public class VariableSistemaConfiguration : IEntityTypeConfiguration<VariableSis
         builder.HasIndex(e => new { e.EmpresaId, e.Clave }).IsUnique();
     }
 }
+
+public class SolicitudSoporteConfiguration : IEntityTypeConfiguration<SolicitudSoporte>
+{
+    public void Configure(EntityTypeBuilder<SolicitudSoporte> builder)
+    {
+        builder.ToTable("SolicitudSoporte");
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Tipo).HasMaxLength(50).IsRequired();
+        builder.Property(e => e.Motivo).HasMaxLength(1000).IsRequired();
+        builder.Property(e => e.SolicitadoPor).HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Estado).HasMaxLength(50).IsRequired();
+        builder.Property(e => e.Comentario).HasMaxLength(1000);
+
+        builder.HasOne(e => e.Empresa).WithMany()
+            .HasForeignKey(e => e.EmpresaId).OnDelete(DeleteBehavior.Restrict);
+    }
+}

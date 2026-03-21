@@ -30,6 +30,18 @@ public class ImportRow
 
 public static class ExcelImporter
 {
+    /// <summary>
+    /// Busca un item por codigo o nombre (case-insensitive).
+    /// Primero intenta matchear por codigo, si no encuentra, por nombre.
+    /// </summary>
+    private static int? ResolverId<T>(string valor, Dictionary<string, int> porCodigo, Dictionary<string, int> porNombre)
+    {
+        var key = valor.Trim().ToLowerInvariant();
+        if (porCodigo.TryGetValue(key, out var id)) return id;
+        if (porNombre.TryGetValue(key, out id)) return id;
+        return null;
+    }
+
     public static List<ImportRow> ParsearExcel(
         byte[] fileBytes,
         List<Sector> sectores,
@@ -59,11 +71,15 @@ public static class ExcelImporter
             }
         }
 
-        // Build lookup dictionaries (case-insensitive)
-        var sectorDict = sectores.ToDictionary(s => s.Nombre.Trim().ToLowerInvariant(), s => s.Id);
-        var catDict = categorias.ToDictionary(c => c.Nombre.Trim().ToLowerInvariant(), c => c.Id);
-        var horDict = horarios.ToDictionary(h => h.Nombre.Trim().ToLowerInvariant(), h => h.Id);
-        var sucDict = sucursales.ToDictionary(s => s.Nombre.Trim().ToLowerInvariant(), s => s.Id);
+        // Build lookup dictionaries (case-insensitive) — por codigo y por nombre
+        var sectorPorCodigo = sectores.Where(s => !string.IsNullOrEmpty(s.Codigo)).ToDictionary(s => s.Codigo.Trim().ToLowerInvariant(), s => s.Id);
+        var sectorPorNombre = sectores.ToDictionary(s => s.Nombre.Trim().ToLowerInvariant(), s => s.Id);
+        var catPorCodigo = categorias.Where(c => !string.IsNullOrEmpty(c.Codigo)).ToDictionary(c => c.Codigo.Trim().ToLowerInvariant(), c => c.Id);
+        var catPorNombre = categorias.ToDictionary(c => c.Nombre.Trim().ToLowerInvariant(), c => c.Id);
+        var horPorCodigo = horarios.Where(h => !string.IsNullOrEmpty(h.Codigo)).ToDictionary(h => h.Codigo.Trim().ToLowerInvariant(), h => h.Id);
+        var horPorNombre = horarios.ToDictionary(h => h.Nombre.Trim().ToLowerInvariant(), h => h.Id);
+        var sucPorCodigo = sucursales.Where(s => !string.IsNullOrEmpty(s.Codigo)).ToDictionary(s => s.Codigo.Trim().ToLowerInvariant(), s => s.Id);
+        var sucPorNombre = sucursales.ToDictionary(s => s.Nombre.Trim().ToLowerInvariant(), s => s.Id);
 
         for (int r = headerRow + 1; r <= lastRow; r++)
         {
@@ -110,43 +126,53 @@ public static class ExcelImporter
             if (string.IsNullOrEmpty(row.Nombre))
                 row.Errores.Add("Nombre vacío");
 
-            // Sector
+            // Sector (por codigo o nombre)
             if (string.IsNullOrEmpty(row.SectorNombre))
                 row.Errores.Add("Sector vacío");
-            else if (sectorDict.TryGetValue(row.SectorNombre.ToLowerInvariant(), out var sid))
-                row.SectorId = sid;
             else
-                row.Errores.Add($"Sector '{row.SectorNombre}' no existe");
+            {
+                var id = ResolverId<Sector>(row.SectorNombre, sectorPorCodigo, sectorPorNombre);
+                if (id.HasValue)
+                    row.SectorId = id.Value;
+                else
+                    row.Errores.Add($"Sector '{row.SectorNombre}' no existe");
+            }
 
-            // Categoria
+            // Categoria (por codigo o nombre)
             if (string.IsNullOrEmpty(row.CategoriaNombre))
                 row.Errores.Add("Categoría vacía");
-            else if (catDict.TryGetValue(row.CategoriaNombre.ToLowerInvariant(), out var cid))
-                row.CategoriaId = cid;
             else
-                row.Errores.Add($"Categoría '{row.CategoriaNombre}' no existe");
+            {
+                var id = ResolverId<Categoria>(row.CategoriaNombre, catPorCodigo, catPorNombre);
+                if (id.HasValue)
+                    row.CategoriaId = id.Value;
+                else
+                    row.Errores.Add($"Categoría '{row.CategoriaNombre}' no existe");
+            }
 
-            // Horario (optional)
+            // Horario (optional, por codigo o nombre)
             if (row.HorarioNombre != null)
             {
-                if (horDict.TryGetValue(row.HorarioNombre.ToLowerInvariant(), out var hid))
-                    row.HorarioId = hid;
+                var id = ResolverId<Horario>(row.HorarioNombre, horPorCodigo, horPorNombre);
+                if (id.HasValue)
+                    row.HorarioId = id.Value;
                 else
                     row.Errores.Add($"Horario '{row.HorarioNombre}' no existe");
             }
 
-            // Sucursales (required, separated by ;)
+            // Sucursales (required, separated by ;, por codigo o nombre)
             if (string.IsNullOrEmpty(row.SucursalesTexto))
                 row.Errores.Add("Sucursal vacía (mínimo 1)");
             else
             {
-                var nombres = row.SucursalesTexto.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                foreach (var sn in nombres)
+                var valores = row.SucursalesTexto.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var val in valores)
                 {
-                    if (sucDict.TryGetValue(sn.ToLowerInvariant(), out var sucId))
-                        row.SucursalIds.Add(sucId);
+                    var id = ResolverId<Sucursal>(val, sucPorCodigo, sucPorNombre);
+                    if (id.HasValue)
+                        row.SucursalIds.Add(id.Value);
                     else
-                        row.Errores.Add($"Sucursal '{sn}' no existe");
+                        row.Errores.Add($"Sucursal '{val}' no existe");
                 }
                 if (row.SucursalIds.Count == 0 && row.Errores.All(e => !e.StartsWith("Sucursal '")))
                     row.Errores.Add("Sucursal vacía (mínimo 1)");
@@ -186,13 +212,13 @@ public static class ExcelImporter
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
         }
 
-        // Example row
+        // Example row — usar codigo del primer item
         var ejemplo = new[] {
             "001", "García", "Juan",
-            sectores.FirstOrDefault()?.Nombre ?? "Administración",
-            categorias.FirstOrDefault()?.Nombre ?? "Empleado",
-            horarios.FirstOrDefault()?.Nombre ?? "",
-            sucursales.FirstOrDefault()?.Nombre ?? "Central",
+            sectores.FirstOrDefault()?.Codigo ?? "S001",
+            categorias.FirstOrDefault()?.Codigo ?? "C001",
+            horarios.FirstOrDefault()?.Codigo ?? "",
+            sucursales.FirstOrDefault()?.Codigo ?? "0001",
             "juan@ejemplo.com", "1155551234", "01/03/2026"
         };
         for (int i = 0; i < ejemplo.Length; i++)
@@ -205,8 +231,8 @@ public static class ExcelImporter
         // Notes row
         var notas = new[] {
             "Requerido, único", "Requerido", "Requerido",
-            "Requerido (de lista)", "Requerido (de lista)", "Opcional (de lista)",
-            "Requerido; separar con ;", "Opcional", "Opcional", "Opcional (dd/mm/aaaa)"
+            "Codigo o nombre (ver lista)", "Codigo o nombre (ver lista)", "Codigo o nombre (ver lista)",
+            "Codigo o nombre; separar con ;", "Opcional", "Opcional", "Opcional (dd/mm/aaaa)"
         };
         for (int i = 0; i < notas.Length; i++)
         {
@@ -222,41 +248,42 @@ public static class ExcelImporter
         }
         ws.SheetView.FreezeRows(1);
 
-        // --- Hoja 2: Valores válidos ---
+        // --- Hoja 2: Valores válidos (Codigo | Nombre) ---
         var ref_ = wb.Worksheets.Add("Valores válidos");
         int col = 1;
 
-        // Sectores
-        ref_.Cell(1, col).Value = "Sectores";
-        ref_.Cell(1, col).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml("#3498db")).Font.SetFontColor(XLColor.White);
-        for (int i = 0; i < sectores.Count; i++)
-            ref_.Cell(i + 2, col).Value = sectores[i].Nombre;
-        col++;
+        void WriteRefSection(string titulo, string color, IEnumerable<(string Codigo, string Nombre)> items)
+        {
+            // Header: Codigo
+            ref_.Cell(1, col).Value = titulo + " (Cod)";
+            ref_.Cell(1, col).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml(color)).Font.SetFontColor(XLColor.White);
+            // Header: Nombre
+            ref_.Cell(1, col + 1).Value = titulo + " (Nombre)";
+            ref_.Cell(1, col + 1).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml(color)).Font.SetFontColor(XLColor.White);
 
-        // Categorías
-        ref_.Cell(1, col).Value = "Categorías";
-        ref_.Cell(1, col).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml("#2ecc71")).Font.SetFontColor(XLColor.White);
-        for (int i = 0; i < categorias.Count; i++)
-            ref_.Cell(i + 2, col).Value = categorias[i].Nombre;
-        col++;
+            int row = 2;
+            foreach (var item in items)
+            {
+                ref_.Cell(row, col).Value = item.Codigo;
+                ref_.Cell(row, col + 1).Value = item.Nombre;
+                row++;
+            }
+            col += 2;
+        }
 
-        // Horarios
-        ref_.Cell(1, col).Value = "Horarios";
-        ref_.Cell(1, col).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml("#e67e22")).Font.SetFontColor(XLColor.White);
-        for (int i = 0; i < horarios.Count; i++)
-            ref_.Cell(i + 2, col).Value = horarios[i].Nombre;
+        // Separador visual entre secciones (columna vacia)
+        WriteRefSection("Sectores", "#3498db", sectores.Select(s => (s.Codigo ?? "", s.Nombre)));
+        col++; // columna separadora
+        WriteRefSection("Categorías", "#2ecc71", categorias.Select(c => (c.Codigo ?? "", c.Nombre)));
         col++;
-
-        // Sucursales
-        ref_.Cell(1, col).Value = "Sucursales";
-        ref_.Cell(1, col).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml("#9b59b6")).Font.SetFontColor(XLColor.White);
-        for (int i = 0; i < sucursales.Count; i++)
-            ref_.Cell(i + 2, col).Value = sucursales[i].Nombre;
+        WriteRefSection("Horarios", "#e67e22", horarios.Select(h => (h.Codigo ?? "", h.Nombre)));
+        col++;
+        WriteRefSection("Sucursales", "#9b59b6", sucursales.Select(s => (s.Codigo ?? "", s.Nombre)));
 
         ref_.Columns(1, col).AdjustToContents();
         for (int i = 1; i <= col; i++)
         {
-            if (ref_.Column(i).Width < 18) ref_.Column(i).Width = 18;
+            if (ref_.Column(i).Width < 12) ref_.Column(i).Width = 12;
         }
 
         using var ms = new MemoryStream();

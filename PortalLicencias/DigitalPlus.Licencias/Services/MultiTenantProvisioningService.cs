@@ -546,6 +546,7 @@ public class MultiTenantProvisioningService
                 "DELETE FROM Incidencia WHERE EmpresaId = @EmpresaId",
                 "DELETE FROM Feriado WHERE EmpresaId = @EmpresaId",
                 "DELETE FROM Noticia WHERE EmpresaId = @EmpresaId",
+                "DELETE FROM SolicitudSoporte WHERE EmpresaId = @EmpresaId",
                 "DELETE FROM VariableSistema WHERE EmpresaId = @EmpresaId",
             ];
 
@@ -741,6 +742,87 @@ public class MultiTenantProvisioningService
         return legajos;
     }
 
+    /// <summary>
+    /// Completa solicitudes pendientes de soporte para una empresa y crea una noticia.
+    /// </summary>
+    public async Task CompletarSolicitudesPendientesAsync(int empresaId, string tipo, string comentario)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var ahora = DateTime.UtcNow.AddHours(-3); // Argentina
+        var hoy = ahora.ToString("yyyy-MM-dd");
+
+        // Actualizar solicitudes pendientes del tipo indicado
+        await using (var cmd = new SqlCommand(@"
+            UPDATE SolicitudSoporte
+            SET Estado = 'Completada', FechaResolucion = @Ahora, Comentario = @Comentario, VistoPorUsuario = 0
+            WHERE EmpresaId = @EmpresaId AND Tipo = @Tipo AND Estado IN ('Pendiente','EnProceso')", conn))
+        {
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmd.Parameters.AddWithValue("@Tipo", tipo);
+            cmd.Parameters.AddWithValue("@Comentario", comentario);
+            cmd.Parameters.AddWithValue("@Ahora", ahora);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Crear noticia
+        await using (var cmd = new SqlCommand(@"
+            INSERT INTO Noticia (EmpresaId, Titulo, Contenido, FechaDesde, FechaHasta, IsPrivada, CreatedAt, CreatedBy)
+            VALUES (@EmpresaId, @Titulo, @Contenido, @Hoy, @HastaDate, 0, @Ahora, 'IntegraIA')", conn))
+        {
+            var titulo = tipo == "Limpieza"
+                ? "Limpieza de datos completada"
+                : "Eliminacion de empresa completada";
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmd.Parameters.AddWithValue("@Titulo", titulo);
+            cmd.Parameters.AddWithValue("@Contenido", comentario);
+            cmd.Parameters.AddWithValue("@Hoy", hoy);
+            cmd.Parameters.AddWithValue("@HastaDate", ahora.AddDays(30).ToString("yyyy-MM-dd"));
+            cmd.Parameters.AddWithValue("@Ahora", ahora);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        _logger.LogWarning("SOLICITUD COMPLETADA: EmpresaId={EmpresaId}, Tipo={Tipo}", empresaId, tipo);
+    }
+
+    /// <summary>
+    /// Obtiene solicitudes de soporte pendientes de todas las empresas.
+    /// </summary>
+    public async Task<List<SolicitudSoporteDto>> GetSolicitudesPendientesAsync()
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT s.Id, s.EmpresaId, e.Nombre AS EmpresaNombre, e.Codigo, s.Tipo, s.Motivo,
+                   s.SolicitadoPor, s.FechaSolicitud, s.Estado
+            FROM SolicitudSoporte s
+            INNER JOIN Empresa e ON s.EmpresaId = e.Id
+            WHERE s.Estado IN ('Pendiente','EnProceso')
+            ORDER BY s.FechaSolicitud DESC";
+
+        var lista = new List<SolicitudSoporteDto>();
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            lista.Add(new SolicitudSoporteDto
+            {
+                Id = reader.GetInt32(0),
+                EmpresaId = reader.GetInt32(1),
+                EmpresaNombre = reader.GetString(2),
+                EmpresaCodigo = reader.GetString(3),
+                Tipo = reader.GetString(4),
+                Motivo = reader.GetString(5),
+                SolicitadoPor = reader.GetString(6),
+                FechaSolicitud = reader.GetDateTime(7),
+                Estado = reader.GetString(8)
+            });
+        }
+        return lista;
+    }
+
     private static string GenerateTempPassword()
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -765,6 +847,20 @@ public class LegajoListDto
     public int TotalFichadas { get; set; }
     public DateTime? UltimaFichada { get; set; }
     public bool IsActive { get; set; }
+}
+
+public class SolicitudSoporteDto
+{
+    public int Id { get; set; }
+    public int EmpresaId { get; set; }
+    public string EmpresaNombre { get; set; } = "";
+    public string EmpresaCodigo { get; set; } = "";
+    public string Tipo { get; set; } = "";
+    public string Motivo { get; set; } = "";
+    public string SolicitadoPor { get; set; } = "";
+    public DateTime FechaSolicitud { get; set; }
+    public string Estado { get; set; } = "";
+    public int? AdminEmpresaId { get; set; }
 }
 
 public class EmpresaStats
