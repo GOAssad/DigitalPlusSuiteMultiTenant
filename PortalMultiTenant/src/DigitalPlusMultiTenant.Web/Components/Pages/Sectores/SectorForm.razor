@@ -70,6 +70,13 @@
 
     private async Task Save()
     {
+        errorMessage = null;
+        if (!string.IsNullOrWhiteSpace(model.Codigo))
+        {
+            var duplicado = await Db.Sectores.AnyAsync(s =>
+                s.Codigo == model.Codigo && (!IsEdit || s.Id != model.Id));
+            if (duplicado) { errorMessage = $"Ya existe un sector con el codigo '{model.Codigo}'."; return; }
+        }
         try
         {
             if (!IsEdit) Db.Sectores.Add(model);

@@ -39,6 +39,15 @@ public static class ExcelImporter
         var key = valor.Trim().ToLowerInvariant();
         if (porCodigo.TryGetValue(key, out var id)) return id;
         if (porNombre.TryGetValue(key, out id)) return id;
+        // Fallback: si el valor es numerico, comparar sin ceros a la izquierda (Excel convierte "0006" -> "6")
+        if (int.TryParse(key, out var num))
+        {
+            foreach (var kvp in porCodigo)
+            {
+                if (int.TryParse(kvp.Key, out var codNum) && codNum == num)
+                    return kvp.Value;
+            }
+        }
         return null;
     }
 
@@ -200,6 +209,13 @@ public static class ExcelImporter
         var ws = wb.Worksheets.Add("Legajos");
         var headers = new[] { "NumeroLegajo", "Apellido", "Nombre", "Sector", "Categoria", "Horario", "Sucursales", "Email", "Telefono", "FechaIngreso" };
 
+        var comentarios = new[] {
+            "Requerido, unico", "Requerido", "Requerido",
+            "Codigo o nombre (ver hoja Valores validos)", "Codigo o nombre (ver hoja Valores validos)",
+            "Codigo o nombre (ver hoja Valores validos)", "Codigo o nombre; separar multiples con ;",
+            "Opcional", "Opcional", "Opcional (dd/mm/aaaa)"
+        };
+
         for (int i = 0; i < headers.Length; i++)
         {
             var cell = ws.Cell(1, i + 1);
@@ -210,36 +226,12 @@ public static class ExcelImporter
                 .Font.SetFontSize(10)
                 .Fill.SetBackgroundColor(XLColor.FromHtml("#2c3e50"))
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            cell.GetComment().AddText(comentarios[i]);
         }
 
-        // Example row — usar codigo del primer item
-        var ejemplo = new[] {
-            "001", "García", "Juan",
-            sectores.FirstOrDefault()?.Codigo ?? "S001",
-            categorias.FirstOrDefault()?.Codigo ?? "C001",
-            horarios.FirstOrDefault()?.Codigo ?? "",
-            sucursales.FirstOrDefault()?.Codigo ?? "0001",
-            "juan@ejemplo.com", "1155551234", "01/03/2026"
-        };
-        for (int i = 0; i < ejemplo.Length; i++)
-        {
-            var cell = ws.Cell(2, i + 1);
-            cell.Value = ejemplo[i];
-            cell.Style.Font.SetFontColor(XLColor.Gray).Font.SetItalic(true);
-        }
-
-        // Notes row
-        var notas = new[] {
-            "Requerido, único", "Requerido", "Requerido",
-            "Codigo o nombre (ver lista)", "Codigo o nombre (ver lista)", "Codigo o nombre (ver lista)",
-            "Codigo o nombre; separar con ;", "Opcional", "Opcional", "Opcional (dd/mm/aaaa)"
-        };
-        for (int i = 0; i < notas.Length; i++)
-        {
-            var cell = ws.Cell(3, i + 1);
-            cell.Value = notas[i];
-            cell.Style.Font.SetFontSize(8).Font.SetFontColor(XLColor.FromHtml("#95a5a6")).Font.SetItalic(true);
-        }
+        // Formatear columnas de codigos como texto para preservar ceros a la izquierda
+        foreach (var textCol in new[] { 1, 4, 5, 6, 7 }) // NumeroLegajo, Sector, Categoria, Horario, Sucursales
+            ws.Column(textCol).Style.NumberFormat.Format = "@";
 
         ws.Columns(1, headers.Length).AdjustToContents();
         for (int i = 1; i <= headers.Length; i++)
@@ -261,6 +253,7 @@ public static class ExcelImporter
             ref_.Cell(1, col + 1).Value = titulo + " (Nombre)";
             ref_.Cell(1, col + 1).Style.Font.SetBold(true).Fill.SetBackgroundColor(XLColor.FromHtml(color)).Font.SetFontColor(XLColor.White);
 
+            ref_.Column(col).Style.NumberFormat.Format = "@"; // codigo como texto
             int row = 2;
             foreach (var item in items)
             {

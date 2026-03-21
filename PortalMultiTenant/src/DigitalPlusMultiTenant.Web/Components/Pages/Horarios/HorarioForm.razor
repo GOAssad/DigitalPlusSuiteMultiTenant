@@ -114,6 +114,13 @@
 
     private async Task Save()
     {
+        errorMessage = null;
+        if (!string.IsNullOrWhiteSpace(model.Codigo))
+        {
+            var duplicado = await Db.Horarios.AnyAsync(h =>
+                h.Codigo == model.Codigo && (!IsEdit || h.Id != model.Id));
+            if (duplicado) { errorMessage = $"Ya existe un horario con el codigo '{model.Codigo}'."; return; }
+        }
         try
         {
             // Remove existing detalles

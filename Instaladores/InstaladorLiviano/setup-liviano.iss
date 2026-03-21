@@ -70,6 +70,14 @@ ArchitecturesAllowed=x64compatible
 UninstallDisplayIcon={app}\Fichadas\{#FichExe}
 UninstallDisplayName={#AppName}
 CloseApplications=yes
+CloseApplicationsFilter=TEntradaSalida.exe,Acceso.exe
+
+; ============================================================
+[UninstallDelete]
+; ============================================================
+Type: filesandordirs; Name: "{app}\Fichadas"
+Type: filesandordirs; Name: "{app}\Administrador"
+Type: dirifempty; Name: "{app}"
 
 ; ============================================================
 [Languages]

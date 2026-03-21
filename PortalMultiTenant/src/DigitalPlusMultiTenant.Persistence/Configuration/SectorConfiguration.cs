@@ -15,6 +15,7 @@ public class SectorConfiguration : IEntityTypeConfiguration<Sector>
         builder.Property(e => e.UpdatedBy).HasMaxLength(100);
 
         builder.HasIndex(e => new { e.EmpresaId, e.Nombre }).IsUnique();
+        builder.HasIndex(e => new { e.EmpresaId, e.Codigo }).IsUnique().HasFilter("[Codigo] IS NOT NULL AND [Codigo] <> ''");
 
         builder.HasOne(e => e.Empresa).WithMany(e => e.Sectores)
             .HasForeignKey(e => e.EmpresaId).OnDelete(DeleteBehavior.Restrict);

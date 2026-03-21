@@ -319,6 +319,13 @@
     {
         errorMessage = null;
 
+        if (!string.IsNullOrWhiteSpace(model.Codigo))
+        {
+            var duplicado = await Db.Sucursales.AnyAsync(s =>
+                s.Codigo == model.Codigo && (!IsEdit || s.Id != model.Id));
+            if (duplicado) { errorMessage = $"Ya existe una sucursal con el codigo '{model.Codigo}'."; return; }
+        }
+
         try
         {
             if (!IsEdit)

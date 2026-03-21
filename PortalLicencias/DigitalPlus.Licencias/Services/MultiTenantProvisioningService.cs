@@ -457,45 +457,67 @@ public class MultiTenantProvisioningService
     /// Elimina: fichadas, vacaciones, incidencias asignadas, eventos calendario,
     /// terminales móviles, códigos activación móvil.
     /// </summary>
-    public async Task<int> LimpiarEmpresaAsync(int empresaId)
+    public Task<int> LimpiarEmpresaAsync(int empresaId)
+        => LimpiarEmpresaAsync(empresaId, null);
+
+    public async Task<int> LimpiarEmpresaAsync(int empresaId, Func<int, int, Task>? onProgress)
     {
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
-        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
 
-        try
+        int totalRows = 0;
+
+        // Contar fichadas para calcular progreso
+        int totalFichadas = 0;
+        if (onProgress != null)
         {
-            int totalRows = 0;
-
-            string[] deleteStatements =
-            [
-                "DELETE FROM CodigosActivacionMovil WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM TerminalesMoviles WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM IncidenciaLegajo WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM EventoCalendario WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Vacacion WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Fichada WHERE EmpresaId = @EmpresaId",
-            ];
-
-            foreach (var sql in deleteStatements)
-            {
-                await using var cmd = new SqlCommand(sql, conn, tx);
-                cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
-                totalRows += await cmd.ExecuteNonQueryAsync();
-            }
-
-            await tx.CommitAsync();
-
-            _logger.LogWarning("LIMPIAR EMPRESA: EmpresaId={EmpresaId}, {TotalRows} registros transaccionales eliminados.",
-                empresaId, totalRows);
-
-            return totalRows;
+            await using var countCmd = new SqlCommand(
+                "SELECT COUNT(*) FROM Fichada WHERE EmpresaId = @EmpresaId", conn);
+            countCmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            countCmd.CommandTimeout = 60;
+            totalFichadas = (int)await countCmd.ExecuteScalarAsync();
         }
-        catch
+
+        // Tablas chicas: borrar directo (sin batch)
+        string[] smallDeletes =
+        [
+            "DELETE FROM CodigosActivacionMovil WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM TerminalesMoviles WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM IncidenciaLegajo WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM EventoCalendario WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Vacacion WHERE EmpresaId = @EmpresaId",
+        ];
+
+        foreach (var sql in smallDeletes)
         {
-            await tx.RollbackAsync();
-            throw;
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            totalRows += await cmd.ExecuteNonQueryAsync();
         }
+
+        // Fichadas: borrar en batches de 10000 para no llenar el transaction log
+        const int batchSize = 10000;
+        int fichadasEliminadas = 0;
+        while (true)
+        {
+            await using var cmd = new SqlCommand(
+                $"DELETE TOP ({batchSize}) FROM Fichada WHERE EmpresaId = @EmpresaId", conn);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmd.CommandTimeout = 120;
+            var deleted = await cmd.ExecuteNonQueryAsync();
+            totalRows += deleted;
+            fichadasEliminadas += deleted;
+
+            if (onProgress != null && totalFichadas > 0)
+                await onProgress(fichadasEliminadas, totalFichadas);
+
+            if (deleted < batchSize) break;
+        }
+
+        _logger.LogWarning("LIMPIAR EMPRESA: EmpresaId={EmpresaId}, {TotalRows} registros transaccionales eliminados.",
+            empresaId, totalRows);
+
+        return totalRows;
     }
 
     /// <summary>
@@ -505,88 +527,71 @@ public class MultiTenantProvisioningService
     public async Task EliminarEmpresaAsync(int empresaId, int adminEmpresaId, string companyId,
         string adminConnectionString)
     {
-        // 1. Eliminar todo de DigitalPlusMultiTenant
+        // 1. Eliminar todo de DigitalPlusMultiTenant (sin transaccion global para no llenar el log)
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
-        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
 
-        try
+        // Fichadas: borrar en batches para no llenar el transaction log
+        const int batchSize = 10000;
+        while (true)
         {
-            // Child tables sin EmpresaId (FK a tablas con EmpresaId)
-            string[] childDeletes =
-            [
-                "DELETE lh FROM LegajoHuella lh INNER JOIN Legajo l ON lh.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
-                "DELETE lp FROM LegajoPin lp INNER JOIN Legajo l ON lp.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
-                "DELETE ls FROM LegajoSucursal ls INNER JOIN Legajo l ON ls.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
-                "DELETE ld FROM LegajoDomicilio ld INNER JOIN Legajo l ON ld.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
-                "DELETE hd FROM HorarioDetalle hd INNER JOIN Horario h ON hd.HorarioId = h.Id WHERE h.EmpresaId = @EmpresaId",
-            ];
-
-            // Tablas transaccionales con EmpresaId
-            string[] transactionalDeletes =
-            [
-                "DELETE FROM CodigosActivacionMovil WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM TerminalesMoviles WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM IncidenciaLegajo WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM EventoCalendario WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Vacacion WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Fichada WHERE EmpresaId = @EmpresaId",
-            ];
-
-            // Tablas estructurales con EmpresaId
-            string[] structuralDeletes =
-            [
-                "DELETE FROM SucursalGeoconfigs WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Legajo WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Terminal WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Sucursal WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Sector WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Categoria WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Horario WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Incidencia WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Feriado WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM Noticia WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM SolicitudSoporte WHERE EmpresaId = @EmpresaId",
-                "DELETE FROM VariableSistema WHERE EmpresaId = @EmpresaId",
-            ];
-
-            // Usuarios de Identity y relaciones
-            string[] userDeletes =
-            [
-                "DELETE us FROM UsuarioSucursal us INNER JOIN AspNetUsers u ON us.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
-                "DELETE ur FROM AspNetUserRoles ur INNER JOIN AspNetUsers u ON ur.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
-                "DELETE uc FROM AspNetUserClaims uc INNER JOIN AspNetUsers u ON uc.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
-                "DELETE ul FROM AspNetUserLogins ul INNER JOIN AspNetUsers u ON ul.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
-                "DELETE ut FROM AspNetUserTokens ut INNER JOIN AspNetUsers u ON ut.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
-                "DELETE FROM AspNetUsers WHERE EmpresaId = @EmpresaId",
-            ];
-
-            // La empresa misma
-            const string deleteEmpresa = "DELETE FROM Empresa WHERE Id = @EmpresaId";
-
-            var allDeletes = childDeletes
-                .Concat(transactionalDeletes)
-                .Concat(structuralDeletes)
-                .Concat(userDeletes)
-                .Append(deleteEmpresa);
-
-            foreach (var sql in allDeletes)
-            {
-                await using var cmd = new SqlCommand(sql, conn, tx);
-                cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
-                await cmd.ExecuteNonQueryAsync();
-            }
-
-            await tx.CommitAsync();
-
-            _logger.LogWarning("ELIMINAR EMPRESA (MT): EmpresaId={EmpresaId} eliminada completamente de DigitalPlusMultiTenant.",
-                empresaId);
+            await using var batchCmd = new SqlCommand(
+                $"DELETE TOP ({batchSize}) FROM Fichada WHERE EmpresaId = @EmpresaId", conn);
+            batchCmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            batchCmd.CommandTimeout = 120;
+            var deleted = await batchCmd.ExecuteNonQueryAsync();
+            if (deleted < batchSize) break;
         }
-        catch
+
+        // Resto de tablas: borrar directo (volumen menor)
+        string[] allDeletes =
+        [
+            // Child tables sin EmpresaId
+            "DELETE lh FROM LegajoHuella lh INNER JOIN Legajo l ON lh.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
+            "DELETE lp FROM LegajoPin lp INNER JOIN Legajo l ON lp.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
+            "DELETE ls FROM LegajoSucursal ls INNER JOIN Legajo l ON ls.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
+            "DELETE ld FROM LegajoDomicilio ld INNER JOIN Legajo l ON ld.LegajoId = l.Id WHERE l.EmpresaId = @EmpresaId",
+            "DELETE hd FROM HorarioDetalle hd INNER JOIN Horario h ON hd.HorarioId = h.Id WHERE h.EmpresaId = @EmpresaId",
+            // Transaccionales
+            "DELETE FROM CodigosActivacionMovil WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM TerminalesMoviles WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM IncidenciaLegajo WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM EventoCalendario WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Vacacion WHERE EmpresaId = @EmpresaId",
+            // Estructurales
+            "DELETE FROM SucursalGeoconfigs WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Legajo WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Terminal WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Sucursal WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Sector WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Categoria WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Horario WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Incidencia WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Feriado WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM Noticia WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM SolicitudSoporte WHERE EmpresaId = @EmpresaId",
+            "DELETE FROM VariableSistema WHERE EmpresaId = @EmpresaId",
+            // Usuarios
+            "DELETE us FROM UsuarioSucursal us INNER JOIN AspNetUsers u ON us.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
+            "DELETE ur FROM AspNetUserRoles ur INNER JOIN AspNetUsers u ON ur.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
+            "DELETE uc FROM AspNetUserClaims uc INNER JOIN AspNetUsers u ON uc.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
+            "DELETE ul FROM AspNetUserLogins ul INNER JOIN AspNetUsers u ON ul.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
+            "DELETE ut FROM AspNetUserTokens ut INNER JOIN AspNetUsers u ON ut.UserId = u.Id WHERE u.EmpresaId = @EmpresaId",
+            "DELETE FROM AspNetUsers WHERE EmpresaId = @EmpresaId",
+            // Empresa
+            "DELETE FROM Empresa WHERE Id = @EmpresaId",
+        ];
+
+        foreach (var sql in allDeletes)
         {
-            await tx.RollbackAsync();
-            throw;
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmd.CommandTimeout = 60;
+            await cmd.ExecuteNonQueryAsync();
         }
+
+        _logger.LogWarning("ELIMINAR EMPRESA (MT): EmpresaId={EmpresaId} eliminada completamente de DigitalPlusMultiTenant.",
+            empresaId);
 
         // 2. Eliminar de DigitalPlusAdmin (licencias + empresa)
         await using var adminConn = new SqlConnection(adminConnectionString);
@@ -703,7 +708,7 @@ public class MultiTenantProvisioningService
         }
 
         const string sql = @"
-            SELECT l.Id, l.NumeroLegajo, l.Apellido, l.Nombre, l.IsActive,
+            SELECT l.Id, l.NumeroLegajo, l.Apellido, l.Nombre, l.Email, l.IsActive,
                    c.Nombre AS Categoria,
                    STUFF((
                        SELECT ', ' + s.Nombre
@@ -731,6 +736,7 @@ public class MultiTenantProvisioningService
                 NumeroLegajo = reader.GetString(reader.GetOrdinal("NumeroLegajo")),
                 Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
                 Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                Email = reader.IsDBNull(reader.GetOrdinal("Email")) ? null : reader.GetString(reader.GetOrdinal("Email")),
                 IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive")),
                 Categoria = reader.IsDBNull(reader.GetOrdinal("Categoria")) ? null : reader.GetString(reader.GetOrdinal("Categoria")),
                 Sucursales = reader.IsDBNull(reader.GetOrdinal("Sucursales")) ? null : reader.GetString(reader.GetOrdinal("Sucursales")),
@@ -740,6 +746,49 @@ public class MultiTenantProvisioningService
         }
 
         return legajos;
+    }
+
+    public async Task<List<UsuarioListDto>> GetUsuariosAsync(string codigo)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        int empresaId;
+        await using (var cmd = new SqlCommand("SELECT Id FROM Empresa WHERE Codigo = @Codigo", conn))
+        {
+            cmd.Parameters.AddWithValue("@Codigo", codigo);
+            var result = await cmd.ExecuteScalarAsync();
+            if (result == null) return [];
+            empresaId = (int)result;
+        }
+
+        const string sql = @"
+            SELECT u.Email, u.NombreCompleto, u.IsActive, u.CreatedAt,
+                   r.[Name] AS Rol
+            FROM AspNetUsers u
+            LEFT JOIN AspNetUserRoles ur ON u.Id = ur.UserId
+            LEFT JOIN AspNetRoles r ON ur.RoleId = r.Id
+            WHERE u.EmpresaId = @EmpresaId
+            ORDER BY u.CreatedAt";
+
+        var usuarios = new List<UsuarioListDto>();
+        await using var cmd2 = new SqlCommand(sql, conn);
+        cmd2.Parameters.AddWithValue("@EmpresaId", empresaId);
+
+        await using var reader = await cmd2.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            usuarios.Add(new UsuarioListDto
+            {
+                Email = reader.GetString(reader.GetOrdinal("Email")),
+                NombreCompleto = reader.IsDBNull(reader.GetOrdinal("NombreCompleto")) ? null : reader.GetString(reader.GetOrdinal("NombreCompleto")),
+                Rol = reader.IsDBNull(reader.GetOrdinal("Rol")) ? null : reader.GetString(reader.GetOrdinal("Rol")),
+                CreatedAt = reader.IsDBNull(reader.GetOrdinal("CreatedAt")) ? null : reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
+                IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive")),
+            });
+        }
+
+        return usuarios;
     }
 
     /// <summary>
@@ -823,6 +872,43 @@ public class MultiTenantProvisioningService
         return lista;
     }
 
+    /// <summary>
+    /// Obtiene la solicitud pendiente de una empresa específica (si existe).
+    /// </summary>
+    public async Task<SolicitudSoporteDto?> GetSolicitudPendienteByEmpresaAsync(string companyId)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT TOP 1 s.Id, s.EmpresaId, e.Nombre, e.Codigo, s.Tipo, s.Motivo,
+                   s.SolicitadoPor, s.FechaSolicitud, s.Estado
+            FROM SolicitudSoporte s
+            INNER JOIN Empresa e ON s.EmpresaId = e.Id
+            WHERE e.Codigo = @CompanyId AND s.Estado IN ('Pendiente','EnProceso')
+            ORDER BY s.FechaSolicitud DESC";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@CompanyId", companyId);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return new SolicitudSoporteDto
+            {
+                Id = reader.GetInt32(0),
+                EmpresaId = reader.GetInt32(1),
+                EmpresaNombre = reader.GetString(2),
+                EmpresaCodigo = reader.GetString(3),
+                Tipo = reader.GetString(4),
+                Motivo = reader.GetString(5),
+                SolicitadoPor = reader.GetString(6),
+                FechaSolicitud = reader.GetDateTime(7),
+                Estado = reader.GetString(8)
+            };
+        }
+        return null;
+    }
+
     private static string GenerateTempPassword()
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -842,10 +928,20 @@ public class LegajoListDto
     public string NumeroLegajo { get; set; } = "";
     public string Apellido { get; set; } = "";
     public string Nombre { get; set; } = "";
+    public string? Email { get; set; }
     public string? Categoria { get; set; }
     public string? Sucursales { get; set; }
     public int TotalFichadas { get; set; }
     public DateTime? UltimaFichada { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class UsuarioListDto
+{
+    public string Email { get; set; } = "";
+    public string? NombreCompleto { get; set; }
+    public string? Rol { get; set; }
+    public DateTime? CreatedAt { get; set; }
     public bool IsActive { get; set; }
 }
 

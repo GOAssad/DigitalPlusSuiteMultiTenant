@@ -70,6 +70,13 @@
 
     private async Task Save()
     {
+        errorMessage = null;
+        if (!string.IsNullOrWhiteSpace(model.Codigo))
+        {
+            var duplicado = await Db.Categorias.AnyAsync(c =>
+                c.Codigo == model.Codigo && (!IsEdit || c.Id != model.Id));
+            if (duplicado) { errorMessage = $"Ya existe una categoria con el codigo '{model.Codigo}'."; return; }
+        }
         try
         {
             if (!IsEdit) Db.Categorias.Add(model);

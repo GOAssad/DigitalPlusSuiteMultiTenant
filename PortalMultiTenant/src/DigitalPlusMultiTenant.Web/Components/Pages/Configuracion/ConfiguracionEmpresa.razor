@@ -87,6 +87,45 @@ else
         </div>
     </div>
 
+    @* ── Identidad de la Empresa ── *@
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-transparent">
+            <h6 class="mb-0"><i class="bi bi-palette me-2"></i>Identidad de la Empresa</h6>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center g-3 mb-3">
+                <div class="col-auto">
+                    @if (logoBytes != null && logoContentType != null)
+                    {
+                        <img src="data:@logoContentType;base64,@Convert.ToBase64String(logoBytes)"
+                             alt="Logo" style="max-height:80px; max-width:200px;" class="border rounded p-1" />
+                    }
+                    else
+                    {
+                        <div class="border rounded p-3 text-muted text-center" style="width:120px;height:80px;line-height:50px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>
+                        </div>
+                    }
+                </div>
+                <div class="col">
+                    <InputFile OnChange="OnLogoSelected" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="form-control form-control-sm" />
+                    <small class="text-muted">PNG, JPG, SVG o WebP. Max 500 KB.</small>
+                    @if (logoBytes != null)
+                    {
+                        <button class="btn btn-sm btn-outline-danger mt-1" @onclick="QuitarLogo">Quitar logo</button>
+                    }
+                </div>
+            </div>
+            <hr />
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label small"><i class="bi bi-globe me-1"></i>Pagina web</label>
+                    <input type="url" class="form-control" placeholder="https://www.ejemplo.com" @bind="paginaWeb" />
+                </div>
+            </div>
+        </div>
+    </div>
+
     @* ── Modulos y Funcionalidades ── *@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-transparent">
@@ -141,6 +180,22 @@ else
             <h6 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Zona peligrosa</h6>
         </div>
         <div class="card-body">
+            @if (solicitudPendiente != null)
+            {
+                <div class="alert alert-warning mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-hourglass-split me-1"></i>
+                            Solicitud de <strong>@solicitudPendiente.Tipo</strong> pendiente
+                            <span class="text-muted small ms-2">(#@solicitudPendiente.Id - @solicitudPendiente.FechaSolicitud.ToString("dd/MM/yyyy HH:mm"))</span>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => mostrarConfirmCancelar = true"
+                                disabled="@cancelandoSolicitud">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar solicitud
+                        </button>
+                    </div>
+                </div>
+            }
             <div class="row g-4">
                 @* Limpiar datos *@
                 <div class="col-md-6">
@@ -153,10 +208,11 @@ else
                         <div class="mb-2">
                             <label class="form-label small">Motivo de la solicitud</label>
                             <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: Necesitamos reiniciar las fichadas para comenzar el periodo..."
-                                      @bind="motivoLimpiar"></textarea>
+                                      @bind="motivoLimpiar"
+                                      disabled="@(solicitudPendiente != null)"></textarea>
                         </div>
                         <button class="btn btn-outline-warning btn-sm" @onclick="() => mostrarConfirmLimpiar = true"
-                                disabled="@(string.IsNullOrWhiteSpace(motivoLimpiar) || enviandoSolicitud)">
+                                disabled="@(string.IsNullOrWhiteSpace(motivoLimpiar) || enviandoSolicitud || solicitudPendiente != null)">
                             <i class="bi bi-send me-1"></i>Solicitar limpieza
                         </button>
                     </div>
@@ -172,10 +228,11 @@ else
                         <div class="mb-2">
                             <label class="form-label small">Motivo de la solicitud</label>
                             <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: La empresa ya no utiliza el sistema..."
-                                      @bind="motivoEliminar"></textarea>
+                                      @bind="motivoEliminar"
+                                      disabled="@(solicitudPendiente != null)"></textarea>
                         </div>
                         <button class="btn btn-outline-danger btn-sm" @onclick="() => mostrarConfirmEliminar = true"
-                                disabled="@(string.IsNullOrWhiteSpace(motivoEliminar) || enviandoSolicitud)">
+                                disabled="@(string.IsNullOrWhiteSpace(motivoEliminar) || enviandoSolicitud || solicitudPendiente != null)">
                             <i class="bi bi-send me-1"></i>Solicitar eliminacion
                         </button>
                     </div>
@@ -242,9 +299,39 @@ else
     </div>
 }
 
+@* ── Modal Confirmar Cancelacion ── *@
+@if (mostrarConfirmCancelar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title"><i class="bi bi-question-circle me-2"></i>Cancelar solicitud</h6>
+                    <button type="button" class="btn-close" @onclick="() => mostrarConfirmCancelar = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Esta seguro que desea cancelar la solicitud de <strong>@solicitudPendiente?.Tipo</strong> #@solicitudPendiente?.Id?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => mostrarConfirmCancelar = false">No, mantener</button>
+                    <button class="btn btn-outline-danger btn-sm" @onclick="CancelarSolicitud"
+                            disabled="@cancelandoSolicitud">
+                        @if (cancelandoSolicitud) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Si, cancelar solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private DigitalPlusMultiTenant.Domain.Common.Empresa? empresa;
     private string? codigoActivacion;
+    private byte[]? logoBytes;
+    private string? logoContentType;
+    private bool logoCambiado;
+    private string? paginaWeb;
     private bool cargando = true;
     private bool guardando;
     private string? mensaje;
@@ -267,15 +354,28 @@ else
             // Cargar codigo de activacion de BD admin (DigitalPlusAdmin)
             if (empresa != null)
             {
+                // Cargar solicitud pendiente
+                solicitudPendiente = await Db.SolicitudesSoporte
+                    .Where(s => s.EmpresaId == empresa.Id && (s.Estado == "Pendiente" || s.Estado == "EnProceso"))
+                    .OrderByDescending(s => s.FechaSolicitud)
+                    .FirstOrDefaultAsync();
+
                 try
                 {
                     var adminCs = Configuration.GetConnectionString("AdminConnection");
                     if (!string.IsNullOrEmpty(adminCs))
                     {
                         await using var conn = new SqlConnection(adminCs);
-                        codigoActivacion = await conn.QueryFirstOrDefaultAsync<string>(
-                            "SELECT CodigoActivacion FROM Empresas WHERE CompanyId = @CompanyId",
+                        var adminData = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                            "SELECT CodigoActivacion, Logo, LogoContentType, PaginaWeb FROM Empresas WHERE CompanyId = @CompanyId",
                             new { CompanyId = empresa.Codigo });
+                        if (adminData != null)
+                        {
+                            codigoActivacion = adminData.CodigoActivacion;
+                            logoBytes = adminData.Logo as byte[];
+                            logoContentType = adminData.LogoContentType;
+                            paginaWeb = adminData.PaginaWeb;
+                        }
                     }
                 }
                 catch { /* admin DB no disponible, no bloquear */ }
@@ -303,16 +403,26 @@ else
             // 1. Guardar en BD local (DigitalPlusMultiTenant)
             await Db.SaveChangesAsync();
 
-            // 2. Sincronizar nombre en BD admin (DigitalPlusAdmin)
+            // 2. Sincronizar con BD admin (DigitalPlusAdmin)
             try
             {
                 var adminCs = Configuration.GetConnectionString("AdminConnection");
                 if (!string.IsNullOrEmpty(adminCs))
                 {
                     await using var conn = new SqlConnection(adminCs);
-                    await conn.ExecuteAsync(
-                        "UPDATE Empresas SET Nombre = @Nombre WHERE CompanyId = @CompanyId",
-                        new { Nombre = empresa.Nombre, CompanyId = empresa.Codigo });
+                    if (logoCambiado)
+                    {
+                        await conn.ExecuteAsync(
+                            "UPDATE Empresas SET Nombre = @Nombre, PaginaWeb = @PaginaWeb, Logo = @Logo, LogoContentType = @LogoContentType WHERE CompanyId = @CompanyId",
+                            new { Nombre = empresa.Nombre, PaginaWeb = paginaWeb, Logo = logoBytes, LogoContentType = logoContentType, CompanyId = empresa.Codigo });
+                        logoCambiado = false;
+                    }
+                    else
+                    {
+                        await conn.ExecuteAsync(
+                            "UPDATE Empresas SET Nombre = @Nombre, PaginaWeb = @PaginaWeb WHERE CompanyId = @CompanyId",
+                            new { Nombre = empresa.Nombre, PaginaWeb = paginaWeb, CompanyId = empresa.Codigo });
+                    }
                 }
             }
             catch { /* admin DB sync failed, non-blocking */ }
@@ -341,6 +451,27 @@ else
         }
     }
 
+    // ── Logo ──
+    private async Task OnLogoSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var allowedTypes = new[] { "image/png", "image/jpeg", "image/svg+xml", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType) || file.Size > 512_000)
+            return;
+        using var ms = new System.IO.MemoryStream();
+        await file.OpenReadStream(512_000).CopyToAsync(ms);
+        logoBytes = ms.ToArray();
+        logoContentType = file.ContentType;
+        logoCambiado = true;
+    }
+
+    private void QuitarLogo()
+    {
+        logoBytes = null;
+        logoContentType = null;
+        logoCambiado = true;
+    }
+
     // ── Zona Peligrosa ──
     private string? motivoLimpiar;
     private string? motivoEliminar;
@@ -348,6 +479,9 @@ else
     private bool mostrarConfirmLimpiar;
     private bool mostrarConfirmEliminar;
     private bool enviandoSolicitud;
+    private SolicitudSoporte? solicitudPendiente;
+    private bool cancelandoSolicitud;
+    private bool mostrarConfirmCancelar;
 
     private void CerrarModales()
     {
@@ -429,6 +563,7 @@ else
             });
 
             CerrarModales();
+            solicitudPendiente = solicitud;
             mensaje = $"Solicitud #{solicitud.Id} de {tipoLabel} enviada correctamente. El equipo de IntegraIA procesara su pedido.";
             esError = false;
         }
@@ -453,5 +588,72 @@ else
     {
         await EnviarSolicitud("Eliminacion", motivoEliminar!);
         motivoEliminar = null;
+    }
+
+    private async Task CancelarSolicitud()
+    {
+        if (solicitudPendiente == null) return;
+        cancelandoSolicitud = true;
+        mostrarConfirmCancelar = false;
+        try
+        {
+            var entity = await Db.SolicitudesSoporte.FindAsync(solicitudPendiente.Id);
+            if (entity != null)
+            {
+                var ahora = Clock.Now;
+                var emailUsuario = await ObtenerEmailUsuario();
+                entity.Estado = "Cancelada";
+                entity.FechaResolucion = ahora;
+                entity.Comentario = $"Cancelada por {emailUsuario}.";
+                entity.VistoPorUsuario = true;
+
+                // Noticia de cancelacion
+                var hoy = DateOnly.FromDateTime(ahora);
+                Db.Noticias.Add(new Noticia
+                {
+                    EmpresaId = empresa!.Id,
+                    Titulo = $"Solicitud de {entity.Tipo.ToLower()} cancelada",
+                    Contenido = $"La solicitud #{entity.Id} fue cancelada por {emailUsuario}.",
+                    FechaDesde = hoy,
+                    FechaHasta = hoy.AddDays(7),
+                    CreatedAt = ahora,
+                    CreatedBy = emailUsuario
+                });
+
+                await Db.SaveChangesAsync();
+
+                // Email a IntegraIA
+                var subject = $"[DigitalPlus] Solicitud #{entity.Id} CANCELADA - {empresa.Nombre}";
+                var body = $@"
+                    <h2 style='color:gray;'>Solicitud cancelada por el cliente</h2>
+                    <table style='border-collapse:collapse;'>
+                        <tr><td style='padding:4px 12px;font-weight:bold;'>Solicitud #:</td><td style='padding:4px 12px;'>{entity.Id}</td></tr>
+                        <tr><td style='padding:4px 12px;font-weight:bold;'>Empresa:</td><td style='padding:4px 12px;'>{empresa.Nombre}</td></tr>
+                        <tr><td style='padding:4px 12px;font-weight:bold;'>Tipo:</td><td style='padding:4px 12px;'>{entity.Tipo}</td></tr>
+                        <tr><td style='padding:4px 12px;font-weight:bold;'>Cancelado por:</td><td style='padding:4px 12px;'>{emailUsuario}</td></tr>
+                        <tr><td style='padding:4px 12px;font-weight:bold;'>Fecha:</td><td style='padding:4px 12px;'>{ahora:dd/MM/yyyy HH:mm}</td></tr>
+                    </table>
+                    <p style='margin-top:16px;font-weight:bold;'>No se requiere ninguna accion.</p>
+                    <p style='color:#666;font-size:12px;'>Este email fue generado automaticamente desde el Portal Multi-Tenant.</p>";
+
+                _ = Task.Run(async () =>
+                {
+                    try { await EmailService.SendAsync("notify@integraia.tech", subject, body); }
+                    catch { }
+                });
+            }
+            solicitudPendiente = null;
+            mensaje = "Solicitud cancelada correctamente.";
+            esError = false;
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error al cancelar: " + ex.Message;
+            esError = true;
+        }
+        finally
+        {
+            cancelandoSolicitud = false;
+        }
     }
 }

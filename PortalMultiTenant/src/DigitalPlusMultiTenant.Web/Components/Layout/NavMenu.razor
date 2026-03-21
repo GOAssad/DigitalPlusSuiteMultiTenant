@@ -2,6 +2,8 @@
 @inject NavigationManager NavigationManager
 @inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
 @inject DigitalPlusMultiTenant.Application.Interfaces.ILicenciaService LicenciaService
+@inject IDbContextFactory<DigitalPlusMultiTenant.Persistence.ApplicationDbContext> DbFactory
+@using Microsoft.EntityFrameworkCore
 
 <div class="sidebar-brand">
     <i class="bi bi-fingerprint"></i>
@@ -42,13 +44,13 @@
                     <NavLink class="sidebar-link sub" href="terminales">
                         <i class="bi bi-pc-display"></i> Terminales
                     </NavLink>
-                    @if (Tenant.MobileHabilitado || Tenant.KioskoHabilitado)
+                    @if (mobileHab || kioskoHab)
                     {
                         <NavLink class="sidebar-link sub" href="terminales-moviles">
                             <i class="bi bi-phone"></i> Terminales Moviles
                         </NavLink>
                     }
-                    @if (Tenant.MobileHabilitado)
+                    @if (mobileHab)
                     {
                         <NavLink class="sidebar-link sub" href="fichado-movil">
                             <i class="bi bi-geo-alt"></i> Fichado Movil
@@ -135,7 +137,7 @@
                         <NavLink class="sidebar-link sub" href="usuarios">
                             <i class="bi bi-person-lock"></i> Usuarios
                         </NavLink>
-                        <NavLink class="sidebar-link sub" href="configuracion">
+                        <NavLink class="sidebar-link sub" href="configuracion" Match="NavLinkMatch.All">
                             <i class="bi bi-gear"></i> Variables
                         </NavLink>
                     </div>
@@ -158,6 +160,8 @@
     private string? currentUrl;
     private HashSet<string> openGroups = new();
     private DigitalPlusMultiTenant.Application.Interfaces.LicenciaInfo? licenciaInfo;
+    private bool mobileHab;
+    private bool kioskoHab;
 
     private string PlanBadgeClass => licenciaInfo?.Plan switch
     {
@@ -203,6 +207,21 @@
         {
             try { licenciaInfo = await LicenciaService.GetLicenciaInfoAsync(Tenant.EmpresaId); }
             catch { /* no bloquear si falla */ }
+
+            try
+            {
+                await using var db = await DbFactory.CreateDbContextAsync();
+                var empresa = await db.Empresas.AsNoTracking()
+                    .Where(e => e.Id == Tenant.EmpresaId)
+                    .Select(e => new { e.MobileHabilitado, e.KioskoHabilitado })
+                    .FirstOrDefaultAsync();
+                if (empresa != null)
+                {
+                    mobileHab = empresa.MobileHabilitado;
+                    kioskoHab = empresa.KioskoHabilitado;
+                }
+            }
+            catch { }
         }
     }
 

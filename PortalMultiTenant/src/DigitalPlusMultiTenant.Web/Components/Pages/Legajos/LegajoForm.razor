@@ -1149,7 +1149,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        mobileHabilitado = Tenant.MobileHabilitado;
+        mobileHabilitado = await Db.Empresas.Where(e => e.Id == Tenant.EmpresaId).Select(e => e.MobileHabilitado).FirstOrDefaultAsync();
         sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
         categorias = await Db.Categorias.Where(c => c.IsActive).OrderBy(c => c.Nombre).ToListAsync();
         horarios = await Db.Horarios.Where(h => h.IsActive).OrderBy(h => h.Nombre).ToListAsync();

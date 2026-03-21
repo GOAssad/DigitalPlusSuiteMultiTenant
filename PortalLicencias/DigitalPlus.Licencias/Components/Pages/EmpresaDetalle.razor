@@ -16,7 +16,12 @@
 else
 {
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">@empresa.Nombre</h3>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/empresas" class="btn btn-outline-secondary btn-sm" title="Volver al listado">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="mb-0">@empresa.Nombre</h3>
+        </div>
         <span class="badge fs-6 @(empresa.Estado == "activa" ? "bg-success" : empresa.Estado == "suspendida" ? "bg-warning text-dark" : "bg-danger")">
             @empresa.EstadoDisplay
         </span>
@@ -36,6 +41,15 @@ else
                         @if (legajosList != null)
                         {
                             <span class="badge bg-secondary ms-1">@legajosList.Count</span>
+                        }
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "usuarios" ? "active" : "")" @onclick="ActivarTabUsuarios">
+                        <i class="bi bi-person-lock me-1"></i>Usuarios
+                        @if (usuariosList != null)
+                        {
+                            <span class="badge bg-secondary ms-1">@usuariosList.Count</span>
                         }
                     </button>
                 </li>
@@ -304,6 +318,7 @@ else
                                         <th style="width:70px">Nro</th>
                                         <th>Apellido</th>
                                         <th>Nombre</th>
+                                        <th>Email</th>
                                         <th>Categoria</th>
                                         <th>Sucursales</th>
                                         <th class="text-end" style="width:80px">Fichadas</th>
@@ -318,6 +333,7 @@ else
                                             <td>@leg.NumeroLegajo</td>
                                             <td>@leg.Apellido</td>
                                             <td>@leg.Nombre</td>
+                                            <td><small class="text-muted">@(leg.Email ?? "-")</small></td>
                                             <td><small class="text-muted">@(leg.Categoria ?? "-")</small></td>
                                             <td><small class="text-muted">@(leg.Sucursales ?? "-")</small></td>
                                             <td class="text-end">
@@ -359,6 +375,81 @@ else
                 </div>
             </div>
             } @* fin tab legajos *@
+
+            @if (activeTab == "usuarios")
+            {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-person-lock me-1"></i> Usuarios del portal</span>
+                    @if (usuariosList != null)
+                    {
+                        <span class="badge bg-secondary">@usuariosList.Count usuarios</span>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (usuariosError)
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted"><i class="bi bi-exclamation-circle me-1"></i>No se pudieron cargar los usuarios</p>
+                            @if (!string.IsNullOrEmpty(usuariosErrorMsg))
+                            {
+                                <small class="text-danger">@usuariosErrorMsg</small>
+                            }
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="RecargarUsuarios">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else if (usuariosList == null)
+                    {
+                        <p class="text-muted small text-center py-3"><span class="spinner-border spinner-border-sm me-1"></span>Cargando usuarios...</p>
+                    }
+                    else if (usuariosList.Count == 0)
+                    {
+                        <p class="text-muted small text-center py-3"><i class="bi bi-inbox me-1"></i>Sin usuarios registrados</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-sm table-striped table-hover mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Nombre</th>
+                                        <th>Rol</th>
+                                        <th style="width:120px">Creado</th>
+                                        <th style="width:70px">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var usr in usuariosList)
+                                    {
+                                        <tr class="@(!usr.IsActive ? "table-secondary" : "")">
+                                            <td>@usr.Email</td>
+                                            <td>@(usr.NombreCompleto ?? "-")</td>
+                                            <td><span class="badge bg-info text-dark">@(usr.Rol ?? "-")</span></td>
+                                            <td><small>@(usr.CreatedAt?.ToString("dd/MM/yy HH:mm") ?? "-")</small></td>
+                                            <td>
+                                                @if (usr.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Activo</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Inactivo</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+            } @* fin tab usuarios *@
         </div>
 
         <div class="col-md-4">
@@ -602,10 +693,33 @@ else
                     <i class="bi bi-exclamation-triangle me-1"></i> Zona peligrosa
                 </div>
                 <div class="card-body d-grid gap-2">
-                    <button class="btn btn-outline-warning btn-sm" @onclick="MostrarConfirmLimpiar">
+                    @if (solicitudPendiente != null)
+                    {
+                        <div class="alert alert-info py-2 mb-2 small">
+                            <i class="bi bi-info-circle me-1"></i>Solicitud de <strong>@solicitudPendiente.Tipo</strong> pendiente
+                        </div>
+                    }
+                    @if (procesando && limpiezaTotal > 0)
+                    {
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span><i class="bi bi-trash me-1"></i>Eliminando fichadas...</span>
+                                <span>@limpiezaEliminadas.ToString("N0") / @limpiezaTotal.ToString("N0")</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                     style="width: @limpiezaPorcentaje%">
+                                    @limpiezaPorcentaje%
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <button class="btn btn-outline-warning btn-sm" @onclick="MostrarConfirmLimpiar"
+                            disabled="@(solicitudPendiente?.Tipo == "Eliminacion" || procesando)">
                         <i class="bi bi-eraser me-1"></i>Limpiar Empresa
                     </button>
-                    <button class="btn btn-outline-danger btn-sm" @onclick="MostrarConfirmEliminar">
+                    <button class="btn btn-outline-danger btn-sm" @onclick="MostrarConfirmEliminar"
+                            disabled="@(solicitudPendiente?.Tipo == "Limpieza" || procesando)">
                         <i class="bi bi-trash me-1"></i>Eliminar Empresa
                     </button>
                 </div>
@@ -752,7 +866,13 @@ else
             : (legajosList ?? []).Where(l =>
                 l.Apellido.Contains(legajoFiltro, StringComparison.OrdinalIgnoreCase) ||
                 l.Nombre.Contains(legajoFiltro, StringComparison.OrdinalIgnoreCase) ||
-                l.NumeroLegajo.Contains(legajoFiltro, StringComparison.OrdinalIgnoreCase));
+                l.NumeroLegajo.Contains(legajoFiltro, StringComparison.OrdinalIgnoreCase) ||
+                (l.Email ?? "").Contains(legajoFiltro, StringComparison.OrdinalIgnoreCase));
+
+    // Usuarios
+    private List<DigitalPlus.Licencias.Services.UsuarioListDto>? usuariosList;
+    private bool usuariosError;
+    private string? usuariosErrorMsg;
 
     // Limpiar / Eliminar
     private bool showLimpiarModal;
@@ -762,6 +882,10 @@ else
     private string confirmNombre = "";
     private bool procesando;
     private string? procesandoMensaje;
+    private DigitalPlus.Licencias.Services.SolicitudSoporteDto? solicitudPendiente;
+    private int limpiezaEliminadas;
+    private int limpiezaTotal;
+    private int limpiezaPorcentaje;
 
     private string selectedPaisId => empresa?.PaisId?.ToString() ?? "";
     private string selectedTipoIdFiscalId => empresa?.TipoIdentificacionFiscalId?.ToString() ?? "";
@@ -809,6 +933,16 @@ else
                 await InvokeAsync(StateHasChanged);
             }
         });
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                solicitudPendiente = await MTService.GetSolicitudPendienteByEmpresaAsync(empresa.CompanyId);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch { }
+        });
     }
 
     private async Task OnPaisChangedEvent(ChangeEventArgs e)
@@ -849,6 +983,34 @@ else
             {
                 legajosError = true;
                 legajosErrorMsg = ex.Message;
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+
+    private void ActivarTabUsuarios()
+    {
+        activeTab = "usuarios";
+        if (usuariosList == null && !usuariosError)
+            RecargarUsuarios();
+    }
+
+    private void RecargarUsuarios()
+    {
+        usuariosError = false;
+        usuariosErrorMsg = null;
+        usuariosList = null;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                usuariosList = await MTService.GetUsuariosAsync(empresa!.CompanyId);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                usuariosError = true;
+                usuariosErrorMsg = ex.Message;
                 await InvokeAsync(StateHasChanged);
             }
         });
@@ -947,6 +1109,10 @@ else
     {
         if (empresa == null || confirmNombre != empresa.Nombre) return;
         procesando = true;
+        limpiezaEliminadas = 0;
+        limpiezaTotal = 0;
+        limpiezaPorcentaje = 0;
+        CerrarModales();
         StateHasChanged();
 
         try
@@ -955,32 +1121,33 @@ else
             if (mtEmpresaId == null)
             {
                 mensaje = "No se encontro la empresa en la base de datos multi-tenant.";
-                CerrarModales();
                 return;
             }
 
-            var registros = await MTService.LimpiarEmpresaAsync(mtEmpresaId.Value);
+            var registros = await MTService.LimpiarEmpresaAsync(mtEmpresaId.Value, async (eliminadas, total) =>
+            {
+                limpiezaEliminadas = eliminadas;
+                limpiezaTotal = total;
+                limpiezaPorcentaje = total > 0 ? Math.Min(100, (int)(eliminadas * 100L / total)) : 0;
+                await InvokeAsync(StateHasChanged);
+            });
 
             // Completar solicitudes pendientes y crear noticia
-            try
-            {
-                await MTService.CompletarSolicitudesPendientesAsync(mtEmpresaId.Value, "Limpieza",
-                    $"Limpieza completada. Se eliminaron {registros} registros transaccionales.");
-            }
-            catch { /* no bloquear si falla */ }
+            await MTService.CompletarSolicitudesPendientesAsync(mtEmpresaId.Value, "Limpieza",
+                $"Limpieza completada. Se eliminaron {registros} registros transaccionales.");
 
             stats = await MTService.GetEmpresaStatsAsync(empresa.CompanyId);
-            CerrarModales();
+            solicitudPendiente = await MTService.GetSolicitudPendienteByEmpresaAsync(empresa.CompanyId);
             mensaje = $"Empresa limpiada correctamente. Se eliminaron {registros} registros transaccionales.";
         }
         catch (Exception ex)
         {
-            CerrarModales();
             mensaje = $"Error al limpiar: {ex.Message}";
         }
         finally
         {
             procesando = false;
+            limpiezaTotal = 0;
         }
     }
 
