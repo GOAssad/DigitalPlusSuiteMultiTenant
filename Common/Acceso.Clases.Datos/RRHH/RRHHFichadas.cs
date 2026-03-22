@@ -15,10 +15,11 @@ namespace Acceso.Clases.Datos.RRHH
         protected DateTime _dRegistro;
 
         protected string _sOrigen;
+        protected int _nTerminalId;
 
         public string sMensaje;
 
-        private SqlParameter[] par = new SqlParameter[6];
+        private SqlParameter[] par = new SqlParameter[7];
 
 
         #region Propiedades
@@ -62,6 +63,12 @@ namespace Acceso.Clases.Datos.RRHH
         {
             set { _sOrigen = value; }
             get { return _sOrigen; }
+        }
+
+        public int nTerminalId
+        {
+            set { _nTerminalId = value; }
+            get { return _nTerminalId; }
         }
         #endregion
 
@@ -206,6 +213,11 @@ namespace Acceso.Clases.Datos.RRHH
             par[5].ParameterName = "@Origen";
             par[5].Value = string.IsNullOrEmpty(_sOrigen) ? (object)DBNull.Value : _sOrigen;
             par[5].SqlDbType = SqlDbType.NVarChar;
+
+            par[6] = new SqlParameter();
+            par[6].ParameterName = "@TerminalId";
+            par[6].Value = _nTerminalId > 0 ? (object)_nTerminalId : DBNull.Value;
+            par[6].SqlDbType = SqlDbType.Int;
 
         }
     }

@@ -14,14 +14,28 @@
     <link rel="stylesheet" href="/mobile/style.css">
 </head>
 <body>
+    <!-- SELECTOR DE EMPRESA -->
+    <div id="screen-empresas" class="screen">
+        <div class="login-container">
+            <div class="logo">
+                <div class="logo-icon">⏱</div>
+                <h1>Digital One</h1>
+                <p class="subtitle">Seleccione Empresa</p>
+            </div>
+            <div id="empresas-list" class="empresas-list"></div>
+            <button id="btn-otra-empresa" class="btn-secondary" style="margin-top:12px;">+ Agregar otra empresa</button>
+        </div>
+    </div>
+
     <!-- LOGIN -->
-    <div id="screen-login" class="screen active">
+    <div id="screen-login" class="screen">
         <div class="login-container">
             <div class="logo">
                 <div class="logo-icon">⏱</div>
                 <h1>Digital One</h1>
                 <p class="subtitle">Terminal Móvil</p>
             </div>
+            <div id="login-empresa-badge" class="empresa-badge hidden"></div>
             <form id="form-login" autocomplete="off">
                 <div id="login-error" class="error-banner hidden"></div>
                 <label for="input-legajo">Número de Legajo</label>
@@ -30,6 +44,8 @@
                 <input type="password" id="input-pin" inputmode="numeric" maxlength="6" placeholder="6 dígitos" required>
                 <button type="submit" id="btn-login" class="btn-primary">INGRESAR</button>
             </form>
+            <button id="btn-cambiar-empresa" class="btn-link hidden" style="margin-top:8px;">Cambiar empresa</button>
+            <div class="version-label">v2.0.0-20260322</div>
         </div>
     </div>
 
@@ -61,7 +77,10 @@
                     <div class="brand-sub">Fichada Móvil</div>
                 </div>
             </div>
-            <button id="btn-logout" class="btn-menu" title="Cerrar sesión">✕</button>
+            <div class="header-actions">
+                <button id="btn-switch-empresa" class="btn-menu hidden" title="Cambiar empresa">⇄</button>
+                <button id="btn-logout" class="btn-menu" title="Cerrar sesión">✕</button>
+            </div>
         </div>
         <div class="accent-line"></div>
 
@@ -146,6 +165,8 @@
             <span id="status-badge" class="last-record-badge">Normal</span>
         </div>
 
+        <div class="version-label">v2.0.0-20260322</div>
+
         <!-- Tab Bar -->
         <nav class="tab-bar">
             <button class="tab active" data-tab="home">⏱ Fichar</button>
@@ -222,6 +243,14 @@
     <div id="loading" class="loading-overlay hidden">
         <div class="spinner"></div>
     </div>
+
+    <!-- OFFLINE INDICATOR -->
+    <div id="offline-indicator" class="offline-indicator hidden">
+        <span class="offline-dot"></span> Sin conexión
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden"></div>
 
     <script src="/js/qrcode.min.js"></script>
     <script src="/mobile/app.js"></script>

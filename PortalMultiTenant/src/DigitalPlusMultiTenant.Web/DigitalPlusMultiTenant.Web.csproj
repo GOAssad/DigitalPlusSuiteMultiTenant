@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-DigitalPlusMultiTenant_Web-fb874341-bc89-41e7-baad-8b51b348c23b</UserSecretsId>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <NoWarn>$(NoWarn);BLAZOR106</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

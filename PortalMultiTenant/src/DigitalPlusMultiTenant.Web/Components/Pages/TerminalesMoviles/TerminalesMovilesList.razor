@@ -16,16 +16,17 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-phone me-2"></i>Terminales Moviles</h4>
-    <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
-        <div class="d-flex gap-2">
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm me-2" @onclick="CargarDatos" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+        <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
             <button class="btn btn-success btn-sm" @onclick="MostrarActivarDispositivo">
                 <i class="bi bi-phone me-1"></i>Activar Dispositivo
             </button>
             <button class="btn btn-primary btn-sm" @onclick="MostrarRegistrarKiosko">
                 <i class="bi bi-display me-1"></i>Registrar Kiosko
             </button>
-        </div>
-    </AuthorizeView>
+        </AuthorizeView>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm mb-3">

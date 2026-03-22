@@ -10,7 +10,7 @@
     <span>DIGITAL ONE</span>
     @if (licenciaInfo != null)
     {
-        <span class="badge ms-2 @PlanBadgeClass" style="font-size: 0.65rem; vertical-align: middle;">@licenciaInfo.PlanDisplay</span>
+        <a href="/configuracion/planes" class="badge ms-2 @PlanBadgeClass text-decoration-none" style="font-size: 0.65rem; vertical-align: middle;">@licenciaInfo.PlanDisplay</a>
     }
 </div>
 
@@ -134,6 +134,9 @@
                         <NavLink class="sidebar-link sub" href="configuracion/empresa">
                             <i class="bi bi-building-gear"></i> Empresa
                         </NavLink>
+                        <NavLink class="sidebar-link sub" href="configuracion/planes">
+                            <i class="bi bi-gem"></i> Planes
+                        </NavLink>
                         <NavLink class="sidebar-link sub" href="usuarios">
                             <i class="bi bi-person-lock"></i> Usuarios
                         </NavLink>
@@ -194,6 +197,7 @@
         ["noticias"] = "operacion",
         ["usuarios"] = "admin",
         ["configuracion/empresa"] = "admin",
+        ["configuracion/planes"] = "admin",
         ["configuracion"] = "admin",
     };
 

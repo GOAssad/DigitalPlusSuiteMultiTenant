@@ -594,12 +594,12 @@ namespace Acceso.uAreu
             this.etiquetaSucursal.AutoEllipsis = true;
             this.etiquetaSucursal.BackColor = cHeaderBg;
             this.etiquetaSucursal.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.etiquetaSucursal.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular);
+            this.etiquetaSucursal.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular);
             this.etiquetaSucursal.ForeColor = cGoldLight;
-            this.etiquetaSucursal.Location = new System.Drawing.Point(0, 570);
+            this.etiquetaSucursal.Location = new System.Drawing.Point(0, 555);
             this.etiquetaSucursal.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.etiquetaSucursal.Name = "etiquetaSucursal";
-            this.etiquetaSucursal.Size = new System.Drawing.Size(620, 40);
+            this.etiquetaSucursal.Size = new System.Drawing.Size(620, 55);
             this.etiquetaSucursal.TabIndex = 7;
             this.etiquetaSucursal.Text = "";
             this.etiquetaSucursal.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

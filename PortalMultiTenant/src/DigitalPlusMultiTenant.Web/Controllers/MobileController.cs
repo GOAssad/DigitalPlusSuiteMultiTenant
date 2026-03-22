@@ -37,6 +37,31 @@ public class MobileController : ControllerBase
     }
 
     // ============================================================
+    // GET /api/mobile/mis-empresas
+    // ============================================================
+    [AllowAnonymous]
+    [HttpGet("mis-empresas")]
+    public async Task<IActionResult> MisEmpresas()
+    {
+        var deviceId = Request.Headers["X-Device-Id"].FirstOrDefault();
+        if (string.IsNullOrEmpty(deviceId))
+            return Ok(new { ok = true, empresas = Array.Empty<object>() });
+
+        var terminales = await _db.TerminalesMoviles
+            .IgnoreQueryFilters()
+            .Include(t => t.Empresa)
+            .Where(t => t.DeviceId == deviceId && t.Activo && t.Empresa.IsActive)
+            .ToListAsync();
+
+        var empresas = terminales
+            .GroupBy(t => t.EmpresaId)
+            .Select(g => new { id = g.Key, nombre = g.First().Empresa.Nombre })
+            .ToList();
+
+        return Ok(new { ok = true, empresas });
+    }
+
+    // ============================================================
     // POST /api/mobile/login
     // ============================================================
     [AllowAnonymous]
@@ -62,15 +87,42 @@ public class MobileController : ControllerBase
 
             // Buscar legajo filtrando por empresa cuando es posible
             Legajo? legajo = null;
-            if (empresaIdFromDevice.HasValue)
+
+            // Prioridad 1: EmpresaId explícito desde selector de empresa en PWA
+            if (request.EmpresaId.HasValue)
             {
-                // Dispositivo registrado: buscar solo en su empresa
+                legajo = await _db.Legajos
+                    .IgnoreQueryFilters()
+                    .Include(l => l.Pin)
+                    .Include(l => l.Empresa)
+                    .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo
+                                           && l.EmpresaId == request.EmpresaId.Value && l.IsActive);
+            }
+            // Prioridad 2: Dispositivo registrado en una empresa
+            else if (empresaIdFromDevice.HasValue)
+            {
                 legajo = await _db.Legajos
                     .IgnoreQueryFilters()
                     .Include(l => l.Pin)
                     .Include(l => l.Empresa)
                     .FirstOrDefaultAsync(l => l.NumeroLegajo == request.Legajo
                                            && l.EmpresaId == empresaIdFromDevice.Value && l.IsActive);
+
+                // Fallback: si no lo encuentra en la empresa del dispositivo, buscar en todas
+                if (legajo == null)
+                {
+                    var legajos = await _db.Legajos
+                        .IgnoreQueryFilters()
+                        .Include(l => l.Pin)
+                        .Include(l => l.Empresa)
+                        .Where(l => l.NumeroLegajo == request.Legajo && l.IsActive)
+                        .ToListAsync();
+
+                    if (legajos.Count == 1)
+                        legajo = legajos[0];
+                    else if (legajos.Count > 1)
+                        return BadRequest(new { ok = false, mensaje = "Número de legajo existe en múltiples empresas. Seleccione la empresa antes de ingresar." });
+                }
             }
             else
             {
@@ -102,7 +154,7 @@ public class MobileController : ControllerBase
                         .ToListAsync();
 
                     if (legajos.Count > 1)
-                        return BadRequest(new { ok = false, mensaje = "Número de legajo existe en múltiples empresas. Registre el dispositivo primero." });
+                        return BadRequest(new { ok = false, mensaje = "Número de legajo existe en múltiples empresas. Seleccione la empresa antes de ingresar." });
 
                     legajo = legajos.FirstOrDefault();
                 }
@@ -164,6 +216,7 @@ public class MobileController : ControllerBase
                 ok = true,
                 token,
                 legajoId = legajo.Id,
+                numeroLegajo = legajo.NumeroLegajo,
                 nombreEmpleado = $"{legajo.Apellido}, {legajo.Nombre}",
                 empresaId = legajo.EmpresaId,
                 nombreEmpresa = legajo.Empresa.Nombre,
@@ -218,6 +271,12 @@ public class MobileController : ControllerBase
             ant.Activo = false;
 
         // Registrar nuevo dispositivo
+        var legajoNombre = await _db.Legajos.IgnoreQueryFilters()
+            .Where(l => l.Id == legajoId)
+            .Select(l => l.Apellido + ", " + l.Nombre)
+            .FirstOrDefaultAsync() ?? "empleado";
+        var descripcion = GenerarDescripcionDispositivo(request.NombreDispositivo, request.Plataforma, legajoNombre);
+
         var terminal = new TerminalMovil
         {
             EmpresaId = empresaId,
@@ -225,6 +284,7 @@ public class MobileController : ControllerBase
             DeviceId = request.DeviceId,
             PublicKey = request.PublicKey,
             Nombre = request.NombreDispositivo,
+            Descripcion = descripcion,
             Plataforma = request.Plataforma,
             FechaRegistro = DateTime.UtcNow,
             Activo = true
@@ -353,6 +413,7 @@ public class MobileController : ControllerBase
             FechaHora = ahoraLocal,
             Tipo = tipo,
             Origen = nameof(OrigenFichada.Movil),
+            TerminalMovilId = terminal.Id,
             CreatedAt = DateTime.UtcNow
         };
         _db.Fichadas.Add(fichada);
@@ -516,6 +577,7 @@ public class MobileController : ControllerBase
                 FechaHora = ahora,
                 Tipo = tipo,
                 Origen = nameof(OrigenFichada.QR),
+                TerminalMovilId = terminal.Id,
                 CreatedAt = DateTime.UtcNow
             };
             _db.Fichadas.Add(fichada);
@@ -678,11 +740,26 @@ public class MobileController : ControllerBase
         }
     }
 
+    private static string GenerarDescripcionDispositivo(string? userAgent, string? plataforma, string nombreEmpleado)
+    {
+        var device = plataforma ?? "Dispositivo";
+        if (!string.IsNullOrEmpty(userAgent))
+        {
+            if (userAgent.Contains("iPhone", StringComparison.OrdinalIgnoreCase))
+                device = "iPhone";
+            else if (userAgent.Contains("iPad", StringComparison.OrdinalIgnoreCase))
+                device = "iPad";
+            else if (userAgent.Contains("Android", StringComparison.OrdinalIgnoreCase))
+                device = "Android";
+        }
+        return $"{device} de {nombreEmpleado}";
+    }
+
     // ============================================================
     // Request DTOs
     // ============================================================
 
-    public record LoginRequest(string Legajo, string Password, string? CodigoActivacion = null);
+    public record LoginRequest(string Legajo, string Password, string? CodigoActivacion = null, int? EmpresaId = null);
 
     public record RegistrarDispositivoRequest(
         string Codigo,

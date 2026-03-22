@@ -414,8 +414,51 @@ app.MapPost("/api/activar-free", async (ActivarFreeRequest req,
     }
 });
 
+// API publica: comparacion de planes
+app.MapGet("/api/planes", async (RepositorioLicencias repo) =>
+{
+    var planes = await repo.GetPlanesComparacionAsync();
+    return Results.Ok(planes);
+});
+
+// API: solicitud de upgrade de plan
+app.MapPost("/api/upgrade/solicitar", async (SolicitudUpgradeRequest request, RepositorioLicencias repo) =>
+{
+    if (string.IsNullOrWhiteSpace(request.CompanyId))
+        return Results.BadRequest(new { error = "CompanyId requerido" });
+    if (string.IsNullOrWhiteSpace(request.PlanSolicitado))
+        return Results.BadRequest(new { error = "PlanSolicitado requerido" });
+
+    // Obtener empresa para validar que existe y obtener plan actual
+    var empresa = await repo.GetEmpresaPorCompanyIdAsync(request.CompanyId.Trim());
+    if (empresa == null)
+        return Results.NotFound(new { error = "Empresa no encontrada" });
+
+    // Obtener plan actual desde licencia
+    var licencias = await repo.GetLicenciasAsync(request.CompanyId.Trim());
+    var planActual = licencias.FirstOrDefault()?.Plan ?? "free";
+
+    if (string.Equals(planActual, request.PlanSolicitado, StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "Ya se encuentra en ese plan" });
+
+    // Obtener importe del plan solicitado
+    var planValores = await repo.GetPlanValoresAsync(request.PlanSolicitado);
+    decimal? importeMensual = planValores.TryGetValue("ImporteMensual", out var imp) ? imp : null;
+
+    var id = await repo.CrearSolicitudUpgradeAsync(
+        request.EmpresaId,
+        request.CompanyId.Trim(),
+        planActual,
+        request.PlanSolicitado,
+        request.SolicitadoPor ?? "portal",
+        importeMensual);
+
+    return Results.Ok(new { id, mensaje = "Solicitud de upgrade registrada correctamente" });
+});
+
 app.Run();
 
 record ActivarRequest(string Codigo);
 record VerificarEstadoRequest(string CompanyId);
 record ActivarFreeRequest(string Nombre, string Email, int? PaisId);
+record SolicitudUpgradeRequest(string CompanyId, string PlanSolicitado, string? SolicitadoPor, int EmpresaId);

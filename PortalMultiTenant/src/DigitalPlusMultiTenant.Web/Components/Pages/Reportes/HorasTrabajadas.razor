@@ -15,13 +15,14 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-hourglass-split me-2"></i>Horas Trabajadas</h4>
-    @if (items?.Any() == true)
-    {
-        <div>
+    <div>
+        <button class="btn btn-outline-secondary btn-sm me-2" @onclick="Generar" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+        @if (items?.Any() == true)
+        {
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
             <button class="btn btn-outline-secondary btn-sm" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm mb-3">

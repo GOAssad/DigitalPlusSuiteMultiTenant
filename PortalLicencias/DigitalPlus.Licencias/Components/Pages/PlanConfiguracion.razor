@@ -52,33 +52,40 @@ else
                             <tbody>
                                 @foreach (var c in planConfigs)
                                 {
+                                    var esSistema = EsParametroSistema(c.Parametro);
                                     <tr>
                                         <td class="small" title="@c.Descripcion">
-                                            <i class="bi @GetParametroIcon(c.Parametro) me-1 text-muted"></i>@GetParametroLabel(c.Parametro)
+                                            <i class="bi @GetParametroIcon(c) me-1 text-muted"></i>@GetParametroLabel(c)
+                                            @if (!string.IsNullOrEmpty(c.LabelAmigable) && c.LabelAmigable != c.Parametro)
+                                            {
+                                                <span class="text-muted ms-1">(@c.LabelAmigable)</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(c.Categoria))
+                                            {
+                                                var catColor = c.Categoria switch
+                                                {
+                                                    "Precio" => "info",
+                                                    "Limite" => "warning",
+                                                    "Funcionalidad" => "success",
+                                                    "Sistema" => "secondary",
+                                                    _ => "light"
+                                                };
+                                                <span class="badge bg-@catColor ms-1" style="font-size:0.65em">@c.Categoria</span>
+                                            }
                                         </td>
                                         <td style="width:80px">
-                                            @if (editandoId == c.Id)
-                                            {
-                                                <input type="number" min="0" class="form-control form-control-sm" @bind="editandoValor" />
-                                            }
-                                            else
-                                            {
-                                                <span class="fw-bold @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "text-success" : "")">
-                                                    @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "∞" : c.Valor.ToString("N0"))
-                                                </span>
-                                            }
+                                            <span class="fw-bold @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "text-success" : "")">
+                                                @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "\u221e" : c.Valor.ToString("N0"))
+                                            </span>
                                         </td>
-                                        <td style="width:30px">
-                                            @if (editandoId == c.Id)
+                                        <td style="width:60px" class="text-nowrap">
+                                            <button class="btn btn-sm btn-outline-primary p-0 px-1" @onclick="() => AbrirEdicion(c)" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            @if (!esSistema)
                                             {
-                                                <button class="btn btn-sm btn-success p-0 px-1" @onclick="GuardarEdicion">
-                                                    <i class="bi bi-check"></i>
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <button class="btn btn-sm btn-outline-primary p-0 px-1" @onclick="() => IniciarEdicion(c)">
-                                                    <i class="bi bi-pencil"></i>
+                                                <button class="btn btn-sm btn-outline-danger p-0 px-1 ms-1" @onclick="() => EliminarParametro(c)" title="Eliminar">
+                                                    <i class="bi bi-x-lg"></i>
                                                 </button>
                                             }
                                         </td>
@@ -96,6 +103,82 @@ else
     {
         <div class="alert alert-success mt-3 small py-2">@mensaje</div>
     }
+    @if (errorMsg != null)
+    {
+        <div class="alert alert-danger mt-3 small py-2">@errorMsg</div>
+    }
+
+    @* ---- Edit Modal ---- *@
+    @if (editConfig != null)
+    {
+        <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar: @editConfig.Parametro (@editConfig.Plan)</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarEdicion"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label">Valor</label>
+                                <input type="number" min="0" class="form-control form-control-sm" @bind="editValor" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Descripcion</label>
+                                <input type="text" class="form-control form-control-sm" @bind="editDescripcion" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Categoria</label>
+                                <select class="form-select form-select-sm" @bind="editCategoria">
+                                    <option value="">(ninguna)</option>
+                                    <option value="Precio">Precio</option>
+                                    <option value="Limite">Limite</option>
+                                    <option value="Funcionalidad">Funcionalidad</option>
+                                    <option value="Sistema">Sistema</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Tipo Visualizacion</label>
+                                <select class="form-select form-select-sm" @bind="editTipoVisualizacion">
+                                    <option value="">(ninguno)</option>
+                                    <option value="cantidad">cantidad</option>
+                                    <option value="precio">precio</option>
+                                    <option value="booleano">booleano</option>
+                                    <option value="texto">texto</option>
+                                    <option value="oculto">oculto</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Label Amigable</label>
+                                <input type="text" class="form-control form-control-sm" @bind="editLabelAmigable" placeholder="Nombre visible" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Icono</label>
+                                <input type="text" class="form-control form-control-sm" @bind="editIcono" placeholder="bi-people" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Orden Visualizacion</label>
+                                <input type="number" class="form-control form-control-sm" @bind="editOrdenVisualizacion" />
+                            </div>
+                            <div class="col-6 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="editVisibleChk" @bind="editVisibleEnComparacion" />
+                                    <label class="form-check-label" for="editVisibleChk">Visible en comparacion</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary btn-sm" @onclick="CerrarEdicion">Cancelar</button>
+                        <button class="btn btn-primary btn-sm" @onclick="GuardarEdicion">
+                            <i class="bi bi-check-lg me-1"></i>Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <hr class="mt-4" />
 
@@ -110,22 +193,63 @@ else
                 }
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label class="form-label">Parametro</label>
             <input type="text" class="form-control form-control-sm" @bind="nuevoParametro" placeholder="NombreParametro" />
         </div>
-        <div class="col-md-2">
+        <div class="col-md-1">
             <label class="form-label">Valor</label>
             <input type="number" class="form-control form-control-sm" @bind="nuevoValor" />
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label class="form-label">Descripcion</label>
             <input type="text" class="form-control form-control-sm" @bind="nuevaDescripcion" placeholder="Opcional..." />
         </div>
         <div class="col-md-2">
+            <label class="form-label">Categoria</label>
+            <select class="form-select form-select-sm" @bind="nuevaCategoria">
+                <option value="">(ninguna)</option>
+                <option value="Precio">Precio</option>
+                <option value="Limite">Limite</option>
+                <option value="Funcionalidad">Funcionalidad</option>
+                <option value="Sistema">Sistema</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Tipo Visualizacion</label>
+            <select class="form-select form-select-sm" @bind="nuevoTipoVisualizacion">
+                <option value="">cantidad</option>
+                <option value="cantidad">cantidad</option>
+                <option value="precio">precio</option>
+                <option value="booleano">booleano</option>
+                <option value="texto">texto</option>
+                <option value="oculto">oculto</option>
+            </select>
+        </div>
+        <div class="col-md-1">
             <button class="btn btn-primary btn-sm w-100" @onclick="AgregarParametro">
                 <i class="bi bi-plus-lg me-1"></i>Agregar
             </button>
+        </div>
+    </div>
+    <div class="row g-2 mt-1 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Label Amigable</label>
+            <input type="text" class="form-control form-control-sm" @bind="nuevoLabelAmigable" placeholder="Nombre visible" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Icono</label>
+            <input type="text" class="form-control form-control-sm" @bind="nuevoIcono" placeholder="bi-people" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Orden Visualizacion</label>
+            <input type="number" class="form-control form-control-sm" @bind="nuevoOrdenVisualizacion" />
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="nuevoVisibleChk" @bind="nuevoVisibleEnComparacion" />
+                <label class="form-check-label" for="nuevoVisibleChk">Visible en comparacion</label>
+            </div>
         </div>
     </div>
     <small class="text-muted">El nuevo parametro se agrega solo al plan seleccionado. Para agregarlo a todos los planes, repita la operacion.</small>
@@ -134,15 +258,31 @@ else
 @code {
     private List<string>? planes;
     private List<DigitalPlus.Licencias.Entidades.PlanConfig> configs = new();
-    private int editandoId;
-    private int editandoValor;
     private string? mensaje;
+    private string? errorMsg;
 
     // Nuevo parametro
     private string nuevoPlan = "free";
     private string nuevoParametro = "";
     private int nuevoValor;
     private string? nuevaDescripcion;
+    private string? nuevaCategoria;
+    private string? nuevoTipoVisualizacion;
+    private string? nuevoLabelAmigable;
+    private string? nuevoIcono;
+    private int nuevoOrdenVisualizacion = 50;
+    private bool nuevoVisibleEnComparacion = true;
+
+    // Edicion modal
+    private DigitalPlus.Licencias.Entidades.PlanConfig? editConfig;
+    private int editValor;
+    private string? editDescripcion;
+    private string? editCategoria;
+    private string? editTipoVisualizacion;
+    private string? editLabelAmigable;
+    private string? editIcono;
+    private int editOrdenVisualizacion;
+    private bool editVisibleEnComparacion;
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,6 +290,7 @@ else
     }
 
     private static readonly string[] OrdenPlanes = ["free", "basic", "pro", "enterprise"];
+    private static readonly string[] ParametrosSistema = ["OrdenPlan", "DuracionDias", "GraciaDias"];
 
     private async Task CargarDatos()
     {
@@ -161,54 +302,135 @@ else
             nuevoPlan = planes.First();
     }
 
-    private void IniciarEdicion(DigitalPlus.Licencias.Entidades.PlanConfig c)
+    private static bool EsParametroSistema(string parametro) => ParametrosSistema.Contains(parametro);
+
+    private void AbrirEdicion(DigitalPlus.Licencias.Entidades.PlanConfig c)
     {
-        editandoId = c.Id;
-        editandoValor = c.Valor;
+        editConfig = c;
+        editValor = c.Valor;
+        editDescripcion = c.Descripcion;
+        editCategoria = c.Categoria ?? "";
+        editTipoVisualizacion = c.TipoVisualizacion ?? "";
+        editLabelAmigable = c.LabelAmigable;
+        editIcono = c.Icono;
+        editOrdenVisualizacion = c.OrdenVisualizacion;
+        editVisibleEnComparacion = c.VisibleEnComparacion;
+        errorMsg = null;
+    }
+
+    private void CerrarEdicion()
+    {
+        editConfig = null;
     }
 
     private async Task GuardarEdicion()
     {
-        if (editandoValor < 0) editandoValor = 0;
-        await Repo.GuardarPlanConfigAsync(editandoId, editandoValor);
-        var config = configs.First(c => c.Id == editandoId);
-        config.Valor = editandoValor;
-        editandoId = 0;
-        mensaje = $"Parametro '{config.Parametro}' del plan '{config.Plan}' actualizado a {editandoValor}.";
+        if (editConfig == null) return;
+        if (editValor < 0) editValor = 0;
+        try
+        {
+            await Repo.GuardarPlanConfigAsync(editConfig.Id, editValor,
+                string.IsNullOrEmpty(editCategoria) ? null : editCategoria,
+                string.IsNullOrEmpty(editTipoVisualizacion) ? null : editTipoVisualizacion,
+                editLabelAmigable,
+                editIcono,
+                editOrdenVisualizacion,
+                editVisibleEnComparacion);
+
+            // Update local state
+            editConfig.Valor = editValor;
+            editConfig.Descripcion = editDescripcion;
+            editConfig.Categoria = string.IsNullOrEmpty(editCategoria) ? null : editCategoria;
+            editConfig.TipoVisualizacion = string.IsNullOrEmpty(editTipoVisualizacion) ? null : editTipoVisualizacion;
+            editConfig.LabelAmigable = editLabelAmigable;
+            editConfig.Icono = editIcono;
+            editConfig.OrdenVisualizacion = editOrdenVisualizacion;
+            editConfig.VisibleEnComparacion = editVisibleEnComparacion;
+
+            mensaje = $"Parametro '{editConfig.Parametro}' del plan '{editConfig.Plan}' actualizado.";
+            errorMsg = null;
+            editConfig = null;
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
+    }
+
+    private async Task EliminarParametro(DigitalPlus.Licencias.Entidades.PlanConfig c)
+    {
+        try
+        {
+            await Repo.EliminarParametroAsync(c.Id);
+            configs.Remove(c);
+            mensaje = $"Parametro '{c.Parametro}' eliminado del plan '{c.Plan}'.";
+            errorMsg = null;
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
     }
 
     private async Task AgregarParametro()
     {
         if (string.IsNullOrWhiteSpace(nuevoParametro)) return;
-        await Repo.AgregarPlanConfigAsync(nuevoPlan, nuevoParametro.Trim(), nuevoValor, nuevaDescripcion);
-        await CargarDatos();
-        mensaje = $"Parametro '{nuevoParametro}' agregado al plan '{nuevoPlan}'.";
-        nuevoParametro = "";
-        nuevoValor = 0;
-        nuevaDescripcion = null;
+        try
+        {
+            await Repo.AgregarPlanConfigAsync(nuevoPlan, nuevoParametro.Trim(), nuevoValor, nuevaDescripcion,
+                string.IsNullOrEmpty(nuevaCategoria) ? null : nuevaCategoria,
+                string.IsNullOrEmpty(nuevoTipoVisualizacion) ? null : nuevoTipoVisualizacion,
+                nuevoLabelAmigable,
+                nuevoIcono,
+                nuevoOrdenVisualizacion,
+                nuevoVisibleEnComparacion);
+            await CargarDatos();
+            mensaje = $"Parametro '{nuevoParametro}' agregado al plan '{nuevoPlan}'.";
+            errorMsg = null;
+            nuevoParametro = "";
+            nuevoValor = 0;
+            nuevaDescripcion = null;
+            nuevaCategoria = null;
+            nuevoTipoVisualizacion = null;
+            nuevoLabelAmigable = null;
+            nuevoIcono = null;
+            nuevoOrdenVisualizacion = 50;
+            nuevoVisibleEnComparacion = true;
+        }
+        catch (Exception ex)
+        {
+            errorMsg = ex.Message;
+        }
     }
 
-    private static string GetParametroIcon(string parametro) => parametro switch
+    private static string GetParametroIcon(DigitalPlus.Licencias.Entidades.PlanConfig c)
     {
-        "MaxLegajos" => "bi-people",
-        "MaxSucursales" => "bi-building",
-        "MaxFichadasRolling30d" => "bi-card-checklist",
-        "MobileHabilitado" => "bi-phone",
-        "DuracionDias" => "bi-calendar",
-        "GraciaDias" => "bi-hourglass",
-        _ => "bi-gear"
-    };
+        if (!string.IsNullOrEmpty(c.Icono)) return c.Icono;
+        return c.Parametro switch
+        {
+            "MaxLegajos" => "bi-people",
+            "MaxSucursales" => "bi-building",
+            "MaxFichadasRolling30d" => "bi-card-checklist",
+            "MobileHabilitado" => "bi-phone",
+            "DuracionDias" => "bi-calendar",
+            "GraciaDias" => "bi-hourglass",
+            _ => "bi-gear"
+        };
+    }
 
-    private static string GetParametroLabel(string parametro) => parametro switch
+    private static string GetParametroLabel(DigitalPlus.Licencias.Entidades.PlanConfig c)
     {
-        "MaxLegajos" => "Legajos",
-        "MaxSucursales" => "Sucursales",
-        "MaxFichadasRolling30d" => "Max fichadas/mes",
-        "MobileHabilitado" => "Movil",
-        "DuracionDias" => "Duracion (dias)",
-        "GraciaDias" => "Gracia (dias)",
-        _ => parametro
-    };
+        return c.Parametro switch
+        {
+            "MaxLegajos" => "Legajos",
+            "MaxSucursales" => "Sucursales",
+            "MaxFichadasRolling30d" => "Max fichadas/mes",
+            "MobileHabilitado" => "Movil",
+            "DuracionDias" => "Duracion (dias)",
+            "GraciaDias" => "Gracia (dias)",
+            _ => c.Parametro
+        };
+    }
 
     private static bool EsParametroCantidad(string parametro) =>
         parametro is "MaxLegajos" or "MaxSucursales" or "MaxFichadasRolling30d";

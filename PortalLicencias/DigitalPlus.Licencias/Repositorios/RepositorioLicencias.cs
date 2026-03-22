@@ -394,24 +394,44 @@ public class RepositorioLicencias
             .ToDictionaryAsync(p => p.Parametro, p => p.Valor);
     }
 
-    public async Task GuardarPlanConfigAsync(int id, int valor)
+    private static readonly string[] ParametrosSistema = ["OrdenPlan", "DuracionDias", "GraciaDias"];
+
+    public async Task GuardarPlanConfigAsync(int id, int valor,
+        string? categoria = null, string? tipoVisualizacion = null,
+        string? labelAmigable = null, string? icono = null,
+        int? ordenVisualizacion = null, bool? visibleEnComparacion = null)
     {
         var config = await _context.PlanConfigs.FindAsync(id);
         if (config != null)
         {
             config.Valor = valor;
+            if (categoria != null) config.Categoria = categoria;
+            if (tipoVisualizacion != null) config.TipoVisualizacion = tipoVisualizacion;
+            if (labelAmigable != null) config.LabelAmigable = labelAmigable;
+            if (icono != null) config.Icono = icono;
+            if (ordenVisualizacion.HasValue) config.OrdenVisualizacion = ordenVisualizacion.Value;
+            if (visibleEnComparacion.HasValue) config.VisibleEnComparacion = visibleEnComparacion.Value;
             await _context.SaveChangesAsync();
         }
     }
 
-    public async Task AgregarPlanConfigAsync(string plan, string parametro, int valor, string? descripcion)
+    public async Task AgregarPlanConfigAsync(string plan, string parametro, int valor, string? descripcion,
+        string? categoria = null, string? tipoVisualizacion = null,
+        string? labelAmigable = null, string? icono = null,
+        int ordenVisualizacion = 50, bool visibleEnComparacion = true)
     {
         _context.PlanConfigs.Add(new PlanConfig
         {
             Plan = plan,
             Parametro = parametro,
             Valor = valor,
-            Descripcion = descripcion
+            Descripcion = descripcion,
+            Categoria = categoria,
+            TipoVisualizacion = tipoVisualizacion,
+            LabelAmigable = labelAmigable,
+            Icono = icono,
+            OrdenVisualizacion = ordenVisualizacion,
+            VisibleEnComparacion = visibleEnComparacion
         });
         await _context.SaveChangesAsync();
     }
@@ -424,6 +444,80 @@ public class RepositorioLicencias
             _context.PlanConfigs.Remove(config);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task EliminarParametroAsync(int id)
+    {
+        var config = await _context.PlanConfigs.FindAsync(id)
+            ?? throw new InvalidOperationException("Parametro no encontrado.");
+        if (ParametrosSistema.Contains(config.Parametro))
+            throw new InvalidOperationException($"No se puede eliminar el parametro de sistema '{config.Parametro}'.");
+        _context.PlanConfigs.Remove(config);
+        await _context.SaveChangesAsync();
+    }
+
+    // --- Planes comparacion (API publica) ---
+
+    public async Task<List<object>> GetPlanesComparacionAsync()
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        var configs = await conn.QueryAsync<dynamic>(
+            @"SELECT [Plan], Parametro, Valor, Descripcion,
+                     ISNULL(Categoria, 'Limite') AS Categoria,
+                     ISNULL(TipoVisualizacion, 'cantidad') AS TipoVisualizacion,
+                     ISNULL(LabelAmigable, Parametro) AS LabelAmigable,
+                     Icono,
+                     ISNULL(OrdenVisualizacion, 50) AS OrdenVisualizacion,
+                     ISNULL(VisibleEnComparacion, 1) AS VisibleEnComparacion
+              FROM PlanConfig
+              ORDER BY [Plan], OrdenVisualizacion");
+
+        var grouped = configs.GroupBy(c => (string)c.Plan);
+
+        var result = grouped.Select(g =>
+        {
+            var parametros = g.Select(item => new
+            {
+                parametro = (string)item.Parametro,
+                valor = (int)item.Valor,
+                categoria = (string)item.Categoria,
+                tipoVisualizacion = (string)item.TipoVisualizacion,
+                labelAmigable = (string)item.LabelAmigable,
+                icono = item.Icono as string,
+                ordenVisualizacion = (int)item.OrdenVisualizacion,
+                visibleEnComparacion = (bool)item.VisibleEnComparacion
+            }).ToList();
+
+            var ordenParam = parametros.FirstOrDefault(p => p.parametro == "OrdenPlan");
+            var orden = ordenParam?.valor ?? 99;
+
+            return new
+            {
+                plan = g.Key,
+                orden,
+                parametros
+            } as object;
+        })
+        .OrderBy(x => ((dynamic)x).orden)
+        .ToList();
+
+        return result;
+    }
+
+    // --- Solicitud Upgrade ---
+
+    public async Task<int> CrearSolicitudUpgradeAsync(int empresaId, string companyId, string planActual, string planSolicitado, string solicitadoPor, decimal? importeMensual)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        var token = Guid.NewGuid().ToString("N");
+        var id = await conn.QuerySingleAsync<int>(
+            @"INSERT INTO SolicitudUpgrade (EmpresaId, CompanyId, PlanActual, PlanSolicitado, Estado, SolicitadoPor, FechaSolicitud, ImporteMensual, Token, TokenExpiresAt, CreatedAt, UpdatedAt)
+              VALUES (@EmpresaId, @CompanyId, @PlanActual, @PlanSolicitado, 'Pendiente', @SolicitadoPor, SYSUTCDATETIME(), @ImporteMensual, @Token, DATEADD(DAY, 7, SYSUTCDATETIME()), SYSUTCDATETIME(), SYSUTCDATETIME());
+              SELECT CAST(SCOPE_IDENTITY() AS INT);",
+            new { EmpresaId = empresaId, CompanyId = companyId, PlanActual = planActual,
+                  PlanSolicitado = planSolicitado, SolicitadoPor = solicitadoPor,
+                  ImporteMensual = importeMensual, Token = token });
+        return id;
     }
 
     // --- Log ---

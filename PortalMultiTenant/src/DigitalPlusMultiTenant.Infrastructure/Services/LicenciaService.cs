@@ -57,7 +57,8 @@ public class LicenciaService : ILicenciaService
             await using (var conn = new SqlConnection(_adminConnectionString))
             {
                 licencia = await conn.QueryFirstOrDefaultAsync<LicenciaInfo>(
-                    @"SELECT l.[Plan], l.MaxLegajos, l.MaxSucursales, l.MaxFichadasMes, l.LicenseType, l.ExpiresAt,
+                    @"SELECT l.[Plan], l.MaxLegajos, l.MaxSucursales, l.LicenseType, l.ExpiresAt,
+                             ISNULL((SELECT TOP 1 CAST(Valor AS int) FROM PlanConfig WHERE [Plan] = l.[Plan] AND Parametro = 'MaxFichadasRolling30d'), l.MaxFichadasMes) AS MaxFichadasMes,
                              ISNULL((SELECT TOP 1 CAST(Valor AS int) FROM PlanConfig WHERE [Plan] = l.[Plan] AND Parametro = 'MaxTerminalesMoviles'), 1) AS MaxTerminalesMoviles
                       FROM Licencias l
                       WHERE l.CompanyId = @CompanyId",
@@ -131,6 +132,65 @@ public class LicenciaService : ILicenciaService
             return (false, $"El plan {licencia.PlanDisplay} permite un máximo de {licencia.MaxTerminalesMoviles} terminales móviles. Actualmente tiene {terminalesActivas}.");
 
         return (true, null);
+    }
+
+    public async Task<List<PlanComparacion>> GetPlanesComparacionAsync()
+    {
+        var cacheKey = "planes_comparacion";
+        if (_cache.TryGetValue<List<PlanComparacion>>(cacheKey, out var cached) && cached is not null)
+            return cached;
+
+        try
+        {
+            await using var conn = new SqlConnection(_adminConnectionString);
+            var configs = await conn.QueryAsync<dynamic>(
+                @"SELECT [Plan], Parametro, Valor,
+                         ISNULL(Categoria, 'Limite') AS Categoria,
+                         ISNULL(TipoVisualizacion, 'cantidad') AS TipoVisualizacion,
+                         ISNULL(LabelAmigable, Parametro) AS LabelAmigable,
+                         Icono,
+                         ISNULL(OrdenVisualizacion, 50) AS OrdenVisualizacion,
+                         ISNULL(VisibleEnComparacion, 1) AS VisibleEnComparacion
+                  FROM PlanConfig
+                  ORDER BY [Plan], OrdenVisualizacion");
+
+            var grouped = configs.GroupBy(c => (string)c.Plan);
+
+            var result = grouped.Select(g =>
+            {
+                var parametros = g.Select(item => new PlanParametro
+                {
+                    Parametro = (string)item.Parametro,
+                    Valor = (int)item.Valor,
+                    Categoria = (string)item.Categoria,
+                    TipoVisualizacion = (string)item.TipoVisualizacion,
+                    LabelAmigable = (string)item.LabelAmigable,
+                    Icono = item.Icono as string,
+                    OrdenVisualizacion = (int)item.OrdenVisualizacion,
+                    VisibleEnComparacion = (bool)item.VisibleEnComparacion
+                }).ToList();
+
+                var orden = parametros.FirstOrDefault(p => p.Parametro == "OrdenPlan")?.Valor ?? 99;
+
+                return new PlanComparacion
+                {
+                    Plan = g.Key,
+                    Orden = orden,
+                    Parametros = parametros
+                };
+            })
+            .OrderBy(x => x.Orden)
+            .ToList();
+
+            // Cache corto (2 min) — los planes se consultan poco pero deben reflejar cambios rápido
+            _cache.Set(cacheKey, result, TimeSpan.FromMinutes(2));
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener planes de comparacion");
+            return new List<PlanComparacion>();
+        }
     }
 
     public void InvalidarCache(int empresaId)

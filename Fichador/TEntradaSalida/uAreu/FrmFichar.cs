@@ -701,6 +701,7 @@ namespace Acceso.uAreu
                 catch { }
                 oFichada.nSucursalID = sucursalId;
                 oFichada.nLegajoID = nLegajoID;
+                oFichada.nTerminalId = oTerminal.nId;
                 // Mapear al valor del enum OrigenFichada del portal: Huella=0, PIN=1, Demo=2, QR=0
                 oFichada.sOrigen = _modoActual == ModoFichada.Pin ? "PIN" : _modoActual.ToString();
                 HuellaLog.Write("RegistrarFichada() nLegajoID=" + nLegajoID + " sucursalId=" + sucursalId + " origen=" + oFichada.sOrigen + " empresaId=" + Global.Datos.TenantContext.EmpresaId);
@@ -1313,7 +1314,8 @@ namespace Acceso.uAreu
             if (oTerminal.Existe)
             {
                 etiquetaSucursal.Text = oTerminal.sSucursalID.sSucursalID + "  -  " +
-                    oTerminal.sSucursalID.sDescripcion.Trim();
+                    oTerminal.sSucursalID.sDescripcion.Trim() + "\n" +
+                    "Terminal: " + oTerminal.sTerminalID;
                 oFichada.sSucursalID = oTerminal.sSucursalID.sSucursalID;
             }
         }

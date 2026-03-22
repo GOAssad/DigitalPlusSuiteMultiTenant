@@ -9,6 +9,7 @@ public class TerminalMovil : BaseEntity, ITenantEntity
     public string DeviceId { get; set; } = null!;
     public string? PublicKey { get; set; }
     public string? Nombre { get; set; }
+    public string? Descripcion { get; set; }
     public string? Plataforma { get; set; }
     public DateTime FechaRegistro { get; set; }
     public DateTime? UltimoUso { get; set; }

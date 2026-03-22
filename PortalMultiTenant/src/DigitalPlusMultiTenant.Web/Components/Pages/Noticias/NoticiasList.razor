@@ -16,6 +16,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-megaphone me-2"></i>Noticias</h4>
     <div>
+        <button class="btn btn-outline-secondary btn-sm me-2" @onclick="CargarDatos" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
         @if (items?.Any() == true)
         {
             <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>

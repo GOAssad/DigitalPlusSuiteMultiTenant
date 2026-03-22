@@ -103,6 +103,13 @@ public class Program
         // Licencias (validacion de limites)
         builder.Services.AddScoped<ILicenciaService, LicenciaService>();
 
+        // HttpClient para Portal Licencias API
+        builder.Services.AddHttpClient("PortalLicencias", client =>
+        {
+            client.BaseAddress = new Uri("https://digitalpluslicencias.azurewebsites.net");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
         // Terminal Movil (v2)
         builder.Services.AddScoped<UbicacionService>();
         builder.Services.AddControllers();

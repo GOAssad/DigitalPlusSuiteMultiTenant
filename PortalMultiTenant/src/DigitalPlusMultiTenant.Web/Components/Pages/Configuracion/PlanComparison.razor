@@ -1,0 +1,365 @@
+@page "/configuracion/planes"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Net.Http.Json
+@attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa")]
+@rendermode InteractiveServer
+
+@inject ITenantService Tenant
+@inject ILicenciaService LicenciaService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Planes - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-gem me-2"></i>Comparacion de Planes</h4>
+</div>
+
+@if (cargando)
+{
+    <div class="text-center py-5">
+        <DigitalPlusMultiTenant.Web.Components.Shared.LoadingIndicator Message="Cargando planes..." />
+    </div>
+}
+else if (planes.Count == 0)
+{
+    <div class="alert alert-info">No se pudieron obtener los planes disponibles. Intente nuevamente mas tarde.</div>
+}
+else
+{
+    <div class="row g-4 mb-4">
+        @foreach (var plan in planes)
+        {
+            var esPlanActual = string.Equals(plan.Plan, planActual, StringComparison.OrdinalIgnoreCase);
+            var ordenActual = planes.FirstOrDefault(p => string.Equals(p.Plan, planActual, StringComparison.OrdinalIgnoreCase))?.Orden ?? 0;
+            var esPlanInferior = plan.Orden < ordenActual;
+            var esPlanSuperior = plan.Orden > ordenActual;
+            var esEnterprise = string.Equals(plan.Plan, "enterprise", StringComparison.OrdinalIgnoreCase);
+            var esFree = string.Equals(plan.Plan, "free", StringComparison.OrdinalIgnoreCase);
+
+            var parametrosPrecio = plan.ParametrosVisibles.Where(p => string.Equals(p.Categoria, "Precio", StringComparison.OrdinalIgnoreCase)).ToList();
+            var parametrosLista = plan.ParametrosVisibles
+                .Where(p => !string.Equals(p.Categoria, "Precio", StringComparison.OrdinalIgnoreCase)
+                          && !string.Equals(p.Categoria, "Sistema", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(p => p.OrdenVisualizacion)
+                .ToList();
+            var descuento = parametrosPrecio.FirstOrDefault(p => string.Equals(p.Parametro, "Descuento", StringComparison.OrdinalIgnoreCase));
+
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="card h-100 shadow-sm @(esPlanActual ? "border-success border-2" : esPlanInferior ? "opacity-50" : "border-0")"
+                     style="@(esPlanActual ? "box-shadow: 0 0 15px rgba(25, 135, 84, 0.3) !important;" : "")">
+
+                    @if (esPlanActual)
+                    {
+                        <div class="card-header bg-success text-white text-center py-2">
+                            <small class="fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Plan actual</small>
+                        </div>
+                    }
+
+                    <div class="card-body d-flex flex-column text-center">
+                        @* ── CABECERA: nombre + precio + descuento ── *@
+                        <h5 class="card-title fw-bold mb-1">@plan.PlanDisplay</h5>
+
+                        @if (esEnterprise && plan.ImporteMensual == 0)
+                        {
+                            <div class="mb-3">
+                                <span class="display-6 fw-bold text-warning">Consultar</span>
+                            </div>
+                        }
+                        else if (plan.ImporteMensual > 0)
+                        {
+                            <div class="mb-3">
+                                @if (descuento != null && descuento.Valor > 0)
+                                {
+                                    <div class="mb-1">
+                                        <span class="text-decoration-line-through text-muted fs-5">$@plan.ImporteMensual.ToString("N0")</span>
+                                        <span class="badge bg-danger ms-1">@(descuento.Valor)% OFF</span>
+                                    </div>
+                                    var precioConDescuento = plan.ImporteMensual * (1 - (decimal)descuento.Valor / 100);
+                                    <span class="display-6 fw-bold">$@precioConDescuento.ToString("N0")</span>
+                                    <span class="text-muted">/mes</span>
+                                }
+                                else
+                                {
+                                    <span class="display-6 fw-bold">$@plan.ImporteMensual.ToString("N0")</span>
+                                    <span class="text-muted">/mes</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <span class="display-6 fw-bold text-success">Gratis</span>
+                            </div>
+                        }
+
+                        <hr />
+
+                        @* ── LISTA: parametros visibles (no Precio, no Sistema) ── *@
+                        <ul class="list-unstyled text-start flex-grow-1">
+                            @foreach (var param in parametrosLista)
+                            {
+                                <li class="mb-2 d-flex align-items-start">
+                                    @if (!string.IsNullOrEmpty(param.Icono))
+                                    {
+                                        <i class="bi @param.Icono me-2 text-primary mt-1"></i>
+                                    }
+                                    <span>
+                                        <strong>@param.LabelAmigable:</strong>
+                                        @if (string.Equals(param.TipoVisualizacion, "booleano", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (param.Valor == 1)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-success ms-1"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-x-circle-fill text-danger ms-1"></i>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            @param.ValorFormateado
+                                        }
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+
+                        @* ── FOOTER: botones ── *@
+                        @if (esPlanActual)
+                        {
+                            <button class="btn btn-outline-success mt-auto" disabled>
+                                <i class="bi bi-check-lg me-1"></i>Plan actual
+                            </button>
+                        }
+                        else if (esPlanInferior)
+                        {
+                            <button class="btn btn-outline-secondary mt-auto" disabled>
+                                Plan inferior
+                            </button>
+                        }
+                        else if (esEnterprise)
+                        {
+                            <a href="mailto:contacto@integraia.tech?subject=Consulta%20plan%20Enterprise%20-%20DigitalPlus"
+                               class="btn btn-warning mt-auto">
+                                <i class="bi bi-envelope me-1"></i>Contactar ventas
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary mt-auto"
+                                    @onclick="() => MostrarConfirmUpgrade(plan)"
+                                    disabled="@solicitando">
+                                <i class="bi bi-arrow-up-circle me-1"></i>Solicitar upgrade
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Los cambios de plan son procesados por el equipo de IntegraIA. Recibira una notificacion cuando se complete el cambio.
+    </div>
+}
+
+@* ── Modal Confirmar Upgrade ── *@
+@if (mostrarConfirmUpgrade && planSeleccionado != null)
+{
+    var modalParametros = planSeleccionado.ParametrosVisibles
+        .Where(p => !string.Equals(p.Categoria, "Sistema", StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Categoria)
+        .ThenBy(p => p.OrdenVisualizacion)
+        .ToList();
+    var categorias = modalParametros.Select(p => p.Categoria).Distinct().ToList();
+
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary bg-opacity-10">
+                    <h6 class="modal-title"><i class="bi bi-arrow-up-circle me-2"></i>Confirmar solicitud de upgrade</h6>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Desea solicitar el cambio al plan <strong>@planSeleccionado.PlanDisplay</strong>?</p>
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">Plan actual:</td>
+                                <td>@(planes.FirstOrDefault(p => string.Equals(p.Plan, planActual, StringComparison.OrdinalIgnoreCase))?.PlanDisplay ?? planActual)</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Plan solicitado:</td>
+                                <td>@planSeleccionado.PlanDisplay</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    @foreach (var cat in categorias)
+                    {
+                        var paramsEnCat = modalParametros.Where(p => p.Categoria == cat).ToList();
+                        <h6 class="mt-3 mb-2 text-muted fw-bold small text-uppercase">@cat</h6>
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                @foreach (var param in paramsEnCat)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">
+                                            @if (!string.IsNullOrEmpty(param.Icono))
+                                            {
+                                                <i class="bi @param.Icono me-1 text-primary"></i>
+                                            }
+                                            @param.LabelAmigable:
+                                        </td>
+                                        <td>
+                                            @if (string.Equals(param.TipoVisualizacion, "booleano", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                if (param.Valor == 1)
+                                                {
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                @param.ValorFormateado
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="CerrarModal">Cancelar</button>
+                    <button class="btn btn-primary btn-sm" @onclick="EnviarSolicitudUpgrade" disabled="@solicitando">
+                        @if (solicitando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Confirmar solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert @(esError ? "alert-danger" : "alert-success") mt-3 alert-dismissible">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
+    </div>
+}
+
+@code {
+    private List<PlanComparacion> planes = new();
+    private string planActual = "free";
+    private string? companyId;
+    private bool cargando = true;
+    private bool solicitando;
+    private string? mensaje;
+    private bool esError;
+    private bool mostrarConfirmUpgrade;
+    private PlanComparacion? planSeleccionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var empresaId = Tenant.EmpresaId;
+            if (empresaId == 0) return;
+
+            // Obtener plan actual e info de empresa
+            var licencia = await LicenciaService.GetLicenciaInfoAsync(empresaId);
+            planActual = licencia.Plan;
+
+            // Obtener CompanyId (Codigo) de la empresa
+            var empresa = await Db.Empresas
+                .AsNoTracking()
+                .Where(e => e.Id == empresaId)
+                .Select(e => new { e.Codigo })
+                .FirstOrDefaultAsync();
+            companyId = empresa?.Codigo;
+
+            // Obtener planes disponibles
+            planes = await LicenciaService.GetPlanesComparacionAsync();
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error cargando planes: " + ex.Message;
+            esError = true;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void MostrarConfirmUpgrade(PlanComparacion plan)
+    {
+        planSeleccionado = plan;
+        mostrarConfirmUpgrade = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarConfirmUpgrade = false;
+        planSeleccionado = null;
+    }
+
+    private async Task EnviarSolicitudUpgrade()
+    {
+        if (planSeleccionado == null || string.IsNullOrEmpty(companyId)) return;
+        solicitando = true;
+        mensaje = null;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var emailUsuario = authState.User.Identity?.Name ?? "desconocido";
+
+            var client = HttpClientFactory.CreateClient("PortalLicencias");
+            var request = new
+            {
+                CompanyId = companyId,
+                PlanSolicitado = planSeleccionado.Plan,
+                SolicitadoPor = emailUsuario,
+                EmpresaId = 0 // La API lo resuelve por CompanyId
+            };
+
+            var response = await client.PostAsJsonAsync("/api/upgrade/solicitar", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensaje = $"Solicitud de upgrade al plan {planSeleccionado.PlanDisplay} enviada correctamente. El equipo de IntegraIA procesara su solicitud.";
+                esError = false;
+                CerrarModal();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                mensaje = $"Error al enviar la solicitud: {errorContent}";
+                esError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error al enviar la solicitud: " + ex.Message;
+            esError = true;
+        }
+        finally
+        {
+            solicitando = false;
+        }
+    }
+}

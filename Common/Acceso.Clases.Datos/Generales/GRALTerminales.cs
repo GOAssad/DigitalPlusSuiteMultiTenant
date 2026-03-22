@@ -17,6 +17,7 @@ namespace Acceso.Clases.Datos.Generales
 
         #region Propiedades
 
+        public int nId { get; set; }
         public string sTerminalID { get; set; }
         public GRALSucursales sSucursalID = new GRALSucursales();
         public string sDescripcion { get; set; }
@@ -65,6 +66,7 @@ namespace Acceso.Clases.Datos.Generales
             {
                 dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(cadena);
 
+                nId = Convert.ToInt32(dt.Rows[0]["Id"]);
                 sDescripcion = dt.Rows[0]["Descripcion"].ToString();
                 sMensajeBienVenida = "Hola!";
                 sIPV4 = "";

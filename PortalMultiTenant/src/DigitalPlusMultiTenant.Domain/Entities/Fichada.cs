@@ -9,6 +9,7 @@ public class Fichada : BaseEntity, ITenantEntity
     public int LegajoId { get; set; }
     public int SucursalId { get; set; }
     public int? TerminalId { get; set; }
+    public int? TerminalMovilId { get; set; }
     public DateTime FechaHora { get; set; }
     public string Tipo { get; set; } = null!; // "E" o "S"
     public string? Origen { get; set; }
@@ -22,4 +23,5 @@ public class Fichada : BaseEntity, ITenantEntity
     public Legajo Legajo { get; set; } = null!;
     public Sucursal Sucursal { get; set; } = null!;
     public Terminal? Terminal { get; set; }
+    public TerminalMovil? TerminalMovil { get; set; }
 }
