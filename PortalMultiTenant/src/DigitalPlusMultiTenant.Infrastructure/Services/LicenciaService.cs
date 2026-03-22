@@ -57,7 +57,10 @@ public class LicenciaService : ILicenciaService
             await using (var conn = new SqlConnection(_adminConnectionString))
             {
                 licencia = await conn.QueryFirstOrDefaultAsync<LicenciaInfo>(
-                    @"SELECT l.[Plan], l.MaxLegajos, l.MaxSucursales, l.LicenseType, l.ExpiresAt,
+                    @"SELECT l.[Plan],
+                             ISNULL((SELECT TOP 1 CAST(Valor AS int) FROM PlanConfig WHERE [Plan] = l.[Plan] AND Parametro = 'MaxLegajos'), l.MaxLegajos) AS MaxLegajos,
+                             ISNULL((SELECT TOP 1 CAST(Valor AS int) FROM PlanConfig WHERE [Plan] = l.[Plan] AND Parametro = 'MaxSucursales'), l.MaxSucursales) AS MaxSucursales,
+                             l.LicenseType, l.ExpiresAt,
                              ISNULL((SELECT TOP 1 CAST(Valor AS int) FROM PlanConfig WHERE [Plan] = l.[Plan] AND Parametro = 'MaxFichadasRolling30d'), l.MaxFichadasMes) AS MaxFichadasMes,
                              ISNULL((SELECT TOP 1 CAST(Valor AS int) FROM PlanConfig WHERE [Plan] = l.[Plan] AND Parametro = 'MaxTerminalesMoviles'), 1) AS MaxTerminalesMoviles
                       FROM Licencias l
