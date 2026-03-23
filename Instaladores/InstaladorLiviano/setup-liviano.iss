@@ -14,7 +14,7 @@
 
 ; --- Identidad del instalador liviano ---
 #define AppName       "DigitalPlus Suite (Cloud)"
-#define AppVersion    "1.0.0-202603202038"
+#define AppVersion    "1.0.0-202603231936"
 #define AppPublisher  "DigitalOnePlus"
 #define AppId         "{{A1B2C3D4-5E6F-7A8B-9C0D-E1F2A3B4C5D6}"
 
@@ -1099,6 +1099,48 @@ begin
     end;
 
     lblFreeResult.Caption := '';
+  end;
+end;
+
+function IsAppRunning(const FileName: string): Boolean;
+var
+  ResultCode: Integer;
+begin
+  // tasklist filtra por nombre; si encuentra algo, ERRORLEVEL=0
+  Exec('cmd.exe', '/C tasklist /FI "IMAGENAME eq ' + FileName + '" | findstr /I "' + FileName + '"',
+       '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Result := (ResultCode = 0);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+  Apps: String;
+begin
+  Result := '';
+  Apps := '';
+
+  if IsAppRunning('TEntradaSalida.exe') then
+    Apps := Apps + '  - DigitalOne Fichador' + #13#10;
+  if IsAppRunning('Acceso.exe') then
+    Apps := Apps + '  - DigitalOne Administrador' + #13#10;
+
+  if Apps <> '' then
+  begin
+    if MsgBox('Las siguientes aplicaciones estan en ejecucion:' + #13#10 + #13#10 +
+              Apps + #13#10 +
+              'Se cerraran automaticamente para continuar con la instalacion.' + #13#10 + #13#10 +
+              'Desea continuar?',
+              mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      Exec('taskkill', '/F /IM TEntradaSalida.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec('taskkill', '/F /IM Acceso.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(800);
+    end
+    else
+    begin
+      Result := 'Cierre las aplicaciones manualmente antes de continuar.';
+    end;
   end;
 end;
 
