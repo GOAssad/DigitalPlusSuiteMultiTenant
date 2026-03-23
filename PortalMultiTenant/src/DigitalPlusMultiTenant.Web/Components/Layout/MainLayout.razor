@@ -100,6 +100,7 @@
 
 <script suppress-error="BL9992">
     // Contextual help: maps portal routes to help page anchors
+    // Uses polling because Blazor Server navigates via SignalR, not pushState
     (function() {
         const helpBase = 'https://integraia.tech/digital-one-help.html';
         const routeMap = {
@@ -123,17 +124,22 @@
             '/usuarios': '#portal-usuarios',
             '/configuracion/empresa': '#portal',
             '/configuracion/planes': '#licencias',
-            '/configuracion': '#portal'
+            '/configuracion': '#portal',
+            '/noticias': '#portal'
         };
-        // Partial matches for legajo form tabs
         const partialMap = [
-            { match: '/legajos/', anchor: '#portal-legajo-form' }
+            { match: '/legajos/', anchor: '#portal-legajo-form' },
+            { match: '/reportes/', anchor: '#portal-reportes' },
+            { match: '/configuracion/', anchor: '#portal' }
         ];
 
+        var lastPath = '';
         function updateHelp() {
+            var path = window.location.pathname.replace(/\/$/, '') || '/';
+            if (path === lastPath) return;
+            lastPath = path;
             var btn = document.getElementById('helpBtn');
             if (!btn) return;
-            var path = window.location.pathname.replace(/\/$/, '') || '/';
             var anchor = routeMap[path] || '';
             if (!anchor) {
                 for (var i = 0; i < partialMap.length; i++) {
@@ -145,15 +151,9 @@
             }
             btn.href = helpBase + anchor;
         }
-        // Update on Blazor navigation
-        var origPush = history.pushState;
-        history.pushState = function() { origPush.apply(this, arguments); setTimeout(updateHelp, 100); };
-        var origReplace = history.replaceState;
-        history.replaceState = function() { origReplace.apply(this, arguments); setTimeout(updateHelp, 100); };
-        window.addEventListener('popstate', function() { setTimeout(updateHelp, 100); });
-        // Initial
-        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', updateHelp); }
-        else { updateHelp(); }
+        // Poll every 500ms to detect Blazor SignalR navigation
+        setInterval(updateHelp, 500);
+        updateHelp();
     })();
 </script>
 
