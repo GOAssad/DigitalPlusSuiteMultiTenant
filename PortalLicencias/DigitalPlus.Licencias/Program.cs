@@ -424,36 +424,122 @@ app.MapGet("/api/planes", async (RepositorioLicencias repo) =>
 // API: solicitud de upgrade de plan
 app.MapPost("/api/upgrade/solicitar", async (SolicitudUpgradeRequest request, RepositorioLicencias repo) =>
 {
-    if (string.IsNullOrWhiteSpace(request.CompanyId))
-        return Results.BadRequest(new { error = "CompanyId requerido" });
-    if (string.IsNullOrWhiteSpace(request.PlanSolicitado))
-        return Results.BadRequest(new { error = "PlanSolicitado requerido" });
+    try
+    {
+        if (string.IsNullOrWhiteSpace(request.CompanyId))
+            return Results.BadRequest(new { error = "CompanyId requerido" });
+        if (string.IsNullOrWhiteSpace(request.PlanSolicitado))
+            return Results.BadRequest(new { error = "PlanSolicitado requerido" });
 
-    // Obtener empresa para validar que existe y obtener plan actual
-    var empresa = await repo.GetEmpresaPorCompanyIdAsync(request.CompanyId.Trim());
-    if (empresa == null)
-        return Results.NotFound(new { error = "Empresa no encontrada" });
+        // Obtener empresa para validar que existe y obtener plan actual
+        var empresa = await repo.GetEmpresaPorCompanyIdAsync(request.CompanyId.Trim());
+        if (empresa == null)
+            return Results.NotFound(new { error = "Empresa no encontrada" });
 
-    // Obtener plan actual desde licencia
-    var licencias = await repo.GetLicenciasAsync(request.CompanyId.Trim());
-    var planActual = licencias.FirstOrDefault()?.Plan ?? "free";
+        // Obtener plan actual desde licencia
+        var licencias = await repo.GetLicenciasAsync(request.CompanyId.Trim());
+        var planActual = licencias.FirstOrDefault()?.Plan ?? "free";
 
-    if (string.Equals(planActual, request.PlanSolicitado, StringComparison.OrdinalIgnoreCase))
-        return Results.BadRequest(new { error = "Ya se encuentra en ese plan" });
+        if (string.Equals(planActual, request.PlanSolicitado, StringComparison.OrdinalIgnoreCase))
+            return Results.BadRequest(new { error = "Ya se encuentra en ese plan" });
 
-    // Obtener importe del plan solicitado
-    var planValores = await repo.GetPlanValoresAsync(request.PlanSolicitado);
-    decimal? importeMensual = planValores.TryGetValue("ImporteMensual", out var imp) ? imp : null;
+        // Obtener importe del plan solicitado
+        var planValores = await repo.GetPlanValoresAsync(request.PlanSolicitado);
+        decimal? importeMensual = planValores.TryGetValue("ImporteMensual", out var imp) ? imp : null;
 
-    var id = await repo.CrearSolicitudUpgradeAsync(
-        request.EmpresaId,
-        request.CompanyId.Trim(),
-        planActual,
-        request.PlanSolicitado,
-        request.SolicitadoPor ?? "portal",
-        importeMensual);
+        var (id, token) = await repo.CrearSolicitudUpgradeAsync(
+            empresa.Id,
+            request.CompanyId.Trim(),
+            planActual,
+            request.PlanSolicitado,
+            request.SolicitadoPor ?? "portal",
+            importeMensual);
 
-    return Results.Ok(new { id, mensaje = "Solicitud de upgrade registrada correctamente" });
+        var baseUrl = app.Configuration["AppUrl"] ?? "https://digitalpluslicencias.azurewebsites.net";
+        var upgradeUrl = $"{baseUrl}/upgrade/{token}";
+
+        return Results.Ok(new { id, token, upgradeUrl, mensaje = "Solicitud de upgrade registrada correctamente" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error interno: {ex.Message} | {ex.InnerException?.Message}");
+    }
+});
+
+// API: confirmar upgrade (aplica cambio de plan)
+app.MapPost("/api/upgrade/confirmar", async (ConfirmarUpgradeRequest request, RepositorioLicencias repo, IEmailService emailService, ILogger<Program> logger) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Token))
+        return Results.BadRequest(new { error = "Token requerido" });
+
+    // Validar que la solicitud existe y no expiró
+    var solicitud = await repo.GetSolicitudUpgradeByTokenAsync(request.Token);
+    if (solicitud == null)
+        return Results.NotFound(new { error = "Solicitud no encontrada" });
+
+    string estado = solicitud.Estado;
+    if (estado != "PendientePago")
+        return Results.BadRequest(new { error = $"La solicitud ya fue procesada (estado: {estado})" });
+
+    DateTime? tokenExpires = solicitud.TokenExpiresAt;
+    if (tokenExpires.HasValue && tokenExpires.Value < DateTime.UtcNow)
+        return Results.BadRequest(new { error = "El enlace de upgrade ha expirado. Solicite uno nuevo." });
+
+    // Aplicar upgrade
+    var ok = await repo.AplicarUpgradeAsync(request.Token);
+    if (!ok)
+        return Results.Problem("Error al aplicar el upgrade");
+
+    // Email de confirmación
+    try
+    {
+        string? email = solicitud.SolicitadoPor;
+        string planNuevo = solicitud.PlanSolicitado;
+        string empresaNombre = solicitud.EmpresaNombre ?? "Su empresa";
+        if (!string.IsNullOrEmpty(email))
+        {
+            await emailService.SendAsync(email,
+                $"Upgrade a plan {planNuevo} confirmado - DigitalPlus",
+                $@"<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'>
+                    <h2 style='color:#0d6efd'>Upgrade confirmado</h2>
+                    <p>El plan de <strong>{empresaNombre}</strong> ha sido actualizado a <strong>{planNuevo.ToUpper()}</strong>.</p>
+                    <p>Los nuevos limites ya estan activos. Puede verificarlos en <a href='https://digitalplusportalmt.azurewebsites.net/configuracion/planes'>Planes</a>.</p>
+                    <hr/>
+                    <p style='color:#6c757d;font-size:12px'>DigitalPlus by IntegraIA</p>
+                </div>");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "No se pudo enviar email de confirmacion de upgrade");
+    }
+
+    return Results.Ok(new { ok = true, mensaje = "Upgrade aplicado correctamente" });
+});
+
+// API: obtener solicitud de upgrade por token (para página pública)
+app.MapGet("/api/upgrade/{token}", async (string token, RepositorioLicencias repo) =>
+{
+    var solicitud = await repo.GetSolicitudUpgradeByTokenAsync(token);
+    if (solicitud == null)
+        return Results.NotFound(new { error = "Solicitud no encontrada" });
+
+    // Obtener parámetros del plan solicitado para mostrar detalle
+    string planSolicitado = solicitud.PlanSolicitado;
+    var planValores = await repo.GetPlanValoresAsync(planSolicitado);
+
+    return Results.Ok(new
+    {
+        id = (int)solicitud.Id,
+        empresaNombre = solicitud.EmpresaNombre as string,
+        companyId = (string)solicitud.CompanyId,
+        planActual = (string)solicitud.PlanActual,
+        planSolicitado = planSolicitado,
+        estado = (string)solicitud.Estado,
+        importeMensual = solicitud.ImporteMensual as decimal?,
+        tokenExpiresAt = solicitud.TokenExpiresAt as DateTime?,
+        planValores = planValores
+    });
 });
 
 app.Run();
@@ -462,3 +548,4 @@ record ActivarRequest(string Codigo);
 record VerificarEstadoRequest(string CompanyId);
 record ActivarFreeRequest(string Nombre, string Email, int? PaisId);
 record SolicitudUpgradeRequest(string CompanyId, string PlanSolicitado, string? SolicitadoPor, int EmpresaId);
+record ConfirmarUpgradeRequest(string Token);

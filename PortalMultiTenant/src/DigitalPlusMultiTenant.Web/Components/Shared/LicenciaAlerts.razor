@@ -1,9 +1,11 @@
 @using DigitalPlusMultiTenant.Application.Interfaces
 @using DigitalPlusMultiTenant.Persistence
 @using Microsoft.EntityFrameworkCore
+@implements IDisposable
 @inject ILicenciaService LicenciaService
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject ITenantService Tenant
+@inject NavigationManager Nav
 
 @if (alertas.Count > 0)
 {
@@ -27,6 +29,29 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Nav.LocationChanged += OnLocationChanged;
+        await CargarAlertas();
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (e.Location.Contains("upgraded"))
+        {
+            var empresaId = Tenant.EmpresaId;
+            if (empresaId > 0) LicenciaService.InvalidarCache(empresaId);
+            await CargarAlertas();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+
+    private async Task CargarAlertas()
+    {
+        alertas.Clear();
         try
         {
             var empresaId = Tenant.EmpresaId;

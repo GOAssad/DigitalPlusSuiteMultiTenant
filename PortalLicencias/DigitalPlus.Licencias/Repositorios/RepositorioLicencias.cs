@@ -506,18 +506,110 @@ public class RepositorioLicencias
 
     // --- Solicitud Upgrade ---
 
-    public async Task<int> CrearSolicitudUpgradeAsync(int empresaId, string companyId, string planActual, string planSolicitado, string solicitadoPor, decimal? importeMensual)
+    public async Task<(int id, string token)> CrearSolicitudUpgradeAsync(int empresaId, string companyId, string planActual, string planSolicitado, string solicitadoPor, decimal? importeMensual)
     {
         await using var conn = new SqlConnection(_connectionString);
         var token = Guid.NewGuid().ToString("N");
         var id = await conn.QuerySingleAsync<int>(
             @"INSERT INTO SolicitudUpgrade (EmpresaId, CompanyId, PlanActual, PlanSolicitado, Estado, SolicitadoPor, FechaSolicitud, ImporteMensual, Token, TokenExpiresAt, CreatedAt, UpdatedAt)
-              VALUES (@EmpresaId, @CompanyId, @PlanActual, @PlanSolicitado, 'Pendiente', @SolicitadoPor, SYSUTCDATETIME(), @ImporteMensual, @Token, DATEADD(DAY, 7, SYSUTCDATETIME()), SYSUTCDATETIME(), SYSUTCDATETIME());
+              VALUES (@EmpresaId, @CompanyId, @PlanActual, @PlanSolicitado, 'PendientePago', @SolicitadoPor, SYSUTCDATETIME(), @ImporteMensual, @Token, DATEADD(DAY, 7, SYSUTCDATETIME()), SYSUTCDATETIME(), SYSUTCDATETIME());
               SELECT CAST(SCOPE_IDENTITY() AS INT);",
             new { EmpresaId = empresaId, CompanyId = companyId, PlanActual = planActual,
                   PlanSolicitado = planSolicitado, SolicitadoPor = solicitadoPor,
                   ImporteMensual = importeMensual, Token = token });
-        return id;
+        return (id, token);
+    }
+
+    // --- Solicitud Upgrade: consulta y aplicar ---
+
+    public async Task<dynamic?> GetSolicitudUpgradeByTokenAsync(string token)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        return await conn.QueryFirstOrDefaultAsync<dynamic>(
+            @"SELECT s.*, e.Nombre AS EmpresaNombre
+              FROM SolicitudUpgrade s
+              LEFT JOIN Empresas e ON e.Id = s.EmpresaId
+              WHERE s.Token = @Token",
+            new { Token = token });
+    }
+
+    public async Task<bool> AplicarUpgradeAsync(string token)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            // 1. Obtener solicitud
+            var solicitud = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                "SELECT * FROM SolicitudUpgrade WHERE Token = @Token AND Estado = 'PendientePago'",
+                new { Token = token }, tx);
+
+            if (solicitud == null) return false;
+
+            string companyId = solicitud.CompanyId;
+            string planSolicitado = solicitud.PlanSolicitado;
+
+            // 2. Obtener valores del plan nuevo desde PlanConfig
+            var configs = await conn.QueryAsync<dynamic>(
+                "SELECT Parametro, Valor FROM PlanConfig WHERE [Plan] = @Plan",
+                new { Plan = planSolicitado }, tx);
+            var valores = configs.ToDictionary(c => (string)c.Parametro, c => (int)c.Valor);
+
+            int maxLegajos = valores.GetValueOrDefault("MaxLegajos", 5);
+            int maxSucursales = valores.GetValueOrDefault("MaxSucursales", 1);
+            int maxFichadasMes = valores.GetValueOrDefault("MaxFichadasRolling30d", 200);
+            int duracionDias = valores.GetValueOrDefault("DuracionDias", 0);
+
+            // 3. Calcular ExpiresAt
+            DateTime? expiresAt = duracionDias > 0
+                ? DateTime.UtcNow.AddDays(duracionDias)
+                : null; // 0 = sin vencimiento
+
+            // 4. Actualizar licencia
+            await conn.ExecuteAsync(
+                @"UPDATE Licencias SET [Plan] = @Plan, MaxLegajos = @MaxLegajos,
+                  MaxSucursales = @MaxSucursales, MaxFichadasMes = @MaxFichadasMes,
+                  ExpiresAt = @ExpiresAt, LicenseType = 'active',
+                  UpdatedAt = SYSUTCDATETIME()
+                  WHERE CompanyId = @CompanyId",
+                new { Plan = planSolicitado, MaxLegajos = maxLegajos,
+                      MaxSucursales = maxSucursales, MaxFichadasMes = maxFichadasMes,
+                      ExpiresAt = expiresAt, CompanyId = companyId }, tx);
+
+            // 5. Marcar solicitud como aprobada
+            await conn.ExecuteAsync(
+                @"UPDATE SolicitudUpgrade SET Estado = 'Aprobada', UpdatedAt = SYSUTCDATETIME()
+                  WHERE Token = @Token",
+                new { Token = token }, tx);
+
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<string?> GetEmailSolicitanteAsync(string token)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        return await conn.QueryFirstOrDefaultAsync<string>(
+            "SELECT SolicitadoPor FROM SolicitudUpgrade WHERE Token = @Token",
+            new { Token = token });
+    }
+
+    public async Task<List<dynamic>> GetSolicitudesUpgradeAsync()
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        return (await conn.QueryAsync<dynamic>(
+            @"SELECT s.*, e.Nombre AS EmpresaNombre
+              FROM SolicitudUpgrade s
+              LEFT JOIN Empresas e ON e.Id = s.EmpresaId
+              ORDER BY s.FechaSolicitud DESC")).ToList();
     }
 
     // --- Log ---

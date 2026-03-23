@@ -173,6 +173,18 @@ public class Program
 
         app.MapControllers();
 
+        // Refresh de claims (usado después de verificar email, corre en contexto HTTP)
+        app.MapGet("/api/refresh-signin", async (HttpContext ctx,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager) =>
+        {
+            var user = await userManager.GetUserAsync(ctx.User);
+            if (user != null)
+                await signInManager.RefreshSignInAsync(user);
+            var returnUrl = ctx.Request.Query["returnUrl"].FirstOrDefault() ?? "/";
+            return Results.Redirect(returnUrl);
+        }).RequireAuthorization();
+
         // Logo de empresa desde DigitalPlusAdmin (cacheado 1 hora)
         app.MapGet("/api/empresa-logo", async (HttpContext ctx, IConfiguration config, IMemoryCache cache) =>
         {

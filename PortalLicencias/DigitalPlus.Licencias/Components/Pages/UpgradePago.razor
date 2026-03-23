@@ -1,0 +1,284 @@
+@page "/upgrade/{Token}"
+@using Microsoft.AspNetCore.Authorization
+@using DigitalPlus.Licencias.Repositorios
+@using DigitalPlus.Licencias.Services
+@attribute [AllowAnonymous]
+@rendermode InteractiveServer
+
+@inject RepositorioLicencias Repo
+@inject IEmailService EmailService
+
+<PageTitle>Upgrade de Plan - DigitalPlus</PageTitle>
+
+<div class="container py-5" style="max-width: 640px;">
+    <div class="text-center mb-4">
+        <img src="/favicon.png" alt="DigitalPlus" style="height:48px" class="mb-2" />
+        <h3 class="fw-bold">DigitalPlus</h3>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Cargando solicitud...</p>
+        </div>
+    }
+    else if (error != null)
+    {
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3 d-block"></i>
+                <h5>No se puede procesar</h5>
+                <p class="text-muted">@error</p>
+            </div>
+        </div>
+    }
+    else if (upgradeCompletado)
+    {
+        <div class="card border-success shadow">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 fw-bold text-success">Upgrade completado</h4>
+                <p class="mt-2">
+                    El plan de <strong>@empresaNombre</strong> ha sido actualizado a
+                    <span class="badge bg-primary fs-6">@FormatPlan(planSolicitado)</span>
+                </p>
+                <p class="text-muted">Los nuevos limites ya estan activos. Los cambios pueden tardar hasta 5 minutos en reflejarse en el portal.</p>
+                <hr />
+                <a href="https://digitalplusportalmt.azurewebsites.net/configuracion/planes?upgraded=1" class="btn btn-primary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver al portal
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        @* ── Resumen de upgrade ── *@
+        <div class="card shadow">
+            <div class="card-header bg-primary bg-opacity-10 text-center">
+                <h5 class="mb-0"><i class="bi bi-arrow-up-circle me-2"></i>Confirmar upgrade de plan</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <p class="mb-1 text-muted">Empresa</p>
+                    <h5 class="fw-bold">@empresaNombre</h5>
+                </div>
+
+                @* Transición de plan *@
+                <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                    <div class="text-center">
+                        <span class="badge bg-secondary fs-6 px-3 py-2">@FormatPlan(planActual)</span>
+                        <div class="text-muted small mt-1">Plan actual</div>
+                    </div>
+                    <i class="bi bi-arrow-right fs-3 text-primary"></i>
+                    <div class="text-center">
+                        <span class="badge bg-primary fs-6 px-3 py-2">@FormatPlan(planSolicitado)</span>
+                        <div class="text-muted small mt-1">Plan nuevo</div>
+                    </div>
+                </div>
+
+                @* Precio *@
+                @if (importeMensual.HasValue && importeMensual.Value > 0)
+                {
+                    <div class="text-center mb-4 p-3 bg-light rounded">
+                        <span class="text-muted">Precio mensual:</span>
+                        <span class="display-6 fw-bold ms-2">$@importeMensual.Value.ToString("N0")</span>
+                        <span class="text-muted">/mes</span>
+                    </div>
+                }
+
+                @* Detalle del plan *@
+                @if (planValores.Count > 0)
+                {
+                    <h6 class="text-muted fw-bold small text-uppercase mb-3">Que incluye el plan @FormatPlan(planSolicitado)</h6>
+                    <ul class="list-group list-group-flush mb-4">
+                        @foreach (var kv in GetParametrosVisibles())
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@GetLabel(kv.Key)</span>
+                                <span class="fw-bold">@FormatValor(kv.Key, kv.Value)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @* Aviso simulación *@
+                <div class="alert alert-info small mb-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Pago simulado:</strong> En esta etapa el upgrade se aplica sin cobro. Proximamente se habilitara el pago con MercadoPago.
+                </div>
+
+                @* Botón confirmar *@
+                <div class="d-grid">
+                    <button class="btn btn-primary btn-lg" @onclick="ConfirmarUpgrade" disabled="@procesando">
+                        @if (procesando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Procesando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span>Confirmar y activar plan @FormatPlan(planSolicitado)</span>
+                        }
+                    </button>
+                </div>
+
+                @* Vencimiento del link *@
+                @if (tokenExpiresAt.HasValue)
+                {
+                    <p class="text-center text-muted small mt-3">
+                        <i class="bi bi-clock me-1"></i>Este enlace vence el @tokenExpiresAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Token { get; set; } = "";
+
+    private bool cargando = true;
+    private bool procesando;
+    private bool upgradeCompletado;
+    private string? error;
+
+    private string? empresaNombre;
+    private string planActual = "";
+    private string planSolicitado = "";
+    private decimal? importeMensual;
+    private DateTime? tokenExpiresAt;
+    private Dictionary<string, int> planValores = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var solicitud = await Repo.GetSolicitudUpgradeByTokenAsync(Token);
+            if (solicitud == null)
+            {
+                error = "Solicitud no encontrada. Verifique el enlace.";
+                return;
+            }
+
+            string estado = solicitud.Estado;
+            if (estado == "Aprobada")
+            {
+                // Ya fue procesada, mostrar como completada
+                empresaNombre = solicitud.EmpresaNombre ?? "Su empresa";
+                planSolicitado = solicitud.PlanSolicitado;
+                upgradeCompletado = true;
+                return;
+            }
+
+            if (estado != "PendientePago")
+            {
+                error = $"Esta solicitud ya fue procesada (estado: {estado}).";
+                return;
+            }
+
+            DateTime? expires = solicitud.TokenExpiresAt;
+            if (expires.HasValue && expires.Value < DateTime.UtcNow)
+            {
+                error = "Este enlace de upgrade ha expirado. Solicite uno nuevo desde el portal.";
+                return;
+            }
+
+            empresaNombre = solicitud.EmpresaNombre ?? "Su empresa";
+            planActual = solicitud.PlanActual;
+            planSolicitado = solicitud.PlanSolicitado;
+            importeMensual = solicitud.ImporteMensual;
+            tokenExpiresAt = expires;
+            planValores = await Repo.GetPlanValoresAsync(planSolicitado);
+        }
+        catch (Exception ex)
+        {
+            error = "Error cargando la solicitud: " + ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task ConfirmarUpgrade()
+    {
+        procesando = true;
+        try
+        {
+            var ok = await Repo.AplicarUpgradeAsync(Token);
+            if (ok)
+            {
+                upgradeCompletado = true;
+
+                // Email de confirmación (best effort)
+                try
+                {
+                    var email = await Repo.GetEmailSolicitanteAsync(Token);
+                    if (!string.IsNullOrEmpty(email))
+                    {
+                        await EmailService.SendAsync(email,
+                            $"Upgrade a plan {FormatPlan(planSolicitado)} confirmado - DigitalPlus",
+                            $@"<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'>
+                                <h2 style='color:#0d6efd'>Upgrade confirmado</h2>
+                                <p>El plan de <strong>{empresaNombre}</strong> ha sido actualizado a <strong>{FormatPlan(planSolicitado)}</strong>.</p>
+                                <p>Los nuevos limites ya estan activos. Puede verificarlos en el portal.</p>
+                                <hr/>
+                                <p style='color:#6c757d;font-size:12px'>DigitalPlus by IntegraIA</p>
+                            </div>");
+                    }
+                }
+                catch { /* no bloquear si falla el email */ }
+            }
+            else
+            {
+                error = "No se pudo aplicar el upgrade. Es posible que la solicitud ya haya sido procesada.";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = "Error al procesar: " + ex.Message;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private List<KeyValuePair<string, int>> GetParametrosVisibles()
+    {
+        var excluir = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "OrdenPlan", "DuracionDias", "GraciaDias", "ImporteMensual", "Descuento"
+        };
+        return planValores.Where(kv => !excluir.Contains(kv.Key)).ToList();
+    }
+
+    private string FormatPlan(string plan) => plan switch
+    {
+        "free" => "Free",
+        "basic" => "Basic",
+        "pro" => "Pro",
+        "enterprise" => "Enterprise",
+        _ => plan
+    };
+
+    private string GetLabel(string parametro) => parametro switch
+    {
+        "MaxLegajos" => "Legajos",
+        "MaxSucursales" => "Sucursales",
+        "MaxFichadasRolling30d" => "Fichadas por mes",
+        "MaxTerminalesMoviles" => "Terminales moviles",
+        "MobileHabilitado" => "Terminal movil",
+        "KioskoHabilitado" => "Modo kiosko",
+        _ => parametro
+    };
+
+    private string FormatValor(string parametro, int valor)
+    {
+        if (parametro is "MobileHabilitado" or "KioskoHabilitado")
+            return valor == 1 ? "Si" : "No";
+        return valor == 0 ? "Ilimitados" : valor.ToString("N0");
+    }
+}
