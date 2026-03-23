@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c97a"/>
+      <stop offset="100%" stop-color="#c9a84c"/>
+    </linearGradient>
+    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c97a" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#c9a84c" stop-opacity="0.7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#0b1120" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.9"/>
+
+  <!-- Chat bubble / brain hybrid -->
+  <!-- Main bubble shape -->
+  <path d="M 65 55 Q 65 42 80 42 L 120 42 Q 135 42 135 55 L 135 90 Q 135 103 120 103 L 90 103 L 78 115 L 80 103 L 80 103 Q 65 103 65 90 Z"
+        fill="none" stroke="url(#goldGrad)" stroke-width="2" opacity="0.85"/>
+
+  <!-- Brain/neural pattern inside bubble -->
+  <!-- Left hemisphere -->
+  <path d="M 82 58 Q 78 65 82 72 Q 78 78 82 85" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 88 55 Q 84 62 88 68 Q 84 75 88 82 Q 85 88 88 94" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Right hemisphere -->
+  <path d="M 118 58 Q 122 65 118 72 Q 122 78 118 85" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 112 55 Q 116 62 112 68 Q 116 75 112 82 Q 115 88 112 94" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Center connection -->
+  <path d="M 95 52 Q 100 60 105 52" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 95 95 Q 100 87 105 95" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Neural nodes -->
+  <circle cx="100" cy="60" r="3" fill="url(#goldGrad)" opacity="0.9"/>
+  <circle cx="90" cy="72" r="2.5" fill="url(#goldGrad)" opacity="0.7"/>
+  <circle cx="110" cy="72" r="2.5" fill="url(#goldGrad)" opacity="0.7"/>
+  <circle cx="100" cy="82" r="3" fill="url(#goldGrad)" opacity="0.9"/>
+  <circle cx="88" cy="62" r="2" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="112" cy="62" r="2" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="88" cy="85" r="2" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="112" cy="85" r="2" fill="#c9a84c" opacity="0.5"/>
+
+  <!-- Neural connections -->
+  <line x1="100" y1="60" x2="90" y2="72" stroke="#e8c97a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="100" y1="60" x2="110" y2="72" stroke="#e8c97a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="90" y1="72" x2="100" y2="82" stroke="#e8c97a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="110" y1="72" x2="100" y2="82" stroke="#e8c97a" stroke-width="0.8" opacity="0.4"/>
+  <line x1="88" y1="62" x2="100" y2="60" stroke="#e8c97a" stroke-width="0.5" opacity="0.3"/>
+  <line x1="112" y1="62" x2="100" y2="60" stroke="#e8c97a" stroke-width="0.5" opacity="0.3"/>
+  <line x1="88" y1="85" x2="100" y2="82" stroke="#e8c97a" stroke-width="0.5" opacity="0.3"/>
+  <line x1="112" y1="85" x2="100" y2="82" stroke="#e8c97a" stroke-width="0.5" opacity="0.3"/>
+  <line x1="90" y1="72" x2="110" y2="72" stroke="#e8c97a" stroke-width="0.5" opacity="0.25" stroke-dasharray="2,2"/>
+
+  <!-- Small orbiting data dots around bubble -->
+  <circle cx="58" cy="48" r="2" fill="#c9a84c" opacity="0.35"/>
+  <circle cx="142" cy="52" r="2" fill="#c9a84c" opacity="0.35"/>
+  <circle cx="55" cy="95" r="1.5" fill="#c9a84c" opacity="0.25"/>
+  <circle cx="142" cy="98" r="1.5" fill="#c9a84c" opacity="0.25"/>
+
+  <!-- Pulse rings around central node -->
+  <circle cx="100" cy="72" r="18" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.15"/>
+  <circle cx="100" cy="72" r="28" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.08"/>
+
+  <!-- Text -->
+  <text x="100" y="145" text-anchor="middle" font-family="serif" font-size="16" font-weight="700" fill="url(#goldGrad)" letter-spacing="0.5">
+    ERP
+  </text>
+  <text x="100" y="165" text-anchor="middle" font-family="serif" font-size="16" font-weight="700" fill="url(#goldGrad)" letter-spacing="0.5">
+    Assistant
+  </text>
+</svg>

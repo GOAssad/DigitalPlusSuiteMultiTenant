@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c97a"/>
+      <stop offset="100%" stop-color="#c9a84c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle - WHITE -->
+  <circle cx="100" cy="100" r="95" fill="#0b1120" stroke="#ffffff" stroke-width="1.5" opacity="0.9"/>
+
+  <!-- Face outline - GOLD -->
+  <ellipse cx="100" cy="95" rx="32" ry="40" fill="none" stroke="url(#goldGrad)" stroke-width="2" opacity="0.9"/>
+
+  <circle cx="88" cy="73" r="2" fill="#c9a84c" opacity="0.6"/>
+  <circle cx="100" cy="69" r="2" fill="#c9a84c" opacity="0.6"/>
+  <circle cx="112" cy="73" r="2" fill="#c9a84c" opacity="0.6"/>
+
+  <circle cx="88" cy="87" r="2.5" fill="#e8c97a" opacity="0.8"/>
+  <circle cx="112" cy="87" r="2.5" fill="#e8c97a" opacity="0.8"/>
+
+  <path d="M 80 83 L 80 87 L 83 87" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 96 87 L 93 87 L 93 83" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 80 91 L 80 87" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 93 91 L 93 87" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+
+  <path d="M 104 83 L 104 87 L 107 87" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 120 87 L 117 87 L 117 83" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 104 91 L 104 87" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 117 91 L 117 87" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+
+  <circle cx="100" cy="95" r="1.5" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="96" cy="99" r="1.5" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="104" cy="99" r="1.5" fill="#c9a84c" opacity="0.5"/>
+
+  <path d="M 90 109 Q 100 115 110 109" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.5"/>
+
+  <circle cx="100" cy="123" r="1.5" fill="#c9a84c" opacity="0.4"/>
+
+  <line x1="88" y1="73" x2="88" y2="87" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="112" y1="73" x2="112" y2="87" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="88" y1="87" x2="96" y2="99" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="112" y1="87" x2="104" y2="99" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="96" y1="99" x2="100" y2="123" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="104" y1="99" x2="100" y2="123" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="88" y1="87" x2="112" y2="87" stroke="#c9a84c" stroke-width="0.5" opacity="0.15" stroke-dasharray="2,2"/>
+  <line x1="88" y1="73" x2="112" y2="73" stroke="#c9a84c" stroke-width="0.5" opacity="0.15" stroke-dasharray="2,2"/>
+
+  <!-- Corner scan brackets - GOLD -->
+  <path d="M 60 58 L 60 50 L 68 50" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 140 58 L 140 50 L 132 50" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 60 132 L 60 140 L 68 140" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 140 132 L 140 140 L 132 140" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <line x1="62" y1="95" x2="138" y2="95" stroke="#e8c97a" stroke-width="1" opacity="0.2" stroke-dasharray="4,3"/>
+</svg>

@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital One - Control de Asistencia por Huella Digital, PIN y Móvil | IntegraIA</title>
+  <meta name="description" content="Sistema de control de asistencia con fichada por huella digital, PIN y desde el celular con validación GPS. Gestión de empleados, reportes y multi-empresa en la nube.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050810;
+      --surface: #0b1120;
+      --surface2: #111827;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dim: rgba(201,168,76,0.15);
+      --text: #e8eaf0;
+      --muted: #7a8394;
+      --white: #ffffff;
+      --accent-blue: #3a7bfd;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Figtree', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.4;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 900;
+      padding: 1.5rem 6%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #dce1ec;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      transition: all 0.4s ease;
+    }
+    nav.scrolled {
+      background: #dce1ec;
+      backdrop-filter: blur(20px);
+      border-color: rgba(0,0,0,0.15);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+    }
+    .logo { text-decoration: none; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; align-items: center; }
+    .nav-links a {
+      text-decoration: none;
+      color: #1a2a4a;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold) !important;
+      padding: 0.5rem 1.4rem;
+      font-size: 0.75rem !important;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.3s ease !important;
+    }
+    .nav-cta:hover { background: var(--gold) !important; color: var(--bg) !important; }
+
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 1.5px; background: #1a2a4a; transition: all 0.3s; }
+
+    /* ── GENERAL ── */
+    section { padding: 7rem 6%; }
+
+    .section-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      font-weight: 300;
+      line-height: 1.15;
+      color: var(--white);
+    }
+    .section-title em { font-style: normal; color: var(--gold); }
+    .section-body {
+      font-size: 0.97rem;
+      line-height: 1.9;
+      color: var(--muted);
+      max-width: 580px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      padding: 0.9rem 2.2rem;
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,168,76,0.3); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.9rem 2.2rem;
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+    /* ── HERO ── */
+    .do-hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 10rem 6% 6rem;
+      overflow: hidden;
+    }
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+    }
+    .hero-glow {
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(58,123,253,0.12) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      pointer-events: none;
+    }
+    .hero-glow-2 {
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      bottom: 0; left: -100px;
+      pointer-events: none;
+    }
+
+    .hero-layout {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      width: 100%;
+    }
+    .hero-text { max-width: 600px; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      border: 1px solid var(--gold);
+      padding: 0.4rem 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      animation: fadeUp 0.8s ease forwards;
+      opacity: 0;
+    }
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+
+    .hero-text h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 6vw, 5rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      animation: fadeUp 0.8s 0.15s ease forwards;
+      opacity: 0;
+    }
+    .hero-text h1 em { font-style: normal; color: var(--gold); }
+
+    .hero-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: var(--gold-light);
+      margin-top: 0.8rem;
+      animation: fadeUp 0.8s 0.25s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-desc {
+      margin-top: 1.8rem;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 520px;
+      animation: fadeUp 0.8s 0.35s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-actions {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.8s 0.45s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-image {
+      animation: fadeUp 0.8s 0.5s ease forwards;
+      opacity: 0;
+    }
+    .hero-image .img-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+    }
+
+    /* ── IMAGE PLACEHOLDERS ── */
+    .img-placeholder {
+      background: var(--surface2);
+      border: 1px dashed rgba(201,168,76,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .img-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.03) 0%, transparent 50%);
+    }
+    .img-placeholder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ── FICHADA CARDS ── */
+    .fichada-section { background: var(--surface); }
+
+    .fichada-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .fichada-card {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 2.2rem 2rem;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .fichada-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--gold);
+      transition: width 0.4s ease;
+    }
+    .fichada-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-4px); }
+    .fichada-card:hover::after { width: 100%; }
+
+    .fichada-icon {
+      width: 48px; height: 48px;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+    .fichada-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.8rem;
+    }
+    .fichada-card p {
+      font-size: 0.87rem;
+      line-height: 1.75;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .fichada-card .img-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+    }
+
+    /* ── KIOSKO ── */
+    .kiosko-section { background: var(--surface); }
+    .kiosko-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .kiosko-steps {
+      list-style: none;
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+    .kiosko-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--muted);
+      counter-increment: step;
+    }
+    .kiosko-step::before {
+      content: counter(step);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .kiosko-step strong { color: var(--text); }
+
+    /* ── REPORTES ── */
+    .reportes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .reporte-card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 2rem 1.8rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .reporte-card:hover { border-color: rgba(201,168,76,0.25); }
+    .reporte-card h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.8rem;
+    }
+    .reporte-card p {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .reporte-icon {
+      width: 40px; height: 40px;
+      color: var(--gold);
+      margin: 0 auto 1rem;
+    }
+
+    /* ── SEMAFORO ── */
+    .semaforo-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .semaforo-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+    .semaforo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+    .semaforo-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .semaforo-dot.green { background: #22c55e; box-shadow: 0 0 12px rgba(34,197,94,0.4); }
+    .semaforo-dot.yellow { background: #eab308; box-shadow: 0 0 12px rgba(234,179,8,0.4); }
+    .semaforo-dot.red { background: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,0.4); }
+    .semaforo-item strong { color: var(--text); }
+
+    .semaforo-image .img-placeholder {
+      width: 100%;
+      aspect-ratio: 4/3;
+    }
+
+    /* ── MOBILE ── */
+    .mobile-section { background: var(--surface); }
+    .mobile-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .mobile-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+    .mobile-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+    .mobile-feature-item strong { color: var(--text); }
+    .mobile-feature-icon {
+      width: 36px; height: 36px;
+      color: var(--gold);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .mobile-image .img-placeholder {
+      width: 100%;
+      aspect-ratio: 9/16;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .mobile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--gold);
+      padding: 0.3rem 0.9rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 2rem;
+    }
+
+    /* ── ADMIN ── */
+    .admin-section { background: var(--surface); }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .admin-feature {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 2rem 1.8rem;
+      transition: all 0.3s ease;
+    }
+    .admin-feature:hover { border-color: rgba(201,168,76,0.25); }
+    .admin-feature h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 1rem;
+    }
+    .admin-feature ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .admin-feature li {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .admin-feature li::before {
+      content: '—';
+      color: var(--gold);
+      position: absolute;
+      left: 0;
+    }
+
+    .admin-images {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .admin-images .img-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+    }
+
+    /* ── PORTAL ── */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .portal-feature {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 2rem 1.8rem;
+      transition: all 0.3s ease;
+    }
+    .portal-feature:hover { border-color: rgba(201,168,76,0.25); }
+    .portal-feature h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 1rem;
+    }
+    .portal-feature ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .portal-feature li {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .portal-feature li::before {
+      content: '—';
+      color: var(--gold);
+      position: absolute;
+      left: 0;
+    }
+
+    .portal-images {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .portal-images .img-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+    }
+
+    /* ── MULTI-EMPRESA ── */
+    .multi-section { background: var(--surface); }
+    .multi-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .multi-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-top: 2rem;
+    }
+    .multi-bullets li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.7;
+      padding-left: 1.5rem;
+      position: relative;
+    }
+    .multi-bullets li::before {
+      content: '—';
+      color: var(--gold);
+      position: absolute;
+      left: 0;
+    }
+    .multi-image .img-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+    }
+
+    /* ── DESCARGAS ── */
+    .descargas-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .descarga-card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+    .descarga-card:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-3px); }
+
+    .descarga-icon {
+      width: 48px; height: 48px;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+    .descarga-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.3rem;
+    }
+    .descarga-peso {
+      font-size: 0.75rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+    .descarga-card p {
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      flex-grow: 1;
+    }
+    .descarga-req {
+      font-size: 0.78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .descarga-req strong { color: var(--text); font-weight: 500; }
+    .descarga-cuando {
+      font-size: 0.8rem;
+      color: var(--gold-light);
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-download {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 0.75rem 1.5rem;
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .btn-download:hover { background: var(--gold); color: var(--bg); }
+    .btn-download.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ── PLANES ── */
+    .planes-section { background: var(--surface); }
+    .planes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .plan-card {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .plan-card:hover { border-color: rgba(201,168,76,0.3); }
+    .plan-card.featured {
+      border-color: var(--gold);
+      position: relative;
+    }
+    .plan-card.featured::before {
+      content: 'Recomendado';
+      position: absolute;
+      top: -0.7rem; left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--bg);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.3rem 1rem;
+    }
+    .plan-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .plan-detail {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .plan-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      text-align: center;
+      padding: 8rem 6%;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(201,168,76,0.06) 0%, transparent 70%);
+    }
+    .cta-section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 300;
+      color: var(--white);
+      position: relative;
+      z-index: 1;
+    }
+    .cta-section em { font-style: normal; color: var(--gold); }
+    .cta-actions {
+      margin-top: 2.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(0,0,0,0.1);
+      background: #dce1ec;
+      padding: 3rem 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .footer-logo { text-decoration: none; }
+    .footer-links { display: flex; gap: 2rem; list-style: none; }
+    .footer-links a {
+      text-decoration: none;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-copy { font-size: 0.75rem; color: rgba(0,0,0,0.35); letter-spacing: 0.05em; }
+
+    /* ── WHATSAPP ── */
+    .wa-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 800;
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      background: #25d366;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+      transition: all 0.3s;
+      text-decoration: none;
+      animation: fadeUp 1s 1s ease forwards;
+      opacity: 0;
+    }
+    .wa-btn:hover { transform: scale(1.1); box-shadow: 0 8px 30px rgba(37,211,102,0.5); }
+    .wa-btn svg { width: 28px; height: 28px; fill: white; }
+    .wa-pulse {
+      position: absolute;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: #25d366;
+      animation: waPulse 2s infinite;
+    }
+    @keyframes waPulse { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.7);opacity:0} }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        align-items: center;
+        justify-content: center;
+        gap: 3rem;
+        z-index: 850;
+      }
+      .nav-links.open a { font-size: 1.1rem; color: var(--text); }
+      .hamburger { display: flex; z-index: 900; }
+
+      .hero-layout { grid-template-columns: 1fr; gap: 3rem; }
+      .fichada-grid { grid-template-columns: 1fr 1fr; }
+      .semaforo-section { grid-template-columns: 1fr; gap: 3rem; }
+      .mobile-layout { grid-template-columns: 1fr; gap: 3rem; }
+      .kiosko-layout { grid-template-columns: 1fr; gap: 3rem; }
+      .admin-grid { grid-template-columns: 1fr; }
+      .admin-images { grid-template-columns: 1fr; }
+      .portal-grid { grid-template-columns: 1fr; }
+      .portal-images { grid-template-columns: 1fr; }
+      .reportes-grid { grid-template-columns: 1fr 1fr; }
+      .multi-layout { grid-template-columns: 1fr; gap: 3rem; }
+      .descargas-grid { grid-template-columns: 1fr; }
+      .planes-grid { grid-template-columns: 1fr 1fr; }
+      footer { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 500px) {
+      .fichada-grid { grid-template-columns: 1fr; }
+      .reportes-grid { grid-template-columns: 1fr; }
+      .planes-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="logo"><img src="images/Logo-IntegraIA.png" alt="INTEGRA IA" style="height:75px;width:auto;"></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html#sobre">Nosotros</a></li>
+    <li><a href="index.html#servicios">Servicios</a></li>
+    <li><a href="index.html#productos">Productos</a></li>
+    <li><a href="#mobile">Móvil</a></li>
+    <li><a href="#descargas">Descargas</a></li>
+    <li><a href="digital-one-help.html">Ayuda</a></li>
+    <li><a href="index.html#contacto" class="nav-cta">Contacto</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="do-hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero-layout">
+    <div class="hero-text">
+      <div class="hero-badge">Producto IntegraIA</div>
+      <h1>Digital <em>One</em></h1>
+      <div class="hero-subtitle">Control de Asistencia Inteligente para tu Empresa</div>
+      <p class="hero-desc">
+        Sistema integral de control de asistencia con fichada por huella digital, PIN o desde el celular con validación GPS. Incluye aplicaciones de escritorio para fichada y administración, portal web para gestión remota y una PWA móvil para que tus empleados fichen desde su smartphone.
+      </p>
+      <div class="hero-actions">
+        <a href="index.html#contacto" class="btn-primary">Solicitar Demo</a>
+        <a href="#descargas" class="btn-ghost">Descargar</a>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="img-placeholder">
+        <img src="images/digital-one/digital-one-hero.svg" alt="Digital One - Fichador, Administrador y Portal Web">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODALIDADES DE FICHADA -->
+<section class="fichada-section" id="fichada">
+  <div class="reveal">
+    <div class="section-eyebrow">Modalidades de fichada</div>
+    <h2 class="section-title">Fichá con <em>Huella</em>, <em>PIN</em> o desde tu <em>Celular</em>.</h2>
+  </div>
+  <div class="fichada-grid">
+
+    <div class="fichada-card reveal">
+      <div class="fichada-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 10a4 4 0 0 0-4 4c0 2.21 1.79 4 4 4s4-1.79 4-4a4 4 0 0 0-4-4z"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+          <path d="M12 6v2"/><path d="M12 16v2"/><path d="M6 12h2"/><path d="M16 12h2"/>
+          <path d="M7.76 7.76l1.41 1.41"/><path d="M14.83 14.83l1.41 1.41"/>
+          <path d="M7.76 16.24l1.41-1.41"/><path d="M14.83 9.17l1.41-1.41"/>
+        </svg>
+      </div>
+      <h3>Huella Digital</h3>
+      <p>Identificación biométrica instantánea con lector DigitalPersona. El empleado apoya su dedo y el sistema lo reconoce en menos de 1 segundo entre todos los empleados registrados.</p>
+      <div class="img-placeholder">
+        <img src="images/digital-one/fichador-huella.png" alt="Fichador - Modo Huella Digital">
+      </div>
+    </div>
+
+    <div class="fichada-card reveal">
+      <div class="fichada-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <path d="M8 8h2v2H8z"/><path d="M12 8h2v2h-2z"/><path d="M16 8h0"/>
+          <path d="M8 12h2v2H8z"/><path d="M12 12h2v2h-2z"/><path d="M16 12h0"/>
+          <path d="M8 16h8v2H8z"/>
+        </svg>
+      </div>
+      <h3>PIN Personal</h3>
+      <p>Cada empleado tiene un PIN numérico personal. Ideal como alternativa cuando no hay lector biométrico disponible. El PIN se puede cambiar voluntariamente y tiene política de expiración configurable.</p>
+      <div class="img-placeholder">
+        <img src="images/digital-one/fichador-pin.png" alt="Fichador - Modo PIN">
+      </div>
+    </div>
+
+    <div class="fichada-card reveal">
+      <div class="fichada-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+          <line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+      </div>
+      <h3>Fichada Móvil</h3>
+      <p>El empleado ficha desde su smartphone accediendo a la PWA de Digital One. El sistema valida su ubicación por GPS para garantizar que esté en la sucursal correspondiente. Sin necesidad de instalar una app.</p>
+      <div class="img-placeholder">
+        <img src="images/digital-one/fichador-movil.png" alt="Fichador - Modo Móvil">
+      </div>
+    </div>
+
+    <div class="fichada-card reveal">
+      <div class="fichada-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/>
+          <line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/>
+        </svg>
+      </div>
+      <h3>Código QR</h3>
+      <p>El empleado muestra su código QR personal frente a la cámara de la terminal. El sistema lo lee, valida y registra la fichada en menos de 1 segundo. Protección anti-duplicado de 5 segundos entre lecturas.</p>
+      <div class="img-placeholder">
+        <!-- IMG: digital-one-fichador-qr.png -->
+        QR — Cámara leyendo código
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SEMAFORO VISUAL -->
+<section class="semaforo-section" id="semaforo">
+  <div class="reveal">
+    <div class="section-eyebrow">Experiencia de uso</div>
+    <h2 class="section-title">Feedback <em>inmediato</em> para el empleado.</h2>
+    <p class="section-body" style="margin-top:1.5rem">
+      Al fichar, el sistema muestra un semáforo de colores que confirma visualmente el resultado:
+    </p>
+    <ul class="semaforo-list">
+      <li class="semaforo-item">
+        <div class="semaforo-dot green"></div>
+        <div><strong>Verde:</strong> Fichada registrada correctamente. Muestra nombre del empleado y si es ENTRADA o SALIDA.</div>
+      </li>
+      <li class="semaforo-item">
+        <div class="semaforo-dot yellow"></div>
+        <div><strong>Amarillo:</strong> Procesando captura de huella.</div>
+      </li>
+      <li class="semaforo-item">
+        <div class="semaforo-dot red"></div>
+        <div><strong>Rojo:</strong> Huella no reconocida. El empleado debe reintentar.</div>
+      </li>
+    </ul>
+  </div>
+  <div class="semaforo-image reveal">
+    <div class="img-placeholder">
+      <img src="images/digital-one/fichador-semaforo.png" alt="Fichador - Semáforo Visual">
+    </div>
+  </div>
+</section>
+
+<!-- FICHADA MÓVIL -->
+<section class="mobile-section" id="mobile">
+  <div class="mobile-layout">
+    <div class="reveal">
+      <div class="section-eyebrow">Nuevo — Fichada desde el celular</div>
+      <h2 class="section-title">Fichá desde tu <em>smartphone</em>, estés donde estés.</h2>
+      <p class="section-body" style="margin-top:1.5rem">
+        Con Digital One Mobile, tus empleados fichan directamente desde su celular accediendo a la PWA del portal. No necesitan instalar ninguna app: abren el navegador, ingresan y fichan. El sistema valida automáticamente su ubicación por GPS.
+      </p>
+      <ul class="mobile-features">
+        <li class="mobile-feature-item">
+          <svg class="mobile-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div><strong>Validación GPS:</strong> El sistema verifica que el empleado esté dentro del radio de la sucursal antes de permitir la fichada.</div>
+        </li>
+        <li class="mobile-feature-item">
+          <svg class="mobile-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          <div><strong>Validación WiFi:</strong> Configurá redes WiFi autorizadas por sucursal como método alternativo de validación de ubicación.</div>
+        </li>
+        <li class="mobile-feature-item">
+          <svg class="mobile-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <div><strong>PWA — Sin instalar nada:</strong> Funciona como una app desde el navegador del celular. Compatible con Android e iOS.</div>
+        </li>
+        <li class="mobile-feature-item">
+          <svg class="mobile-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div><strong>PIN Móvil:</strong> El empleado se identifica con su legajo y PIN personal, con las mismas políticas de seguridad y expiración que en la terminal de escritorio.</div>
+        </li>
+        <li class="mobile-feature-item">
+          <svg class="mobile-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div><strong>Gestión desde el Portal:</strong> Administrá terminales móviles, generá códigos de activación y configurá las reglas de validación por sucursal desde el portal web.</div>
+        </li>
+      </ul>
+      <div class="mobile-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="width:14px;height:14px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+        Compatible con Android e iOS
+      </div>
+    </div>
+    <div class="mobile-image reveal">
+      <div class="img-placeholder">
+        <img src="images/digital-one/mobile-fichada-gps.svg" alt="Digital One Mobile - Fichada con validación GPS">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMINISTRADOR -->
+<section class="admin-section" id="administrador">
+  <div class="reveal">
+    <div class="section-eyebrow">App de escritorio</div>
+    <h2 class="section-title">Registro de <em>huellas y fotos</em> desde el escritorio.</h2>
+    <p class="section-body" style="margin-top:1.5rem">
+      La aplicación Administrador tiene un rol simplificado: se usa exclusivamente para registrar huellas digitales y tomar fotos de los empleados. Los datos del legajo se muestran en modo solo lectura — toda la gestión se hace desde el Portal Web.
+    </p>
+  </div>
+
+  <div class="admin-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="admin-feature reveal">
+      <h4>Registro de Huellas</h4>
+      <ul>
+        <li>Asistente guiado de enrolamiento</li>
+        <li>4 capturas por dedo para máxima precisión</li>
+        <li>Registro de múltiples dedos por empleado</li>
+        <li>Requiere lector DigitalPersona conectado</li>
+      </ul>
+    </div>
+    <div class="admin-feature reveal">
+      <h4>Captura de Foto</h4>
+      <ul>
+        <li>Foto del empleado vía webcam</li>
+        <li>Se muestra en el Portal Web y la PWA</li>
+        <li>Avatar en listados y confirmación de fichada</li>
+      </ul>
+    </div>
+    <div class="admin-feature reveal">
+      <h4>Dispositivo Móvil</h4>
+      <ul>
+        <li>Ver estado del smartphone vinculado</li>
+        <li>Generar código de activación móvil</li>
+        <li>Desactivar dispositivo</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="admin-images">
+    <div class="img-placeholder reveal">
+      <img src="images/digital-one/administrador-principal.png" alt="Administrador - Pantalla Principal">
+    </div>
+    <div class="img-placeholder reveal">
+      <img src="images/digital-one/administrador-huellas.png" alt="Administrador - Registro de Huellas">
+    </div>
+  </div>
+</section>
+
+<!-- PORTAL WEB -->
+<section id="portal">
+  <div class="reveal">
+    <div class="section-eyebrow">Acceso remoto</div>
+    <h2 class="section-title">Tu empresa en la <em>palma de tu mano</em>.</h2>
+    <p class="section-body" style="margin-top:1.5rem">
+      Accedé a toda la información de asistencia desde cualquier navegador, en cualquier dispositivo. El portal web te da visibilidad completa del estado de tu equipo en tiempo real.
+    </p>
+  </div>
+
+  <div class="portal-grid">
+    <div class="portal-feature reveal">
+      <h4>Dashboard en Tiempo Real</h4>
+      <ul>
+        <li>Empleados presentes vs ausentes hoy</li>
+        <li>Llegadas tarde del día</li>
+        <li>Total de fichadas (entradas/salidas)</li>
+        <li>Gráfico semanal de asistencia</li>
+        <li>Distribución horaria de fichadas</li>
+        <li>Últimas fichadas en tiempo real</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Gestión de Empleados</h4>
+      <ul>
+        <li>Alta, baja y modificación desde el navegador</li>
+        <li>Importación masiva desde Excel (.xlsx)</li>
+        <li>Plantilla descargable con valores válidos</li>
+        <li>Foto, domicilio y datos completos</li>
+        <li>Credencial QR auto-generada por legajo</li>
+        <li>Impresión masiva de credenciales QR</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Fichadas y Fichadas Manuales</h4>
+      <ul>
+        <li>Consulta por empleado, fecha y tipo</li>
+        <li>Carga manual de fichadas con fecha, hora y sucursal</li>
+        <li>Edición y eliminación con trazabilidad</li>
+        <li>Exportación a Excel y CSV</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Calendario Personal</h4>
+      <ul>
+        <li>Vista mensual tipo Google Calendar</li>
+        <li>Horario habitual visible como badge</li>
+        <li>Eventos de calendario (extensiones, convocatorias)</li>
+        <li>Novedades: incidencias y vacaciones individuales</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Incidencias y Vacaciones</h4>
+      <ul>
+        <li>20 tipos de incidencia por defecto (legales y personales)</li>
+        <li>Registro masivo para múltiples empleados</li>
+        <li>Filtros por sector, categoría y sucursal</li>
+        <li>Eliminación masiva por rango de fechas</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Estructura Organizacional</h4>
+      <ul>
+        <li>Horarios, Categorías, Sectores, Sucursales</li>
+        <li>Ubicación GPS por sucursal (mapa interactivo)</li>
+        <li>Feriados del calendario</li>
+        <li>Variables de configuración del sistema</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Terminales y Dispositivos</h4>
+      <ul>
+        <li>Terminales de escritorio (auto-registro)</li>
+        <li>Terminales móviles y códigos de activación</li>
+        <li>Modo Kiosko con QR</li>
+        <li>Configuración GPS/WiFi por sucursal</li>
+      </ul>
+    </div>
+    <div class="portal-feature reveal">
+      <h4>Usuarios y Seguridad</h4>
+      <ul>
+        <li>4 roles: AdminEmpresa, Operador, Consulta, SuperAdmin</li>
+        <li>Cambio de contraseña obligatorio en primer ingreso</li>
+        <li>Aislamiento total de datos entre empresas</li>
+        <li>Verificación de email para operaciones críticas</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="portal-images">
+    <div class="img-placeholder reveal">
+      <img src="images/digital-one/portal-dashboard.png" alt="Portal Web - Dashboard">
+    </div>
+    <div class="img-placeholder reveal">
+      <img src="images/digital-one/portal-legajos.png" alt="Portal Web - Empleados">
+    </div>
+    <div class="img-placeholder reveal">
+      <img src="images/digital-one/portal-fichadas.png" alt="Portal Web - Fichadas">
+    </div>
+  </div>
+</section>
+
+<!-- REPORTES -->
+<section id="reportes">
+  <div class="reveal">
+    <div class="section-eyebrow">Información para decidir</div>
+    <h2 class="section-title">Reportes que te dan <em>visibilidad</em>.</h2>
+    <p class="section-body" style="margin-top:1.5rem">
+      Generá reportes detallados para controlar la asistencia de tu equipo. Todos se exportan a Excel y CSV.
+    </p>
+  </div>
+  <div class="reportes-grid">
+    <div class="reporte-card reveal">
+      <div class="reporte-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+      </div>
+      <h4>Asistencia Diaria</h4>
+      <p>Resumen de entradas y salidas por día. Visualizá quién fichó y a qué hora.</p>
+    </div>
+    <div class="reporte-card reveal">
+      <div class="reporte-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h4>Llegadas Tarde</h4>
+      <p>Empleados que ingresaron después de su horario. Comparación automática con horario asignado.</p>
+    </div>
+    <div class="reporte-card reveal">
+      <div class="reporte-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+      </div>
+      <h4>Ausencias</h4>
+      <p>Empleados que no ficharon en días laborables. Filtro por sector, motivo y toggle para incidencias justificadas.</p>
+    </div>
+    <div class="reporte-card reveal">
+      <div class="reporte-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h4>Horas Trabajadas</h4>
+      <p>Resumen de horas por empleado y período. Ideal para liquidación de sueldos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODO KIOSKO -->
+<section class="kiosko-section" id="kiosko">
+  <div class="kiosko-layout">
+    <div class="reveal">
+      <div class="section-eyebrow">Nuevo — Fichada compartida</div>
+      <h2 class="section-title">Modo <em>Kiosko</em>: una tablet, todos fichan.</h2>
+      <p class="section-body" style="margin-top:1.5rem">
+        Instalá una tablet o dispositivo en la sucursal para que múltiples empleados fichen con su código QR personal. La presencia física frente a la cámara es la validación — no necesita GPS.
+      </p>
+      <ol class="kiosko-steps">
+        <li class="kiosko-step"><div><strong>Configurar:</strong> Desde el Portal Web, registrá el kiosko asignándole un nombre y sucursal.</div></li>
+        <li class="kiosko-step"><div><strong>Instalar:</strong> Abrí la URL del kiosko en la tablet e ingresá el Device ID.</div></li>
+        <li class="kiosko-step"><div><strong>Credenciales QR:</strong> Cada empleado tiene un QR único (visible en el Portal, la PWA o impreso).</div></li>
+        <li class="kiosko-step"><div><strong>Fichar:</strong> El empleado muestra su QR a la cámara. Validación + Entrada/Salida automática.</div></li>
+        <li class="kiosko-step"><div><strong>Confirmación:</strong> Pantalla verde con nombre, foto y tipo de fichada durante 3 segundos.</div></li>
+      </ol>
+    </div>
+    <div class="reveal">
+      <div class="img-placeholder" style="width:100%;aspect-ratio:4/3;">
+        <!-- IMG: digital-one-kiosko.png -->
+        Kiosko — Tablet con cámara QR activa
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MULTI-EMPRESA -->
+<section class="multi-section" id="multi-empresa">
+  <div class="multi-layout">
+    <div class="reveal">
+      <div class="section-eyebrow">Escalabilidad</div>
+      <h2 class="section-title">Una plataforma, <em>múltiples</em> empresas.</h2>
+      <p class="section-body" style="margin-top:1.5rem">
+        Digital One funciona en modalidad multi-empresa: todas tus sucursales y empresas del grupo comparten la misma plataforma, con aislamiento total de datos. Cada empresa tiene su propia configuración, empleados, horarios y reportes completamente independientes.
+      </p>
+      <ul class="multi-bullets">
+        <li>Base de datos compartida con aislamiento por empresa</li>
+        <li>Cada empresa con su propio logo, branding y redes sociales</li>
+        <li>Gestión centralizada desde el portal de licencias</li>
+        <li>Auto-registro de terminales: las PCs de fichaje se dan de alta solas al abrir el Fichador por primera vez</li>
+        <li>Alta de nuevas empresas en minutos con usuario admin auto-provisionado</li>
+        <li>Suspensión y reactivación de empresas con efecto inmediato</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- DESCARGAS -->
+<section id="descargas">
+  <div class="reveal">
+    <div class="section-eyebrow">Instaladores</div>
+    <h2 class="section-title">Descargá <em>Digital One</em>.</h2>
+  </div>
+
+  <!-- WINDOWS -->
+  <div style="margin-top:3rem;" class="reveal">
+    <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:2rem;">
+      <svg viewBox="0 0 24 24" fill="var(--gold)" width="28" height="28" style="width:28px;height:28px;flex-shrink:0;"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.849"/></svg>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--white);">Windows</span>
+    </div>
+  </div>
+
+  <div class="descargas-grid">
+
+    <div class="descarga-card reveal">
+      <div class="descarga-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </div>
+      <h3>Instalador Cloud</h3>
+      <div class="descarga-peso">~25 MB</div>
+      <p>Para empresas que ya tienen su cuenta creada en la plataforma. Requiere un código de activación proporcionado por el administrador. Se conecta directamente a la nube sin base de datos local.</p>
+      <div class="descarga-req"><strong>Requisitos:</strong> Windows 10 o superior, conexión a internet, código de activación.</div>
+      <div class="descarga-cuando">Elegí esta opción si tu empresa ya está registrada en Digital One y te dieron un código de activación.</div>
+      <a href="instalador/DigitalPlus_Cloud_Setup_v1.0.exe" class="btn-download" download>Descargar para Windows</a>
+    </div>
+
+    <div class="descarga-card reveal">
+      <div class="descarga-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </div>
+      <h3>Instalador Completo</h3>
+      <div class="descarga-peso">~180 MB</div>
+      <p>Instalación independiente con base de datos local incluida. Ideal para empresas que quieren operar de forma autónoma sin depender de conexión a internet.</p>
+      <div class="descarga-req"><strong>Requisitos:</strong> Windows 10 o superior, 4 GB RAM mínimo.</div>
+      <div class="descarga-cuando">Elegí esta opción si querés instalar Digital One en tu red local sin necesidad de conexión permanente a internet.</div>
+      <a href="#" class="btn-download disabled">Próximamente</a>
+    </div>
+
+    <div class="descarga-card reveal">
+      <div class="descarga-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h3>Manual de Usuario</h3>
+      <div class="descarga-peso">PDF</div>
+      <p>Guía completa de uso del Fichador, Administrador y Portal Web. Todo lo que necesitás saber para usar Digital One desde el primer día.</p>
+      <div class="descarga-req">&nbsp;</div>
+      <div class="descarga-cuando">&nbsp;</div>
+      <a href="instalador/DOC02-Manual_Usuario_Final.md" class="btn-download" download>Descargar Manual</a>
+    </div>
+
+  </div>
+
+  <div class="reveal" style="margin-top:2rem;padding:1.2rem 1.5rem;border:1px solid rgba(201,168,76,0.2);background:rgba(201,168,76,0.05);">
+    <p style="font-size:0.82rem;color:var(--muted);line-height:1.7;margin:0;">
+      <strong style="color:var(--gold);">Nota:</strong> Tu navegador puede mostrar una advertencia de seguridad al descargar el instalador. Esto es normal para aplicaciones nuevas. Hacé click en "Conservar" o "Permitir" para continuar con la descarga.
+    </p>
+  </div>
+
+  <!-- MÓVIL -->
+  <div style="margin-top:4rem;" class="reveal">
+    <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:2rem;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--white);">Móvil — Android e iOS</span>
+    </div>
+    <div class="descarga-card" style="max-width:500px;padding:2.5rem 2rem;">
+      <div class="descarga-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 16 16 12 12 8"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </div>
+      <h3>Digital One Mobile</h3>
+      <div class="descarga-peso">PWA — Sin instalación</div>
+      <p>Fichada desde el celular con validación de ubicación GPS. Los empleados acceden desde el navegador de su smartphone, sin descargar nada. Funciona en cualquier celular con Android o iOS.</p>
+      <div class="descarga-req"><strong>Requisitos:</strong> Smartphone con navegador moderno, conexión a internet, GPS habilitado, código de activación móvil.</div>
+      <div class="descarga-cuando">El administrador genera los códigos de activación móvil desde el Portal Web, sección "Terminales Móviles".</div>
+      <a href="index.html#contacto" class="btn-download" style="margin-top:1rem;">Solicitar acceso móvil</a>
+    </div>
+  </div>
+
+</section>
+
+<!-- PLANES -->
+<section class="planes-section" id="planes">
+  <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto 1rem;">
+    <div class="section-eyebrow">Planes</div>
+    <h2 class="section-title">Elegí el plan que se <em>adapte</em> a tu empresa.</h2>
+  </div>
+  <div class="planes-grid">
+    <div class="plan-card reveal">
+      <div class="plan-name">Trial</div>
+      <div class="plan-detail">Hasta 5 empleados</div>
+      <div class="plan-price">Gratis</div>
+      <p class="plan-detail">14 días de prueba completa para que conozcas todas las funcionalidades.</p>
+    </div>
+    <div class="plan-card reveal">
+      <div class="plan-name">Básico</div>
+      <div class="plan-detail">Hasta X empleados</div>
+      <div class="plan-price">A definir</div>
+      <p class="plan-detail">Ideal para empresas pequeñas que inician con el control de asistencia digital.</p>
+    </div>
+    <div class="plan-card featured reveal">
+      <div class="plan-name">Profesional</div>
+      <div class="plan-detail">Hasta X empleados</div>
+      <div class="plan-price">A definir</div>
+      <p class="plan-detail">Para empresas en crecimiento que necesitan reportes avanzados y portal web.</p>
+    </div>
+    <div class="plan-card reveal">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-detail">Sin límite</div>
+      <div class="plan-price">A definir</div>
+      <p class="plan-detail">Multi-empresa, soporte dedicado y personalización completa.</p>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:3rem;" class="reveal">
+    <a href="index.html#contacto" class="btn-primary">Contactanos para más información</a>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="reveal">
+    <h2>¿Listo para modernizar el <em>control de asistencia</em> de tu empresa?</h2>
+    <div class="cta-actions">
+      <a href="#" class="btn-primary" onclick="descargarDemo(); return false;">Bajar Demo</a>
+      <a href="index.html#contacto" class="btn-ghost">Contactar a Ventas</a>
+    </div>
+    <p style="margin-top:1rem;font-size:0.78rem;color:var(--muted);position:relative;z-index:1;">Descargá el instalador para Windows</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="index.html" class="footer-logo"><img src="images/Logo-IntegraIA.png" alt="INTEGRA IA" style="height:85px;width:auto;"></a>
+  <ul class="footer-links">
+    <li><a href="index.html#sobre">Nosotros</a></li>
+    <li><a href="index.html#servicios">Servicios</a></li>
+    <li><a href="index.html#productos">Productos</a></li>
+    <li><a href="index.html#contacto">Contacto</a></li>
+    <li><a href="digital-one-help.html">Ayuda</a></li>
+  </ul>
+  <div class="footer-copy">&copy; 2026 INTEGRA IA SRL — Todos los derechos reservados</div>
+</footer>
+
+<!-- WHATSAPP FLOTANTE -->
+<a class="wa-btn" href="https://wa.me/5491100000000" target="_blank" rel="noopener" title="Escribinos por WhatsApp">
+  <div class="wa-pulse"></div>
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+</a>
+
+<script>
+  // NAV scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  // Mobile menu
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('#navLinks a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Descargar demo (instalador)
+  function descargarDemo() {
+    var a = document.createElement('a');
+    a.href = 'instalador/DigitalPlus_Cloud_Setup_v1.0.exe';
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Fallback
+  setTimeout(() => {
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+      el.classList.add('visible');
+    });
+  }, 1500);
+</script>
+</body>
+</html>

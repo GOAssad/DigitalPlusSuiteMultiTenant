@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c97a"/>
+      <stop offset="100%" stop-color="#c9a84c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#0b1120" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.9"/>
+
+  <!-- Face outline - minimal oval -->
+  <ellipse cx="100" cy="82" rx="32" ry="40" fill="none" stroke="url(#goldGrad)" stroke-width="2" opacity="0.9"/>
+
+  <!-- Facial recognition scan grid points -->
+  <!-- Forehead points -->
+  <circle cx="88" cy="60" r="2" fill="#c9a84c" opacity="0.6"/>
+  <circle cx="100" cy="56" r="2" fill="#c9a84c" opacity="0.6"/>
+  <circle cx="112" cy="60" r="2" fill="#c9a84c" opacity="0.6"/>
+
+  <!-- Eye area -->
+  <circle cx="88" cy="74" r="2.5" fill="#e8c97a" opacity="0.8"/>
+  <circle cx="112" cy="74" r="2.5" fill="#e8c97a" opacity="0.8"/>
+
+  <!-- Eye scan brackets - left -->
+  <path d="M 80 70 L 80 74 L 83 74" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 96 74 L 93 74 L 93 70" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 80 78 L 80 74" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 93 78 L 93 74" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Eye scan brackets - right -->
+  <path d="M 104 70 L 104 74 L 107 74" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 120 74 L 117 74 L 117 70" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 104 78 L 104 74" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+  <path d="M 117 78 L 117 74" fill="none" stroke="#e8c97a" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Nose points -->
+  <circle cx="100" cy="82" r="1.5" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="96" cy="86" r="1.5" fill="#c9a84c" opacity="0.5"/>
+  <circle cx="104" cy="86" r="1.5" fill="#c9a84c" opacity="0.5"/>
+
+  <!-- Mouth area -->
+  <path d="M 90 96 Q 100 102 110 96" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Chin point -->
+  <circle cx="100" cy="110" r="1.5" fill="#c9a84c" opacity="0.4"/>
+
+  <!-- Connection lines between scan points (face mesh) -->
+  <line x1="88" y1="60" x2="88" y2="74" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="112" y1="60" x2="112" y2="74" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="88" y1="74" x2="96" y2="86" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="112" y1="74" x2="104" y2="86" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="96" y1="86" x2="100" y2="110" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="104" y1="86" x2="100" y2="110" stroke="#c9a84c" stroke-width="0.7" opacity="0.25"/>
+  <line x1="88" y1="74" x2="112" y2="74" stroke="#c9a84c" stroke-width="0.5" opacity="0.15" stroke-dasharray="2,2"/>
+  <line x1="88" y1="60" x2="112" y2="60" stroke="#c9a84c" stroke-width="0.5" opacity="0.15" stroke-dasharray="2,2"/>
+
+  <!-- Corner scan brackets (main frame) -->
+  <path d="M 60 50 L 60 42 L 68 42" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 140 50 L 140 42 L 132 42" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 60 118 L 60 126 L 68 126" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 140 118 L 140 126 L 132 126" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Scan line -->
+  <line x1="62" y1="84" x2="138" y2="84" stroke="#e8c97a" stroke-width="1" opacity="0.2" stroke-dasharray="4,3"/>
+
+  <!-- Text -->
+  <text x="100" y="152" text-anchor="middle" font-family="serif" font-size="18" font-weight="700" fill="url(#goldGrad)" letter-spacing="1">
+    Face
+  </text>
+  <text x="100" y="172" text-anchor="middle" font-family="serif" font-size="18" font-weight="700" fill="url(#goldGrad)" letter-spacing="1">
+    One
+  </text>
+</svg>

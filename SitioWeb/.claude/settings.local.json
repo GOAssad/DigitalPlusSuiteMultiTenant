@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:integraia.tech)",
+      "Bash(az account:*)",
+      "Bash(az appservice:*)",
+      "Bash(az signalr:*)",
+      "Bash(az webapp:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://ghappweb.azurewebsites.net/ --max-time 30 2>&1)",
+      "Bash(az network:*)",
+      "Bash(python -c \"import docx; print\\(docx.__version__\\)\" 2>&1 || pip install python-docx 2>&1)",
+      "Bash(python -m pip install python-docx 2>&1)",
+      "Bash(cd \"C:/Users/Gustavo/OneDrive/Gustavo/Empresas/IntegraIA/WebHTML\" && python Docs/generar_manual.py 2>&1)"
+    ]
+  }
+}

@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>INTEGRA IA — Transformación Digital & Agentes de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050810;
+      --surface: #0b1120;
+      --surface2: #111827;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dim: rgba(201,168,76,0.15);
+      --text: #e8eaf0;
+      --muted: #7a8394;
+      --white: #ffffff;
+      --accent-blue: #3a7bfd;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Figtree', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.4;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 900;
+      padding: 1.5rem 6%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #dce1ec;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      transition: all 0.4s ease;
+    }
+    nav.scrolled {
+      background: #dce1ec;
+      backdrop-filter: blur(20px);
+      border-color: rgba(0,0,0,0.15);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      text-decoration: none;
+      color: #1a2a4a;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold) !important;
+      padding: 0.5rem 1.4rem;
+      font-size: 0.75rem !important;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.3s ease !important;
+    }
+    .nav-cta:hover { background: var(--gold) !important; color: var(--bg) !important; }
+
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 1.5px; background: var(--text); transition: all 0.3s; }
+
+    /* ── HERO ── */
+    #inicio {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 10rem 6% 6rem;
+      overflow: hidden;
+    }
+
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(58,123,253,0.12) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      pointer-events: none;
+    }
+    .hero-glow-2 {
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      bottom: 0; left: -100px;
+      pointer-events: none;
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 800px; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      border: 1px solid var(--gold);
+      padding: 0.4rem 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      animation: fadeUp 0.8s ease forwards;
+      opacity: 0;
+    }
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      animation: fadeUp 0.8s 0.15s ease forwards;
+      opacity: 0;
+    }
+    .hero-title em { font-style: normal; color: var(--gold); }
+
+    .hero-sub {
+      margin-top: 1.8rem;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 560px;
+      animation: fadeUp 0.8s 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-actions {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.8s 0.45s ease forwards;
+      opacity: 0;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      padding: 0.9rem 2.2rem;
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,168,76,0.3); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.9rem 2.2rem;
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+    .hero-stats {
+      margin-top: 5rem;
+      display: flex;
+      gap: 3rem;
+      animation: fadeUp 0.8s 0.6s ease forwards;
+      opacity: 0;
+    }
+    .hero-stat { }
+    .hero-stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 600;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* ── PARTNERS STRIP ── */
+    .partners-strip {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1.8rem 6%;
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      overflow: hidden;
+    }
+    .partners-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .partners-logos {
+      display: flex;
+      gap: 3.5rem;
+      align-items: center;
+    }
+    .partner-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.08em;
+      transition: color 0.3s;
+      white-space: nowrap;
+    }
+    .partner-logo:hover { color: rgba(255,255,255,0.5); }
+
+    /* ── SECTION BASE ── */
+    section { padding: 7rem 6%; }
+
+    .section-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      font-weight: 300;
+      line-height: 1.15;
+      color: var(--white);
+    }
+    .section-title em { font-style: normal; color: var(--gold); }
+    .section-body {
+      font-size: 0.97rem;
+      line-height: 1.9;
+      color: var(--muted);
+      max-width: 580px;
+    }
+
+    /* ── SOBRE NOSOTROS ── */
+    #sobre {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    .sobre-right { display: flex; flex-direction: column; gap: 2rem; }
+
+    .sobre-card {
+      border: 1px solid var(--border);
+      padding: 1.8rem;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .sobre-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--gold);
+    }
+    .sobre-card:hover { border-color: rgba(201,168,76,0.3); transform: translateX(4px); }
+    .sobre-card h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+    }
+    .sobre-card p { font-size: 0.88rem; line-height: 1.7; color: var(--muted); }
+
+    /* ── SERVICIOS ── */
+    #servicios { background: var(--surface); }
+
+    .servicios-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 4rem;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .servicios-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5px;
+      background: var(--border);
+    }
+
+    .servicio-item {
+      background: var(--surface);
+      padding: 2.8rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+      cursor: default;
+    }
+    .servicio-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--gold);
+      transition: width 0.4s ease;
+    }
+    .servicio-item:hover { background: var(--surface2); }
+    .servicio-item:hover::after { width: 100%; }
+
+    .servicio-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: var(--gold-dim);
+      line-height: 1;
+      margin-bottom: 1.5rem;
+      transition: color 0.3s;
+    }
+    .servicio-item:hover .servicio-num { color: rgba(201,168,76,0.3); }
+
+    .servicio-icon {
+      width: 44px; height: 44px;
+      margin-bottom: 1.5rem;
+      color: var(--gold);
+    }
+    .servicio-item h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.8rem;
+      line-height: 1.2;
+    }
+    .servicio-item p { font-size: 0.87rem; line-height: 1.75; color: var(--muted); }
+
+    /* ── PRODUCTOS PROPIOS ── */
+    #productos { }
+
+    .productos-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 5rem;
+    }
+    .productos-header .section-body { margin: 1.2rem auto 0; text-align: center; }
+
+    .productos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .producto-card {
+      border: 1px solid var(--border);
+      padding: 2.5rem 2.2rem;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+    .producto-icon {
+      position: absolute;
+      top: 2rem;
+      right: 1.8rem;
+    }
+    .producto-icon img {
+      opacity: 0.85;
+      transition: opacity 0.3s;
+    }
+    .producto-card:hover .producto-icon img {
+      opacity: 1;
+    }
+    .producto-card:hover {
+      border-color: rgba(201,168,76,0.4);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(201,168,76,0.06);
+    }
+    .producto-card .card-glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, rgba(201,168,76,0.05), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .producto-card:hover .card-glow { opacity: 1; }
+
+    .producto-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.3);
+      padding: 0.25rem 0.7rem;
+      margin-bottom: 1.5rem;
+    }
+    .producto-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+    }
+    .producto-name span { color: var(--gold); }
+    .producto-tagline {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .producto-desc { font-size: 0.88rem; line-height: 1.75; color: var(--muted); }
+
+    .producto-features {
+      margin-top: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .producto-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .producto-feature::before {
+      content: '—';
+      color: var(--gold);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── PROCESO ── */
+    #proceso { background: var(--surface); }
+
+    .proceso-content {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .proceso-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+    .proceso-steps::before {
+      content: '';
+      position: absolute;
+      left: 20px; top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+
+    .proceso-step {
+      display: flex;
+      gap: 2rem;
+      padding: 0 0 3rem 0;
+      position: relative;
+    }
+    .paso-num {
+      width: 40px; height: 40px;
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      flex-shrink: 0;
+      background: var(--surface);
+      position: relative;
+      z-index: 1;
+    }
+    .paso-content h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+    }
+    .paso-content p { font-size: 0.87rem; line-height: 1.7; color: var(--muted); }
+
+    /* ── CONTACTO ── */
+    #contacto {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .contacto-info h2 { margin-bottom: 1.5rem; }
+    .contacto-info p { font-size: 0.97rem; line-height: 1.9; color: var(--muted); margin-bottom: 2.5rem; }
+
+    .contacto-dato {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .contacto-dato-icon {
+      width: 40px; height: 40px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .contacto-dato-icon svg { width: 16px; height: 16px; }
+    .contacto-dato-text { font-size: 0.88rem; color: var(--muted); }
+    .contacto-dato-text strong { color: var(--text); display: block; font-size: 0.82rem; font-weight: 500; margin-bottom: 2px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+    .form-group {
+      margin-bottom: 1.4rem;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.85rem 1rem;
+      color: var(--text);
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.3s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--gold);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
+    .form-textarea { resize: vertical; min-height: 130px; }
+    .form-select { cursor: pointer; }
+    .form-select option { background: var(--surface2); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+
+    .form-submit {
+      width: 100%;
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      padding: 1rem;
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 0.5rem;
+    }
+    .form-submit:hover { background: var(--gold-light); box-shadow: 0 6px 20px rgba(201,168,76,0.25); }
+
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: var(--gold-dim);
+      color: var(--gold);
+      font-size: 0.9rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(0,0,0,0.1);
+      background: #dce1ec;
+      padding: 3rem 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.08em;
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-links { display: flex; gap: 2rem; list-style: none; }
+    .footer-links a {
+      text-decoration: none;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.15); letter-spacing: 0.05em; }
+
+    /* ── WHATSAPP ── */
+    .wa-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 800;
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      background: #25d366;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+      transition: all 0.3s;
+      text-decoration: none;
+      animation: fadeUp 1s 1s ease forwards;
+      opacity: 0;
+    }
+    .wa-btn:hover { transform: scale(1.1); box-shadow: 0 8px 30px rgba(37,211,102,0.5); }
+    .wa-btn svg { width: 28px; height: 28px; fill: white; }
+    .wa-pulse {
+      position: absolute;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: #25d366;
+      animation: waPulse 2s infinite;
+    }
+    @keyframes waPulse { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.7);opacity:0} }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        align-items: center;
+        justify-content: center;
+        gap: 3rem;
+        z-index: 850;
+      }
+      .nav-links.open a { font-size: 1.1rem; }
+      .hamburger { display: flex; z-index: 900; }
+
+      #sobre { grid-template-columns: 1fr; gap: 3rem; }
+      .servicios-grid { grid-template-columns: 1fr; }
+      .productos-grid { grid-template-columns: 1fr; }
+      .proceso-content { grid-template-columns: 1fr; gap: 3rem; }
+      #contacto { grid-template-columns: 1fr; gap: 3rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .hero-stats { gap: 2rem; }
+      footer { flex-direction: column; text-align: center; }
+      .partners-logos { flex-wrap: wrap; gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#inicio" class="logo"><img src="images/Logo-IntegraIA.png" alt="INTEGRA IA" style="height:75px;width:auto;"></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#sobre">Nosotros</a></li>
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#productos">Productos</a></li>
+    <li><a href="#proceso">Proceso</a></li>
+    <li><a href="#contacto" class="nav-cta">Contacto</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="inicio">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Consultora de Transformación Digital</div>
+    <h1 class="hero-title">
+      Inteligencia<br>que <em>integra</em><br>tu negocio.
+    </h1>
+    <p class="hero-sub">
+      Diseñamos ecosistemas digitales donde cada sistema interactúa de manera eficiente, potenciados por agentes de inteligencia artificial que aprenden del negocio y evolucionan junto a él.
+    </p>
+    <div class="hero-actions">
+      <a href="#contacto" class="btn-primary">Iniciar diagnóstico</a>
+      <a href="#productos" class="btn-ghost">Ver productos</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">360°</div>
+        <div class="hero-stat-label">Visión integradora</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">3</div>
+        <div class="hero-stat-label">Productos propios</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">IA</div>
+        <div class="hero-stat-label">En cada solución</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERS -->
+<div class="partners-strip">
+  <span class="partners-label">Partners oficiales</span>
+  <div class="partners-logos">
+    <span class="partner-logo">Microsoft</span>
+    <span class="partner-logo">SAP</span>
+    <span class="partner-logo">Odoo</span>
+  </div>
+</div>
+
+<!-- SOBRE NOSOTROS -->
+<section id="sobre">
+  <div class="sobre-left reveal">
+    <div class="section-eyebrow">Quiénes somos</div>
+    <h2 class="section-title">Más que tecnología,<br><em>arquitectura</em> digital.</h2>
+    <p class="section-body" style="margin-top:1.5rem">
+      INTEGRA IA SRL es una consultora especializada en transformación digital y optimización de procesos empresariales. Acompañamos a organizaciones de cualquier rubro desde el diagnóstico inicial hasta la implementación integral de soluciones tecnológicas.
+    </p>
+    <p class="section-body" style="margin-top:1rem">
+      Contamos con un departamento interno de desarrollo que nos permite adaptar, personalizar e integrar herramientas según las necesidades específicas de cada negocio.
+    </p>
+  </div>
+  <div class="sobre-right">
+    <div class="sobre-card reveal">
+      <h4>Diagnóstico & Estrategia</h4>
+      <p>Analizamos en profundidad los circuitos informáticos de su organización para identificar brechas, redundancias y oportunidades de optimización antes de diseñar cualquier solución.</p>
+    </div>
+    <div class="sobre-card reveal">
+      <h4>Desarrollo a medida</h4>
+      <p>Nuestro equipo interno diseña, adapta e integra herramientas tecnológicas alineadas con la estrategia específica de cada empresa, garantizando escalabilidad y coherencia.</p>
+    </div>
+    <div class="sobre-card reveal">
+      <h4>Ecosistemas conectados</h4>
+      <p>No informatizamos por partes: diseñamos arquitecturas donde ERP, gestión operativa, control de accesos y analítica trabajan de manera unificada y potenciada por IA.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section id="servicios">
+  <div class="servicios-header">
+    <div>
+      <div class="section-eyebrow reveal">Lo que hacemos</div>
+      <h2 class="section-title reveal">Servicios de<br><em>transformación</em>.</h2>
+    </div>
+    <p class="section-body reveal" style="max-width:340px;text-align:right">
+      Soluciones integrales que abarcan todo el ciclo de vida de la transformación digital empresarial.
+    </p>
+  </div>
+  <div class="servicios-grid">
+    <div class="servicio-item reveal">
+      <div class="servicio-num">01</div>
+      <h3>Transformación Digital</h3>
+      <p>Rediseñamos e integramos los circuitos informáticos de la organización con una visión de arquitectura unificada, eliminando silos y conectando cada área del negocio.</p>
+    </div>
+    <div class="servicio-item reveal">
+      <div class="servicio-num">02</div>
+      <h3>Implementación ERP</h3>
+      <p>Partners oficiales de Microsoft, SAP y Odoo. Implementamos, configuramos y adaptamos plataformas ERP integrándolas con desarrollos propios y agentes de inteligencia artificial.</p>
+    </div>
+    <div class="servicio-item reveal">
+      <div class="servicio-num">03</div>
+      <h3>Agentes de Inteligencia Artificial</h3>
+      <p>Diseñamos agentes de IA que aprenden la estructura y lógica de su negocio, convirtiendo los datos corporativos en información estratégica accionable en tiempo real.</p>
+    </div>
+    <div class="servicio-item reveal">
+      <div class="servicio-num">04</div>
+      <h3>Optimización de Procesos</h3>
+      <p>Relevamiento, análisis y rediseño de flujos operativos para eliminar ineficiencias y automatizar tareas repetitivas, liberando al equipo para el trabajo de alto valor.</p>
+    </div>
+    <div class="servicio-item reveal">
+      <div class="servicio-num">05</div>
+      <h3>Analítica & Business Intelligence</h3>
+      <p>Transformamos los datos de su organización en dashboards, reportes y modelos predictivos que habilitan decisiones más rápidas, informadas y seguras.</p>
+    </div>
+    <div class="servicio-item reveal">
+      <div class="servicio-num">06</div>
+      <h3>Desarrollo a Medida</h3>
+      <p>Equipo interno de desarrollo especializado en la creación de soluciones personalizadas que se integran nativamente con el ecosistema tecnológico de la empresa.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTOS -->
+<section id="productos">
+  <div class="productos-header reveal">
+    <div class="section-eyebrow">Tecnología propia</div>
+    <h2 class="section-title">Productos <em>consolidados</em>.</h2>
+    <p class="section-body">Desarrollos propios que integran hardware, software e inteligencia artificial en soluciones listas para operar en entornos empresariales.</p>
+  </div>
+  <div class="productos-grid">
+
+    <div class="producto-card reveal">
+      <div class="card-glow"></div>
+      <div class="producto-icon">
+        <img src="images/logos/digital-one-icon.svg" alt="Digital One" style="width:80px;height:80px;">
+      </div>
+      <div class="producto-tag">Control de acceso</div>
+      <div class="producto-name">Digital <span>One</span></div>
+      <div class="producto-tagline">Gestión biométrica de personal</div>
+      <p class="producto-desc">Sistema de control de acceso y gestión de personal mediante detección de huellas digitales. Precisión biométrica, registro en tiempo real e integración con sistemas de RRHH.</p>
+      <div class="producto-features">
+        <div class="producto-feature">Identificación por huella digital</div>
+        <div class="producto-feature">Control de ingresos y egresos</div>
+        <div class="producto-feature">Gestión de turnos y asistencia</div>
+        <div class="producto-feature">Reportes e integración con ERP</div>
+      </div>
+      <a href="digital-one.html" style="display:inline-block;margin-top:1.8rem;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,168,76,0.3);padding-bottom:2px;transition:border-color 0.3s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,168,76,0.3)'">Ver producto →</a>
+    </div>
+
+    <div class="producto-card reveal">
+      <div class="card-glow"></div>
+      <div class="producto-icon">
+        <img src="images/logos/face-one-icon.svg" alt="Face One" style="width:80px;height:80px;">
+      </div>
+      <div class="producto-tag">Reconocimiento facial</div>
+      <div class="producto-name">Face <span>One</span></div>
+      <div class="producto-tagline">Validación de identidad inteligente</div>
+      <p class="producto-desc">Sistema de reconocimiento facial para validación de identidad y control inteligente de ingresos. IA aplicada a la seguridad física de las instalaciones empresariales.</p>
+      <div class="producto-features">
+        <div class="producto-feature">Reconocimiento facial en tiempo real</div>
+        <div class="producto-feature">Validación de identidad segura</div>
+        <div class="producto-feature">Control de acceso sin contacto</div>
+        <div class="producto-feature">Alertas y auditoría de ingresos</div>
+      </div>
+    </div>
+
+    <div class="producto-card reveal">
+      <div class="card-glow"></div>
+      <div class="producto-icon">
+        <img src="images/logos/erpassistant-icon.svg" alt="ERPAssistant" style="width:80px;height:80px;">
+      </div>
+      <div class="producto-tag">Agente de IA</div>
+      <div class="producto-name">ERP<span>Assistant</span></div>
+      <div class="producto-tagline">El copiloto inteligente de su negocio</div>
+      <p class="producto-desc">Agente de inteligencia artificial entrenable que aprende la estructura y lógica del negocio, permitiendo interactuar con la información corporativa mediante voz y chat.</p>
+      <div class="producto-features">
+        <div class="producto-feature">Interacción por voz y chat natural</div>
+        <div class="producto-feature">Consultas operativas en tiempo real</div>
+        <div class="producto-feature">Análisis y soporte estratégico</div>
+        <div class="producto-feature">Se adapta y evoluciona con el negocio</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PROCESO -->
+<section id="proceso">
+  <div class="proceso-content">
+    <div>
+      <div class="section-eyebrow reveal">Cómo trabajamos</div>
+      <h2 class="section-title reveal">Del diagnóstico a la <em>implementación</em>.</h2>
+      <p class="section-body reveal" style="margin-top:1.5rem">
+        Acompañamos a cada organización en cada etapa del proceso, asegurando una transición ordenada, sin fricciones y con resultados medibles.
+      </p>
+    </div>
+    <div class="proceso-steps">
+      <div class="proceso-step reveal">
+        <div class="paso-num">01</div>
+        <div class="paso-content">
+          <h4>Diagnóstico inicial</h4>
+          <p>Relevamiento integral de los sistemas, procesos y circuitos informáticos actuales. Identificamos ineficiencias y oportunidades de mejora con un análisis objetivo.</p>
+        </div>
+      </div>
+      <div class="proceso-step reveal">
+        <div class="paso-num">02</div>
+        <div class="paso-content">
+          <h4>Diseño de la arquitectura</h4>
+          <p>Diseñamos el ecosistema digital integrado: qué sistemas intervienen, cómo se interconectan y dónde aplican los agentes de IA para mayor impacto.</p>
+        </div>
+      </div>
+      <div class="proceso-step reveal">
+        <div class="paso-num">03</div>
+        <div class="paso-content">
+          <h4>Desarrollo e integración</h4>
+          <p>Nuestro equipo interno implementa, personaliza e integra las soluciones acordadas, asegurando compatibilidad y coherencia con el resto del ecosistema.</p>
+        </div>
+      </div>
+      <div class="proceso-step reveal">
+        <div class="paso-num">04</div>
+        <div class="paso-content">
+          <h4>Implementación y puesta en marcha</h4>
+          <p>Despliegue controlado, capacitación de equipos y acompañamiento en los primeros meses para garantizar la adopción y el correcto funcionamiento.</p>
+        </div>
+      </div>
+      <div class="proceso-step reveal">
+        <div class="paso-num">05</div>
+        <div class="paso-content">
+          <h4>Evolución continua</h4>
+          <p>Los agentes de IA aprenden y mejoran con el tiempo. Revisamos periódicamente el ecosistema para adaptarlo a la evolución del negocio.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="contacto-info reveal">
+    <div class="section-eyebrow">Hablemos</div>
+    <h2 class="section-title">Iniciemos su <em>transformación</em>.</h2>
+    <p style="margin-top:1.5rem">
+      Cuéntenos el estado actual de su organización. Nuestro equipo analizará su caso y le propondrá un diagnóstico inicial sin cargo.
+    </p>
+    <div style="margin-top:2rem">
+      <div class="contacto-dato">
+        <div class="contacto-dato-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="contacto-dato-text">
+          <strong>Email</strong>
+          <a href="mailto:administracion@integraai.com.ar">administracion@integraai.com.ar</a>
+        </div>
+      </div>
+      <div class="contacto-dato">
+        <div class="contacto-dato-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <div class="contacto-dato-text">
+          <strong>Ubicación</strong>
+          Buenos Aires, Argentina
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <form id="contactForm" onsubmit="submitForm(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input class="form-input" type="text" name="nombre" placeholder="Su nombre" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Empresa</label>
+          <input class="form-input" type="text" name="empresa" placeholder="Nombre de la empresa" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" name="email" placeholder="correo@empresa.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">¿En qué podemos ayudarle?</label>
+        <select class="form-select" name="servicio">
+          <option value="">Seleccione una opción</option>
+          <option>Diagnóstico de transformación digital</option>
+          <option>Implementación ERP (Microsoft / SAP / Odoo)</option>
+          <option>Agentes de Inteligencia Artificial</option>
+          <option>Producto Digital One</option>
+          <option>Producto Face One</option>
+          <option>Producto ERPAssistant</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensaje</label>
+        <textarea class="form-textarea" name="mensaje" placeholder="Cuéntenos brevemente sobre su empresa y el desafío que enfrenta..."></textarea>
+      </div>
+      <button type="submit" class="form-submit">Enviar consulta →</button>
+    </form>
+    <div class="form-success" id="formSuccess">
+      ✓ Mensaje recibido. Nuestro equipo se pondrá en contacto a la brevedad.
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><img src="images/Logo-IntegraIA.png" alt="INTEGRA IA" style="height:85px;width:auto;"></div>
+  <ul class="footer-links">
+    <li><a href="#sobre">Nosotros</a></li>
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#productos">Productos</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 INTEGRA IA SRL — Todos los derechos reservados</div>
+</footer>
+
+<!-- WHATSAPP FLOTANTE -->
+<a class="wa-btn" href="https://wa.me/5491100000000" target="_blank" rel="noopener" title="Escribinos por WhatsApp">
+  <div class="wa-pulse"></div>
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+</a>
+
+<script>
+  // NAV scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  // Mobile menu
+  function toggleMenu() {
+    const links = document.getElementById('navLinks');
+    links.classList.toggle('open');
+  }
+  document.querySelectorAll('#navLinks a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Fallback: si por algún motivo el observer no dispara, mostrar todo igual
+  setTimeout(() => {
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+      el.classList.add('visible');
+    });
+  }, 1500);
+
+  // Form submit
+  function submitForm(e) {
+    e.preventDefault();
+    var form = document.getElementById('contactForm');
+    var btn = form.querySelector('.form-submit');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    fetch('enviar.php', {
+      method: 'POST',
+      body: new FormData(form)
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        form.style.display = 'none';
+        document.getElementById('formSuccess').style.display = 'block';
+      } else {
+        alert('Error al enviar: ' + (data.error || 'Intente nuevamente.'));
+        btn.disabled = false;
+        btn.textContent = 'Enviar consulta →';
+      }
+    })
+    .catch(function() {
+      alert('Error de conexión. Intente nuevamente.');
+      btn.disabled = false;
+      btn.textContent = 'Enviar consulta →';
+    });
+  }
+</script>
+</body>
+</html>

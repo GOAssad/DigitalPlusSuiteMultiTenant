@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c97a"/>
+      <stop offset="100%" stop-color="#c9a84c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle - WHITE -->
+  <circle cx="100" cy="100" r="95" fill="#0b1120" stroke="#ffffff" stroke-width="1.5" opacity="0.9"/>
+
+  <!-- Fingerprint lines - GOLD -->
+  <circle cx="100" cy="100" r="3" fill="url(#goldGrad)"/>
+
+  <path d="M 88 100 A 12 12 0 0 1 112 100" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 112 100 A 12 14 0 0 1 88 100" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+
+  <path d="M 80 103 A 20 22 0 0 1 120 103" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 118 95 A 20 22 0 0 1 82 95" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <path d="M 73 105 A 28 32 0 0 1 127 105" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 125 90 A 28 30 0 0 1 75 90" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+  <path d="M 67 110 A 36 42 0 0 1 133 110" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 131 85 A 36 38 0 0 1 69 85" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+
+  <path d="M 62 115 A 44 52 0 0 1 138 115" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 136 80 A 44 46 0 0 1 64 80" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+
+  <line x1="60" y1="100" x2="140" y2="100" stroke="#e8c97a" stroke-width="1" opacity="0.25" stroke-dasharray="3,3"/>
+
+  <circle cx="65" cy="120" r="1.5" fill="#c9a84c" opacity="0.4"/>
+  <circle cx="135" cy="120" r="1.5" fill="#c9a84c" opacity="0.4"/>
+  <circle cx="70" cy="75" r="1.5" fill="#c9a84c" opacity="0.3"/>
+  <circle cx="130" cy="75" r="1.5" fill="#c9a84c" opacity="0.3"/>
+</svg>

@@ -1,0 +1,501 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 820" width="1600" height="820" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A1628"/>
+      <stop offset="55%" stop-color="#0D1F3C"/>
+      <stop offset="100%" stop-color="#0A2240"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00C9A7"/>
+      <stop offset="100%" stop-color="#0080FF"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#162440" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0E1A30" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00C9A7"/>
+      <stop offset="100%" stop-color="#00E5B8"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0080FF"/>
+      <stop offset="100%" stop-color="#00B4FF"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF7043"/>
+      <stop offset="100%" stop-color="#FFA726"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#A855F7"/>
+    </linearGradient>
+    <linearGradient id="barGreen1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00C9A7"/>
+      <stop offset="100%" stop-color="#00A58A"/>
+    </linearGradient>
+    <linearGradient id="barBlue1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0080FF"/>
+      <stop offset="100%" stop-color="#0060CC"/>
+    </linearGradient>
+    <linearGradient id="barOrange1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF7043"/>
+      <stop offset="100%" stop-color="#E55C30"/>
+    </linearGradient>
+    <linearGradient id="fpGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00C9A7" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#0080FF" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="scanLine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00C9A7" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#00C9A7" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#00C9A7" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="tinyGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="screenClip">
+      <rect x="880" y="80" width="660" height="680" rx="16"/>
+    </clipPath>
+    <clipPath id="donutClip">
+      <circle cx="1090" cy="390" r="54"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="820" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid lines -->
+  <g opacity="0.04" stroke="#FFFFFF" stroke-width="0.5">
+    <line x1="0" y1="100" x2="1600" y2="100"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/>
+    <line x1="0" y1="300" x2="1600" y2="300"/>
+    <line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="500" x2="1600" y2="500"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/>
+    <line x1="0" y1="700" x2="1600" y2="700"/>
+    <line x1="200" y1="0" x2="200" y2="820"/>
+    <line x1="400" y1="0" x2="400" y2="820"/>
+    <line x1="600" y1="0" x2="600" y2="820"/>
+    <line x1="800" y1="0" x2="800" y2="820"/>
+    <line x1="1000" y1="0" x2="1000" y2="820"/>
+    <line x1="1200" y1="0" x2="1200" y2="820"/>
+    <line x1="1400" y1="0" x2="1400" y2="820"/>
+  </g>
+
+  <!-- Decorative glowing orbs -->
+  <circle cx="120" cy="400" r="260" fill="#00C9A7" opacity="0.04"/>
+  <circle cx="120" cy="400" r="160" fill="#00C9A7" opacity="0.04"/>
+  <circle cx="1480" cy="200" r="200" fill="#0080FF" opacity="0.04"/>
+
+  <!-- ===================== LEFT PANEL — FINGERPRINT SCANNER ===================== -->
+  <!-- Scanner card -->
+  <rect x="50" y="120" width="380" height="560" rx="20" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+
+  <!-- Card header -->
+  <rect x="50" y="120" width="380" height="64" rx="20" fill="#0D1F3C"/>
+  <rect x="50" y="150" width="380" height="34" fill="#0D1F3C"/>
+  <circle cx="86" cy="152" r="10" fill="#00C9A7" opacity="0.15"/>
+  <circle cx="86" cy="152" r="6" fill="#00C9A7" opacity="0.3"/>
+  <circle cx="86" cy="152" r="3" fill="#00C9A7"/>
+  <text x="106" y="158" fill="#FFFFFF" font-size="16" font-weight="600">Digital One</text>
+  <text x="106" y="176" fill="#6B8DB5" font-size="11">Terminal de Fichadas</text>
+
+  <!-- Time display -->
+  <text x="240" y="230" fill="#FFFFFF" font-size="38" font-weight="700" text-anchor="middle">08:47:23</text>
+  <text x="240" y="252" fill="#6B8DB5" font-size="12" text-anchor="middle">Miércoles, 12 de marzo de 2025</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="268" x2="400" y2="268" stroke="#1E3A5F" stroke-width="1"/>
+
+  <!-- Fingerprint scanner area -->
+  <rect x="140" y="282" width="200" height="220" rx="16" fill="url(#fpGlow)" stroke="#00C9A7" stroke-width="1.5" stroke-dasharray="6 3"/>
+
+  <!-- Fingerprint lines (stylized) -->
+  <g opacity="0.55" stroke="#00C9A7" stroke-width="1.2" fill="none">
+    <path d="M240 310 Q240 302, 233 300 Q220 298, 218 308 Q216 322, 224 330 Q232 338, 240 336 Q252 334, 256 324 Q260 312, 252 304 Q244 296, 233 294 Q218 292, 212 306 Q207 320, 214 334 Q222 348, 236 352 Q252 356, 264 346 Q276 336, 277 320 Q278 302, 267 292 Q256 282, 240 280 Q220 278, 207 290 Q194 302, 194 320 Q194 340, 208 354 Q222 368, 242 370 Q264 372, 278 358 Q292 344, 293 324 Q294 302, 280 288 Q266 274, 246 272"/>
+    <path d="M240 318 Q240 312, 234 310 Q224 308, 222 318 Q221 328, 228 334 Q236 340, 244 338 Q254 336, 258 327 Q261 316, 254 308 Q247 302, 237 300 Q225 299, 218 308"/>
+    <path d="M240 326 Q240 322, 235 320 Q228 319, 226 326 Q225 333, 231 337 Q237 341, 244 340 Q252 338, 255 331 Q257 324, 251 320"/>
+  </g>
+
+  <!-- Scan line animation indicator (static representation) -->
+  <rect x="148" y="370" width="184" height="3" rx="1.5" fill="url(#scanLine)" opacity="0.9"/>
+  <line x1="148" y1="371.5" x2="332" y2="371.5" stroke="#00C9A7" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Corner marks on scanner -->
+  <path d="M148 290 L148 298 M148 290 L156 290" stroke="#00C9A7" stroke-width="2" fill="none"/>
+  <path d="M332 290 L332 298 M332 290 L324 290" stroke="#00C9A7" stroke-width="2" fill="none"/>
+  <path d="M148 494 L148 486 M148 494 L156 494" stroke="#00C9A7" stroke-width="2" fill="none"/>
+  <path d="M332 494 L332 486 M332 494 L324 494" stroke="#00C9A7" stroke-width="2" fill="none"/>
+
+  <!-- Instruction text -->
+  <text x="240" y="516" fill="#6B8DB5" font-size="12" text-anchor="middle">Apoye el dedo en el lector</text>
+  <text x="240" y="532" fill="#00C9A7" font-size="11" text-anchor="middle" opacity="0.8">● Escaneando huella digital...</text>
+
+  <!-- Status bar -->
+  <rect x="80" y="548" width="320" height="8" rx="4" fill="#0D1F3C"/>
+  <rect x="80" y="548" width="210" height="8" rx="4" fill="url(#accentGrad)"/>
+
+  <!-- Last 3 records -->
+  <text x="80" y="580" fill="#4A6A8A" font-size="11" font-weight="600" letter-spacing="1">ÚLTIMOS REGISTROS</text>
+  <!-- Record 1 -->
+  <rect x="80" y="590" width="320" height="36" rx="8" fill="#0D1F3C"/>
+  <circle cx="100" cy="608" r="10" fill="#00C9A7" opacity="0.15"/>
+  <text x="100" y="613" fill="#00C9A7" font-size="11" text-anchor="middle">✓</text>
+  <text x="120" y="605" fill="#FFFFFF" font-size="12">García, María</text>
+  <text x="120" y="619" fill="#4A6A8A" font-size="10">Entrada</text>
+  <text x="390" y="612" fill="#00C9A7" font-size="12" text-anchor="end">08:42</text>
+  <!-- Record 2 -->
+  <rect x="80" y="630" width="320" height="36" rx="8" fill="#0D1F3C"/>
+  <circle cx="100" cy="648" r="10" fill="#FFA726" opacity="0.15"/>
+  <text x="100" y="653" fill="#FFA726" font-size="10" text-anchor="middle">!</text>
+  <text x="120" y="645" fill="#FFFFFF" font-size="12">López, Carlos</text>
+  <text x="120" y="659" fill="#4A6A8A" font-size="10">Llegada tarde</text>
+  <text x="390" y="652" fill="#FFA726" font-size="12" text-anchor="end">08:45</text>
+
+  <!-- ===================== CENTER PANEL — METRICS GRID ===================== -->
+  <!-- KPI Cards row 1 -->
+  <!-- Card: Presentes -->
+  <rect x="460" y="120" width="190" height="110" rx="14" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+  <rect x="460" y="120" width="190" height="4" rx="2" fill="url(#greenGrad)"/>
+  <text x="480" y="156" fill="#6B8DB5" font-size="11" font-weight="600" letter-spacing="0.5">PRESENTES HOY</text>
+  <text x="480" y="198" fill="#00C9A7" font-size="44" font-weight="700">187</text>
+  <text x="610" y="198" fill="#00C9A7" font-size="14" opacity="0.6">/ 210</text>
+  <rect x="480" y="212" width="150" height="6" rx="3" fill="#0D1F3C"/>
+  <rect x="480" y="212" width="133" height="6" rx="3" fill="url(#greenGrad)"/>
+
+  <!-- Card: Tardanzas -->
+  <rect x="664" y="120" width="190" height="110" rx="14" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+  <rect x="664" y="120" width="190" height="4" rx="2" fill="url(#orangeGrad)"/>
+  <text x="684" y="156" fill="#6B8DB5" font-size="11" font-weight="600" letter-spacing="0.5">TARDANZAS</text>
+  <text x="684" y="198" fill="#FFA726" font-size="44" font-weight="700">14</text>
+  <text x="684" y="218" fill="#4A6A8A" font-size="10">↑ 3 más que ayer</text>
+
+  <!-- Card: Ausentes -->
+  <rect x="460" y="244" width="190" height="110" rx="14" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+  <rect x="460" y="244" width="190" height="4" rx="2" fill="url(#purpleGrad)"/>
+  <text x="480" y="280" fill="#6B8DB5" font-size="11" font-weight="600" letter-spacing="0.5">AUSENCIAS</text>
+  <text x="480" y="322" fill="#A855F7" font-size="44" font-weight="700">9</text>
+  <text x="480" y="342" fill="#4A6A8A" font-size="10">2 justificadas · 7 sin justificar</text>
+
+  <!-- Card: Horas extra -->
+  <rect x="664" y="244" width="190" height="110" rx="14" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+  <rect x="664" y="244" width="190" height="4" rx="2" fill="url(#blueGrad)"/>
+  <text x="684" y="280" fill="#6B8DB5" font-size="11" font-weight="600" letter-spacing="0.5">HORAS EXTRA</text>
+  <text x="684" y="322" fill="#00B4FF" font-size="44" font-weight="700">38<tspan font-size="20">h</tspan></text>
+  <text x="684" y="342" fill="#4A6A8A" font-size="10">Esta semana · 12 empleados</text>
+
+  <!-- Attendance bar chart -->
+  <rect x="460" y="368" width="394" height="200" rx="14" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="480" y="394" fill="#FFFFFF" font-size="13" font-weight="600">Asistencia semanal</text>
+  <text x="840" y="394" fill="#4A6A8A" font-size="10" text-anchor="end">Esta semana</text>
+  <!-- Chart grid lines -->
+  <line x1="480" y1="540" x2="836" y2="540" stroke="#1E3A5F" stroke-width="0.5"/>
+  <line x1="480" y1="510" x2="836" y2="510" stroke="#1E3A5F" stroke-width="0.5"/>
+  <line x1="480" y1="480" x2="836" y2="480" stroke="#1E3A5F" stroke-width="0.5"/>
+  <line x1="480" y1="450" x2="836" y2="450" stroke="#1E3A5F" stroke-width="0.5"/>
+  <line x1="480" y1="420" x2="836" y2="420" stroke="#1E3A5F" stroke-width="0.5"/>
+  <!-- Y axis labels -->
+  <text x="475" y="543" fill="#4A6A8A" font-size="9" text-anchor="end">0</text>
+  <text x="475" y="513" fill="#4A6A8A" font-size="9" text-anchor="end">50</text>
+  <text x="475" y="483" fill="#4A6A8A" font-size="9" text-anchor="end">100</text>
+  <text x="475" y="453" fill="#4A6A8A" font-size="9" text-anchor="end">150</text>
+  <text x="475" y="423" fill="#4A6A8A" font-size="9" text-anchor="end">200</text>
+  <!-- Bars day Lun -->
+  <rect x="498" y="430" width="22" height="110" rx="4" fill="url(#barGreen1)"/>
+  <rect x="522" y="492" width="22" height="48" rx="4" fill="url(#barOrange1)" opacity="0.8"/>
+  <rect x="546" y="524" width="22" height="16" rx="4" fill="url(#barBlue1)" opacity="0.6"/>
+  <text x="524" y="556" fill="#4A6A8A" font-size="10" text-anchor="middle">Lun</text>
+  <!-- Bars day Mar -->
+  <rect x="578" y="426" width="22" height="114" rx="4" fill="url(#barGreen1)"/>
+  <rect x="602" y="498" width="22" height="42" rx="4" fill="url(#barOrange1)" opacity="0.8"/>
+  <rect x="626" y="528" width="22" height="12" rx="4" fill="url(#barBlue1)" opacity="0.6"/>
+  <text x="604" y="556" fill="#4A6A8A" font-size="10" text-anchor="middle">Mar</text>
+  <!-- Bars day Mié -->
+  <rect x="658" y="437" width="22" height="103" rx="4" fill="url(#barGreen1)"/>
+  <rect x="682" y="503" width="22" height="37" rx="4" fill="url(#barOrange1)" opacity="0.8"/>
+  <rect x="706" y="530" width="22" height="10" rx="4" fill="url(#barBlue1)" opacity="0.6"/>
+  <text x="684" y="556" fill="#4A6A8A" font-size="10" text-anchor="middle">Mié</text>
+  <!-- Bars day Jue -->
+  <rect x="738" y="432" width="22" height="108" rx="4" fill="url(#barGreen1)"/>
+  <rect x="762" y="496" width="22" height="44" rx="4" fill="url(#barOrange1)" opacity="0.8"/>
+  <rect x="786" y="526" width="22" height="14" rx="4" fill="url(#barBlue1)" opacity="0.6"/>
+  <text x="764" y="556" fill="#4A6A8A" font-size="10" text-anchor="middle">Jue</text>
+  <!-- Bars day Vie (partial - today) -->
+  <rect x="818" y="439" width="22" height="101" rx="4" fill="url(#barGreen1)" opacity="0.6"/>
+  <rect x="818" y="439" width="22" height="101" rx="4" fill="none" stroke="#00C9A7" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="829" y="556" fill="#00C9A7" font-size="10" text-anchor="middle">Hoy</text>
+
+  <!-- Legend -->
+  <circle cx="492" cy="569" r="5" fill="#00C9A7"/>
+  <text x="502" y="573" fill="#6B8DB5" font-size="10">Presentes</text>
+  <circle cx="572" cy="569" r="5" fill="#FF7043"/>
+  <text x="582" y="573" fill="#6B8DB5" font-size="10">Tardanzas</text>
+  <circle cx="652" cy="569" r="5" fill="#0080FF"/>
+  <text x="662" y="573" fill="#6B8DB5" font-size="10">Ausentes</text>
+
+  <!-- Export row -->
+  <rect x="460" y="582" width="394" height="48" rx="12" fill="#0D1F3C" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="480" y="612" fill="#6B8DB5" font-size="12">Exportar informe:</text>
+  <!-- Excel button -->
+  <rect x="606" y="592" width="110" height="28" rx="8" fill="#1D6F42" opacity="0.85"/>
+  <text x="661" y="611" fill="#FFFFFF" font-size="12" font-weight="600" text-anchor="middle">📊  Excel</text>
+  <!-- PDF button -->
+  <rect x="726" y="592" width="110" height="28" rx="8" fill="#B91C1C" opacity="0.85"/>
+  <text x="781" y="611" fill="#FFFFFF" font-size="12" font-weight="600" text-anchor="middle">📄  PDF</text>
+
+  <!-- Employee list snippet -->
+  <rect x="460" y="644" width="394" height="140" rx="14" fill="url(#cardGrad)" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="480" y="668" fill="#FFFFFF" font-size="13" font-weight="600">Personal · hoy</text>
+  <!-- Table header -->
+  <rect x="460" y="675" width="394" height="22" fill="#0D1F3C"/>
+  <text x="480" y="690" fill="#4A6A8A" font-size="10" font-weight="600">EMPLEADO</text>
+  <text x="640" y="690" fill="#4A6A8A" font-size="10" font-weight="600">ENTRADA</text>
+  <text x="710" y="690" fill="#4A6A8A" font-size="10" font-weight="600">ESTADO</text>
+  <text x="810" y="690" fill="#4A6A8A" font-size="10" font-weight="600">DPTO.</text>
+  <!-- Row 1 -->
+  <line x1="460" y1="697" x2="854" y2="697" stroke="#1E3A5F" stroke-width="0.5"/>
+  <circle cx="476" cy="709" r="8" fill="#00C9A7" opacity="0.2"/>
+  <text x="476" y="713" fill="#00C9A7" font-size="9" text-anchor="middle">GM</text>
+  <text x="492" y="712" fill="#E2EAF4" font-size="11">García, María</text>
+  <text x="640" y="712" fill="#E2EAF4" font-size="11">08:42</text>
+  <rect x="710" y="703" width="62" height="16" rx="8" fill="#00C9A7" opacity="0.15"/>
+  <text x="741" y="715" fill="#00C9A7" font-size="10" text-anchor="middle">Presente</text>
+  <text x="810" y="712" fill="#6B8DB5" font-size="10">Sistemas</text>
+  <!-- Row 2 -->
+  <line x1="460" y1="723" x2="854" y2="723" stroke="#1E3A5F" stroke-width="0.5"/>
+  <circle cx="476" cy="735" r="8" fill="#FFA726" opacity="0.2"/>
+  <text x="476" y="739" fill="#FFA726" font-size="9" text-anchor="middle">LC</text>
+  <text x="492" y="738" fill="#E2EAF4" font-size="11">López, Carlos</text>
+  <text x="640" y="738" fill="#E2EAF4" font-size="11">08:45</text>
+  <rect x="710" y="729" width="62" height="16" rx="8" fill="#FFA726" opacity="0.15"/>
+  <text x="741" y="741" fill="#FFA726" font-size="10" text-anchor="middle">Tardanza</text>
+  <text x="810" y="738" fill="#6B8DB5" font-size="10">Ventas</text>
+  <!-- Row 3 -->
+  <line x1="460" y1="749" x2="854" y2="749" stroke="#1E3A5F" stroke-width="0.5"/>
+  <circle cx="476" cy="761" r="8" fill="#A855F7" opacity="0.2"/>
+  <text x="476" y="765" fill="#A855F7" font-size="9" text-anchor="middle">RF</text>
+  <text x="492" y="764" fill="#E2EAF4" font-size="11">Ramírez, Fede.</text>
+  <text x="640" y="764" fill="#6B8DB5" font-size="11">—</text>
+  <rect x="710" y="755" width="62" height="16" rx="8" fill="#A855F7" opacity="0.15"/>
+  <text x="741" y="767" fill="#A855F7" font-size="10" text-anchor="middle">Ausente</text>
+  <text x="810" y="764" fill="#6B8DB5" font-size="10">Admin.</text>
+
+  <!-- ===================== RIGHT PANEL — WEB PORTAL MOCKUP ===================== -->
+  <rect x="880" y="80" width="660" height="680" rx="16" fill="#0A1628" stroke="#1E3A5F" stroke-width="1"/>
+
+  <!-- Browser chrome -->
+  <rect x="880" y="80" width="660" height="42" rx="16" fill="#0D1F3C"/>
+  <rect x="880" y="106" width="660" height="16" fill="#0D1F3C"/>
+  <!-- Traffic lights -->
+  <circle cx="908" cy="101" r="6" fill="#FF5F57"/>
+  <circle cx="928" cy="101" r="6" fill="#FEBC2E"/>
+  <circle cx="948" cy="101" r="6" fill="#28C840"/>
+  <!-- URL bar -->
+  <rect x="972" y="89" width="380" height="24" rx="12" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="1162" y="106" fill="#4A6A8A" font-size="11" text-anchor="middle">🔒  portal.digitalone.com/dashboard</text>
+  <!-- Action buttons -->
+  <rect x="1378" y="89" width="60" height="24" rx="12" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="1408" y="106" fill="#4A6A8A" font-size="11" text-anchor="middle">⚙</text>
+
+  <!-- Portal content area -->
+  <!-- Left nav bar -->
+  <rect x="880" y="122" width="64" height="638" fill="#0B1929"/>
+  <!-- Nav icons -->
+  <rect x="892" y="146" width="40" height="40" rx="10" fill="#00C9A7" opacity="0.15"/>
+  <text x="912" y="171" fill="#00C9A7" font-size="18" text-anchor="middle">◈</text>
+  <text x="912" y="213" fill="#4A6A8A" font-size="18" text-anchor="middle">☰</text>
+  <text x="912" y="253" fill="#4A6A8A" font-size="18" text-anchor="middle">◎</text>
+  <text x="912" y="293" fill="#4A6A8A" font-size="18" text-anchor="middle">◷</text>
+  <text x="912" y="333" fill="#4A6A8A" font-size="18" text-anchor="middle">⬡</text>
+  <text x="912" y="373" fill="#4A6A8A" font-size="18" text-anchor="middle">↗</text>
+  <!-- Nav separator + bottom icons -->
+  <line x1="892" y1="710" x2="932" y2="710" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="912" y="735" fill="#4A6A8A" font-size="18" text-anchor="middle">⚙</text>
+
+  <!-- Portal main content -->
+  <!-- Top header -->
+  <rect x="944" y="122" width="596" height="54" fill="#0D1F3C" stroke-bottom="#1E3A5F"/>
+  <text x="960" y="145" fill="#FFFFFF" font-size="16" font-weight="700">Panel de Control</text>
+  <text x="960" y="163" fill="#4A6A8A" font-size="11">Bienvenido, Admin · Empresa: Transportes López S.A.</text>
+  <!-- Top right controls -->
+  <rect x="1360" y="130" width="80" height="28" rx="8" fill="url(#accentGrad)" opacity="0.9"/>
+  <text x="1400" y="149" fill="#FFFFFF" font-size="11" font-weight="600" text-anchor="middle">+ Reportes</text>
+  <rect x="1450" y="130" width="28" height="28" rx="8" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="1464" y="148" fill="#6B8DB5" font-size="14" text-anchor="middle">🔔</text>
+  <rect x="1488" y="130" width="42" height="28" rx="14" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <circle cx="1504" cy="144" r="9" fill="#00C9A7" opacity="0.2"/>
+  <text x="1504" y="148" fill="#00C9A7" font-size="9" text-anchor="middle">AD</text>
+
+  <!-- Content separator -->
+  <line x1="944" y1="176" x2="1540" y2="176" stroke="#1E3A5F" stroke-width="0.5"/>
+
+  <!-- Date filter row -->
+  <rect x="944" y="182" width="596" height="38" fill="#0B1929"/>
+  <rect x="960" y="190" width="100" height="22" rx="6" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="1010" y="205" fill="#6B8DB5" font-size="10" text-anchor="middle">Marzo 2025 ▾</text>
+  <rect x="1072" y="190" width="88" height="22" rx="6" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="1116" y="205" fill="#6B8DB5" font-size="10" text-anchor="middle">Todos ▾</text>
+  <rect x="1172" y="190" width="100" height="22" rx="6" fill="#162440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="1222" y="205" fill="#6B8DB5" font-size="10" text-anchor="middle">Dept.: Todos ▾</text>
+  <!-- Export buttons right side -->
+  <rect x="1370" y="190" width="76" height="22" rx="6" fill="#1D6F42" opacity="0.85"/>
+  <text x="1408" y="205" fill="#FFFFFF" font-size="10" font-weight="600" text-anchor="middle">📊 Excel</text>
+  <rect x="1456" y="190" width="72" height="22" rx="6" fill="#B91C1C" opacity="0.85"/>
+  <text x="1492" y="205" fill="#FFFFFF" font-size="10" font-weight="600" text-anchor="middle">📄 PDF</text>
+
+  <!-- KPI mini cards row -->
+  <rect x="960" y="228" width="128" height="80" rx="10" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="976" y="250" fill="#4A6A8A" font-size="10">Asistencia</text>
+  <text x="976" y="280" fill="#00C9A7" font-size="28" font-weight="700">89<tspan font-size="14">%</tspan></text>
+  <text x="976" y="300" fill="#4A6A8A" font-size="9">↑ 2.1% vs mes ant.</text>
+
+  <rect x="1100" y="228" width="128" height="80" rx="10" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="1116" y="250" fill="#4A6A8A" font-size="10">Puntualidad</text>
+  <text x="1116" y="280" fill="#00B4FF" font-size="28" font-weight="700">93<tspan font-size="14">%</tspan></text>
+  <text x="1116" y="300" fill="#4A6A8A" font-size="9">↓ 0.8% vs mes ant.</text>
+
+  <rect x="1240" y="228" width="128" height="80" rx="10" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="1256" y="250" fill="#4A6A8A" font-size="10">Horas extra</text>
+  <text x="1256" y="280" fill="#FFA726" font-size="28" font-weight="700">142<tspan font-size="14">h</tspan></text>
+  <text x="1256" y="300" fill="#4A6A8A" font-size="9">Este mes</text>
+
+  <rect x="1380" y="228" width="148" height="80" rx="10" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="1396" y="250" fill="#4A6A8A" font-size="10">Empleados activos</text>
+  <text x="1396" y="280" fill="#A855F7" font-size="28" font-weight="700">210</text>
+  <text x="1396" y="300" fill="#4A6A8A" font-size="9">5 bajas este mes</text>
+
+  <!-- Donut chart area -->
+  <rect x="960" y="320" width="240" height="230" rx="12" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="980" y="344" fill="#FFFFFF" font-size="12" font-weight="600">Distribución del día</text>
+  <!-- Donut chart (SVG arcs) -->
+  <!-- Background circle -->
+  <circle cx="1080" cy="430" r="68" fill="none" stroke="#0D1F3C" stroke-width="26"/>
+  <!-- Segment Presentes (89%) ~ 320 degrees -->
+  <circle cx="1080" cy="430" r="68" fill="none" stroke="#00C9A7" stroke-width="26"
+    stroke-dasharray="380 428" stroke-dashoffset="0" transform="rotate(-90 1080 430)"/>
+  <!-- Segment Tardanzas (6.7%) ~24 deg -->
+  <circle cx="1080" cy="430" r="68" fill="none" stroke="#FF7043" stroke-width="26"
+    stroke-dasharray="28 428" stroke-dashoffset="-380" transform="rotate(-90 1080 430)"/>
+  <!-- Segment Ausentes (4.3%) ~15 deg -->
+  <circle cx="1080" cy="430" r="68" fill="none" stroke="#A855F7" stroke-width="26"
+    stroke-dasharray="18 428" stroke-dashoffset="-408" transform="rotate(-90 1080 430)"/>
+  <!-- Center text -->
+  <text x="1080" y="425" fill="#FFFFFF" font-size="24" font-weight="700" text-anchor="middle">89%</text>
+  <text x="1080" y="443" fill="#6B8DB5" font-size="10" text-anchor="middle">asistencia</text>
+  <!-- Donut legend -->
+  <circle cx="980" cy="516" r="5" fill="#00C9A7"/>
+  <text x="992" y="520" fill="#6B8DB5" font-size="10">Presentes</text>
+  <text x="1172" y="520" fill="#00C9A7" font-size="10" text-anchor="end">89%</text>
+  <circle cx="980" cy="534" r="5" fill="#FF7043"/>
+  <text x="992" y="538" fill="#6B8DB5" font-size="10">Tardanzas</text>
+  <text x="1172" y="538" fill="#FFA726" font-size="10" text-anchor="end">7%</text>
+  <circle cx="980" cy="552" r="5" fill="#A855F7"/>
+  <text x="992" y="556" fill="#6B8DB5" font-size="10">Ausentes</text>
+  <text x="1172" y="556" fill="#A855F7" font-size="10" text-anchor="end">4%</text>
+
+  <!-- Trend line chart -->
+  <rect x="1212" y="320" width="316" height="230" rx="12" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="1232" y="344" fill="#FFFFFF" font-size="12" font-weight="600">Tendencia mensual</text>
+  <text x="1510" y="344" fill="#4A6A8A" font-size="9" text-anchor="end">Últimos 30 días</text>
+  <!-- Grid -->
+  <line x1="1232" y1="510" x2="1508" y2="510" stroke="#1A2E4A" stroke-width="0.5"/>
+  <line x1="1232" y1="480" x2="1508" y2="480" stroke="#1A2E4A" stroke-width="0.5"/>
+  <line x1="1232" y1="450" x2="1508" y2="450" stroke="#1A2E4A" stroke-width="0.5"/>
+  <line x1="1232" y1="420" x2="1508" y2="420" stroke="#1A2E4A" stroke-width="0.5"/>
+  <line x1="1232" y1="390" x2="1508" y2="390" stroke="#1A2E4A" stroke-width="0.5"/>
+  <line x1="1232" y1="360" x2="1508" y2="360" stroke="#1A2E4A" stroke-width="0.5"/>
+  <!-- Y labels -->
+  <text x="1228" y="514" fill="#4A6A8A" font-size="8" text-anchor="end">0</text>
+  <text x="1228" y="393" fill="#4A6A8A" font-size="8" text-anchor="end">200</text>
+  <!-- Line chart path (Presentes) -->
+  <polyline points="1240,460 1260,452 1280,455 1300,446 1320,462 1340,440 1360,438 1380,444 1400,436 1420,450 1440,432 1460,428 1480,435 1500,430"
+    fill="none" stroke="#00C9A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Area under line -->
+  <polygon points="1240,460 1260,452 1280,455 1300,446 1320,462 1340,440 1360,438 1380,444 1400,436 1420,450 1440,432 1460,428 1480,435 1500,430 1500,510 1240,510"
+    fill="#00C9A7" opacity="0.07"/>
+  <!-- Tardanzas line -->
+  <polyline points="1240,494 1260,490 1280,496 1300,492 1320,498 1340,488 1360,486 1380,491 1400,487 1420,493 1440,484 1460,482 1480,488 1500,484"
+    fill="none" stroke="#FF7043" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 2"/>
+  <!-- X axis labels -->
+  <text x="1240" y="524" fill="#4A6A8A" font-size="8" text-anchor="middle">1</text>
+  <text x="1280" y="524" fill="#4A6A8A" font-size="8" text-anchor="middle">5</text>
+  <text x="1340" y="524" fill="#4A6A8A" font-size="8" text-anchor="middle">10</text>
+  <text x="1400" y="524" fill="#4A6A8A" font-size="8" text-anchor="middle">15</text>
+  <text x="1460" y="524" fill="#4A6A8A" font-size="8" text-anchor="middle">20</text>
+  <text x="1500" y="524" fill="#4A6A8A" font-size="8" text-anchor="middle">30</text>
+  <!-- Legend -->
+  <line x1="1232" y1="543" x2="1248" y2="543" stroke="#00C9A7" stroke-width="2"/>
+  <text x="1252" y="547" fill="#6B8DB5" font-size="9">Presentes</text>
+  <line x1="1310" y1="543" x2="1326" y2="543" stroke="#FF7043" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <text x="1330" y="547" fill="#6B8DB5" font-size="9">Tardanzas</text>
+
+  <!-- Department table -->
+  <rect x="960" y="564" width="568" height="188" rx="12" fill="#162440" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="980" y="588" fill="#FFFFFF" font-size="12" font-weight="600">Resumen por departamento</text>
+  <!-- Table -->
+  <rect x="960" y="596" width="568" height="24" fill="#0D1F3C"/>
+  <text x="980" y="612" fill="#4A6A8A" font-size="10" font-weight="600">DEPARTAMENTO</text>
+  <text x="1180" y="612" fill="#4A6A8A" font-size="10" font-weight="600">PRESENTES</text>
+  <text x="1280" y="612" fill="#4A6A8A" font-size="10" font-weight="600">TARDANZAS</text>
+  <text x="1390" y="612" fill="#4A6A8A" font-size="10" font-weight="600">AUSENTES</text>
+  <text x="1490" y="612" fill="#4A6A8A" font-size="10" font-weight="600">CUMPL.</text>
+  <!-- Rows -->
+  <line x1="960" y1="620" x2="1528" y2="620" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="980" y="636" fill="#E2EAF4" font-size="11">Administración</text>
+  <text x="1205" y="636" fill="#E2EAF4" font-size="11" text-anchor="middle">38</text>
+  <text x="1305" y="636" fill="#FFA726" font-size="11" text-anchor="middle">3</text>
+  <text x="1415" y="636" fill="#A855F7" font-size="11" text-anchor="middle">2</text>
+  <rect x="1478" y="626" width="38" height="16" rx="8" fill="#00C9A7" opacity="0.15"/>
+  <text x="1497" y="638" fill="#00C9A7" font-size="10" text-anchor="middle">88%</text>
+
+  <line x1="960" y1="644" x2="1528" y2="644" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="980" y="660" fill="#E2EAF4" font-size="11">Ventas</text>
+  <text x="1205" y="660" fill="#E2EAF4" font-size="11" text-anchor="middle">52</text>
+  <text x="1305" y="660" fill="#FFA726" font-size="11" text-anchor="middle">5</text>
+  <text x="1415" y="660" fill="#A855F7" font-size="11" text-anchor="middle">3</text>
+  <rect x="1478" y="650" width="38" height="16" rx="8" fill="#00C9A7" opacity="0.15"/>
+  <text x="1497" y="662" fill="#00C9A7" font-size="10" text-anchor="middle">87%</text>
+
+  <line x1="960" y1="668" x2="1528" y2="668" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="980" y="684" fill="#E2EAF4" font-size="11">Sistemas</text>
+  <text x="1205" y="684" fill="#E2EAF4" font-size="11" text-anchor="middle">28</text>
+  <text x="1305" y="684" fill="#FFA726" font-size="11" text-anchor="middle">1</text>
+  <text x="1415" y="684" fill="#A855F7" font-size="11" text-anchor="middle">1</text>
+  <rect x="1478" y="674" width="38" height="16" rx="8" fill="#00C9A7" opacity="0.15"/>
+  <text x="1497" y="686" fill="#00C9A7" font-size="10" text-anchor="middle">93%</text>
+
+  <line x1="960" y1="692" x2="1528" y2="692" stroke="#1E3A5F" stroke-width="0.5"/>
+  <text x="980" y="708" fill="#E2EAF4" font-size="11">Operaciones</text>
+  <text x="1205" y="708" fill="#E2EAF4" font-size="11" text-anchor="middle">69</text>
+  <text x="1305" y="708" fill="#FFA726" font-size="11" text-anchor="middle">5</text>
+  <text x="1415" y="708" fill="#A855F7" font-size="11" text-anchor="middle">3</text>
+  <rect x="1478" y="698" width="38" height="16" rx="8" fill="#FFA726" opacity="0.15"/>
+  <text x="1497" y="710" fill="#FFA726" font-size="10" text-anchor="middle">90%</text>
+
+  <!-- ===================== BRANDING ===================== -->
+  <!-- Product name bottom left -->
+  <text x="60" y="780" fill="#FFFFFF" font-size="32" font-weight="700" opacity="0.95">Digital</text>
+  <text x="163" y="780" fill="#00C9A7" font-size="32" font-weight="700">One</text>
+  <text x="60" y="800" fill="#4A6A8A" font-size="13">Sistema de Gestión de Presentismo y Fichadas Biométricas</text>
+
+  <!-- Tagline badges -->
+  <rect x="460" y="770" width="120" height="28" rx="14" fill="#00C9A7" opacity="0.12" stroke="#00C9A7" stroke-width="0.5"/>
+  <text x="520" y="789" fill="#00C9A7" font-size="11" font-weight="600" text-anchor="middle">Huella Digital</text>
+
+  <rect x="592" y="770" width="120" height="28" rx="14" fill="#0080FF" opacity="0.12" stroke="#0080FF" stroke-width="0.5"/>
+  <text x="652" y="789" fill="#00B4FF" font-size="11" font-weight="600" text-anchor="middle">Portal Web</text>
+
+  <rect x="724" y="770" width="128" height="28" rx="14" fill="#A855F7" opacity="0.12" stroke="#A855F7" stroke-width="0.5"/>
+  <text x="788" y="789" fill="#A855F7" font-size="11" font-weight="600" text-anchor="middle">Excel · PDF</text>
+
+  <rect x="864" y="770" width="138" height="28" rx="14" fill="#FF7043" opacity="0.12" stroke="#FF7043" stroke-width="0.5"/>
+  <text x="933" y="789" fill="#FF9066" font-size="11" font-weight="600" text-anchor="middle">Reportes Avanzados</text>
+
+  <!-- Top tagline -->
+  <text x="1540" y="800" fill="#6B8DB5" font-size="11" text-anchor="end">Powered by DigitalPersona · .NET · SQL Server</text>
+</svg>
