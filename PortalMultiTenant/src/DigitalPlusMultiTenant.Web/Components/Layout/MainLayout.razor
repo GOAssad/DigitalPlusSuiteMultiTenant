@@ -26,6 +26,10 @@
                         <span class="text-muted me-3">
                             <i class="bi bi-building me-1"></i>@context.User.FindFirst("EmpresaId")?.Value
                         </span>
+                        <a id="helpBtn" href="https://integraia.tech/digital-one-help.html" target="_blank" rel="noopener"
+                           class="btn btn-link text-muted me-2" title="Ayuda" style="font-size:1.1rem;">
+                            <i class="bi bi-question-circle"></i>
+                        </a>
                         <div class="dropdown">
                             <button class="btn btn-link dropdown-toggle text-dark text-decoration-none" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle me-1"></i>@context.User.Identity?.Name
@@ -93,6 +97,65 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+<script suppress-error="BL9992">
+    // Contextual help: maps portal routes to help page anchors
+    (function() {
+        const helpBase = 'https://integraia.tech/digital-one-help.html';
+        const routeMap = {
+            '/': '#portal-dashboard',
+            '/legajos': '#portal-legajos',
+            '/fichadas': '#portal-fichadas',
+            '/horarios': '#portal-estructura',
+            '/categorias': '#portal-estructura',
+            '/sectores': '#portal-estructura',
+            '/sucursales': '#portal-estructura',
+            '/terminales': '#portal-estructura',
+            '/terminales-moviles': '#terminales-moviles',
+            '/fichado-movil': '#fichada-movil',
+            '/incidencias': '#portal-incidencias',
+            '/vacaciones': '#portal-incidencias',
+            '/feriados': '#portal-estructura',
+            '/reportes/asistencia': '#portal-reportes',
+            '/reportes/llegadas-tarde': '#portal-reportes',
+            '/reportes/ausencias': '#portal-reportes',
+            '/reportes/horas-trabajadas': '#portal-reportes',
+            '/usuarios': '#portal-usuarios',
+            '/configuracion/empresa': '#portal',
+            '/configuracion/planes': '#licencias',
+            '/configuracion': '#portal'
+        };
+        // Partial matches for legajo form tabs
+        const partialMap = [
+            { match: '/legajos/', anchor: '#portal-legajo-form' }
+        ];
+
+        function updateHelp() {
+            var btn = document.getElementById('helpBtn');
+            if (!btn) return;
+            var path = window.location.pathname.replace(/\/$/, '') || '/';
+            var anchor = routeMap[path] || '';
+            if (!anchor) {
+                for (var i = 0; i < partialMap.length; i++) {
+                    if (path.startsWith(partialMap[i].match)) {
+                        anchor = partialMap[i].anchor;
+                        break;
+                    }
+                }
+            }
+            btn.href = helpBase + anchor;
+        }
+        // Update on Blazor navigation
+        var origPush = history.pushState;
+        history.pushState = function() { origPush.apply(this, arguments); setTimeout(updateHelp, 100); };
+        var origReplace = history.replaceState;
+        history.replaceState = function() { origReplace.apply(this, arguments); setTimeout(updateHelp, 100); };
+        window.addEventListener('popstate', function() { setTimeout(updateHelp, 100); });
+        // Initial
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', updateHelp); }
+        else { updateHelp(); }
+    })();
+</script>
 
 @code {
     private bool sidebarOpen;
