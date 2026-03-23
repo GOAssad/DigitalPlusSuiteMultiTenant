@@ -58,9 +58,6 @@
             this.EnrollmentControl = new DPFP.Gui.Enrollment.EnrollmentControl();
             this.panel1 = new Global.Controles.Panel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnInicioCamara = new Global.Controles.BotonBase();
-            this.btnTomarFoto = new Global.Controles.BotonBase();
-            this.btnImagen = new Global.Controles.BotonBase();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.PageLegajo = new System.Windows.Forms.TabPage();
@@ -68,16 +65,6 @@
             this.panelGridFichadas = new System.Windows.Forms.Panel();
             this.panel2 = new Global.Controles.Panel();
             this.panelCamara = new Global.Controles.Panel();
-            this.panel4 = new Global.Controles.Panel();
-            this.btnEliminarFoto = new Global.Controles.BotonBase();
-            this.etiquetaTitulo1 = new Global.Controles.EtiquetaTitulo();
-            this.cboCamera = new System.Windows.Forms.ComboBox();
-            this.picFotoCamara = new System.Windows.Forms.PictureBox();
-            this.btnAceptarFoto = new Global.Controles.BotonBase();
-            this.btnRechazarFoto = new Global.Controles.BotonBase();
-            this.btnDescargarFoto = new Global.Controles.BotonBase();
-            this.btnRotar = new Global.Controles.BotonBase();
-            this.btnEspejo = new Global.Controles.BotonBase();
             this.PageReportes = new System.Windows.Forms.TabPage();
             this.PageDomicilios = new System.Windows.Forms.TabPage();
             this.textoPiso = new Global.Controles.Text.TextoEtiquetaSimple();
@@ -117,8 +104,6 @@
             this.panelGridFichadas.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panelCamara.SuspendLayout();
-            this.panel4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picFotoCamara)).BeginInit();
             // PageReportes, PageDomicilios, PageTurnos removed (read-only mode)
             this.PanelLegajosCabrcera.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContenedor)).BeginInit();
@@ -552,49 +537,7 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(565, 85);
             this.panel1.TabIndex = 20;
-            // 
-            // btnInicioCamara
-            // 
-            this.btnInicioCamara.Font = new System.Drawing.Font("Century Gothic", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnInicioCamara.Image = ((System.Drawing.Image)(resources.GetObject("btnInicioCamara.Image")));
-            this.btnInicioCamara.Location = new System.Drawing.Point(3, 6);
-            this.btnInicioCamara.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnInicioCamara.Name = "btnInicioCamara";
-            this.btnInicioCamara.Size = new System.Drawing.Size(51, 50);
-            this.btnInicioCamara.TabIndex = 7;
-            this.btnInicioCamara.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.toolTip1.SetToolTip(this.btnInicioCamara, "Inicializar WebCam");
-            this.btnInicioCamara.UseVisualStyleBackColor = true;
-            this.btnInicioCamara.Click += new System.EventHandler(this.btnInicioCamara_Click);
-            // 
-            // btnTomarFoto
-            // 
-            this.btnTomarFoto.Enabled = false;
-            this.btnTomarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTomarFoto.Image = ((System.Drawing.Image)(resources.GetObject("btnTomarFoto.Image")));
-            this.btnTomarFoto.Location = new System.Drawing.Point(75, 6);
-            this.btnTomarFoto.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnTomarFoto.Name = "btnTomarFoto";
-            this.btnTomarFoto.Size = new System.Drawing.Size(51, 50);
-            this.btnTomarFoto.TabIndex = 7;
-            this.btnTomarFoto.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.toolTip1.SetToolTip(this.btnTomarFoto, "Tomar Foto desde WebCam");
-            this.btnTomarFoto.UseVisualStyleBackColor = true;
-            this.btnTomarFoto.Click += new System.EventHandler(this.btnTomarFoto_Click);
-            // 
-            // btnImagen
-            // 
-            this.btnImagen.Font = new System.Drawing.Font("Century Gothic", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnImagen.Image = ((System.Drawing.Image)(resources.GetObject("btnImagen.Image")));
-            this.btnImagen.Location = new System.Drawing.Point(149, 6);
-            this.btnImagen.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnImagen.Name = "btnImagen";
-            this.btnImagen.Size = new System.Drawing.Size(51, 50);
-            this.btnImagen.TabIndex = 0;
-            this.btnImagen.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.toolTip1.SetToolTip(this.btnImagen, "Seleccionar Foto desde Archivo");
-            this.btnImagen.UseVisualStyleBackColor = true;
-            this.btnImagen.Click += new System.EventHandler(this.btnImagen_Click);
+            // Camera buttons removed — built programmatically in InicializarPanelFoto()
             // 
             // timer1
             // 
@@ -674,155 +617,12 @@
             // 
             this.panelCamara.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panelCamara.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelCamara.Controls.Add(this.panel4);
-            this.panelCamara.Controls.Add(this.etiquetaTitulo1);
-            this.panelCamara.Controls.Add(this.cboCamera);
-            this.panelCamara.Controls.Add(this.picFotoCamara);
+            // panelCamara children built programmatically in InicializarPanelFoto()
             this.panelCamara.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelCamara.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelCamara.Name = "panelCamara";
             this.panelCamara.TabIndex = 24;
-            // 
-            // panel4
-            // 
-            this.panel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel4.Controls.Add(this.btnInicioCamara);
-            this.panel4.Controls.Add(this.btnTomarFoto);
-            this.panel4.Controls.Add(this.btnImagen);
-            this.panel4.Controls.Add(this.btnAceptarFoto);
-            this.panel4.Controls.Add(this.btnRechazarFoto);
-            this.panel4.Controls.Add(this.btnEliminarFoto);
-            this.panel4.Controls.Add(this.btnDescargarFoto);
-            this.panel4.Controls.Add(this.btnRotar);
-            this.panel4.Controls.Add(this.btnEspejo);
-            this.panel4.Location = new System.Drawing.Point(3, 78);
-            this.panel4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(540, 61);
-            this.panel4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel4.TabIndex = 24;
-            // 
-            // btnEliminarFoto
-            // 
-            this.btnEliminarFoto.Enabled = false;
-            this.btnEliminarFoto.Font = new System.Drawing.Font("Century Gothic", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnEliminarFoto.Image = ((System.Drawing.Image)(resources.GetObject("btnEliminarFoto.Image")));
-            this.btnEliminarFoto.Location = new System.Drawing.Point(268, 7);
-            this.btnEliminarFoto.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnEliminarFoto.Name = "btnEliminarFoto";
-            this.btnEliminarFoto.Size = new System.Drawing.Size(51, 50);
-            this.btnEliminarFoto.TabIndex = 7;
-            this.btnEliminarFoto.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnEliminarFoto.UseVisualStyleBackColor = true;
-            this.btnEliminarFoto.Click += new System.EventHandler(this.btnEliminarFoto_Click);
-            // 
-            // etiquetaTitulo1
-            // 
-            this.etiquetaTitulo1.AutoEllipsis = true;
-            this.etiquetaTitulo1.AutoSize = false;
-            this.etiquetaTitulo1.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.etiquetaTitulo1.ForeColor = System.Drawing.Color.SteelBlue;
-            this.etiquetaTitulo1.Location = new System.Drawing.Point(5, 8);
-            this.etiquetaTitulo1.Name = "etiquetaTitulo1";
-            this.etiquetaTitulo1.Size = new System.Drawing.Size(540, 32);
-            this.etiquetaTitulo1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.etiquetaTitulo1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.etiquetaTitulo1.TabIndex = 23;
-            this.etiquetaTitulo1.Text = "Foto";
-            // 
-            // cboCamera
-            // 
-            this.cboCamera.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboCamera.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cboCamera.FormattingEnabled = true;
-            this.cboCamera.Location = new System.Drawing.Point(5, 45);
-            this.cboCamera.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.cboCamera.Name = "cboCamera";
-            this.cboCamera.Size = new System.Drawing.Size(540, 28);
-            this.cboCamera.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboCamera.TabIndex = 21;
-            // 
-            // picFotoCamara
-            //
-            this.picFotoCamara.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.picFotoCamara.Image = null;
-            this.picFotoCamara.Location = new System.Drawing.Point(5, 145);
-            this.picFotoCamara.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.picFotoCamara.Name = "picFotoCamara";
-            this.picFotoCamara.Size = new System.Drawing.Size(540, 380);
-            this.picFotoCamara.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.picFotoCamara.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.picFotoCamara.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(20)))), ((int)(((byte)(35)))));
-            this.picFotoCamara.TabIndex = 22;
-            this.picFotoCamara.TabStop = false;
-            //
-            // btnAceptarFoto
-            //
-            this.btnAceptarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F);
-            this.btnAceptarFoto.Location = new System.Drawing.Point(3, 6);
-            this.btnAceptarFoto.Name = "btnAceptarFoto";
-            this.btnAceptarFoto.Size = new System.Drawing.Size(75, 50);
-            this.btnAceptarFoto.TabIndex = 30;
-            this.btnAceptarFoto.Text = "✔ Aceptar";
-            this.btnAceptarFoto.Visible = false;
-            this.btnAceptarFoto.ForeColor = System.Drawing.Color.Green;
-            this.toolTip1.SetToolTip(this.btnAceptarFoto, "Aceptar foto");
-            this.btnAceptarFoto.UseVisualStyleBackColor = true;
-            this.btnAceptarFoto.Click += new System.EventHandler(this.btnAceptarFoto_Click);
-            //
-            // btnRechazarFoto
-            //
-            this.btnRechazarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F);
-            this.btnRechazarFoto.Location = new System.Drawing.Point(84, 6);
-            this.btnRechazarFoto.Name = "btnRechazarFoto";
-            this.btnRechazarFoto.Size = new System.Drawing.Size(75, 50);
-            this.btnRechazarFoto.TabIndex = 31;
-            this.btnRechazarFoto.Text = "✖ Reintentar";
-            this.btnRechazarFoto.Visible = false;
-            this.btnRechazarFoto.ForeColor = System.Drawing.Color.IndianRed;
-            this.toolTip1.SetToolTip(this.btnRechazarFoto, "Descartar y reintentar");
-            this.btnRechazarFoto.UseVisualStyleBackColor = true;
-            this.btnRechazarFoto.Click += new System.EventHandler(this.btnRechazarFoto_Click);
-            //
-            // btnDescargarFoto
-            //
-            this.btnDescargarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F);
-            this.btnDescargarFoto.Location = new System.Drawing.Point(223, 6);
-            this.btnDescargarFoto.Name = "btnDescargarFoto";
-            this.btnDescargarFoto.Size = new System.Drawing.Size(51, 50);
-            this.btnDescargarFoto.TabIndex = 32;
-            this.btnDescargarFoto.Text = "💾";
-            this.btnDescargarFoto.Visible = false;
-            this.toolTip1.SetToolTip(this.btnDescargarFoto, "Descargar imagen");
-            this.btnDescargarFoto.UseVisualStyleBackColor = true;
-            this.btnDescargarFoto.Click += new System.EventHandler(this.btnDescargarFoto_Click);
-            //
-            // btnRotar
-            //
-            this.btnRotar.Font = new System.Drawing.Font("Century Gothic", 7.8F);
-            this.btnRotar.Location = new System.Drawing.Point(345, 6);
-            this.btnRotar.Name = "btnRotar";
-            this.btnRotar.Size = new System.Drawing.Size(51, 50);
-            this.btnRotar.TabIndex = 33;
-            this.btnRotar.Text = "↻";
-            this.btnRotar.Visible = false;
-            this.toolTip1.SetToolTip(this.btnRotar, "Rotar 90°");
-            this.btnRotar.UseVisualStyleBackColor = true;
-            this.btnRotar.Click += new System.EventHandler(this.btnRotar_Click);
-            //
-            // btnEspejo
-            //
-            this.btnEspejo.Font = new System.Drawing.Font("Century Gothic", 7.8F);
-            this.btnEspejo.Location = new System.Drawing.Point(402, 6);
-            this.btnEspejo.Name = "btnEspejo";
-            this.btnEspejo.Size = new System.Drawing.Size(51, 50);
-            this.btnEspejo.TabIndex = 34;
-            this.btnEspejo.Text = "⇔";
-            this.btnEspejo.Visible = false;
-            this.toolTip1.SetToolTip(this.btnEspejo, "Espejo horizontal");
-            this.btnEspejo.UseVisualStyleBackColor = true;
-            this.btnEspejo.Click += new System.EventHandler(this.btnEspejo_Click);
+            // All camera panel controls removed - built programmatically
             // 
             // PageReportes
             // 
@@ -1283,8 +1083,6 @@
             this.panel2.ResumeLayout(false);
             this.panelCamara.ResumeLayout(false);
             this.panelCamara.PerformLayout();
-            this.panel4.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.picFotoCamara)).EndInit();
             // PageReportes, PageDomicilios, PageTurnos ResumeLayout removed (read-only mode)
             this.PanelLegajosCabrcera.ResumeLayout(false);
             this.PanelLegajosCabrcera.PerformLayout();
@@ -1356,19 +1154,6 @@
         private Global.Controles.EtiquetaSimple lblInactivo;
         private Global.Controles.Panel panel2;
         private Global.Controles.Panel panelCamara;
-        private Global.Controles.Panel panel4;
-        private Global.Controles.BotonBase btnInicioCamara;
-        private Global.Controles.BotonBase btnTomarFoto;
-        private Global.Controles.BotonBase btnEliminarFoto;
-        private Global.Controles.BotonBase btnImagen;
-        private Global.Controles.EtiquetaTitulo etiquetaTitulo1;
-        private System.Windows.Forms.ComboBox cboCamera;
-        private System.Windows.Forms.PictureBox picFotoCamara;
-        private Global.Controles.BotonBase btnAceptarFoto;
-        private Global.Controles.BotonBase btnRechazarFoto;
-        private Global.Controles.BotonBase btnDescargarFoto;
-        private Global.Controles.BotonBase btnRotar;
-        private Global.Controles.BotonBase btnEspejo;
         private System.Windows.Forms.Panel panelGridFichadas;
         private System.Windows.Forms.TableLayoutPanel TableLayoutGridActividad;
     }
