@@ -72,8 +72,12 @@
             this.btnEliminarFoto = new Global.Controles.BotonBase();
             this.etiquetaTitulo1 = new Global.Controles.EtiquetaTitulo();
             this.cboCamera = new System.Windows.Forms.ComboBox();
-            this.picFotoCamara = new AForge.Controls.PictureBox();
-            this.videoSourcePlayer1 = new AForge.Controls.VideoSourcePlayer();
+            this.picFotoCamara = new System.Windows.Forms.PictureBox();
+            this.btnAceptarFoto = new Global.Controles.BotonBase();
+            this.btnRechazarFoto = new Global.Controles.BotonBase();
+            this.btnDescargarFoto = new Global.Controles.BotonBase();
+            this.btnRotar = new Global.Controles.BotonBase();
+            this.btnEspejo = new Global.Controles.BotonBase();
             this.PageReportes = new System.Windows.Forms.TabPage();
             this.PageDomicilios = new System.Windows.Forms.TabPage();
             this.textoPiso = new Global.Controles.Text.TextoEtiquetaSimple();
@@ -674,7 +678,6 @@
             this.panelCamara.Controls.Add(this.etiquetaTitulo1);
             this.panelCamara.Controls.Add(this.cboCamera);
             this.panelCamara.Controls.Add(this.picFotoCamara);
-            this.panelCamara.Controls.Add(this.videoSourcePlayer1);
             this.panelCamara.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelCamara.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelCamara.Name = "panelCamara";
@@ -686,8 +689,13 @@
             this.panel4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel4.Controls.Add(this.btnInicioCamara);
             this.panel4.Controls.Add(this.btnTomarFoto);
-            this.panel4.Controls.Add(this.btnEliminarFoto);
             this.panel4.Controls.Add(this.btnImagen);
+            this.panel4.Controls.Add(this.btnAceptarFoto);
+            this.panel4.Controls.Add(this.btnRechazarFoto);
+            this.panel4.Controls.Add(this.btnEliminarFoto);
+            this.panel4.Controls.Add(this.btnDescargarFoto);
+            this.panel4.Controls.Add(this.btnRotar);
+            this.panel4.Controls.Add(this.btnEspejo);
             this.panel4.Location = new System.Drawing.Point(3, 78);
             this.panel4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel4.Name = "panel4";
@@ -736,7 +744,7 @@
             this.cboCamera.TabIndex = 21;
             // 
             // picFotoCamara
-            // 
+            //
             this.picFotoCamara.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.picFotoCamara.Image = null;
             this.picFotoCamara.Location = new System.Drawing.Point(5, 145);
@@ -744,20 +752,77 @@
             this.picFotoCamara.Name = "picFotoCamara";
             this.picFotoCamara.Size = new System.Drawing.Size(540, 380);
             this.picFotoCamara.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.picFotoCamara.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picFotoCamara.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.picFotoCamara.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(20)))), ((int)(((byte)(35)))));
             this.picFotoCamara.TabIndex = 22;
             this.picFotoCamara.TabStop = false;
-            // 
-            // videoSourcePlayer1
-            // 
-            this.videoSourcePlayer1.Location = new System.Drawing.Point(5, 145);
-            this.videoSourcePlayer1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.videoSourcePlayer1.Name = "videoSourcePlayer1";
-            this.videoSourcePlayer1.Size = new System.Drawing.Size(540, 380);
-            this.videoSourcePlayer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.videoSourcePlayer1.TabIndex = 20;
-            this.videoSourcePlayer1.Text = "videoSourcePlayer1";
-            this.videoSourcePlayer1.VideoSource = null;
+            //
+            // btnAceptarFoto
+            //
+            this.btnAceptarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F);
+            this.btnAceptarFoto.Location = new System.Drawing.Point(3, 6);
+            this.btnAceptarFoto.Name = "btnAceptarFoto";
+            this.btnAceptarFoto.Size = new System.Drawing.Size(75, 50);
+            this.btnAceptarFoto.TabIndex = 30;
+            this.btnAceptarFoto.Text = "✔ Aceptar";
+            this.btnAceptarFoto.Visible = false;
+            this.btnAceptarFoto.ForeColor = System.Drawing.Color.Green;
+            this.toolTip1.SetToolTip(this.btnAceptarFoto, "Aceptar foto");
+            this.btnAceptarFoto.UseVisualStyleBackColor = true;
+            this.btnAceptarFoto.Click += new System.EventHandler(this.btnAceptarFoto_Click);
+            //
+            // btnRechazarFoto
+            //
+            this.btnRechazarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F);
+            this.btnRechazarFoto.Location = new System.Drawing.Point(84, 6);
+            this.btnRechazarFoto.Name = "btnRechazarFoto";
+            this.btnRechazarFoto.Size = new System.Drawing.Size(75, 50);
+            this.btnRechazarFoto.TabIndex = 31;
+            this.btnRechazarFoto.Text = "✖ Reintentar";
+            this.btnRechazarFoto.Visible = false;
+            this.btnRechazarFoto.ForeColor = System.Drawing.Color.IndianRed;
+            this.toolTip1.SetToolTip(this.btnRechazarFoto, "Descartar y reintentar");
+            this.btnRechazarFoto.UseVisualStyleBackColor = true;
+            this.btnRechazarFoto.Click += new System.EventHandler(this.btnRechazarFoto_Click);
+            //
+            // btnDescargarFoto
+            //
+            this.btnDescargarFoto.Font = new System.Drawing.Font("Century Gothic", 7.8F);
+            this.btnDescargarFoto.Location = new System.Drawing.Point(223, 6);
+            this.btnDescargarFoto.Name = "btnDescargarFoto";
+            this.btnDescargarFoto.Size = new System.Drawing.Size(51, 50);
+            this.btnDescargarFoto.TabIndex = 32;
+            this.btnDescargarFoto.Text = "💾";
+            this.btnDescargarFoto.Visible = false;
+            this.toolTip1.SetToolTip(this.btnDescargarFoto, "Descargar imagen");
+            this.btnDescargarFoto.UseVisualStyleBackColor = true;
+            this.btnDescargarFoto.Click += new System.EventHandler(this.btnDescargarFoto_Click);
+            //
+            // btnRotar
+            //
+            this.btnRotar.Font = new System.Drawing.Font("Century Gothic", 7.8F);
+            this.btnRotar.Location = new System.Drawing.Point(345, 6);
+            this.btnRotar.Name = "btnRotar";
+            this.btnRotar.Size = new System.Drawing.Size(51, 50);
+            this.btnRotar.TabIndex = 33;
+            this.btnRotar.Text = "↻";
+            this.btnRotar.Visible = false;
+            this.toolTip1.SetToolTip(this.btnRotar, "Rotar 90°");
+            this.btnRotar.UseVisualStyleBackColor = true;
+            this.btnRotar.Click += new System.EventHandler(this.btnRotar_Click);
+            //
+            // btnEspejo
+            //
+            this.btnEspejo.Font = new System.Drawing.Font("Century Gothic", 7.8F);
+            this.btnEspejo.Location = new System.Drawing.Point(402, 6);
+            this.btnEspejo.Name = "btnEspejo";
+            this.btnEspejo.Size = new System.Drawing.Size(51, 50);
+            this.btnEspejo.TabIndex = 34;
+            this.btnEspejo.Text = "⇔";
+            this.btnEspejo.Visible = false;
+            this.toolTip1.SetToolTip(this.btnEspejo, "Espejo horizontal");
+            this.btnEspejo.UseVisualStyleBackColor = true;
+            this.btnEspejo.Click += new System.EventHandler(this.btnEspejo_Click);
             // 
             // PageReportes
             // 
@@ -1298,8 +1363,12 @@
         private Global.Controles.BotonBase btnImagen;
         private Global.Controles.EtiquetaTitulo etiquetaTitulo1;
         private System.Windows.Forms.ComboBox cboCamera;
-        private AForge.Controls.PictureBox picFotoCamara;
-        private AForge.Controls.VideoSourcePlayer videoSourcePlayer1;
+        private System.Windows.Forms.PictureBox picFotoCamara;
+        private Global.Controles.BotonBase btnAceptarFoto;
+        private Global.Controles.BotonBase btnRechazarFoto;
+        private Global.Controles.BotonBase btnDescargarFoto;
+        private Global.Controles.BotonBase btnRotar;
+        private Global.Controles.BotonBase btnEspejo;
         private System.Windows.Forms.Panel panelGridFichadas;
         private System.Windows.Forms.TableLayoutPanel TableLayoutGridActividad;
     }

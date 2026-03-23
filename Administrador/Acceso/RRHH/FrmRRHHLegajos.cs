@@ -33,10 +33,19 @@ namespace Acceso.RRHH
         private Label dragLabel = null;
 
         /// <summary>
-        /// Objetos de Aforge para captura de Video y Fotos desde WebCam
+        /// Objetos de AForge para captura de Video y Fotos desde WebCam
         /// </summary>
         private FilterInfoCollection filterInfoCollection;
         private VideoCaptureDevice videoCaptureDevice;
+        private readonly object _frameLock = new object();
+        private volatile bool _camaraCerrando;
+
+        /// <summary>
+        /// Estado del panel de foto: SinFoto, Preview (capturada/subida sin aceptar), ConFoto (aceptada)
+        /// </summary>
+        private enum EstadoFoto { SinFoto, Preview, ConFoto }
+        private EstadoFoto _estadoFoto = EstadoFoto.SinFoto;
+        private bool _camaraActiva;
 
         private readonly SaveFileDialog dialogxls = new SaveFileDialog
         {
@@ -259,18 +268,15 @@ namespace Acceso.RRHH
             if (cboCamera.Items.Count > 0)
             {
                 cboCamera.SelectedIndex = 0;
-                videoCaptureDevice = new VideoCaptureDevice();
                 cboCamera.Enabled = true;
                 btnInicioCamara.Enabled = true;
-                videoSourcePlayer1.Visible = true;
             }
             else
             {
                 cboCamera.Enabled = false;
                 btnInicioCamara.Enabled = false;
-                btnTomarFoto.Enabled = false;
-                videoSourcePlayer1.Visible = false;
             }
+            ActualizarBotonesFoto(EstadoFoto.SinFoto);
 
             // Tabs de Reportes, Domicilios y Turnos removidos en Designer (modo solo huellas+foto)
 
@@ -385,17 +391,19 @@ namespace Acceso.RRHH
 
 
 
+            ApagoCamara();
             picFotoCamara.Image = null;
-            picFotoCamara.BackgroundImage = null;
 
             // Foto
             if (olegajo.iFoto != null)
             {
-                System.IO.MemoryStream ms = new System.IO.MemoryStream(olegajo.iFoto);
+                var ms = new System.IO.MemoryStream(olegajo.iFoto);
                 picFotoCamara.Image = Image.FromStream(ms);
-                btnEliminarFoto.Enabled = true;
-                ms.Close();
-                ms.Dispose();
+                ActualizarBotonesFoto(EstadoFoto.ConFoto);
+            }
+            else
+            {
+                ActualizarBotonesFoto(EstadoFoto.SinFoto);
             }
 
 
@@ -611,11 +619,9 @@ namespace Acceso.RRHH
             lblInactivo.Visible = false;
 
 
+            ApagoCamara();
             picFotoCamara.Image = null;
-            picFotoCamara.BackgroundImage = null;
-
-            btnTomarFoto.Enabled = false;
-            btnEliminarFoto.Enabled = false;
+            ActualizarBotonesFoto(EstadoFoto.SinFoto);
 
             textoEtiquetaApellido.Text = string.Empty;
             textoEtiquetaNombre.Text = string.Empty;
@@ -746,57 +752,212 @@ namespace Acceso.RRHH
         }
 
 
-        private void ApagoCamara()
+        // ═══════════════════════════════════════════════════════
+        // CÁMARA Y PANEL DE FOTO — Estado: SinFoto / Preview / ConFoto
+        // ═══════════════════════════════════════════════════════
+
+        private void ActualizarBotonesFoto(EstadoFoto estado)
         {
-            if (cboCamera.Items.Count > 0)
-            {
-                if (videoCaptureDevice != null)
-                {
-                    videoCaptureDevice.NewFrame -= VideoCaptureDevice_NewFrame;
-                    if (videoCaptureDevice.IsRunning)
-                    {
-                        videoCaptureDevice.Stop();
-                    }
-                }
+            _estadoFoto = estado;
+            bool hayCamara = cboCamera.Items.Count > 0;
 
-                if (videoSourcePlayer1.IsRunning)
-                {
-                    videoSourcePlayer1.SignalToStop();
-                }
-            }
-            picFotoCamara.Image = null;
-            picFotoCamara.BringToFront();
+            // Botones estado SinFoto
+            btnInicioCamara.Visible = estado == EstadoFoto.SinFoto && hayCamara;
+            btnTomarFoto.Visible = estado == EstadoFoto.SinFoto && _camaraActiva;
+            btnImagen.Visible = estado == EstadoFoto.SinFoto;
 
+            // Botones estado Preview
+            btnAceptarFoto.Visible = estado == EstadoFoto.Preview;
+            btnRechazarFoto.Visible = estado == EstadoFoto.Preview;
+
+            // Botones estado ConFoto
+            btnEliminarFoto.Visible = estado == EstadoFoto.ConFoto;
+            btnDescargarFoto.Visible = estado == EstadoFoto.ConFoto;
+            btnRotar.Visible = estado == EstadoFoto.ConFoto;
+            btnEspejo.Visible = estado == EstadoFoto.ConFoto;
         }
 
+        private void ApagoCamara()
+        {
+            _camaraCerrando = true;
+            _camaraActiva = false;
+            if (videoCaptureDevice != null)
+            {
+                videoCaptureDevice.NewFrame -= VideoCaptureDevice_NewFrame;
+                if (videoCaptureDevice.IsRunning)
+                {
+                    videoCaptureDevice.SignalToStop();
+                    videoCaptureDevice.WaitForStop();
+                }
+                videoCaptureDevice = null;
+            }
+            _camaraCerrando = false;
+        }
+
+        private void btnInicioCamara_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ApagoCamara();
+                picFotoCamara.Image = null;
+
+                videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cboCamera.SelectedIndex].MonikerString);
+
+                // Seleccionar resolución 4:3 para mejor encuadre
+                if (videoCaptureDevice.VideoCapabilities != null && videoCaptureDevice.VideoCapabilities.Length > 0)
+                {
+                    var caps4x3 = videoCaptureDevice.VideoCapabilities
+                        .Where(c => (double)c.FrameSize.Width / c.FrameSize.Height <= 1.4)
+                        .OrderByDescending(c => c.FrameSize.Width)
+                        .FirstOrDefault();
+
+                    videoCaptureDevice.VideoResolution = caps4x3 ?? videoCaptureDevice.VideoCapabilities[0];
+                }
+
+                _camaraCerrando = false;
+                videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+                videoCaptureDevice.Start();
+                _camaraActiva = true;
+                ActualizarBotonesFoto(EstadoFoto.SinFoto);
+            }
+            catch (Exception ex)
+            {
+                InformarError("Error al iniciar cámara: " + ex.Message);
+            }
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
+        {
+            if (_camaraCerrando) return;
+            try
+            {
+                Bitmap frame;
+                lock (_frameLock)
+                {
+                    frame = (Bitmap)eventArgs.Frame.Clone();
+                }
+                if (!_camaraCerrando && !IsDisposed)
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        if (!_camaraCerrando && _camaraActiva)
+                        {
+                            var old = picFotoCamara.Image;
+                            picFotoCamara.Image = frame;
+                            old?.Dispose();
+                        }
+                        else
+                        {
+                            frame.Dispose();
+                        }
+                    }));
+                }
+                else
+                {
+                    frame.Dispose();
+                }
+            }
+            catch { }
+        }
+
+        private void btnTomarFoto_Click(object sender, EventArgs e)
+        {
+            if (picFotoCamara.Image == null) return;
+
+            // Capturar frame actual
+            Bitmap img = new Bitmap(picFotoCamara.Image);
+
+            // Detener cámara y mostrar preview
+            ApagoCamara();
+            picFotoCamara.Image = img;
+            ActualizarBotonesFoto(EstadoFoto.Preview);
+        }
+
+        private void btnAceptarFoto_Click(object sender, EventArgs e)
+        {
+            // Aceptar la foto en preview → ConFoto
+            ActualizarBotonesFoto(EstadoFoto.ConFoto);
+        }
+
+        private void btnRechazarFoto_Click(object sender, EventArgs e)
+        {
+            // Rechazar preview → volver a SinFoto
+            picFotoCamara.Image = null;
+            ActualizarBotonesFoto(EstadoFoto.SinFoto);
+
+            // Re-encender cámara si había cámara disponible
+            if (cboCamera.Items.Count > 0)
+                btnInicioCamara_Click(sender, e);
+        }
 
         private void btnImagen_Click(object sender, EventArgs e)
         {
-            btnEliminarFoto.Enabled = false;
             try
             {
-
                 ApagoCamara();
 
-                videoSourcePlayer1.Visible = false;
-                picFotoCamara.Visible = true;
-
-                OpenFileDialog fo = new OpenFileDialog
+                var fo = new OpenFileDialog
                 {
-                    Filter = "jpg files (*.jpg) | *.jpg| png files (*.png) | *.png"
+                    Filter = "Imágenes|*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.webp;*.tiff|Todos los archivos|*.*",
+                    Title = "Seleccionar foto"
                 };
-                DialogResult rs = fo.ShowDialog();
-                if (rs == DialogResult.OK)
+                if (fo.ShowDialog() == DialogResult.OK)
                 {
                     picFotoCamara.Image = Image.FromFile(fo.FileName);
-                    btnEliminarFoto.Enabled = true;
+                    ActualizarBotonesFoto(EstadoFoto.Preview);
                 }
             }
             catch (Exception ex)
             {
                 InformarError(ex.Message);
-
             }
+        }
+
+        private void btnEliminarFoto_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("¿Eliminar la foto?", "DigitalOne", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                picFotoCamara.Image = null;
+                ActualizarBotonesFoto(EstadoFoto.SinFoto);
+            }
+        }
+
+        private void btnDescargarFoto_Click(object sender, EventArgs e)
+        {
+            if (picFotoCamara.Image == null) return;
+            var sfd = new SaveFileDialog
+            {
+                Filter = "JPEG|*.jpg|PNG|*.png",
+                DefaultExt = "jpg",
+                FileName = $"Foto_{olegajo.sApellido}_{olegajo.sNombre}".Replace(" ", "_"),
+                Title = "Guardar foto"
+            };
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                var format = sfd.FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                    ? System.Drawing.Imaging.ImageFormat.Png
+                    : System.Drawing.Imaging.ImageFormat.Jpeg;
+                picFotoCamara.Image.Save(sfd.FileName, format);
+            }
+        }
+
+        private void btnRotar_Click(object sender, EventArgs e)
+        {
+            if (picFotoCamara.Image == null) return;
+            picFotoCamara.Image.RotateFlip(RotateFlipType.Rotate90FlipNone);
+            picFotoCamara.Invalidate();
+        }
+
+        private void btnEspejo_Click(object sender, EventArgs e)
+        {
+            if (picFotoCamara.Image == null) return;
+            picFotoCamara.Image.RotateFlip(RotateFlipType.RotateNoneFlipX);
+            picFotoCamara.Invalidate();
+        }
+
+        private void FrmRRHHLegajosUareU_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ApagoCamara();
         }
 
         private void ApellidoyNombre(object sender, EventArgs e)
@@ -807,84 +968,6 @@ namespace Acceso.RRHH
 
         private void panelDatosLegajos_Paint(object sender, PaintEventArgs e)
         {
-
-        }
-
-        private void btnInicioCamara_Click(object sender, EventArgs e)
-        {
-            videoSourcePlayer1.Visible = false;
-            picFotoCamara.Visible = true;
-            btnTomarFoto.Enabled = true;
-
-            videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cboCamera.SelectedIndex].MonikerString);
-
-            // Seleccionar resolucion 4:3 (640x480 o similar) para mejor encuadre en el panel
-            if (videoCaptureDevice.VideoCapabilities != null && videoCaptureDevice.VideoCapabilities.Length > 0)
-            {
-                // Buscar la mejor resolucion 4:3 (aspect ratio <= 1.4)
-                var caps4x3 = videoCaptureDevice.VideoCapabilities
-                    .Where(c => (double)c.FrameSize.Width / c.FrameSize.Height <= 1.4)
-                    .OrderByDescending(c => c.FrameSize.Width)
-                    .FirstOrDefault();
-
-                if (caps4x3 != null)
-                    videoCaptureDevice.VideoResolution = caps4x3;
-                else
-                    videoCaptureDevice.VideoResolution = videoCaptureDevice.VideoCapabilities[0];
-            }
-
-            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
-            videoCaptureDevice.Start();
-        }
-
-        private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
-        {
-            try
-            {
-                picFotoCamara.Image = (Bitmap)eventArgs.Frame.Clone();
-            }
-            catch { }
-        }
-
-        private void btnTomarFoto_Click(object sender, EventArgs e)
-        {
-            // Capturar el frame actual que ya se muestra en picFotoCamara
-            Bitmap img = picFotoCamara.Image != null ? new Bitmap(picFotoCamara.Image) : null;
-            if (img == null) return;
-
-            DialogResult dialogResult = MessageBox.Show("Me Gusta como Salio la Foto", "DigitalOne", MessageBoxButtons.YesNo);
-            if (dialogResult == DialogResult.No)
-            {
-                return; // sigue mostrando el video en vivo
-            }
-
-            // Detener la cámara y mantener la foto capturada
-            if (videoCaptureDevice != null)
-                videoCaptureDevice.NewFrame -= VideoCaptureDevice_NewFrame;
-            ApagoCamara();
-            picFotoCamara.Image = img;
-            btnEliminarFoto.Enabled = true;
-            btnTomarFoto.Enabled = false;
-        }
-
-        private void FrmRRHHLegajosUareU_FormClosing(object sender, FormClosingEventArgs e)
-        {
-
-            ApagoCamara();
-
-        }
-
-        private void btnEliminarFoto_Click(object sender, EventArgs e)
-
-        {
-            DialogResult dialogResult = MessageBox.Show("Elimina la Foto?", "DigitalOne", MessageBoxButtons.YesNo);
-            if (dialogResult == DialogResult.Yes)
-            {
-                picFotoCamara.Image = null;
-                btnEliminarFoto.Enabled = false;
-                btnTomarFoto.Enabled = false;
-            }
-
         }
 
         private void btnHistorial_Click(object sender, EventArgs e)
