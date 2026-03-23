@@ -3,7 +3,7 @@ namespace Global.Datos
 {
     public static class BuildInfo
     {
-        public const string BuildNumber = "202603202038";
+        public const string BuildNumber = "202603231936";
         public const string Version = "1.0.0";
         public const string FullVersion = Version + "-" + BuildNumber;
     }

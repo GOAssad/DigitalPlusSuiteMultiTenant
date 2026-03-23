@@ -53,6 +53,7 @@ namespace Acceso.uAreu
         private Bitmap _frameActual;
         private readonly object _frameLock = new object();
         private volatile bool _cerrando;
+        private volatile bool _primerFrameCamara;
 
         public FrmFichar()
         {
@@ -543,8 +544,14 @@ namespace Acceso.uAreu
             {
                 if (_videoDevices == null || _videoDevices.Count == 0) return;
 
+                _primerFrameCamara = false;
                 _videoDevice = new VideoCaptureDevice(_videoDevices[0].MonikerString);
                 _videoDevice.NewFrame += VideoDevice_NewFrame;
+                _videoDevice.VideoSourceError += (s, e) =>
+                {
+                    if (!_cerrando && !IsDisposed)
+                        BeginInvoke((Action)(() => MostrarCamaraOcupada()));
+                };
                 _videoDevice.Start();
 
                 _timerQrDecode = new System.Windows.Forms.Timer();
@@ -552,14 +559,64 @@ namespace Acceso.uAreu
                 _timerQrDecode.Tick += TimerQrDecode_Tick;
                 _timerQrDecode.Start();
 
+                // Verificar que llegan frames (si la cámara está ocupada, no llegan)
+                var timerCheck = new System.Windows.Forms.Timer { Interval = 1500 };
+                timerCheck.Tick += (s, e) =>
+                {
+                    timerCheck.Stop();
+                    timerCheck.Dispose();
+                    if (!_primerFrameCamara && !_cerrando)
+                        MostrarCamaraOcupada();
+                };
+                timerCheck.Start();
+
                 HuellaLog.Write("IniciarCamara() OK - " + _videoDevices[0].Name);
             }
             catch (Exception ex)
             {
                 HuellaLog.Write("IniciarCamara() ERROR: " + ex.Message);
-                lblEstado.Text = "Error al iniciar camara";
-                lblEstado.ForeColor = Color.Red;
+                MostrarCamaraOcupada();
             }
+        }
+
+        private void MostrarCamaraOcupada()
+        {
+            DetenerCamara();
+
+            string proceso = null;
+            try
+            {
+                foreach (var p in System.Diagnostics.Process.GetProcesses())
+                {
+                    try
+                    {
+                        string name = p.ProcessName.ToLowerInvariant();
+                        if (name == "acceso" || name.Contains("administrador"))
+                        { proceso = "DigitalOne Administrador"; break; }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            string msg = "Cámara no disponible\nEstá siendo utilizada por otra aplicación";
+            if (!string.IsNullOrEmpty(proceso))
+                msg += $":\n{proceso}";
+
+            // Dibujar mensaje en el PictureBox de la cámara
+            int w = picCamara.Width > 0 ? picCamara.Width : 240;
+            int h = picCamara.Height > 0 ? picCamara.Height : 185;
+            var bmp = new Bitmap(w, h);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.FromArgb(20, 25, 45));
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                using (var font = new Font("Segoe UI", 9))
+                    g.DrawString(msg, font, Brushes.DarkGoldenrod, new RectangleF(5, 5, w - 10, h - 10), sf);
+            }
+            picCamara.Image = bmp;
+            HuellaLog.Write("Camara ocupada" + (proceso != null ? " por " + proceso : ""));
         }
 
         private void DetenerCamara()
@@ -601,6 +658,7 @@ namespace Acceso.uAreu
         private void VideoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
             if (_cerrando || _videoDevice == null) return;
+            _primerFrameCamara = true;
 
             try
             {

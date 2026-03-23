@@ -46,6 +46,8 @@ namespace Acceso.RRHH
         private enum EstadoFoto { SinFoto, Preview, ConFoto }
         private EstadoFoto _estadoFoto = EstadoFoto.SinFoto;
         private bool _camaraActiva;
+        private bool _camaraOcupadaMostrada;
+        private volatile bool _primerFrameRecibido;
 
         private readonly SaveFileDialog dialogxls = new SaveFileDialog
         {
@@ -803,21 +805,23 @@ namespace Acceso.RRHH
 
                 videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cboCamera.SelectedIndex].MonikerString);
 
-                // Seleccionar resolución 4:3 para mejor encuadre
-                if (videoCaptureDevice.VideoCapabilities != null && videoCaptureDevice.VideoCapabilities.Length > 0)
-                {
-                    var caps4x3 = videoCaptureDevice.VideoCapabilities
-                        .Where(c => (double)c.FrameSize.Width / c.FrameSize.Height <= 1.4)
-                        .OrderByDescending(c => c.FrameSize.Width)
-                        .FirstOrDefault();
-
-                    videoCaptureDevice.VideoResolution = caps4x3 ?? videoCaptureDevice.VideoCapabilities[0];
-                }
-
+                // Usar resolución default de la cámara (igual que Fichador)
                 _camaraCerrando = false;
                 videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+                videoCaptureDevice.VideoSourceError += VideoCaptureDevice_VideoSourceError;
                 videoCaptureDevice.Start();
+
+                // Dar tiempo a que llegue el primer frame (si la cámara está ocupada no llegan)
+                _primerFrameRecibido = false;
+                System.Threading.Thread.Sleep(800);
+                if (!_primerFrameRecibido)
+                {
+                    MostrarCamaraOcupada();
+                    return;
+                }
                 _camaraActiva = true;
+                _camaraOcupadaMostrada = false;
+                picFotoCamara.BackColor = Color.FromArgb(15, 20, 35);
                 ActualizarBotonesFoto(EstadoFoto.SinFoto);
             }
             catch (Exception ex)
@@ -829,6 +833,7 @@ namespace Acceso.RRHH
         private void VideoCaptureDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
         {
             if (_camaraCerrando) return;
+            _primerFrameRecibido = true;
             try
             {
                 Bitmap frame;
@@ -953,6 +958,66 @@ namespace Acceso.RRHH
             if (picFotoCamara.Image == null) return;
             picFotoCamara.Image.RotateFlip(RotateFlipType.RotateNoneFlipX);
             picFotoCamara.Invalidate();
+        }
+
+        private void MostrarCamaraOcupada()
+        {
+            if (_camaraOcupadaMostrada) return;
+            _camaraOcupadaMostrada = true;
+            _camaraActiva = false;
+            ApagoCamara();
+
+            string proceso = ObtenerProcesoUsandoCamara();
+            string msg = "Cámara no disponible.\nEstá siendo utilizada por otra aplicación";
+            if (!string.IsNullOrEmpty(proceso))
+                msg += $": {proceso}";
+            msg += ".";
+
+            // Mostrar mensaje en el PictureBox
+            var bmp = new Bitmap(picFotoCamara.Width > 0 ? picFotoCamara.Width : 400,
+                                  picFotoCamara.Height > 0 ? picFotoCamara.Height : 300);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.FromArgb(25, 30, 50));
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                var iconFont = new Font("Segoe UI", 32);
+                var textFont = new Font("Segoe UI", 10);
+                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString("📷", iconFont, Brushes.Gray, new RectangleF(0, bmp.Height / 2f - 50, bmp.Width, 50), sf);
+                g.DrawString(msg, textFont, Brushes.DarkGoldenrod, new RectangleF(10, bmp.Height / 2f + 10, bmp.Width - 20, 80), sf);
+            }
+            picFotoCamara.Image = bmp;
+            ActualizarBotonesFoto(EstadoFoto.SinFoto);
+        }
+
+        private void VideoCaptureDevice_VideoSourceError(object sender, AForge.Video.VideoSourceErrorEventArgs eventArgs)
+        {
+            if (!IsDisposed)
+                BeginInvoke((Action)(() => MostrarCamaraOcupada()));
+        }
+
+        private static string ObtenerProcesoUsandoCamara()
+        {
+            try
+            {
+                // Buscar procesos conocidos que usan cámara
+                var procesos = System.Diagnostics.Process.GetProcesses();
+                foreach (var p in procesos)
+                {
+                    try
+                    {
+                        string name = p.ProcessName.ToLowerInvariant();
+                        // Detectar apps conocidas
+                        if (name == "tentradaysalida" || name.Contains("fichador"))
+                            return "DigitalOne Fichador";
+                        if (name == "acceso" || name.Contains("administrador"))
+                            return "DigitalOne Administrador";
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            return null;
         }
 
         private void FrmRRHHLegajosUareU_FormClosing(object sender, FormClosingEventArgs e)
