@@ -1,10 +1,29 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-20
+**Fecha:** 2026-03-23
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-23
+- [x] **SitioWeb integrado al repo:** Carpeta SitioWeb/ con index.html, digital-one.html, enviar.php, images, instalador
+- [x] **digital-one.html actualizado con DOC02:** Fichada QR (4ta modalidad), Administrador corregido (rol simplificado), Portal expandido (importacion Excel, calendario, incidencias, reportes), seccion Reportes (4 cards), seccion Modo Kiosko, link Ayuda en nav, copyright 2026
+- [x] **digital-one-help.html creado:** Centro de Ayuda online completo basado en DOC02 con sidebar navegable, buscador, 30+ anclas para deep-linking desde Portal MT, highlight activo por scroll, responsive
+- [x] **Ayuda contextual en Portal MT:** Boton ? en top-bar + link Ayuda en sidebar. JS contextual (contextual-help.js) mapea 22 rutas del portal a anclas del help via polling 500ms (Blazor navega por SignalR)
+- [x] **Deploy sitio web a Hostinger:** Todos los archivos subidos via SFTP a integraia.tech (public_html)
+- [x] **Deploy Portal MT a Azure** con ayuda contextual integrada
+- [x] **DOC06-SitioWeb_IntegraIA.md creado:** Documentacion completa del sitio web (estructura, deploy, anclas, integracion Portal MT)
+- [x] Commits: e934938 (SitioWeb al repo), 72ffb4f (ayuda en portal), 472ef28 (fix polling), 2949e1c (JS en wwwroot)
+
+### Sesion 2026-03-23 (anterior)
+- [x] **Suspender/reactivar empresa** — Portal Licencias zona peligrosa, sincroniza Estado (admin) + IsActive (MT)
+- [x] **Validacion GPS SucursalForm** — Toggle deshabilitado sin coordenadas, auto-activa al poner ubicacion
+- [x] **Revalidacion auth 1 min** — IdentityRevalidatingAuthenticationStateProvider verifica IsActive cada 1 min, SQL directo, fail-open
+- [x] **Fix camara AForge** — SignalToStop + WaitForStop en DetenerCamara y FormClosed
+- [x] **Upgrade plan genera CodigoActivacion** — Fix: al confirmar upgrade se regenera codigo si no existia
+- [x] Deploy Portal MT y Portal Licencias a Azure
+- [x] Commit d974e77 pushed
 
 ### Sesion 2026-03-20 (noche)
 - [x] **Sistema de versionado automatico:** Script `Tools/update-build-number.ps1` genera BuildInfo.cs con timestamp YYYYMMDDHHMI en todos los proyectos
@@ -275,9 +294,11 @@
 ## DOCUMENTACION
 
 - [x] DOC01 - Reporte Arquitectura Project Leader (v7.0)
-- [x] DOC02 - Manual Usuario Final (v5.0)
+- [x] DOC02 - Manual Usuario Final (v16.0)
 - [x] DOC03 - Manual Portal Licencias Integra IA (v5.0)
-- [x] DOC04 - Lista de Pendientes (actualizado)
+- [x] DOC04 - Lista de Pendientes (actualizado 2026-03-23)
+- [x] DOC05 - Terminal Movil DigitalOne
+- [x] DOC06 - Sitio Web IntegraIA (v1.0) — estructura, deploy Hostinger, anclas, integracion Portal MT
 - [ ] **Agregar capturas de pantalla** al DOC02 y DOC03 (requiere ejecutar las apps y tomar screenshots)
 
 ## FUNCIONALIDAD (Proximas sesiones)
@@ -338,4 +359,4 @@
 
 ---
 
-*Actualizado: 2026-03-20*
+*Actualizado: 2026-03-23*
