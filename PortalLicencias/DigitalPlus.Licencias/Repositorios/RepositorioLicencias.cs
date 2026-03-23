@@ -584,6 +584,20 @@ public class RepositorioLicencias
                   WHERE Token = @Token",
                 new { Token = token }, tx);
 
+            // 6. Generar CodigoActivacion si la empresa no tiene uno
+            var tieneCodigoActivacion = await conn.QueryFirstOrDefaultAsync<string>(
+                "SELECT CodigoActivacion FROM Empresas WHERE CompanyId = @CompanyId",
+                new { CompanyId = companyId }, tx);
+
+            if (string.IsNullOrEmpty(tieneCodigoActivacion))
+            {
+                var codigo = GenerarCodigoActivacion();
+                await conn.ExecuteAsync(
+                    @"UPDATE Empresas SET CodigoActivacion = @Codigo, UpdatedAt = SYSUTCDATETIME()
+                      WHERE CompanyId = @CompanyId",
+                    new { Codigo = codigo, CompanyId = companyId }, tx);
+            }
+
             tx.Commit();
             return true;
         }
