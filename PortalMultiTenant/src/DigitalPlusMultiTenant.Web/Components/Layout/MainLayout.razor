@@ -98,65 +98,6 @@
     <span class="dismiss">🗙</span>
 </div>
 
-<script suppress-error="BL9992">
-    // Contextual help: maps portal routes to help page anchors
-    // Uses polling because Blazor Server navigates via SignalR, not pushState
-    (function() {
-        const helpBase = 'https://integraia.tech/digital-one-help.html';
-        const routeMap = {
-            '/': '#portal-dashboard',
-            '/legajos': '#portal-legajos',
-            '/fichadas': '#portal-fichadas',
-            '/horarios': '#portal-estructura',
-            '/categorias': '#portal-estructura',
-            '/sectores': '#portal-estructura',
-            '/sucursales': '#portal-estructura',
-            '/terminales': '#portal-estructura',
-            '/terminales-moviles': '#terminales-moviles',
-            '/fichado-movil': '#fichada-movil',
-            '/incidencias': '#portal-incidencias',
-            '/vacaciones': '#portal-incidencias',
-            '/feriados': '#portal-estructura',
-            '/reportes/asistencia': '#portal-reportes',
-            '/reportes/llegadas-tarde': '#portal-reportes',
-            '/reportes/ausencias': '#portal-reportes',
-            '/reportes/horas-trabajadas': '#portal-reportes',
-            '/usuarios': '#portal-usuarios',
-            '/configuracion/empresa': '#portal',
-            '/configuracion/planes': '#licencias',
-            '/configuracion': '#portal',
-            '/noticias': '#portal'
-        };
-        const partialMap = [
-            { match: '/legajos/', anchor: '#portal-legajo-form' },
-            { match: '/reportes/', anchor: '#portal-reportes' },
-            { match: '/configuracion/', anchor: '#portal' }
-        ];
-
-        var lastPath = '';
-        function updateHelp() {
-            var path = window.location.pathname.replace(/\/$/, '') || '/';
-            if (path === lastPath) return;
-            lastPath = path;
-            var btn = document.getElementById('helpBtn');
-            if (!btn) return;
-            var anchor = routeMap[path] || '';
-            if (!anchor) {
-                for (var i = 0; i < partialMap.length; i++) {
-                    if (path.startsWith(partialMap[i].match)) {
-                        anchor = partialMap[i].anchor;
-                        break;
-                    }
-                }
-            }
-            btn.href = helpBase + anchor;
-        }
-        // Poll every 500ms to detect Blazor SignalR navigation
-        setInterval(updateHelp, 500);
-        updateHelp();
-    })();
-</script>
-
 @code {
     private bool sidebarOpen;
     private ErrorBoundary? errorBoundary;
