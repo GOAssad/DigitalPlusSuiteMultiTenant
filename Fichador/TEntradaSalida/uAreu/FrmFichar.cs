@@ -577,7 +577,10 @@ namespace Acceso.uAreu
                 try
                 {
                     if (_videoDevice.IsRunning)
+                    {
                         _videoDevice.SignalToStop();
+                        _videoDevice.WaitForStop();
+                    }
                 }
                 catch { }
                 _videoDevice = null;
@@ -924,14 +927,17 @@ namespace Acceso.uAreu
                 _timerQrDecode = null;
             }
 
-            // Desuscribir y soltar referencia a la camara sin esperar
+            // Desuscribir y detener la camara completamente
             if (_videoDevice != null)
             {
                 try { _videoDevice.NewFrame -= VideoDevice_NewFrame; } catch { }
                 try
                 {
                     if (_videoDevice.IsRunning)
+                    {
                         _videoDevice.SignalToStop();
+                        _videoDevice.WaitForStop();
+                    }
                 }
                 catch { }
                 _videoDevice = null;

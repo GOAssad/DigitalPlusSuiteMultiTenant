@@ -451,6 +451,22 @@ public class MultiTenantProvisioningService
     }
 
     /// <summary>
+    /// Actualiza el campo IsActive de la empresa en DigitalPlusMultiTenant.
+    /// </summary>
+    public async Task ActualizarEmpresaActivaAsync(string codigo, bool isActive)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = "UPDATE Empresa SET IsActive = @IsActive, UpdatedAt = @Now WHERE Codigo = @Codigo";
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@IsActive", isActive);
+        cmd.Parameters.AddWithValue("@Now", DateTime.UtcNow);
+        cmd.Parameters.AddWithValue("@Codigo", codigo);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
     /// Elimina datos transaccionales de la empresa en DigitalPlusMultiTenant.
     /// Mantiene: empresa, usuarios, sucursales, sectores, categorías, horarios, terminales,
     /// legajos (con huellas, PINs, sucursales asignadas), incidencias, feriados, noticias, variables.

@@ -135,9 +135,14 @@
                     <div class="col-md-2">
                         <label class="form-label">Fichado GPS</label>
                         <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" @bind="geoActivo" />
+                            <input class="form-check-input" type="checkbox" @bind="geoActivo"
+                                   disabled="@(!TieneCoordenadasValidas)" />
                             <label class="form-check-label small">@(geoActivo ? "Activo" : "Inactivo")</label>
                         </div>
+                        @if (!TieneCoordenadasValidas)
+                        {
+                            <span class="text-muted small"><i class="bi bi-exclamation-circle me-1"></i>Ingrese ubicación</span>
+                        }
                     </div>
                     <div class="col-md-2">
                         <p class="text-muted small mt-4 mb-0">
@@ -172,7 +177,9 @@
     private double? geoLatitud;
     private double? geoLongitud;
     private int geoRadio = 100;
-    private bool geoActivo = true;
+    private bool geoActivo;
+    private bool TieneCoordenadasValidas => geoLatitud.HasValue && geoLongitud.HasValue
+        && (geoLatitud.Value != 0 || geoLongitud.Value != 0);
     // WiFi fields preserved for backwards compat but not shown in UI
     private string? geoBssid;
     private string? geoSsid;
@@ -231,6 +238,7 @@
     {
         geoLatitud = Math.Round(lat, 7);
         geoLongitud = Math.Round(lng, 7);
+        if (TieneCoordenadasValidas && !geoActivo) geoActivo = true;
         InvokeAsync(StateHasChanged);
     }
 
@@ -293,6 +301,7 @@
         searchQuery = "";
         geoLatitud = Math.Round(r.Lat, 7);
         geoLongitud = Math.Round(r.Lng, 7);
+        if (TieneCoordenadasValidas && !geoActivo) geoActivo = true;
         if (mapInitialized)
         {
             await JS.InvokeVoidAsync("LeafletMap.selectResult", r.Lat, r.Lng);
@@ -301,6 +310,8 @@
 
     private async Task OnCoordsManualChange()
     {
+        if (TieneCoordenadasValidas && !geoActivo) geoActivo = true;
+        if (!TieneCoordenadasValidas && geoActivo) geoActivo = false;
         if (geoLatitud.HasValue && geoLongitud.HasValue && mapInitialized)
         {
             await JS.InvokeVoidAsync("LeafletMap.setPosition", geoLatitud.Value, geoLongitud.Value);
@@ -364,7 +375,7 @@
                     geoconfig.Latitud = geoLatitud.HasValue ? (decimal)geoLatitud.Value : null;
                     geoconfig.Longitud = geoLongitud.HasValue ? (decimal)geoLongitud.Value : null;
                     geoconfig.RadioMetros = geoRadio;
-                    geoconfig.Activo = geoActivo;
+                    geoconfig.Activo = geoActivo && TieneCoordenadasValidas;
                     geoconfig.WifiBSSID = string.IsNullOrWhiteSpace(geoBssid) ? null : geoBssid.Trim();
                     geoconfig.WifiSSID = string.IsNullOrWhiteSpace(geoSsid) ? null : geoSsid.Trim();
                 }

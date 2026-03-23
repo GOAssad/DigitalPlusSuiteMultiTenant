@@ -714,6 +714,20 @@ else
                             </div>
                         </div>
                     }
+                    @if (empresa.Estado == "activa")
+                    {
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="MostrarConfirmSuspender"
+                                disabled="@procesando">
+                            <i class="bi bi-pause-circle me-1"></i>Suspender Empresa
+                        </button>
+                    }
+                    else if (empresa.Estado == "suspendida")
+                    {
+                        <button class="btn btn-success btn-sm" @onclick="EjecutarReactivar"
+                                disabled="@procesando">
+                            <i class="bi bi-play-circle me-1"></i>Reactivar Empresa
+                        </button>
+                    }
                     <button class="btn btn-outline-warning btn-sm" @onclick="MostrarConfirmLimpiar"
                             disabled="@(solicitudPendiente?.Tipo == "Eliminacion" || procesando)">
                         <i class="bi bi-eraser me-1"></i>Limpiar Empresa
@@ -839,6 +853,39 @@ else
     </div>
 }
 
+@* Modal Suspender Empresa *@
+@if (showSuspenderModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-secondary">
+                <div class="modal-header bg-secondary bg-opacity-10">
+                    <h5 class="modal-title"><i class="bi bi-pause-circle text-secondary me-2"></i>Suspender Empresa</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-secondary mb-3">
+                        <strong>La empresa "@empresa?.Nombre" sera suspendida.</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Los usuarios no podran iniciar sesion en el portal</li>
+                            <li>El fichado movil dejara de funcionar</li>
+                            <li>No se eliminara ningun dato</li>
+                            <li>Se puede reactivar en cualquier momento</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
+                    <button class="btn btn-warning" disabled="@procesando" @onclick="EjecutarSuspender">
+                        @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Confirmar Suspension
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -874,7 +921,8 @@ else
     private bool usuariosError;
     private string? usuariosErrorMsg;
 
-    // Limpiar / Eliminar
+    // Suspender / Limpiar / Eliminar
+    private bool showSuspenderModal;
     private bool showLimpiarModal;
     private bool showEliminarModal;
     private bool limpiarConfirmado;
@@ -1078,6 +1126,57 @@ else
         _ => "bg-danger"
     };
 
+    private void MostrarConfirmSuspender()
+    {
+        showSuspenderModal = true;
+        showLimpiarModal = false;
+        showEliminarModal = false;
+        mensaje = null;
+    }
+
+    private async Task EjecutarSuspender()
+    {
+        if (empresa == null) return;
+        procesando = true;
+        try
+        {
+            empresa.Estado = "suspendida";
+            await Repo.ActualizarEmpresaAsync(empresa);
+            await MTService.ActualizarEmpresaActivaAsync(empresa.CompanyId, false);
+            mensaje = "Empresa suspendida correctamente. Los usuarios no podran acceder hasta que se reactive.";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al suspender: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+            CerrarModales();
+        }
+    }
+
+    private async Task EjecutarReactivar()
+    {
+        if (empresa == null) return;
+        procesando = true;
+        try
+        {
+            empresa.Estado = "activa";
+            await Repo.ActualizarEmpresaAsync(empresa);
+            await MTService.ActualizarEmpresaActivaAsync(empresa.CompanyId, true);
+            mensaje = "Empresa reactivada correctamente.";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al reactivar: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
     private void MostrarConfirmLimpiar()
     {
         showLimpiarModal = true;
@@ -1098,6 +1197,7 @@ else
 
     private void CerrarModales()
     {
+        showSuspenderModal = false;
         showLimpiarModal = false;
         showEliminarModal = false;
         limpiarConfirmado = false;
