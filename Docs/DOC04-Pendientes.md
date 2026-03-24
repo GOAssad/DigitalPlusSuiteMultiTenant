@@ -18,7 +18,10 @@
 - [x] **Instalador mejorado:** PrepareToInstall detecta apps abiertas, pregunta antes de cerrar con taskkill
 - [x] **Ciclo deploy web establecido:** Instalador se copia como nombre fijo a Hostinger, HTMLs se sincronizan
 - [x] **Permisos fichada por sucursal VERIFICADOS:** PermiteHuella/Pin/Qr/Movil/Kiosko validados end-to-end (SP desktop + MobileController + Kiosko)
-- [x] Commits: e934938, 72ffb4f, 472ef28, 2949e1c, fd71852, 2c96b72, 89cbbac, 38ebb70, 974d9f8, 12c8c73
+- [x] **PlanConfig.Valor decimal:** BD alterada a decimal(18,2), soporta precios con centavos en ambos portales
+- [x] **Precio anual con descuento dinámico:** Cabecera planes muestra mensual + anual + % OFF calculado
+- [x] **Precios en USD:** Leyenda "dolares estadounidenses" en seccion planes Portal MT
+- [x] **Fix MaxTerminalesMoviles ∞:** Agregado a EsParametroCantidad en Portal Licencias
 
 ### Sesion 2026-03-23 (anterior)
 - [x] **Suspender/reactivar empresa** — Portal Licencias zona peligrosa, sincroniza Estado (admin) + IsActive (MT)
