@@ -324,7 +324,7 @@
                                                     <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteHuella" /></td>
                                                     <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermitePin" /></td>
                                                     <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteQr" /></td>
-                                                    <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteMovil" /></td>
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input" checked="@(model.MobileHabilitado && ls.PermiteMovil)" disabled="@(!model.MobileHabilitado)" @onchange="e => ls.PermiteMovil = (bool)(e.Value ?? false)" /></td>
                                                     <td class="text-center"><input type="checkbox" class="form-check-input" @bind="ls.PermiteKiosko" /></td>
                                                     <td class="text-center">
                                                         <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" @onclick="() => DesasignarSucursal(ls)" title="Quitar">
@@ -1895,6 +1895,10 @@
                 }
 
                 // Sucursales: sincronizar
+                // Si el legajo no tiene acceso movil, forzar PermiteMovil=false en todas las sucursales
+                if (!model.MobileHabilitado)
+                    legajoSucursales.ForEach(ls => ls.PermiteMovil = false);
+
                 var existentes = await Db.LegajoSucursales
                     .Where(ls => ls.LegajoId == model.Id)
                     .ToListAsync();
@@ -1957,6 +1961,10 @@
                         CodigoPostal = domCodigoPostal
                     };
                 }
+                // Si el legajo no tiene acceso movil, forzar PermiteMovil=false
+                if (!model.MobileHabilitado)
+                    legajoSucursales.ForEach(ls => ls.PermiteMovil = false);
+
                 // Asignar sucursales al nuevo legajo
                 model.LegajoSucursales = legajoSucursales.Select(ls => new LegajoSucursal
                 {
