@@ -1184,9 +1184,20 @@
             if (entity == null) { Nav.NavigateTo("legajos"); return; }
             model = entity;
 
-            // Sucursales
+            // Sucursales — desacoplar de EF tracking para evitar conflictos al guardar
             legajoSucursales = entity.LegajoSucursales
                 .OrderBy(ls => ls.Sucursal.Nombre)
+                .Select(ls => new LegajoSucursal
+                {
+                    LegajoId = ls.LegajoId,
+                    SucursalId = ls.SucursalId,
+                    PermiteHuella = ls.PermiteHuella,
+                    PermitePin = ls.PermitePin,
+                    PermiteQr = ls.PermiteQr,
+                    PermiteMovil = ls.PermiteMovil,
+                    PermiteKiosko = ls.PermiteKiosko,
+                    Sucursal = ls.Sucursal
+                })
                 .ToList();
 
             var asignadasIds = legajoSucursales.Select(ls => ls.SucursalId).ToHashSet();
@@ -1921,10 +1932,15 @@
                 if (!model.MobileHabilitado)
                     legajoSucursales.ForEach(ls => ls.PermiteMovil = false);
 
+                // Eliminar sucursales existentes primero (SaveChanges separado para evitar conflicto de clave compuesta)
                 var existentes = await Db.LegajoSucursales
                     .Where(ls => ls.LegajoId == model.Id)
                     .ToListAsync();
-                Db.LegajoSucursales.RemoveRange(existentes);
+                if (existentes.Count > 0)
+                {
+                    Db.LegajoSucursales.RemoveRange(existentes);
+                    await Db.SaveChangesAsync();
+                }
 
                 foreach (var ls in legajoSucursales)
                 {
