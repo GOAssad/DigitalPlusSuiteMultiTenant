@@ -16,6 +16,9 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
 @inject NavigationManager Nav
+@inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
+@using DigitalPlusMultiTenant.Domain.Entities
+@using DigitalPlusMultiTenant.Web.Helpers
 
 <PageTitle>Planes - DigitalPlus</PageTitle>
 
@@ -323,10 +326,20 @@ else
                         }
                         else if (esEnterprise)
                         {
-                            <a href="mailto:notify@integraia.tech?subject=Consulta%20plan%20Enterprise%20-%20DigitalPlus"
-                               class="btn btn-warning mt-auto">
-                                <i class="bi bi-envelope me-1"></i>Contactar ventas
-                            </a>
+                            @if (solicitudEnterprise != null)
+                            {
+                                <button class="btn btn-outline-warning mt-auto" disabled>
+                                    <i class="bi bi-hourglass-split me-1"></i>Solicitud enviada
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-warning mt-auto"
+                                        @onclick="() => mostrarSolicitarEnterprise = true"
+                                        disabled="@solicitando">
+                                    <i class="bi bi-star me-1"></i>Solicitar Enterprise
+                                </button>
+                            }
                         }
                         else
                         {
@@ -564,6 +577,44 @@ else
     </div>
 }
 
+@if (mostrarSolicitarEnterprise)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h6 class="modal-title"><i class="bi bi-star me-2 text-warning"></i>Solicitar Plan Enterprise</h6>
+                    <button type="button" class="btn-close" @onclick="() => mostrarSolicitarEnterprise = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>El plan Enterprise ofrece acceso completo a Digital One sin limites. Un representante de Integra IA se comunicara para coordinar los detalles.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Contanos sobre tu necesidad <span class="text-muted fw-normal">(opcional)</span></label>
+                        <textarea class="form-control" rows="3" @bind="motivoEnterprise"
+                                  placeholder="Ej: Tenemos 500 empleados en 10 sucursales..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => mostrarSolicitarEnterprise = false">Cancelar</button>
+                    <button class="btn btn-warning btn-sm" @onclick="EnviarSolicitudEnterprise" disabled="@solicitando">
+                        @if (solicitando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Enviar solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (solicitudEnterprise != null)
+{
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-hourglass-split me-2"></i>
+        <strong>Solicitud Enterprise enviada</strong> el @solicitudEnterprise.FechaSolicitud.ToString("dd/MM/yyyy HH:mm").
+        Un representante de Integra IA se comunicara a la brevedad.
+    </div>
+}
+
 @if (!string.IsNullOrEmpty(mensaje))
 {
     <div class="alert @(esError ? "alert-danger" : "alert-success") mt-3 alert-dismissible">
@@ -593,6 +644,10 @@ else
     private bool mostrarCancelarModal;
     private bool cancelando;
     private bool esEnterprisePlan;
+    private string empresaNombre = "";
+    private bool mostrarSolicitarEnterprise;
+    private string motivoEnterprise = "";
+    private SolicitudSoporte? solicitudEnterprise;
 
     protected override async Task OnInitializedAsync()
     {
@@ -618,13 +673,21 @@ else
             planActual = licenciaInfo.Plan;
             esEnterprisePlan = string.Equals(planActual, "enterprise", StringComparison.OrdinalIgnoreCase);
 
-            // Obtener CompanyId (Codigo) de la empresa
+            // Obtener CompanyId (Codigo) y Nombre de la empresa
             var empresa = await Db.Empresas
                 .AsNoTracking()
                 .Where(e => e.Id == empresaId)
-                .Select(e => new { e.Codigo })
+                .Select(e => new { e.Codigo, e.Nombre })
                 .FirstOrDefaultAsync();
             companyId = empresa?.Codigo;
+            empresaNombre = empresa?.Nombre ?? "";
+
+            // Cargar solicitud Enterprise pendiente
+            solicitudEnterprise = await Db.SolicitudesSoporte
+                .Where(s => s.EmpresaId == empresaId && s.Tipo == "Enterprise"
+                    && (s.Estado == "Pendiente" || s.Estado == "EnProceso"))
+                .OrderByDescending(s => s.FechaSolicitud)
+                .FirstOrDefaultAsync();
 
             // Verificar email
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -805,6 +868,80 @@ else
             mensaje = "Error al enviar la solicitud: " + ex.Message;
             esError = true;
             CerrarModal();
+        }
+    }
+
+    private async Task EnviarSolicitudEnterprise()
+    {
+        solicitando = true;
+        mensaje = null;
+
+        try
+        {
+            var ahora = Clock.Now;
+            var solicitud = new SolicitudSoporte
+            {
+                EmpresaId = empresaId,
+                Tipo = "Enterprise",
+                Motivo = string.IsNullOrWhiteSpace(motivoEnterprise) ? "Solicitud de plan Enterprise" : motivoEnterprise.Trim(),
+                SolicitadoPor = emailUsuario ?? "desconocido",
+                FechaSolicitud = ahora,
+                Estado = "Pendiente"
+            };
+            Db.SolicitudesSoporte.Add(solicitud);
+
+            // Noticia para el dashboard de la empresa
+            var hoy = DateOnly.FromDateTime(ahora);
+            Db.Noticias.Add(new Noticia
+            {
+                EmpresaId = empresaId,
+                Titulo = "Solicitud de plan Enterprise enviada",
+                Contenido = $"Solicitado por {emailUsuario}. Un representante de Integra IA se comunicara a la brevedad.",
+                FechaDesde = hoy,
+                FechaHasta = hoy.AddDays(30),
+                CreatedAt = ahora,
+                CreatedBy = emailUsuario ?? "sistema"
+            });
+
+            await Db.SaveChangesAsync();
+            solicitudEnterprise = solicitud;
+
+            // Email a IntegraIA (fire-and-forget)
+            var subject = $"[DigitalPlus] Solicitud plan Enterprise - {empresaNombre} (#{solicitud.Id})";
+            var body = $@"
+                <h2>Solicitud de Plan Enterprise</h2>
+                <table style='border-collapse:collapse;'>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Solicitud #:</td><td>{solicitud.Id}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Empresa:</td><td>{empresaNombre}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Codigo:</td><td>{companyId}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Plan actual:</td><td>{planActual}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Solicitado por:</td><td>{emailUsuario}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Fecha:</td><td>{ahora:dd/MM/yyyy HH:mm}</td></tr>
+                    <tr><td style='padding:4px 12px;font-weight:bold;'>Motivo:</td><td>{solicitud.Motivo}</td></tr>
+                </table>
+                <br/>
+                <p>Acceder al <a href='https://digitalpluslicencias.azurewebsites.net/empresas'>Portal de Licencias</a> para gestionar esta solicitud.</p>";
+
+            _ = Task.Run(async () =>
+            {
+                try { await EmailService.SendAsync("notify@integraia.tech", subject, body); }
+                catch { /* email best-effort */ }
+            });
+
+            mostrarSolicitarEnterprise = false;
+            motivoEnterprise = "";
+            mensaje = "Solicitud de plan Enterprise enviada correctamente. Nos comunicaremos a la brevedad.";
+            esError = false;
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error al enviar solicitud: " + ex.Message;
+            esError = true;
+            mostrarSolicitarEnterprise = false;
+        }
+        finally
+        {
+            solicitando = false;
         }
     }
 
