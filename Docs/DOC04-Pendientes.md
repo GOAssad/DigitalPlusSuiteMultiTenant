@@ -312,6 +312,7 @@
 
 - [x] ~~**Validar permisos de fichada por sucursal**~~ COMPLETADO y VERIFICADO 2026-03-23 — PermiteHuella/Pin/Qr/Movil/Kiosko validados en SP desktop, MobileController y Kiosko
 - [x] ~~**Fichador desktop QR (Fase 6)**~~ COMPLETADO 2026-03-18
+- [ ] **Upgrade plan Fase 3: Lemon Squeezy** — Reemplazar pago simulado por Lemon Squeezy (pasarela de pago internacional)
 - [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
 - [ ] **Generar PIN desde Portal MT** — Form de legajo web no permite asignar/cambiar PIN actualmente
 - [ ] **Upgrade de plan: validaciones** — Al cambiar de Free a plan mayor, recordar regenerar codigo activacion y obligar verificar email
