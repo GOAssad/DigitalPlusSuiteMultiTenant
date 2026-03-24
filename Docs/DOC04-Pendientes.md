@@ -312,7 +312,10 @@
 
 - [x] ~~**Validar permisos de fichada por sucursal**~~ COMPLETADO y VERIFICADO 2026-03-23 — PermiteHuella/Pin/Qr/Movil/Kiosko validados en SP desktop, MobileController y Kiosko
 - [x] ~~**Fichador desktop QR (Fase 6)**~~ COMPLETADO 2026-03-18
-- [ ] **Upgrade plan Fase 3: Lemon Squeezy** — Reemplazar pago simulado por Lemon Squeezy (pasarela de pago internacional)
+- [x] ~~**Upgrade plan Fase 3: Lemon Squeezy**~~ COMPLETADO 2026-03-24 — Checkout, webhooks, cancelacion, alertas. Commits dae6f6f..8ee8edf
+- [ ] **Probar baja de plan y verificar advertencia del sistema** — La cancelacion de suscripcion ya esta implementada (LsqStatus + LicenciaAlerts), falta probar end-to-end
+- [ ] **Plan Enterprise: tratamiento especial en pantalla de planes** — Cuando el cliente tiene plan Enterprise, ocultar los otros planes y mostrar una pantalla dedicada
+- [ ] **Probar Portal MT con distintos roles** — Verificar permisos por pagina con usuarios SuperAdmin, AdminEmpresa, y roles menores
 - [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
 - [ ] **Generar PIN desde Portal MT** — Form de legajo web no permite asignar/cambiar PIN actualmente
 - [ ] **Upgrade de plan: validaciones** — Al cambiar de Free a plan mayor, recordar regenerar codigo activacion y obligar verificar email
