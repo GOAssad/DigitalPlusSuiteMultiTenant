@@ -6,15 +6,19 @@
 
 ## COMPLETADO RECIENTEMENTE
 
-### Sesion 2026-03-23
+### Sesion 2026-03-23 (completa)
 - [x] **SitioWeb integrado al repo:** Carpeta SitioWeb/ con index.html, digital-one.html, enviar.php, images, instalador
-- [x] **digital-one.html actualizado con DOC02:** Fichada QR (4ta modalidad), Administrador corregido (rol simplificado), Portal expandido (importacion Excel, calendario, incidencias, reportes), seccion Reportes (4 cards), seccion Modo Kiosko, link Ayuda en nav, copyright 2026
-- [x] **digital-one-help.html creado:** Centro de Ayuda online completo basado en DOC02 con sidebar navegable, buscador, 30+ anclas para deep-linking desde Portal MT, highlight activo por scroll, responsive
-- [x] **Ayuda contextual en Portal MT:** Boton ? en top-bar + link Ayuda en sidebar. JS contextual (contextual-help.js) mapea 22 rutas del portal a anclas del help via polling 500ms (Blazor navega por SignalR)
-- [x] **Deploy sitio web a Hostinger:** Todos los archivos subidos via SFTP a integraia.tech (public_html)
-- [x] **Deploy Portal MT a Azure** con ayuda contextual integrada
-- [x] **DOC06-SitioWeb_IntegraIA.md creado:** Documentacion completa del sitio web (estructura, deploy, anclas, integracion Portal MT)
-- [x] Commits: e934938 (SitioWeb al repo), 72ffb4f (ayuda en portal), 472ef28 (fix polling), 2949e1c (JS en wwwroot)
+- [x] **digital-one.html actualizado con DOC02:** Fichada QR (4ta modalidad), Administrador corregido (rol simplificado), Portal expandido (importacion Excel, calendario, incidencias, reportes), seccion Reportes (4 cards), seccion Modo Kiosko, link Ayuda en nav
+- [x] **digital-one-help.html creado:** Centro de Ayuda online completo basado en DOC02 con sidebar navegable, buscador, 30+ anclas para deep-linking desde Portal MT
+- [x] **Ayuda contextual en Portal MT:** Boton ? en top-bar + link Ayuda en sidebar. JS contextual (contextual-help.js) mapea 22 rutas del portal a anclas del help via polling 500ms
+- [x] **Deploy sitio web a Hostinger** y **Deploy Portal MT a Azure**
+- [x] **DOC06-SitioWeb_IntegraIA.md creado**
+- [x] **Reescritura completa panel camara Administrador:** Eliminados todos los controles AForge, panel construido 100% programaticamente, PictureBox estandar SizeMode.Zoom, patron Fichador (lock+BeginInvoke), 3 estados (SinFoto/Preview/ConFoto), botones dark/gold
+- [x] **Deteccion camara ocupada (Fichador + Administrador):** Timer 1.5s sin frames = ocupada, muestra nombre de la app que usa la camara
+- [x] **Instalador mejorado:** PrepareToInstall detecta apps abiertas, pregunta antes de cerrar con taskkill
+- [x] **Ciclo deploy web establecido:** Instalador se copia como nombre fijo a Hostinger, HTMLs se sincronizan
+- [x] **Permisos fichada por sucursal VERIFICADOS:** PermiteHuella/Pin/Qr/Movil/Kiosko validados end-to-end (SP desktop + MobileController + Kiosko)
+- [x] Commits: e934938, 72ffb4f, 472ef28, 2949e1c, fd71852, 2c96b72, 89cbbac, 38ebb70, 974d9f8, 12c8c73
 
 ### Sesion 2026-03-23 (anterior)
 - [x] **Suspender/reactivar empresa** — Portal Licencias zona peligrosa, sincroniza Estado (admin) + IsActive (MT)
@@ -303,11 +307,7 @@
 
 ## FUNCIONALIDAD (Proximas sesiones)
 
-- [ ] **PRIORIDAD: Validar permisos de fichada por sucursal** — Los campos PermiteHuella/PermitePin/PermiteQr/PermiteMovil/PermiteKiosko de LegajoSucursal ya existen en BD y se configuran desde el Portal MT, pero todavia NO se validan en los puntos de fichada. Hay que modificar:
-  - **Fichador desktop (SP EscritorioFichadasSPSALIDA):** JOIN con LegajoSucursal, verificar PermiteHuella/PermitePin/PermiteQr segun el modo activo y la sucursal del terminal
-  - **MobileController `/api/mobile/fichada`:** verificar PermiteMovil para la sucursal resuelta por GPS
-  - **MobileController `/api/mobile/fichar-qr` (kiosko):** verificar PermiteKiosko para la sucursal del terminal kiosko
-  - Sin esta validacion, los checkboxes de la UI no tienen efecto real en el registro de fichadas
+- [x] ~~**Validar permisos de fichada por sucursal**~~ COMPLETADO y VERIFICADO 2026-03-23 — PermiteHuella/Pin/Qr/Movil/Kiosko validados en SP desktop, MobileController y Kiosko
 - [x] ~~**Fichador desktop QR (Fase 6)**~~ COMPLETADO 2026-03-18
 - [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
 - [ ] **Generar PIN desde Portal MT** — Form de legajo web no permite asignar/cambiar PIN actualmente
@@ -359,4 +359,4 @@
 
 ---
 
-*Actualizado: 2026-03-23*
+*Actualizado: 2026-03-23 (noche)*
