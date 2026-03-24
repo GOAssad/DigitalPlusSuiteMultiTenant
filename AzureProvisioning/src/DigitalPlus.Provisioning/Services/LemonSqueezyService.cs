@@ -36,7 +36,7 @@ public class LemonSqueezyService
     /// <summary>
     /// Crea un checkout en Lemon Squeezy y retorna la URL.
     /// </summary>
-    public async Task<(string? checkoutUrl, string? error)> CreateCheckoutAsync(string? companyId, int? empresaId, string variantId, string successUrl)
+    public async Task<(string? checkoutUrl, string? error)> CreateCheckoutAsync(string? companyId, int? empresaId, string variantId, string successUrl, string? plan = null)
     {
         // Buscar email y empresaId de la empresa
         string? email;
@@ -69,12 +69,16 @@ public class LemonSqueezyService
         }
 
         // Armar checkout_data — solo incluir email si es válido
+        var customData = new Dictionary<string, string>
+        {
+            ["empresaId"] = resolvedEmpresaId.ToString()
+        };
+        if (!string.IsNullOrEmpty(plan))
+            customData["plan"] = plan;
+
         var checkoutData = new Dictionary<string, object>
         {
-            ["custom"] = new Dictionary<string, string>
-            {
-                ["empresaId"] = resolvedEmpresaId.ToString()
-            }
+            ["custom"] = customData
         };
         if (!string.IsNullOrEmpty(email) && email.Contains('@'))
             checkoutData["email"] = email;
@@ -207,8 +211,9 @@ public class LemonSqueezyService
         if (!string.IsNullOrEmpty(renewsAt) && DateTime.TryParse(renewsAt, out var rv))
             planVencimiento = rv;
 
-        // Determinar plan desde variantId consultando PlanConfig
-        var plan = ResolvePlanFromVariantId(variantId);
+        // Determinar plan: custom_data.plan tiene prioridad (Enterprise), sino mapear variantId
+        string? customPlan = customData.TryGetProperty("plan", out var cp2) ? cp2.GetString() : null;
+        var plan = !string.IsNullOrEmpty(customPlan) ? customPlan : ResolvePlanFromVariantId(variantId);
 
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();

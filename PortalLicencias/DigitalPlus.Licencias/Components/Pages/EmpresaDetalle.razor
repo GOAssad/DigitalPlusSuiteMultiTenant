@@ -688,18 +688,26 @@ else
                 </div>
             </div>
 
-            @* ── Suscripción Lemon Squeezy ── *@
-            @if (!string.IsNullOrEmpty(empresa.PlanOrigen) && empresa.PlanOrigen != "manual")
-            {
-                <div class="card mt-3 border-info">
-                    <div class="card-header bg-info bg-opacity-10 text-info-emphasis">
-                        <i class="bi bi-credit-card me-1"></i> Suscripcion Lemon Squeezy
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-sm mb-0">
-                            <tbody>
+            @* ── Suscripción Lemon Squeezy / Enterprise ── *@
+            <div class="card mt-3 border-info">
+                <div class="card-header bg-info bg-opacity-10 text-info-emphasis">
+                    <i class="bi bi-credit-card me-1"></i> Suscripcion y Plan Enterprise
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold" style="width:200px;">Origen del plan</td>
+                                <td>
+                                    <span class="badge @(empresa.PlanOrigen == "lsq" ? "bg-info" : empresa.PlanOrigen == "manual" ? "bg-secondary" : "bg-light text-dark")">
+                                        @(empresa.PlanOrigen ?? "manual")
+                                    </span>
+                                </td>
+                            </tr>
+                            @if (empresa.PlanOrigen == "lsq")
+                            {
                                 <tr>
-                                    <td class="fw-bold" style="width:200px;">Customer ID</td>
+                                    <td class="fw-bold">Customer ID</td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(empresa.LsqCustomerId))
                                         {
@@ -718,28 +726,13 @@ else
                                     <td>@(empresa.LsqSubscriptionId ?? "-")</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Origen del plan</td>
-                                    <td>
-                                        <span class="badge bg-info">@empresa.PlanOrigen</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Proxima renovacion</td>
-                                    <td>
-                                        @if (empresa.PlanVencimiento.HasValue)
-                                        {
-                                            @empresa.PlanVencimiento.Value.ToString("dd/MM/yyyy HH:mm")
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">-</span>
-                                        }
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td class="fw-bold">Estado</td>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(empresa.LsqSubscriptionId))
+                                        @if (empresa.LsqStatus == "cancelled")
+                                        {
+                                            <span class="badge bg-warning text-dark">Cancelada</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(empresa.LsqSubscriptionId))
                                         {
                                             <span class="badge bg-success">Activa</span>
                                         }
@@ -749,21 +742,67 @@ else
                                         }
                                     </td>
                                 </tr>
-                            </tbody>
-                        </table>
+                            }
+                            <tr>
+                                <td class="fw-bold">Proxima renovacion</td>
+                                <td>
+                                    @if (empresa.PlanVencimiento.HasValue)
+                                    {
+                                        @empresa.PlanVencimiento.Value.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Variant ID personalizado</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="text" class="form-control form-control-sm" style="max-width:280px;"
+                                               @bind="empresa.LsqVariantIdCustom" placeholder="Variant ID para Enterprise" />
+                                        @if (!string.IsNullOrEmpty(empresa.LsqVariantIdCustom))
+                                        {
+                                            <button class="btn btn-sm btn-outline-info" disabled="@procesando"
+                                                    @onclick="GenerarLinkPagoEnterprise">
+                                                @if (generandoLink) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                                <i class="bi bi-link-45deg me-1"></i>Generar link de pago
+                                            </button>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(linkPagoEnterprise))
+                                    {
+                                        <div class="mt-2 p-2 bg-light border rounded small">
+                                            <a href="@linkPagoEnterprise" target="_blank">@linkPagoEnterprise</a>
+                                            <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="CopiarLinkPago">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                        @if (!string.IsNullOrEmpty(empresa.LsqSubscriptionId))
+                    <hr />
+                    <div class="d-flex gap-2 flex-wrap">
+                        @if (!string.IsNullOrEmpty(empresa.LsqSubscriptionId) && empresa.LsqStatus != "cancelled")
                         {
-                            <hr />
                             <button class="btn btn-outline-danger btn-sm"
                                     @onclick="() => showCancelarLsqModal = true"
                                     disabled="@procesando">
                                 <i class="bi bi-x-circle me-1"></i>Cancelar suscripcion
                             </button>
                         }
+                        <button class="btn btn-outline-warning btn-sm"
+                                @onclick="() => showEnterpriseManalModal = true"
+                                disabled="@procesando">
+                            <i class="bi bi-star me-1"></i>Activar plan Enterprise manualmente
+                        </button>
                     </div>
                 </div>
-            }
+            </div>
 
             <div class="card mt-3 border-warning">
                 <div class="card-header bg-warning bg-opacity-10 text-warning-emphasis">
@@ -958,6 +997,39 @@ else
     </div>
 }
 
+@* Modal Activar Enterprise Manual *@
+@if (showEnterpriseManalModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-warning">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h5 class="modal-title"><i class="bi bi-star text-warning me-2"></i>Activar Plan Enterprise</h5>
+                    <button type="button" class="btn-close" @onclick="() => showEnterpriseManalModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Se activara el plan Enterprise para "@empresa?.Nombre".</strong>
+                        <p class="mb-0 mt-2 small">Esto establece el plan como Enterprise con origen "manual" (sin Lemon Squeezy). Los limites se ajustan automaticamente segun PlanConfig.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha de vencimiento</label>
+                        <input type="date" class="form-control" @bind="enterpriseVencimiento" />
+                        <div class="form-text">Dejar vacio para plan sin vencimiento.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showEnterpriseManalModal = false">Cancelar</button>
+                    <button class="btn btn-warning" disabled="@procesando" @onclick="EjecutarActivarEnterprise">
+                        @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Activar Enterprise
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @* Modal Suspender Empresa *@
 @if (showSuspenderModal)
 {
@@ -1026,8 +1098,12 @@ else
     private bool usuariosError;
     private string? usuariosErrorMsg;
 
-    // Lemon Squeezy
+    // Lemon Squeezy / Enterprise
     private bool showCancelarLsqModal;
+    private bool showEnterpriseManalModal;
+    private DateTime? enterpriseVencimiento;
+    private bool generandoLink;
+    private string? linkPagoEnterprise;
 
     // Suspender / Limpiar / Eliminar
     private bool showSuspenderModal;
@@ -1288,6 +1364,125 @@ else
         {
             procesando = false;
             showCancelarLsqModal = false;
+        }
+    }
+
+    private async Task GenerarLinkPagoEnterprise()
+    {
+        if (empresa == null || string.IsNullOrEmpty(empresa.LsqVariantIdCustom)) return;
+        generandoLink = true;
+        linkPagoEnterprise = null;
+        mensaje = null;
+
+        try
+        {
+            // Guardar el LsqVariantIdCustom primero
+            await Repo.ActualizarEmpresaAsync(empresa);
+
+            var apiKey = Config["LemonSqueezy:ApiKey"] ?? "";
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                mensaje = "Error: LemonSqueezy:ApiKey no esta configurada.";
+                return;
+            }
+
+            // Crear checkout directo en LSQ con custom_data.plan = "enterprise"
+            var storeId = Config["LemonSqueezy:StoreId"] ?? "324804";
+
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                data = new
+                {
+                    type = "checkouts",
+                    attributes = new
+                    {
+                        checkout_data = new
+                        {
+                            custom = new
+                            {
+                                empresaId = empresa.Id.ToString(),
+                                companyId = empresa.CompanyId,
+                                plan = "enterprise"
+                            }
+                        }
+                    },
+                    relationships = new
+                    {
+                        store = new { data = new { type = "stores", id = storeId } },
+                        variant = new { data = new { type = "variants", id = empresa.LsqVariantIdCustom } }
+                    }
+                }
+            });
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+            client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
+
+            var response = await client.PostAsync(
+                "https://api.lemonsqueezy.com/v1/checkouts",
+                new StringContent(payload, System.Text.Encoding.UTF8, "application/vnd.api+json"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await System.Text.Json.JsonSerializer.DeserializeAsync<System.Text.Json.JsonElement>(
+                    await response.Content.ReadAsStreamAsync());
+                linkPagoEnterprise = json.GetProperty("data").GetProperty("attributes").GetProperty("url").GetString();
+                mensaje = "Link de pago Enterprise generado correctamente.";
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                mensaje = $"Error al generar link: {response.StatusCode} - {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            generandoLink = false;
+        }
+    }
+
+    private async Task CopiarLinkPago()
+    {
+        if (!string.IsNullOrEmpty(linkPagoEnterprise))
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", linkPagoEnterprise);
+    }
+
+    private async Task EjecutarActivarEnterprise()
+    {
+        if (empresa == null || licencias == null || licencias.Count == 0) return;
+        procesando = true;
+        mensaje = null;
+
+        try
+        {
+            var lic = licencias.First();
+            await Repo.ActualizarLicenciaAsync(lic.Id, "enterprise", lic.MaxLegajos, null);
+
+            empresa.PlanOrigen = "manual";
+            empresa.PlanVencimiento = enterpriseVencimiento;
+            empresa.LsqStatus = null;
+            await Repo.ActualizarEmpresaAsync(empresa);
+
+            // Recargar datos
+            empresa = await Repo.GetEmpresaAsync(Id);
+            var todas = await Repo.GetLicenciasAsync(empresa!.CompanyId);
+            licencias = todas.Where(l => l.CompanyId == empresa.CompanyId).ToList();
+
+            mensaje = "Plan Enterprise activado correctamente.";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al activar Enterprise: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+            showEnterpriseManalModal = false;
+            enterpriseVencimiento = null;
         }
     }
 

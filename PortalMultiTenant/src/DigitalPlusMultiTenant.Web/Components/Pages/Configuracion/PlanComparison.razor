@@ -51,6 +51,97 @@ else if (planes.Count == 0)
 {
     <div class="alert alert-info">No se pudieron obtener los planes disponibles. Intente nuevamente mas tarde.</div>
 }
+else if (esEnterprisePlan)
+{
+    @* ── Vista Enterprise dedicada ── *@
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow border-warning border-2">
+                <div class="card-header bg-warning bg-opacity-10 text-center py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>Plan Enterprise</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <p class="lead mb-4">Tenes acceso completo a Digital One sin limites.</p>
+
+                    <div class="row g-3 mb-4 justify-content-center">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded" style="background-color: rgba(201,168,76,0.1);">
+                                <div class="fw-bold text-warning">Ilimitados</div>
+                                <small class="text-muted">Legajos</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded" style="background-color: rgba(201,168,76,0.1);">
+                                <div class="fw-bold text-warning">Ilimitadas</div>
+                                <small class="text-muted">Sucursales</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded" style="background-color: rgba(201,168,76,0.1);">
+                                <div class="fw-bold text-warning">Ilimitadas</div>
+                                <small class="text-muted">Terminales</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded" style="background-color: rgba(201,168,76,0.1);">
+                                <div class="fw-bold text-warning">Ilimitadas</div>
+                                <small class="text-muted">Fichadas</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (licenciaInfo?.PlanVencimiento.HasValue == true)
+                    {
+                        <p class="mb-3">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            <strong>Proxima renovacion:</strong> @licenciaInfo.PlanVencimiento.Value.ToString("dd/MM/yyyy")
+                        </p>
+                    }
+
+                    @if (licenciaInfo?.EsLemonSqueezy == true)
+                    {
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            @if (!string.IsNullOrEmpty(licenciaInfo.LsqUpdatePaymentUrl))
+                            {
+                                <a href="@licenciaInfo.LsqUpdatePaymentUrl" target="_blank"
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-credit-card me-1"></i>Actualizar tarjeta
+                                </a>
+                            }
+                            @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
+                            {
+                                <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-receipt me-1"></i>Portal de facturacion
+                                </a>
+                            }
+                            @if (!(licenciaInfo?.SuscripcionCancelada ?? false))
+                            {
+                                <button class="btn btn-link btn-sm text-danger" @onclick="() => mostrarCancelarModal = true"
+                                        disabled="@cancelando">
+                                    Cancelar suscripcion
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-danger small">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Suscripcion cancelada — activa hasta @(licenciaInfo.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo").
+                                </span>
+                            }
+                        </div>
+                    }
+
+                    <hr />
+                    <p class="text-muted mb-0 small">
+                        <i class="bi bi-headset me-1"></i>Necesitas ayuda? Contacta a
+                        <a href="mailto:notify@integraia.tech">notify@integraia.tech</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 else
 {
     @* ── Toggle Mensual / Anual ── *@
@@ -501,6 +592,7 @@ else
     private LicenciaInfo? licenciaInfo;
     private bool mostrarCancelarModal;
     private bool cancelando;
+    private bool esEnterprisePlan;
 
     protected override async Task OnInitializedAsync()
     {
@@ -524,6 +616,7 @@ else
             // Obtener plan actual e info de empresa
             licenciaInfo = await LicenciaService.GetLicenciaInfoAsync(empresaId);
             planActual = licenciaInfo.Plan;
+            esEnterprisePlan = string.Equals(planActual, "enterprise", StringComparison.OrdinalIgnoreCase);
 
             // Obtener CompanyId (Codigo) de la empresa
             var empresa = await Db.Empresas

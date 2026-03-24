@@ -64,13 +64,14 @@ public class LsqCreateCheckoutFunction
 
         var variantId = variantIdProp.GetString() ?? "";
         var successUrl = body.TryGetProperty("successUrl", out var su) ? su.GetString() ?? "" : "";
+        var plan = body.TryGetProperty("plan", out var pl) ? pl.GetString() : null;
 
-        _logger.LogInformation("LSQ CreateCheckout: companyId={CompanyId}, empresaId={EmpresaId}, variant={Variant}",
-            companyId, empresaId, variantId);
+        _logger.LogInformation("LSQ CreateCheckout: companyId={CompanyId}, empresaId={EmpresaId}, variant={Variant}, plan={Plan}",
+            companyId, empresaId, variantId, plan);
 
         try
         {
-            var (checkoutUrl, lsqError) = await _lsqService.CreateCheckoutAsync(companyId, empresaId, variantId, successUrl);
+            var (checkoutUrl, lsqError) = await _lsqService.CreateCheckoutAsync(companyId, empresaId, variantId, successUrl, plan);
 
             if (string.IsNullOrEmpty(checkoutUrl))
                 return new ObjectResult(new { error = lsqError ?? "Error al crear checkout en Lemon Squeezy." })

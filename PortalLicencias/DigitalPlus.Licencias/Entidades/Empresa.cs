@@ -108,6 +108,9 @@ public class Empresa
     [MaxLength(20)]
     public string? PlanOrigen { get; set; } = "manual";
 
+    [MaxLength(50)]
+    public string? LsqVariantIdCustom { get; set; }
+
     [MaxLength(20)]
     public string? LsqStatus { get; set; }
 
