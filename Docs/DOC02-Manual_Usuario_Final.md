@@ -693,6 +693,33 @@ El sistema de licencias requiere conexion a internet periodica:
 - Cada 4 horas (heartbeat automatico)
 - Si pierde conectividad por mas de **72 horas**, el sistema se bloqueara temporalmente hasta recuperar la conexion
 
+### Planes y suscripciones
+
+Los planes de Digital One determinan los limites de uso del sistema:
+
+| Plan | Legajos | Sucursales | Fichadas/30d | Terminales moviles |
+|---|---|---|---|---|
+| Free | 6 | 1 | 10 | 1 |
+| Basic | 25 | 3 | Ilimitadas | 3 |
+| Pro | 100 | 10 | Ilimitadas | 10 |
+| Enterprise | Ilimitados | Ilimitados | Ilimitadas | Ilimitados |
+
+#### Contratar o mejorar un plan
+
+1. Ir a **Administracion > Planes** en el Portal Web
+2. Seleccionar el periodo deseado: **Mensual** o **Anual** (con descuento)
+3. Hacer click en **Contratar** en el plan elegido
+4. Completar el pago en la pagina segura de Lemon Squeezy
+5. Al confirmar, los nuevos limites se activan automaticamente
+
+Los precios estan expresados en dolares estadounidenses (USD).
+
+#### Cancelar una suscripcion
+
+Desde **Administracion > Planes**, en la seccion "Gestionar suscripcion", hacer click en **Cancelar suscripcion**. El plan sigue activo hasta el final del periodo facturado. Al vencer, el sistema pasa automaticamente al plan Free.
+
+El sistema muestra alertas cuando la suscripcion esta cancelada y proxima a vencer, invitando a recontratar un plan.
+
 ---
 
 ## 8. PREGUNTAS FRECUENTES

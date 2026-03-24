@@ -338,6 +338,16 @@ Se muestra el listado de licencias vinculadas a la empresa con:
 
 > [CAPTURA: Lista de licencias de la empresa con estado y detalles]
 
+### Seccion Suscripcion Lemon Squeezy
+
+Visible solo cuando la empresa tiene `PlanOrigen = "lsq"`. Muestra:
+- Customer ID (con link al dashboard de Lemon Squeezy)
+- Subscription ID
+- Origen del plan (badge)
+- Proxima renovacion
+- Estado (Activa/Sin suscripcion)
+- Boton **Cancelar suscripcion** (con modal de confirmacion)
+
 ---
 
 ## 7. DESACTIVACION DE EMPRESAS
@@ -621,6 +631,43 @@ Cuando un plan Basic/Pro/Enterprise vence:
 ### Relacion con la tabla Licencias
 
 Cuando se crea una licencia para una empresa, los valores de `MaxLegajos`, `MaxSucursales` y `MaxFichadasMes` se copian desde PlanConfig. Esto permite hacer overrides por cliente si es necesario (editando la licencia individual sin cambiar el plan global).
+
+### 13.9 Integracion con Lemon Squeezy
+
+Lemon Squeezy es la pasarela de pago para suscripciones online. Cuando un cliente contrata un plan desde el Portal MT:
+
+1. El Portal MT crea un checkout via Azure Function (`POST /api/lsq/create-checkout`)
+2. El cliente completa el pago en Lemon Squeezy
+3. LSQ envia un webhook (`POST /api/lsq/webhook`) a las Azure Functions
+4. El webhook actualiza la tabla `Empresas` con los datos de la suscripcion y aplica los limites del plan desde `PlanConfig`
+
+**Campos LSQ en tabla Empresas:**
+
+| Campo | Descripcion |
+|---|---|
+| LsqCustomerId | ID del customer en Lemon Squeezy |
+| LsqSubscriptionId | ID de la suscripcion activa |
+| LsqVariantId | Variant ID del plan/periodo contratado |
+| LsqStatus | Estado de la suscripcion (active, cancelled) |
+| LsqUpdatePaymentUrl | URL para actualizar medio de pago |
+| LsqCustomerPortalUrl | URL del portal de facturacion del cliente |
+| PlanVencimiento | Fecha de proxima renovacion/cobro |
+| PlanOrigen | Origen del plan: "lsq" (Lemon Squeezy) o "manual" (asignado por soporte) |
+
+**Cancelacion desde Portal Licencias:**
+
+En el detalle de empresa, seccion "Suscripcion Lemon Squeezy", el boton **Cancelar suscripcion** envia un PATCH a la API de Lemon Squeezy con `cancelled: true`. Esto cancela la suscripcion al final del periodo actual (no inmediatamente). El webhook `subscription_expired` degradara automaticamente a Free cuando venza.
+
+**Variant IDs configurados:**
+
+| Variant ID | Plan | Periodo |
+|---|---|---|
+| 1439760 | Basic | Mensual |
+| 1439796 | Basic | Anual |
+| 1439799 | Pro | Mensual |
+| 1439800 | Pro | Anual |
+
+El mapeo variant → plan se configura en las Azure Functions via variables de entorno `LemonSqueezy__VariantMap__{id}`.
 
 ---
 

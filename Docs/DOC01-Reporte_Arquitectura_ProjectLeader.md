@@ -287,6 +287,8 @@ INFRAESTRUCTURA CLOUD
 - Gestion de Usuarios administradores (CRUD con roles, registro publico deshabilitado)
 - Desactivacion de empresas: cambiar Estado a "suspendida" o "baja" bloquea acceso en Portal MT y apps desktop
 - Log de auditoria
+- Seccion "Suscripcion Lemon Squeezy" en detalle de empresa: Customer ID, Subscription ID, estado, vencimiento
+- Cancelacion de suscripcion via API de Lemon Squeezy (PATCH cancelled=true)
 - Atributos del sistema (Paises, Tipos de identificacion fiscal)
 - API REST `/api/activar` para el instalador liviano (retorna connectionString, adminConnectionString, empresaId, adminEmpresaId)
 - API REST `/api/verificar-estado` para que apps desktop verifiquen si la empresa esta activa
@@ -309,6 +311,9 @@ INFRAESTRUCTURA CLOUD
 - `POST /api/license/activate` - Crear trial o activar con codigo, retorna ticket firmado RSA
 - `POST /api/license/heartbeat` - Actualizar heartbeat, retornar ticket actualizado
 - `POST /api/provision` - Provisioning de instalaciones (modo nube del instalador unificado)
+- `POST /api/lsq/create-checkout` - Crear checkout de Lemon Squeezy para upgrade de plan
+- `POST /api/lsq/webhook` - Recibir webhooks de Lemon Squeezy (subscription_created/updated/payment_success/expired/cancelled)
+- `POST /api/lsq/cancel-subscription` - Cancelar suscripcion activa (PATCH cancelled=true al final del periodo)
 
 ### 3.6 Instaladores
 
@@ -429,7 +434,8 @@ int empresaId = Global.Datos.TenantContext.EmpresaId;
 
 ### Tablas administrativas (DigitalPlusAdmin)
 
-- `Empresas` - Registro de empresas clientes (CodigoActivacion, Logo, PaginaWeb, Facebook, Instagram, LinkedIn, Twitter, YouTube, TikTok)
+- `Empresas` - Registro de empresas clientes (CodigoActivacion, Logo, PaginaWeb, redes sociales, LsqCustomerId, LsqSubscriptionId, LsqVariantId, LsqStatus, PlanVencimiento, PlanOrigen)
+- `SolicitudUpgrade` - Solicitudes de upgrade de plan (legacy, reemplazado por Lemon Squeezy)
 - `Licencias` - Estado de licencias por empresa/maquina
 - `LicenciasLog` - Auditoria de operaciones de licencia
 - `LicenseCodes` - Codigos de activacion de uso unico
@@ -499,6 +505,23 @@ En modo multi-tenant, la validacion de licencia esta **deshabilitada** en las ap
 - Codigos de uso unico con flag `UsedAt` en BD
 - UPDLOCK + HOLDLOCK en stored procedures para evitar race conditions
 
+### Pasarela de pago: Lemon Squeezy
+
+Lemon Squeezy opera como Merchant of Record para pagos internacionales (Argentina no esta soportada por Stripe). La integracion incluye:
+
+- **Checkout:** Portal MT llama a Azure Function que crea checkout en LSQ y redirige al usuario
+- **Webhooks:** Azure Function recibe eventos de LSQ y actualiza Empresa + Licencia en DigitalPlusAdmin
+- **Cancelacion:** PATCH con `cancelled=true` cancela al final del periodo actual (no inmediato)
+- **Mapeo de planes:** Configurado via variables de entorno `LemonSqueezy:VariantMap:{variantId}` en Azure Functions
+- **Alertas:** LicenciaAlerts muestra warning/danger cuando la suscripcion esta cancelada y proxima a vencer
+
+| Evento LSQ | Accion del sistema |
+|---|---|
+| subscription_created | Guarda IDs LSQ, actualiza plan y limites desde PlanConfig |
+| subscription_payment_success | Renueva PlanVencimiento, reactiva si estaba suspendida |
+| subscription_updated | Actualiza LsqStatus/VariantId, cambia plan si cambio variante |
+| subscription_expired/cancelled | Degrada a Free, limpia datos LSQ |
+
 ### Reglas de bloqueo
 
 | Razon | Causa | Puede activar? |
@@ -510,6 +533,7 @@ En modo multi-tenant, la validacion de licencia esta **deshabilitada** en las ap
 | OfflineBlocked | Sin heartbeat > 72h | Reconectar |
 | InvalidSignature | Ticket modificado | No |
 | ClockTampered | Reloj retrocede > 1h | No |
+| SuscripcionCancelada | Suscripcion LSQ cancelada, vence pronto | Si, recontratar plan |
 
 ---
 
