@@ -275,9 +275,22 @@ else
                         @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
                         {
                             <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
-                               class="btn btn-outline-primary btn-sm">
+                               class="btn btn-outline-primary btn-sm me-2">
                                 <i class="bi bi-receipt me-1"></i>Portal de facturacion
                             </a>
+                        }
+                        @if (!suscripcionCancelada)
+                        {
+                            <button class="btn btn-link btn-sm text-danger" @onclick="() => mostrarCancelarModal = true"
+                                    disabled="@cancelando">
+                                Cancelar suscripcion
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>Suscripcion cancelada — activa hasta @licenciaInfo.PlanVencimiento?.ToString("dd/MM/yyyy")
+                            </span>
                         }
                     </div>
                 </div>
@@ -422,6 +435,33 @@ else
     </div>
 }
 
+@* ── Modal Cancelar Suscripción ── *@
+@if (mostrarCancelarModal && licenciaInfo != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger bg-opacity-10">
+                    <h6 class="modal-title"><i class="bi bi-x-circle me-2"></i>Cancelar suscripcion</h6>
+                    <button type="button" class="btn-close" @onclick="() => mostrarCancelarModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Confirmas la cancelacion? Tu plan <strong>@licenciaInfo.PlanDisplay</strong> seguira activo
+                        hasta el <strong>@(licenciaInfo.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo")</strong>.</p>
+                    <p class="text-muted small mb-0">Al vencer pasara automaticamente al plan Free.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => mostrarCancelarModal = false">Volver</button>
+                    <button class="btn btn-danger btn-sm" @onclick="EjecutarCancelacion" disabled="@cancelando">
+                        @if (cancelando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Si, cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @if (!string.IsNullOrEmpty(mensaje))
 {
     <div class="alert @(esError ? "alert-danger" : "alert-success") mt-3 alert-dismissible">
@@ -448,6 +488,9 @@ else
     private bool mostrarAlertaSuccess;
     private bool mostrarAlertaCanceled;
     private LicenciaInfo? licenciaInfo;
+    private bool mostrarCancelarModal;
+    private bool cancelando;
+    private bool suscripcionCancelada;
 
     protected override async Task OnInitializedAsync()
     {
@@ -562,6 +605,43 @@ else
         finally
         {
             solicitando = false;
+        }
+    }
+
+    private async Task EjecutarCancelacion()
+    {
+        if (string.IsNullOrEmpty(companyId)) return;
+        cancelando = true;
+        mensaje = null;
+
+        try
+        {
+            var result = await LsqService.CancelSubscriptionAsync(companyId);
+
+            if (result.Ok)
+            {
+                suscripcionCancelada = true;
+                mostrarCancelarModal = false;
+                var fechaVenc = licenciaInfo?.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo";
+                mensaje = $"Tu suscripcion fue cancelada. El plan sigue activo hasta el {fechaVenc}.";
+                esError = false;
+            }
+            else
+            {
+                mensaje = result.Error ?? "Error al cancelar la suscripcion.";
+                esError = true;
+                mostrarCancelarModal = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error: " + ex.Message;
+            esError = true;
+            mostrarCancelarModal = false;
+        }
+        finally
+        {
+            cancelando = false;
         }
     }
 

@@ -1252,10 +1252,23 @@ else
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
 
-            var response = await client.DeleteAsync(
+            // PATCH con cancelled=true cancela al final del período (no inmediatamente)
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                data = new
+                {
+                    type = "subscriptions",
+                    id = empresa.LsqSubscriptionId,
+                    attributes = new { cancelled = true }
+                }
+            });
+            var request = new HttpRequestMessage(HttpMethod.Patch,
                 $"https://api.lemonsqueezy.com/v1/subscriptions/{empresa.LsqSubscriptionId}");
+            request.Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/vnd.api+json");
 
-            if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
             {
                 mensaje = "Suscripcion cancelada. La empresa mantendra el acceso hasta el fin del periodo actual.";
                 showCancelarLsqModal = false;

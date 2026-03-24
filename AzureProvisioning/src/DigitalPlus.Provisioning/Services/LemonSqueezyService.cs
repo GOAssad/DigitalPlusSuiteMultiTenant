@@ -479,6 +479,70 @@ public class LemonSqueezyService
     }
 
     /// <summary>
+    /// Cancela una suscripción activa en Lemon Squeezy (al final del período actual).
+    /// </summary>
+    public async Task<(bool ok, DateTime? vencimiento, string? error)> CancelSubscriptionAsync(string? companyId, int? empresaId)
+    {
+        // Buscar empresa y su LsqSubscriptionId
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        SqlCommand cmd;
+        if (!string.IsNullOrEmpty(companyId))
+        {
+            cmd = new SqlCommand("SELECT LsqSubscriptionId, PlanVencimiento FROM Empresas WHERE CompanyId = @CompanyId", conn);
+            cmd.Parameters.AddWithValue("@CompanyId", companyId);
+        }
+        else
+        {
+            cmd = new SqlCommand("SELECT LsqSubscriptionId, PlanVencimiento FROM Empresas WHERE Id = @Id", conn);
+            cmd.Parameters.AddWithValue("@Id", empresaId!);
+        }
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+            return (false, null, "Empresa no encontrada.");
+
+        var subscriptionId = reader.IsDBNull(0) ? null : reader.GetString(0);
+        var vencimiento = reader.IsDBNull(1) ? (DateTime?)null : reader.GetDateTime(1);
+        reader.Close();
+
+        if (string.IsNullOrEmpty(subscriptionId))
+            return (false, null, "La empresa no tiene una suscripcion activa.");
+
+        // PATCH a Lemon Squeezy para cancelar al final del período
+        var payload = new
+        {
+            data = new
+            {
+                type = "subscriptions",
+                id = subscriptionId,
+                attributes = new { cancelled = true }
+            }
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"{LsqApiBase}/subscriptions/{subscriptionId}");
+        request.Content = new StringContent(json, Encoding.UTF8, "application/vnd.api+json");
+        request.Headers.Add("Authorization", $"Bearer {_apiKey}");
+        request.Headers.Add("Accept", "application/vnd.api+json");
+
+        var response = await _httpClient.SendAsync(request);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("LSQ CancelSubscription failed: {Status} {Body}", response.StatusCode, responseBody);
+            return (false, null, $"Error de Lemon Squeezy: {response.StatusCode}");
+        }
+
+        _logger.LogInformation("LSQ subscription {SubId} cancelled, active until {Vencimiento}",
+            subscriptionId, vencimiento);
+
+        return (true, vencimiento, null);
+    }
+
+    /// <summary>
     /// Resuelve el nombre del plan basado en el variantId.
     /// Mapeo configurado en variables de entorno LemonSqueezy:VariantMap:{variantId}
     /// </summary>
