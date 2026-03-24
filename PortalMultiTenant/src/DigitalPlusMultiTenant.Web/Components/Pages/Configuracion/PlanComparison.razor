@@ -63,7 +63,7 @@ else
                     }
 
                     <div class="card-body d-flex flex-column text-center">
-                        @* ── CABECERA: nombre + precio + descuento ── *@
+                        @* ── CABECERA: nombre + precio mensual + precio anual ── *@
                         <h5 class="card-title fw-bold mb-1">@plan.PlanDisplay</h5>
 
                         @if (esEnterprise && plan.ImporteMensual == 0)
@@ -75,20 +75,30 @@ else
                         else if (plan.ImporteMensual > 0)
                         {
                             <div class="mb-3">
-                                @if (descuento != null && descuento.Valor > 0)
-                                {
-                                    <div class="mb-1">
-                                        <span class="text-decoration-line-through text-muted fs-5">$@plan.ImporteMensual.ToString("N0")</span>
-                                        <span class="badge bg-danger ms-1">@(descuento.Valor)% OFF</span>
-                                    </div>
-                                    var precioConDescuento = plan.ImporteMensual * (1 - (decimal)descuento.Valor / 100);
-                                    <span class="display-6 fw-bold">$@precioConDescuento.ToString("N0")</span>
-                                    <span class="text-muted">/mes</span>
-                                }
-                                else
-                                {
+                                @* Precio mensual *@
+                                <div class="mb-1">
                                     <span class="display-6 fw-bold">$@plan.ImporteMensual.ToString("N0")</span>
                                     <span class="text-muted">/mes</span>
+                                </div>
+
+                                @* Precio anual con descuento calculado dinámicamente *@
+                                @if (plan.ImporteAnual > 0)
+                                {
+                                    var totalSinDescuento = plan.ImporteMensual * 12;
+                                    var pctDescuento = totalSinDescuento > 0
+                                        ? Math.Round((1 - plan.ImporteAnual / totalSinDescuento) * 100)
+                                        : 0;
+                                    <div class="mt-2 p-2 rounded" style="background-color: rgba(25,135,84,0.1);">
+                                        <div>
+                                            <span class="text-decoration-line-through text-muted small">$@totalSinDescuento.ToString("N0")</span>
+                                            @if (pctDescuento > 0)
+                                            {
+                                                <span class="badge bg-success ms-1">@pctDescuento% OFF</span>
+                                            }
+                                        </div>
+                                        <span class="fs-5 fw-bold text-success">$@plan.ImporteAnual.ToString("N0")</span>
+                                        <span class="text-muted small">/año</span>
+                                    </div>
                                 }
                             </div>
                         }

@@ -55,6 +55,7 @@ public class PlanComparacion
     public int MaxFichadasMes => Parametros.FirstOrDefault(p => p.Parametro == "MaxFichadasRolling30d")?.Valor ?? 0;
     public int MaxTerminalesMoviles => Parametros.FirstOrDefault(p => p.Parametro == "MaxTerminalesMoviles")?.Valor ?? 0;
     public decimal ImporteMensual => Parametros.FirstOrDefault(p => p.Parametro == "ImporteMensual")?.Valor ?? 0;
+    public decimal ImporteAnual => Parametros.FirstOrDefault(p => p.Parametro == "ImporteAnual")?.Valor ?? 0;
     public List<PlanParametro> ParametrosVisibles => Parametros.Where(p => p.VisibleEnComparacion).OrderBy(p => p.OrdenVisualizacion).ToList();
 }
 
