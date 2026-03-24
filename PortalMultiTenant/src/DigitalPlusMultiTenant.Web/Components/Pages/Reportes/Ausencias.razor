@@ -63,6 +63,7 @@
                     <option value="ausente">Sin justificar</option>
                     <option value="incidencia">Con incidencia</option>
                     <option value="vacaciones">Vacaciones</option>
+                    <option value="evento">Evento calendario</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -152,8 +153,9 @@
         <div class="card-footer text-muted small">
             @items.Count ausencias &mdash;
             <span class="text-danger">@items.Count(r => r.Motivo == "Sin justificar") sin justificar</span> |
-            <span class="text-info">@items.Count(r => r.Motivo != "Sin justificar" && r.Motivo != "Vacaciones") con incidencia</span> |
-            <span class="text-success">@items.Count(r => r.Motivo == "Vacaciones") vacaciones</span> &mdash;
+            <span class="text-info">@items.Count(r => r.Motivo != "Sin justificar" && r.Motivo != "Vacaciones" && !r.Motivo.StartsWith("Evento")) con incidencia</span> |
+            <span class="text-success">@items.Count(r => r.Motivo == "Vacaciones") vacaciones</span> |
+            <span class="text-warning">@items.Count(r => r.Motivo.StartsWith("Evento")) eventos</span> &mdash;
             Empleados afectados: @items.Select(r => r.NumeroLegajo).Distinct().Count()
         </div>
     }
@@ -247,6 +249,10 @@
                 .Where(il => il.Fecha >= desde && il.Fecha <= hasta)
                 .ToListAsync(token);
 
+            var eventosCalendario = await Db.EventosCalendario
+                .Where(e => e.FechaDesde <= hasta && e.FechaHasta >= desde)
+                .ToListAsync(token);
+
             token.ThrowIfCancellationRequested();
             var resultado = new List<AusenciaRow>();
 
@@ -265,6 +271,7 @@
                     if (tieneEntrada) continue;
 
                     var enVacaciones = vacaciones.Any(v => v.LegajoId == leg.Id && v.FechaDesde <= dia && v.FechaHasta >= dia);
+                    var evento = eventosCalendario.FirstOrDefault(e => e.LegajoId == leg.Id && e.FechaDesde <= dia && e.FechaHasta >= dia);
                     var incidencia = incidenciasLegajo.FirstOrDefault(il => il.LegajoId == leg.Id && il.Fecha == dia);
 
                     string motivo;
@@ -276,6 +283,12 @@
                         motivo = "Vacaciones";
                         motivoBadge = "bg-success";
                     }
+                    else if (evento != null)
+                    {
+                        motivo = "Evento calendario";
+                        motivoBadge = "bg-warning text-dark";
+                        detalle = evento.Nota ?? "";
+                    }
                     else if (incidencia != null && mostrarIncidencias)
                     {
                         motivo = incidencia.Incidencia?.Nombre ?? "Incidencia";
@@ -284,7 +297,7 @@
                     }
                     else if (incidencia != null && !mostrarIncidencias)
                     {
-                        continue; // tiene incidencia pero no se quieren ver
+                        continue;
                     }
                     else
                     {
@@ -294,7 +307,8 @@
 
                     if (filtroMotivo == "ausente" && motivo != "Sin justificar") continue;
                     if (filtroMotivo == "vacaciones" && motivo != "Vacaciones") continue;
-                    if (filtroMotivo == "incidencia" && (motivo == "Sin justificar" || motivo == "Vacaciones")) continue;
+                    if (filtroMotivo == "incidencia" && (motivo == "Sin justificar" || motivo == "Vacaciones" || motivo == "Evento calendario")) continue;
+                    if (filtroMotivo == "evento" && motivo != "Evento calendario") continue;
 
                     resultado.Add(new AusenciaRow
                     {

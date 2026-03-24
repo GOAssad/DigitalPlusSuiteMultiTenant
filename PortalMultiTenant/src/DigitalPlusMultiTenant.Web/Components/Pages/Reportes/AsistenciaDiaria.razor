@@ -254,6 +254,10 @@
                 .Where(v => v.FechaDesde <= hasta && v.FechaHasta >= desde)
                 .ToListAsync(token);
 
+            var eventosCalendario = await Db.EventosCalendario
+                .Where(e => e.FechaDesde <= hasta && e.FechaHasta >= desde)
+                .ToListAsync(token);
+
             token.ThrowIfCancellationRequested();
 
             var resultado = new List<AsistenciaRow>();
@@ -274,6 +278,9 @@
 
                     var enVacaciones = vacaciones.Any(v => v.LegajoId == leg.Id && v.FechaDesde <= dia && v.FechaHasta >= dia);
                     if (enVacaciones) continue;
+
+                    var tieneEvento = eventosCalendario.Any(e => e.LegajoId == leg.Id && e.FechaDesde <= dia && e.FechaHasta >= dia);
+                    if (tieneEvento) continue;
 
                     var fichadasDia = fichadas
                         .Where(f => f.LegajoId == leg.Id && DateOnly.FromDateTime(f.FechaHora) == dia)

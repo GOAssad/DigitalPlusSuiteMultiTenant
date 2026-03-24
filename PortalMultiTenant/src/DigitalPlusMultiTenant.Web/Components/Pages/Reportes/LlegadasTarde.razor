@@ -202,6 +202,14 @@
                 .Select(f => f.Fecha)
                 .ToListAsync(token);
 
+            var vacaciones = await Db.Vacaciones
+                .Where(v => v.FechaDesde <= hasta && v.FechaHasta >= desde)
+                .ToListAsync(token);
+
+            var eventosCalendario = await Db.EventosCalendario
+                .Where(e => e.FechaDesde <= hasta && e.FechaHasta >= desde)
+                .ToListAsync(token);
+
             token.ThrowIfCancellationRequested();
             var resultado = new List<TardeRow>();
 
@@ -215,6 +223,10 @@
                 {
                     var horarioDia = leg.Horario?.Detalles?.FirstOrDefault(d => (int)d.DiaSemana == diaSemana);
                     if (horarioDia == null || horarioDia.IsCerrado) continue;
+
+                    // Excluir dias con vacaciones o evento calendario
+                    if (vacaciones.Any(v => v.LegajoId == leg.Id && v.FechaDesde <= dia && v.FechaHasta >= dia)) continue;
+                    if (eventosCalendario.Any(e => e.LegajoId == leg.Id && e.FechaDesde <= dia && e.FechaHasta >= dia)) continue;
 
                     var primeraEntrada = fichadas
                         .Where(f => f.LegajoId == leg.Id && DateOnly.FromDateTime(f.FechaHora) == dia)
