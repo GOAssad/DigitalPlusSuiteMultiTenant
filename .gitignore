@@ -36,6 +36,7 @@ Instaladores/InstaladorUnificado/Prerequisites/*.exe
 
 # Publish/deploy outputs
 **/publish/
+**/publish-*/
 **/publish_new/
 **/pub/
 **/pub2/

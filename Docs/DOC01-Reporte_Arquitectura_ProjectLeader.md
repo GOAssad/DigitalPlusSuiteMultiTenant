@@ -613,6 +613,10 @@ C:\Apps\Claude\Huellas\DigitalPlusSuiteMultiTenant\
 |
 +-- Docs\                            Documentacion
 |
++-- SitioWeb\                        Sitio web integraia.tech (HTML, deploy Hostinger)
+|   +-- images\                     Imagenes del sitio
+|   +-- instalador\                 Instalador descargable (nombre fijo)
+|
 +-- AzureProvisioning\               Azure Functions
 ```
 

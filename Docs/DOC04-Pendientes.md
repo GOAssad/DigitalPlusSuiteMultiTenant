@@ -1,10 +1,27 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-23
+**Fecha:** 2026-03-24
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-24
+- [x] **Suscripcion expirada: banner global** — Warning >7d, danger <=7d, expirado en todas las paginas del Portal MT
+- [x] **Middleware "jaula" por suscripcion expirada** — Redirige a /configuracion/planes, usuario puede recontratar
+- [x] **Boton "Volver a contratar"** en card plan actual + "Volver a suscribir" en gestion suscripcion
+- [x] **Webhook subscription_cancelled separado de subscription_expired** — No degrada a free prematuramente
+- [x] **CancelSubscription parsea ends_at** de respuesta LSQ para guardar PlanVencimiento
+- [x] **Fichador: refresh sucursal terminal** antes de cada fichada (oTerminal.Inicializar)
+- [x] **Fichador: actualiza sucursal** si config difiere de BD al arrancar (soporte reinstalacion)
+- [x] **Instalador: selector de sucursal** despues de activar codigo (/api/activar devuelve sucursales)
+- [x] **Instalador: SucursalId en config template** del Fichador
+- [x] **Hostinger: unificada carpeta instalador/** (minuscula), eliminada duplicada Instalador/
+- [x] **Confirmacion inline (Confirmar/Cancelar)** antes de eliminar/desactivar en 9 listados del Portal MT
+- [x] **Lemon Squeezy integrado como pasarela de pago real** — Checkout, webhooks, cancelacion, alertas
+- [x] **EventoCalendario integrado en 4 reportes** — Ausencias, LlegadasTarde, AsistenciaDiaria, HorasTrabajadas
+- [x] **PermiteMovil condicionado** por MobileHabilitado del legajo
+- [x] Commit 3c6919b pushed
 
 ### Sesion 2026-03-23 (completa)
 - [x] **SitioWeb integrado al repo:** Carpeta SitioWeb/ con index.html, digital-one.html, enviar.php, images, instalador
@@ -118,139 +135,64 @@
 - [x] Deploy Portal Licencias y Portal MT a Azure
 - [x] DOC01, DOC03, DOC04 actualizados
 
-### Sesion 2026-03-15 (noche)
-- [x] Administrador desktop simplificado: solo 2 pestanas (Legajo: huellas+foto, Movil)
-- [x] Pestanas removidas del Administrador: Reportes, Domicilios, Turnos
-- [x] Datos del legajo en modo solo lectura en Administrador (nombre, apellido, sector, categoria, sucursal, horario, estado)
-- [x] Boton Eliminar oculto en Administrador: legajos no se pueden borrar desde desktop
-- [x] Boton Guardar del Administrador solo persiste huellas + foto
-- [x] Alta y edicion de legajos se realiza exclusivamente desde Portal MT web
-- [x] Portal MT: foto del legajo (180x180 redondeada en formulario, 28px avatar en lista)
-- [x] Portal MT: seccion Domicilio con 7 campos (Calle, Altura, Piso, Barrio, Localidad, Provincia, CodigoPostal) en tab Datos
-- [x] Portal MT: sucursal obligatoria al crear nuevo legajo (tab Sucursales visible, validacion requiere al menos 1)
-- [x] Portal MT: CRUD completo de legajos (ahora maneja todos los datos incluyendo domicilio)
-- [x] Instalador Liviano: DisableDirPage=no (usuario puede elegir carpeta de instalacion)
-- [x] Instalador Liviano: TLS 1.2 habilitado en todas las llamadas WinHttp (fix fallos de registro en algunos sistemas)
-- [x] Instalador Liviano: registro Free idempotente (si email ya existe, retorna datos existentes sin duplicar)
-- [x] Connection strings: todos los app.config apuntan a Ferozo (localhost completamente removido)
+### Sesiones anteriores (2026-03-08 a 2026-03-15) — Resumen
 
-### Sesion 2026-03-14
-- [x] Roles en Portal MT: SuperAdmin, AdminEmpresa, Operador, Consulta aplicados
-- [x] Form pages restringidos por rol (estructura=Admin, operaciones=Admin+Operador)
-- [x] Botones de accion ocultos por AuthorizeView en todas las listas
-- [x] SuperAdmin removido del combo de creacion de usuarios
-- [x] Descripcion de roles en UsuarioForm (que puede hacer cada rol)
-- [x] Portal Licencias: boton Limpiar Empresa (elimina transaccionales, mantiene entidades)
-- [x] Portal Licencias: boton Eliminar Empresa (borra absolutamente todo de MT y Admin)
-- [x] Doble confirmacion para Limpiar/Eliminar (escribir nombre de empresa)
-- [x] Portal Licencias: mini dashboard "Uso del sistema" en detalle de empresa (legajos, fichadas, usuarios, sucursales, terminales, ultima fichada, fichadas por origen, dias activos 30d, fichadas 15d por dispositivo)
-- [x] Contraste visual mejorado en ambos portales (labels uppercase bold, inputs con borde/sombra, card headers oscuros con linea dorada)
-- [x] Servicio de email SMTP con MailKit (smtp.hostinger.com:465 SSL, notify@integraia.tech)
-- [x] Pestaña "Movil" en LegajoForm: estado del dispositivo + generar codigo de activacion + envio automatico por email
-- [x] Email de activacion con template HTML profesional (codigo + boton deep link)
-- [x] Deep link en PWA: lee codigo de URL (?code=XXX) y lo pre-carga en el campo
-- [x] Boton Reintentar/Reenviar email en LegajoForm
-- [x] Fix re-activacion innecesaria: si legajo ya tiene terminal activa y cambia DeviceId (cache borrada), se actualiza automaticamente sin pedir codigo nuevo
-- [x] Icono PWA actualizado: D1 dorado sobre fondo oscuro (192px y 512px)
-- [x] .gitignore actualizado (excluye publish/, deploy zips)
+<details>
+<summary>2026-03-15 noche — Simplificar Administrador, foto+domicilio Portal MT</summary>
 
-### Sesion 2026-03-13 (noche)
-- [x] Rediseno PWA Mobile: tema oscuro navy, mapa GPS con anillos animados, reloj en vivo, boton teal, GPS watch continuo
-- [x] CRUD Sucursales mejorado: nuevos campos (Direccion, Localidad, Provincia, Telefono, Email)
-- [x] Mapa Leaflet/OpenStreetMap integrado en formulario de sucursales (buscador Nominatim, geocoding, reverse geocoding, marker arrastrable, circulo de radio)
-- [x] Campos WiFi removidos de UI (BSSID no accesible desde PWA), metodo forzado a SoloGPS
-- [x] Validacion GPS por sucursal asignada: fichada movil valida LegajoSucursal antes de resolver GPS
-- [x] Errores claros en fichada: "No tiene sucursales asignadas" / "Sin configuracion GPS" / "No se detecto sucursal"
-- [x] Migracion EF Core AddSucursalFields aplicada en Ferozo
-- [x] Deploy Portal MT a Azure
+- Administrador simplificado: solo 2 pestanas (Legajo: huellas+foto, Movil), datos solo lectura, guardar solo persiste huellas+foto
+- Portal MT: foto legajo, seccion Domicilio 7 campos, sucursal obligatoria, CRUD completo legajos
+- Instalador: carpeta seleccionable, TLS 1.2, registro Free idempotente
+- Connection strings: todos apuntan a Ferozo (localhost removido)
+</details>
 
-### Sesion 2026-03-13 (tarde)
-- [x] PWA Terminal Movil: app completa en wwwroot/mobile/ (login, activacion, fichada GPS, historial)
-- [x] PWA deployada y probada end-to-end en iPhone (Safari) y Android (Chrome) contra Azure
-- [x] MobileHabilitado (empresa): flag en Empresa (MT) y Empresas (Admin), checkbox en EmpresaDetalle.razor (Licencias)
-- [x] MobileHabilitado (legajo): flag en Legajo, checkbox en LegajoForm.razor (Portal MT, visible solo si empresa mobile habilitada)
-- [x] MobileHabilitado claim: CustomClaimsPrincipalFactory agrega claim al login, ITenantService.MobileHabilitado
-- [x] NavMenu condicional: links Terminales Moviles y Fichado Movil solo visibles si empresa MobileHabilitado
-- [x] Gestion de PIN desde Portal MT: asignar, cambiar, resetear PIN en LegajoForm (seccion PIN Movil)
-- [x] Iconos de origen en FichadasList: huella (bi-fingerprint), PIN (bi-dialpad), movil (bi-phone), manual (bi-pencil-square), web (bi-globe), demo (bi-play-circle)
-- [x] Terminal en fichadas: muestra nombre terminal (desktop) o "Dispositivo movil" (origen Movil)
-- [x] DatabaseName editable en EmpresaDetalle.razor (Licencias), constraint UNIQUE eliminado
-- [x] Datos habilitados en Ferozo: Kosiuko y New Family MobileHabilitado=1, legajo 1968 MobileHabilitado=1
-- [x] Deploy Portal MT y Portal Licencias a Azure
-- [x] Migracion EF Core AddMobileHabilitado aplicada en Ferozo
-- [x] DOC01-DOC05 actualizados
+<details>
+<summary>2026-03-14 — Roles Portal MT, Limpiar/Eliminar empresa, email SMTP, activacion movil</summary>
 
-### Sesion 2026-03-13 (manana)
-- [x] Tag v1.0-pre-mobile creado (commit 730589f) como punto de restauracion pre-v2
-- [x] Entidades EF Core: TerminalMovil, SucursalGeoconfig, CodigoActivacionMovil
-- [x] OrigenFichada enum: agregado valor Movil
-- [x] Migracion EF Core AddTerminalMovilAndGeoconfig aplicada en Ferozo (3 tablas creadas)
-- [x] MobileController con 4 endpoints JWT: login, registrar-dispositivo, fichada, estado
-- [x] JWT Bearer auth configurado en Program.cs (convive con cookie auth)
-- [x] UbicacionService: resolucion sucursal por WiFi BSSID o GPS (Haversine)
-- [x] Tab "Movil" en FrmRRHHLegajos del Administrador desktop
-- [x] DALs desktop: TerminalMovilDAL, SucursalGeoconfigDAL
-- [x] Pagina /terminales-moviles en Portal MT
-- [x] Pagina /fichado-movil (SucursalGeoconfigList) en Portal MT
-- [x] NavMenu actualizado con links a Terminales Moviles y Fichado Movil
-- [x] Script SQL de referencia: Database/003_TerminalMovil_Geoconfig.sql
-- [x] Fix: appsettings.Development.json apunta a Ferozo (VS Debug conectaba a localhost)
-- [x] DOC01 actualizado a v8.0 con seccion Terminal Movil
+- Roles: SuperAdmin/AdminEmpresa/Operador/Consulta con restricciones por pagina y AuthorizeView
+- Portal Licencias: Limpiar y Eliminar empresa con doble confirmacion, dashboard "Uso del sistema"
+- Email SMTP con MailKit (notify@integraia.tech), email activacion movil con deep link
+- Contraste visual mejorado, icono PWA D1 dorado
+</details>
 
-### Sesion 2026-03-12
-- [x] Homologacion visual Phase 2 (Administrador): layout 80/20 en Legajos, panel camara ensanchado (650px), boton PIN reubicado en zona 20%
-- [x] Fix foto legajo: parametro @Foto agregado en SP EscritorioLegajoActualizar y en llenarParametros() de RRHHLegajos.cs
-- [x] Fix PIN forzado en Fichador: dialogo obligatorio con solo boton OK (sin escape), separado de creacion de PIN nuevo (Si/No)
-- [x] SP EscritorioLegajoPIN_ForzarCambio deployado en Ferozo produccion
-- [x] Homologacion visual Phase 3 (Portal MT): tema oscuro integraia.tech, sidebar gradient, login dark, loading gold, reconnect gold, branding "DIGITAL ONE"
-- [x] Homologacion visual Phase 4 (Portal Licencias): misma paleta, branding "DIGITAL ONE Licencias", login dark, iconos SVG dorados
-- [x] Fix floating labels en ambos portales (background transparent en form-floating)
-- [x] Deploy Portal MT a Azure (digitalplusportalmt.azurewebsites.net)
-- [x] Deploy Portal Licencias a Azure (digitalpluslicencias.azurewebsites.net)
-- [x] Auto-registro de terminal: Fichador registra automaticamente la maquina en BD asociandola a sucursal por defecto
-- [x] Compilacion Release de Fichador (TEntradaSalida.exe) y Administrador (Acceso.exe)
-- [x] InstaladorLiviano compilado con InnoSetup (DigitalPlus_Cloud_Setup_v1.0.exe)
-- [x] Documentacion DOC01-DOC04 actualizada (v7.0, v5.0, v5.0)
+<details>
+<summary>2026-03-13 — Terminal Movil v2 completa (backend + PWA + control acceso)</summary>
 
-### Sesion 2026-03-11
-- [x] Instalador liviano listo para produccion: API URL apunta a Azure, AdminConnection, AdminEmpresaId en templates
-- [x] Fix bug critico: connection string name "local" -> "Local" en template Administrador
-- [x] Usuario SQL dedicado dp_app_svc con permisos granulares (dp_role_app) - script create-dp-app-svc.ps1
-- [x] Separacion CloudSql (sa, provisioning) vs ClientSql (dp_app_svc, apps) en Portal Licencias
-- [x] API /api/activar retorna EmpresaId real de DigitalPlusMultiTenant (mapeo via Codigo/CompanyId)
-- [x] Portal Licencias: CRUD usuarios admin, registro publico deshabilitado
-- [x] Portal Licencias: endpoint /api/verificar-estado para apps desktop
-- [x] Portal Licencias deployado en Azure (digitalpluslicencias.azurewebsites.net)
-- [x] Portal MT: verificacion estado empresa en login (fail-open, consulta DigitalPlusAdmin)
-- [x] Portal MT deployado en Azure (digitalplusportalmt.azurewebsites.net)
-- [x] Desktop apps: verificacion estado empresa en Form_Load (Fichador + Administrador)
-- [x] Desactivacion de empresas: cambiar Estado en Portal Licencias bloquea Portal MT y apps desktop
+- Backend: MobileController 4 endpoints JWT, entidades EF Core, UbicacionService GPS
+- PWA: login+activacion+fichada+historial, probada iPhone/Android contra Azure
+- Control acceso: MobileHabilitado empresa+legajo, PIN desde Portal MT, menu condicional
+- Sucursales: CRUD mejorado, mapa Leaflet, validacion GPS por sucursal asignada
+- Rediseno PWA dark theme con mapa GPS y reloj en vivo
+- Tag v1.0-pre-mobile (commit 730589f)
+</details>
 
-### Sesion 2026-03-10
-- [x] Auto-provisioning usuario admin al crear empresa (MultiTenantProvisioningService)
-- [x] Portal MT: forzar cambio de contraseña en primer login (MustChangePassword, middleware, ForceChangePassword.razor)
-- [x] Portal MT: DefaultConnection cambiado a Ferozo
+<details>
+<summary>2026-03-12 — Homologacion visual, auto-registro terminal, instalador</summary>
 
-### Sesion 2026-03-09
-- [x] Portal Multi-Tenant: logo y nombre de empresa en header izquierdo (endpoint `/api/empresa-logo` con cache 1 hora)
-- [x] Portal Multi-Tenant y Licencias: fix double-submit en login
-- [x] Portal Licencias: seccion "Identidad de la Empresa" con logo, pagina web y 6 redes sociales
-- [x] EmpresaInfoService: campos de redes sociales consultados desde DigitalPlusAdmin
-- [x] Administrador: menu dinamico con links a redes sociales (reemplaza botones fijos hardcodeados)
-- [x] BD Ferozo: columnas redes sociales agregadas a tabla Empresas
-- [x] PortalLicencias sincronizado dentro de DigitalPlusSuiteMultiTenant
+- Homologacion visual: Administrador layout 80/20, Portal MT tema oscuro, Portal Licencias dark
+- Fix foto legajo (SP), fix PIN forzado Fichador, fix floating labels
+- Auto-registro terminal en BD, compilacion Release, InstaladorLiviano InnoSetup
+- Deploy Portal MT y Licencias a Azure
+</details>
 
-### Sesion 2026-03-08
-- [x] Arquitectura multi-tenant implementada (TenantContext, EmpresaId, tablas singular)
-- [x] BD DigitalPlusMultiTenant creada en Ferozo con schema EF Core (29 tablas)
-- [x] Migracion datos Kosiuko a DigitalPlusMultiTenant (758 legajos, 784K fichadas)
-- [x] Kosiuko registrada en DigitalPlusAdmin (Id=5, CodigoActivacion=EE509930E07E)
-- [x] InstaladorLiviano adaptado para multi-tenant (EmpresaId en configs, paths corregidos)
-- [x] Validacion de licencia deshabilitada en Fichador y Administrador
-- [x] Fichador: cambio voluntario de PIN, PinMustChange, reseteo
-- [x] Administrador: tab PINs, filtro combo, resetear PIN, forzar cambio
-- [x] SPs legacy reemplazados por SQL directo multi-tenant
-- [x] Logo empresa + IntegraIA en Fichador y Administrador
+<details>
+<summary>2026-03-11 — Instalador produccion, usuario SQL dp_app_svc, verificacion estado</summary>
+
+- Instalador apunta a Azure, fix connection string "Local"
+- Usuario SQL dp_app_svc con permisos granulares, separacion CloudSql/ClientSql
+- API /api/activar con EmpresaId real, /api/verificar-estado
+- Desactivacion de empresas bloquea Portal MT y apps desktop
+</details>
+
+<details>
+<summary>2026-03-08 a 2026-03-10 — Arquitectura MT, BD Ferozo, provisioning</summary>
+
+- Arquitectura multi-tenant (TenantContext, EmpresaId, tablas singular)
+- BD DigitalPlusMultiTenant en Ferozo (29 tablas, migracion Kosiuko 758 legajos + 784K fichadas)
+- Auto-provisioning usuario admin, forzar cambio password primer login
+- Logo empresa en header, identidad empresa (redes sociales), PortalLicencias sincronizado
+- Fichador: PIN voluntario/forzado/reseteo. Administrador: tab PINs
+</details>
 
 ---
 
@@ -290,7 +232,7 @@
 ## INMEDIATO (Validacion end-to-end)
 
 - [ ] **Probar circuito completo en produccion (Ferozo):** Enviar instalador + codigo a otro usuario -> instalar -> verificar auto-registro terminal -> fichar -> ver en portal web
-  - Nota: Kosiuko y New Family ya fueron probadas localmente. Falta prueba con usuario externo.
+  - PARCIAL: New Family probada con instalador + fichada + terminal + sucursal + permisos (sesion 2026-03-24). Falta prueba con usuario externo.
 
 ## SEGURIDAD SQL
 
@@ -303,7 +245,7 @@
 - [x] DOC01 - Reporte Arquitectura Project Leader (v7.0)
 - [x] DOC02 - Manual Usuario Final (v16.0)
 - [x] DOC03 - Manual Portal Licencias Integra IA (v5.0)
-- [x] DOC04 - Lista de Pendientes (actualizado 2026-03-23)
+- [x] DOC04 - Lista de Pendientes (actualizado 2026-03-24)
 - [x] DOC05 - Terminal Movil DigitalOne
 - [x] DOC06 - Sitio Web IntegraIA (v1.0) — estructura, deploy Hostinger, anclas, integracion Portal MT
 - [ ] **Agregar capturas de pantalla** al DOC02 y DOC03 (requiere ejecutar las apps y tomar screenshots)
@@ -313,12 +255,13 @@
 - [x] ~~**Validar permisos de fichada por sucursal**~~ COMPLETADO y VERIFICADO 2026-03-23 — PermiteHuella/Pin/Qr/Movil/Kiosko validados en SP desktop, MobileController y Kiosko
 - [x] ~~**Fichador desktop QR (Fase 6)**~~ COMPLETADO 2026-03-18
 - [x] ~~**Upgrade plan Fase 3: Lemon Squeezy**~~ COMPLETADO 2026-03-24 — Checkout, webhooks, cancelacion, alertas. Commits dae6f6f..8ee8edf
-- [ ] **Probar baja de plan y verificar advertencia del sistema** — La cancelacion de suscripcion ya esta implementada (LsqStatus + LicenciaAlerts), falta probar end-to-end
+- [x] ~~**Probar baja de plan y verificar advertencia del sistema**~~ COMPLETADO 2026-03-24 — Cancelacion probada end-to-end con Lemon Squeezy (webhook + banner + jaula + recontratar)
+- [ ] **Instalador web: cache de navegador puede descargar version vieja** — Instruir Ctrl+Shift+Supr antes de descargar
 - [ ] **Plan Enterprise: tratamiento especial en pantalla de planes** — Cuando el cliente tiene plan Enterprise, ocultar los otros planes y mostrar una pantalla dedicada
 - [ ] **Probar Portal MT con distintos roles** — Verificar permisos por pagina con usuarios SuperAdmin, AdminEmpresa, y roles menores
 - [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
-- [ ] **Generar PIN desde Portal MT** — Form de legajo web no permite asignar/cambiar PIN actualmente
-- [ ] **Upgrade de plan: validaciones** — Al cambiar de Free a plan mayor, recordar regenerar codigo activacion y obligar verificar email
+- [x] ~~**Generar PIN desde Portal MT**~~ COMPLETADO 2026-03-13 — LegajoForm tiene seccion PIN Movil (asignar, cambiar, resetear)
+- [x] ~~**Upgrade de plan: validaciones**~~ COMPLETADO 2026-03-22 — Verificacion email obligatoria pre-upgrade, codigo activacion se regenera en confirmar
 - [ ] **Verificar durabilidad de licencias** - Analizar si la licencia es por terminal (MachineId) o permite instalacion ilimitada. Definir politica.
 - [ ] **Adaptar InstaladorUnificado para trial web** - Que el usuario pueda registrarse desde la web, descargar el instalador y probar en modo LOCAL con SQL Express.
 - [ ] **Link al portal web en Administrador** - Agregar en la app Administrador un acceso directo que abra el portal web multi-tenant en el navegador.
@@ -366,4 +309,4 @@
 
 ---
 
-*Actualizado: 2026-03-23 (noche)*
+*Actualizado: 2026-03-24*
