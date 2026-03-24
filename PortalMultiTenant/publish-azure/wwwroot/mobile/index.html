@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0A1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DigitalOne">
+    <title>DigitalOne Mobile</title>
+    <link rel="manifest" href="/mobile/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/mobile/icon.svg">
+    <link rel="apple-touch-icon" href="/mobile/icon-192.png">
+    <link rel="stylesheet" href="/mobile/style.css">
+</head>
+<body>
+    <!-- LOGIN -->
+    <div id="screen-login" class="screen active">
+        <div class="login-container">
+            <div class="logo">
+                <div class="logo-icon">⏱</div>
+                <h1>Digital One</h1>
+                <p class="subtitle">Terminal Móvil</p>
+            </div>
+            <form id="form-login" autocomplete="off">
+                <div id="login-error" class="error-banner hidden"></div>
+                <label for="input-legajo">Número de Legajo</label>
+                <input type="number" id="input-legajo" inputmode="numeric" placeholder="Ej: 1234" required autofocus>
+                <label for="input-pin">PIN</label>
+                <input type="password" id="input-pin" inputmode="numeric" maxlength="6" placeholder="6 dígitos" required>
+                <button type="submit" id="btn-login" class="btn-primary">INGRESAR</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ACTIVACIÓN -->
+    <div id="screen-activar" class="screen">
+        <div class="screen-content">
+            <h2>Activar Dispositivo</h2>
+            <p class="description">Ingrese el código de activación proporcionado por su administrador.</p>
+            <form id="form-activar" autocomplete="off">
+                <div id="activar-error" class="error-banner hidden"></div>
+                <input type="text" id="input-codigo" placeholder="Código de activación" autocapitalize="characters" required>
+                <button type="submit" id="btn-activar" class="btn-primary">ACTIVAR</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- HOME / FICHAR -->
+    <div id="screen-home" class="screen">
+        <!-- App Header -->
+        <div class="app-header">
+            <div class="app-brand">
+                <div class="brand-dots">
+                    <span class="dot dot-lg"></span>
+                    <span class="dot dot-md"></span>
+                    <span class="dot dot-sm"></span>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-name">Digital One</div>
+                    <div class="brand-sub">Fichada Móvil</div>
+                </div>
+            </div>
+            <button id="btn-logout" class="btn-menu" title="Cerrar sesión">✕</button>
+        </div>
+        <div class="accent-line"></div>
+
+        <!-- Sucursal & Time -->
+        <div class="info-time">
+            <div class="info-label">EMPRESA</div>
+            <div id="home-empresa" class="info-empresa"></div>
+            <div id="home-clock" class="live-clock">--:--</div>
+        </div>
+
+        <!-- GPS Map Area -->
+        <div class="gps-map">
+            <!-- Grid lines (CSS) -->
+            <div class="map-grid">
+                <div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div>
+                <div class="grid-h"></div><div class="grid-h"></div>
+                <div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div>
+                <div class="grid-v"></div><div class="grid-v"></div>
+            </div>
+            <!-- GPS range rings -->
+            <div class="gps-rings">
+                <div class="ring ring-outer"></div>
+                <div class="ring ring-middle"></div>
+                <div class="ring ring-inner"></div>
+                <div class="ring-glow"></div>
+            </div>
+            <!-- User location dot -->
+            <div class="gps-dot">
+                <div class="dot-pulse"></div>
+                <div class="dot-core"></div>
+                <div class="dot-center"></div>
+            </div>
+            <!-- Labels -->
+            <div id="gps-accuracy" class="gps-badge gps-badge-right hidden">
+                <span class="badge-dot"></span>
+                <span class="badge-text">Precisión: --</span>
+            </div>
+            <div id="gps-distance" class="gps-badge gps-badge-left hidden">
+                <span class="badge-text">Obteniendo GPS...</span>
+            </div>
+        </div>
+
+        <!-- Employee Card -->
+        <div class="employee-card">
+            <div class="employee-avatar">
+                <svg viewBox="0 0 40 40" class="avatar-svg">
+                    <circle cx="20" cy="16" r="8" fill="#4A6A8A" opacity="0.5"/>
+                    <ellipse cx="20" cy="34" rx="12" ry="8" fill="#4A6A8A" opacity="0.3"/>
+                </svg>
+            </div>
+            <div class="employee-info">
+                <div id="home-nombre" class="employee-name"></div>
+                <div id="home-legajo" class="employee-detail"></div>
+            </div>
+        </div>
+
+        <!-- GPS Validation Status -->
+        <div id="gps-status" class="gps-validation acquiring">
+            <div class="gps-check-icon">
+                <svg viewBox="0 0 24 24" class="check-svg"><path d="M5 12 L9 16 L19 6" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="gps-status-text">
+                <div id="gps-status-title" class="gps-status-title">Obteniendo ubicación...</div>
+                <div id="gps-status-detail" class="gps-status-detail"></div>
+            </div>
+        </div>
+
+        <!-- Fichar Button -->
+        <div class="fichar-section">
+            <button id="btn-fichar" class="btn-fichar">
+                <span id="fichar-text" class="fichar-text">FICHAR ENTRADA</span>
+            </button>
+            <div id="fichar-result" class="result-banner hidden"></div>
+        </div>
+
+        <!-- Last Record -->
+        <div id="home-status" class="last-record hidden">
+            <div class="last-record-left">
+                <span class="last-record-label">ÚLTIMA FICHADA</span>
+                <span id="status-info" class="last-record-info"></span>
+            </div>
+            <span id="status-badge" class="last-record-badge">Normal</span>
+        </div>
+
+        <!-- Tab Bar -->
+        <nav class="tab-bar">
+            <button class="tab active" data-tab="home">⏱ Fichar</button>
+            <button class="tab" data-tab="historial">☰ Historial</button>
+        </nav>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div id="screen-historial" class="screen">
+        <div class="app-header">
+            <div class="app-brand">
+                <div class="brand-dots">
+                    <span class="dot dot-lg"></span>
+                    <span class="dot dot-md"></span>
+                    <span class="dot dot-sm"></span>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-name">Digital One</div>
+                    <div class="brand-sub">Historial</div>
+                </div>
+            </div>
+            <button id="btn-logout2" class="btn-menu" title="Cerrar sesión">✕</button>
+        </div>
+        <div class="accent-line"></div>
+        <div class="historial-content">
+            <h3>Fichadas de Hoy</h3>
+            <div id="historial-error" class="error-banner hidden"></div>
+            <div id="historial-list"></div>
+            <div id="historial-empty" class="empty-state hidden">Sin fichadas hoy</div>
+            <button id="btn-refresh" class="btn-secondary">Actualizar</button>
+        </div>
+        <nav class="tab-bar">
+            <button class="tab" data-tab="home">⏱ Fichar</button>
+            <button class="tab active" data-tab="historial">☰ Historial</button>
+        </nav>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/mobile/app.js"></script>
+</body>
+</html>

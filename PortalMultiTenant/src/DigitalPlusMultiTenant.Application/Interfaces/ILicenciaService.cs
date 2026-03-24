@@ -25,7 +25,7 @@ public class LicenciaInfo
 public class PlanParametro
 {
     public string Parametro { get; set; } = "";
-    public int Valor { get; set; }
+    public decimal Valor { get; set; }
     public string Categoria { get; set; } = "";
     public string TipoVisualizacion { get; set; } = "cantidad";
     public string LabelAmigable { get; set; } = "";
@@ -35,10 +35,10 @@ public class PlanParametro
 
     public string ValorFormateado => TipoVisualizacion switch
     {
-        "precio" => Valor == 0 ? "Gratis" : $"${Valor:N0}",
+        "precio" => Valor == 0 ? "Gratis" : Valor == Math.Floor(Valor) ? $"USD {Valor:N0}" : $"USD {Valor:N2}",
         "cantidad" => Valor == 0 ? "Ilimitados" : Valor.ToString("N0"),
         "booleano" => Valor == 1 ? "Sí" : "No",
-        _ => Valor.ToString()
+        _ => Valor == Math.Floor(Valor) ? Valor.ToString("N0") : Valor.ToString("N2")
     };
 }
 
@@ -50,10 +50,10 @@ public class PlanComparacion
     public List<PlanParametro> Parametros { get; set; } = new();
 
     // Helpers para acceso rápido a valores conocidos
-    public int MaxLegajos => Parametros.FirstOrDefault(p => p.Parametro == "MaxLegajos")?.Valor ?? 0;
-    public int MaxSucursales => Parametros.FirstOrDefault(p => p.Parametro == "MaxSucursales")?.Valor ?? 0;
-    public int MaxFichadasMes => Parametros.FirstOrDefault(p => p.Parametro == "MaxFichadasRolling30d")?.Valor ?? 0;
-    public int MaxTerminalesMoviles => Parametros.FirstOrDefault(p => p.Parametro == "MaxTerminalesMoviles")?.Valor ?? 0;
+    public int MaxLegajos => (int)(Parametros.FirstOrDefault(p => p.Parametro == "MaxLegajos")?.Valor ?? 0);
+    public int MaxSucursales => (int)(Parametros.FirstOrDefault(p => p.Parametro == "MaxSucursales")?.Valor ?? 0);
+    public int MaxFichadasMes => (int)(Parametros.FirstOrDefault(p => p.Parametro == "MaxFichadasRolling30d")?.Valor ?? 0);
+    public int MaxTerminalesMoviles => (int)(Parametros.FirstOrDefault(p => p.Parametro == "MaxTerminalesMoviles")?.Valor ?? 0);
     public decimal ImporteMensual => Parametros.FirstOrDefault(p => p.Parametro == "ImporteMensual")?.Valor ?? 0;
     public decimal ImporteAnual => Parametros.FirstOrDefault(p => p.Parametro == "ImporteAnual")?.Valor ?? 0;
     public List<PlanParametro> ParametrosVisibles => Parametros.Where(p => p.VisibleEnComparacion).OrderBy(p => p.OrdenVisualizacion).ToList();

@@ -75,7 +75,7 @@ else
                                         </td>
                                         <td style="width:80px">
                                             <span class="fw-bold @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "text-success" : "")">
-                                                @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "\u221e" : c.Valor.ToString("N0"))
+                                                @(c.Valor == 0 && EsParametroCantidad(c.Parametro) ? "\u221e" : c.Valor == Math.Floor(c.Valor) ? c.Valor.ToString("N0") : c.Valor.ToString("N2"))
                                             </span>
                                         </td>
                                         <td style="width:60px" class="text-nowrap">
@@ -122,7 +122,7 @@ else
                         <div class="row g-2">
                             <div class="col-6">
                                 <label class="form-label">Valor</label>
-                                <input type="number" min="0" class="form-control form-control-sm" @bind="editValor" />
+                                <input type="number" min="0" step="0.01" class="form-control form-control-sm" @bind="editValor" />
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Descripcion</label>
@@ -275,7 +275,7 @@ else
 
     // Edicion modal
     private DigitalPlus.Licencias.Entidades.PlanConfig? editConfig;
-    private int editValor;
+    private decimal editValor;
     private string? editDescripcion;
     private string? editCategoria;
     private string? editTipoVisualizacion;

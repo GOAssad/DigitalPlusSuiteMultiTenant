@@ -164,7 +164,7 @@ public class LicenciaService : ILicenciaService
                 var parametros = g.Select(item => new PlanParametro
                 {
                     Parametro = (string)item.Parametro,
-                    Valor = (int)item.Valor,
+                    Valor = Convert.ToDecimal(item.Valor),
                     Categoria = (string)item.Categoria,
                     TipoVisualizacion = (string)item.TipoVisualizacion,
                     LabelAmigable = (string)item.LabelAmigable,
@@ -173,7 +173,7 @@ public class LicenciaService : ILicenciaService
                     VisibleEnComparacion = (bool)item.VisibleEnComparacion
                 }).ToList();
 
-                var orden = parametros.FirstOrDefault(p => p.Parametro == "OrdenPlan")?.Valor ?? 99;
+                var orden = (int)(parametros.FirstOrDefault(p => p.Parametro == "OrdenPlan")?.Valor ?? 99);
 
                 return new PlanComparacion
                 {

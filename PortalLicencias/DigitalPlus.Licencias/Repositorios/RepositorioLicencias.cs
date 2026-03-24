@@ -61,9 +61,9 @@ public class RepositorioLicencias
         if (lic != null && lic.Plan != plan)
         {
             var valores = await GetPlanValoresAsync(plan);
-            if (valores.TryGetValue("MaxLegajos", out var ml)) maxLegajos = ml;
-            var maxSuc = valores.GetValueOrDefault("MaxSucursales", 0);
-            var maxFich = valores.GetValueOrDefault("MaxFichadasRolling30d", 0);
+            if (valores.TryGetValue("MaxLegajos", out var ml)) maxLegajos = (int)ml;
+            var maxSuc = (int)valores.GetValueOrDefault("MaxSucursales", 0);
+            var maxFich = (int)valores.GetValueOrDefault("MaxFichadasRolling30d", 0);
 
             await using var conn = new SqlConnection(_connectionString);
             await conn.ExecuteAsync(
@@ -387,7 +387,7 @@ public class RepositorioLicencias
         return await _context.PlanConfigs.Select(p => p.Plan).Distinct().OrderBy(p => p).ToListAsync();
     }
 
-    public async Task<Dictionary<string, int>> GetPlanValoresAsync(string plan)
+    public async Task<Dictionary<string, decimal>> GetPlanValoresAsync(string plan)
     {
         return await _context.PlanConfigs
             .Where(p => p.Plan == plan)
@@ -396,7 +396,7 @@ public class RepositorioLicencias
 
     private static readonly string[] ParametrosSistema = ["OrdenPlan", "DuracionDias", "GraciaDias"];
 
-    public async Task GuardarPlanConfigAsync(int id, int valor,
+    public async Task GuardarPlanConfigAsync(int id, decimal valor,
         string? categoria = null, string? tipoVisualizacion = null,
         string? labelAmigable = null, string? icono = null,
         int? ordenVisualizacion = null, bool? visibleEnComparacion = null)
@@ -415,7 +415,7 @@ public class RepositorioLicencias
         }
     }
 
-    public async Task AgregarPlanConfigAsync(string plan, string parametro, int valor, string? descripcion,
+    public async Task AgregarPlanConfigAsync(string plan, string parametro, decimal valor, string? descripcion,
         string? categoria = null, string? tipoVisualizacion = null,
         string? labelAmigable = null, string? icono = null,
         int ordenVisualizacion = 50, bool visibleEnComparacion = true)
@@ -479,7 +479,7 @@ public class RepositorioLicencias
             var parametros = g.Select(item => new
             {
                 parametro = (string)item.Parametro,
-                valor = (int)item.Valor,
+                valor = (decimal)item.Valor,
                 categoria = (string)item.Categoria,
                 tipoVisualizacion = (string)item.TipoVisualizacion,
                 labelAmigable = (string)item.LabelAmigable,
@@ -555,7 +555,7 @@ public class RepositorioLicencias
             var configs = await conn.QueryAsync<dynamic>(
                 "SELECT Parametro, Valor FROM PlanConfig WHERE [Plan] = @Plan",
                 new { Plan = planSolicitado }, tx);
-            var valores = configs.ToDictionary(c => (string)c.Parametro, c => (int)c.Valor);
+            var valores = configs.ToDictionary(c => (string)c.Parametro, c => (int)(decimal)c.Valor);
 
             int maxLegajos = valores.GetValueOrDefault("MaxLegajos", 5);
             int maxSucursales = valores.GetValueOrDefault("MaxSucursales", 1);

@@ -14,7 +14,8 @@ public class PlanConfig
     [Required, MaxLength(100)]
     public string Parametro { get; set; } = null!;
 
-    public int Valor { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal Valor { get; set; }
 
     [MaxLength(200)]
     public string? Descripcion { get; set; }

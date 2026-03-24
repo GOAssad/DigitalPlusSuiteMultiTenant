@@ -149,7 +149,7 @@
     private string planSolicitado = "";
     private decimal? importeMensual;
     private DateTime? tokenExpiresAt;
-    private Dictionary<string, int> planValores = new();
+    private Dictionary<string, decimal> planValores = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -246,7 +246,7 @@
         }
     }
 
-    private List<KeyValuePair<string, int>> GetParametrosVisibles()
+    private List<KeyValuePair<string, decimal>> GetParametrosVisibles()
     {
         var excluir = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -275,10 +275,10 @@
         _ => parametro
     };
 
-    private string FormatValor(string parametro, int valor)
+    private string FormatValor(string parametro, decimal valor)
     {
         if (parametro is "MobileHabilitado" or "KioskoHabilitado")
-            return valor == 1 ? "Si" : "No";
-        return valor == 0 ? "Ilimitados" : valor.ToString("N0");
+            return valor >= 1 ? "Si" : "No";
+        return valor == 0 ? "Ilimitados" : valor == Math.Floor(valor) ? valor.ToString("N0") : valor.ToString("N2");
     }
 }

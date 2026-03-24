@@ -308,10 +308,10 @@ app.MapPost("/api/activar-free", async (ActivarFreeRequest req,
 
     // Obtener limites del plan Free de PlanConfig
     var planValores = await repo.GetPlanValoresAsync("free");
-    int maxLegajos = planValores.GetValueOrDefault("MaxLegajos", 5);
-    int maxSucursales = planValores.GetValueOrDefault("MaxSucursales", 1);
-    int maxFichadasMes = planValores.GetValueOrDefault("MaxFichadasRolling30d", 200);
-    int duracionDias = planValores.GetValueOrDefault("DuracionDias", 0);
+    int maxLegajos = (int)planValores.GetValueOrDefault("MaxLegajos", 5);
+    int maxSucursales = (int)planValores.GetValueOrDefault("MaxSucursales", 1);
+    int maxFichadasMes = (int)planValores.GetValueOrDefault("MaxFichadasRolling30d", 200);
+    int duracionDias = (int)planValores.GetValueOrDefault("DuracionDias", 0);
 
     var dbName = config["MultiTenant:DatabaseName"] ?? "DigitalPlusMultiTenant";
     DigitalPlus.Licencias.Entidades.Empresa? empresa = null;
