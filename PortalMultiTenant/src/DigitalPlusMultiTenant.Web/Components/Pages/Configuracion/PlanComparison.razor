@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Net.Http.Json
 @attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa")]
@@ -10,12 +11,31 @@
 
 @inject ITenantService Tenant
 @inject ILicenciaService LicenciaService
+@inject LemonSqueezyService LsqService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 
 <PageTitle>Planes - DigitalPlus</PageTitle>
+
+@* ── Alertas de retorno de checkout ── *@
+@if (mostrarAlertaSuccess)
+{
+    <div class="alert alert-success alert-dismissible mb-3">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong>Tu plan fue actualizado!</strong> Los nuevos limites estan activos.
+        <button type="button" class="btn-close" @onclick="() => mostrarAlertaSuccess = false"></button>
+    </div>
+}
+@if (mostrarAlertaCanceled)
+{
+    <div class="alert alert-warning alert-dismissible mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        El proceso de pago fue cancelado.
+        <button type="button" class="btn-close" @onclick="() => mostrarAlertaCanceled = false"></button>
+    </div>
+}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-gem me-2"></i>Comparacion de Planes</h4>
@@ -33,6 +53,31 @@ else if (planes.Count == 0)
 }
 else
 {
+    @* ── Toggle Mensual / Anual ── *@
+    <div class="text-center mb-4">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn @(periodoAnual ? "btn-outline-primary" : "btn-primary")"
+                    @onclick="() => periodoAnual = false">
+                Mensual
+            </button>
+            <button type="button" class="btn @(periodoAnual ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => periodoAnual = true">
+                Anual
+                @{
+                    var mejorDescuento = planes
+                        .Where(p => p.ImporteMensual > 0 && p.ImporteAnual > 0)
+                        .Select(p => Math.Round((1 - p.ImporteAnual / (p.ImporteMensual * 12)) * 100))
+                        .DefaultIfEmpty(0)
+                        .Max();
+                }
+                @if (mejorDescuento > 0)
+                {
+                    <span class="badge bg-success ms-1">Ahorra @mejorDescuento%</span>
+                }
+            </button>
+        </div>
+    </div>
+
     <div class="row g-4 mb-4">
         @foreach (var plan in planes)
         {
@@ -43,13 +88,11 @@ else
             var esEnterprise = string.Equals(plan.Plan, "enterprise", StringComparison.OrdinalIgnoreCase);
             var esFree = string.Equals(plan.Plan, "free", StringComparison.OrdinalIgnoreCase);
 
-            var parametrosPrecio = plan.ParametrosVisibles.Where(p => string.Equals(p.Categoria, "Precio", StringComparison.OrdinalIgnoreCase)).ToList();
             var parametrosLista = plan.ParametrosVisibles
                 .Where(p => !string.Equals(p.Categoria, "Precio", StringComparison.OrdinalIgnoreCase)
                           && !string.Equals(p.Categoria, "Sistema", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(p => p.OrdenVisualizacion)
                 .ToList();
-            var descuento = parametrosPrecio.FirstOrDefault(p => string.Equals(p.Parametro, "Descuento", StringComparison.OrdinalIgnoreCase));
 
             <div class="col-xl-3 col-lg-6 col-md-6">
                 <div class="card h-100 shadow-sm @(esPlanActual ? "border-success border-2" : esPlanInferior ? "opacity-50" : "border-0")"
@@ -63,7 +106,7 @@ else
                     }
 
                     <div class="card-body d-flex flex-column text-center">
-                        @* ── CABECERA: nombre + precio mensual + precio anual ── *@
+                        @* ── CABECERA: nombre + precio ── *@
                         <h5 class="card-title fw-bold mb-1">@plan.PlanDisplay</h5>
 
                         @if (esEnterprise && plan.ImporteMensual == 0)
@@ -75,30 +118,54 @@ else
                         else if (plan.ImporteMensual > 0)
                         {
                             <div class="mb-3">
-                                @* Precio mensual *@
-                                <div class="mb-1">
-                                    <span class="display-6 fw-bold">$@plan.ImporteMensual.ToString("N0")</span>
-                                    <span class="text-muted">/mes</span>
-                                </div>
-
-                                @* Precio anual con descuento calculado dinámicamente *@
-                                @if (plan.ImporteAnual > 0)
+                                @if (periodoAnual && plan.ImporteAnual > 0)
                                 {
-                                    var totalSinDescuento = plan.ImporteMensual * 12;
-                                    var pctDescuento = totalSinDescuento > 0
-                                        ? Math.Round((1 - plan.ImporteAnual / totalSinDescuento) * 100)
+                                    var precioMensualEquiv = Math.Round(plan.ImporteAnual / 12, 2);
+                                    var totalSinDescuentoA = plan.ImporteMensual * 12;
+                                    var pctDescuentoA = totalSinDescuentoA > 0
+                                        ? Math.Round((1 - plan.ImporteAnual / totalSinDescuentoA) * 100)
                                         : 0;
-                                    <div class="mt-2 p-2 rounded" style="background-color: rgba(25,135,84,0.1);">
-                                        <div>
-                                            <span class="text-decoration-line-through text-muted small">$@totalSinDescuento.ToString("N0")</span>
-                                            @if (pctDescuento > 0)
-                                            {
-                                                <span class="badge bg-success ms-1">@pctDescuento% OFF</span>
-                                            }
-                                        </div>
-                                        <span class="fs-5 fw-bold text-success">$@plan.ImporteAnual.ToString("N0")</span>
+
+                                    <div class="mb-1">
+                                        <span class="display-6 fw-bold">$@precioMensualEquiv.ToString("N0")</span>
+                                        <span class="text-muted">/mes</span>
+                                    </div>
+                                    <div class="mt-1">
+                                        <span class="text-muted small">Facturado anualmente:</span>
+                                        <span class="fw-bold text-success">$@plan.ImporteAnual.ToString("N0")</span>
                                         <span class="text-muted small">/año</span>
                                     </div>
+                                    if (pctDescuentoA > 0)
+                                    {
+                                        <div class="mt-1">
+                                            <span class="text-decoration-line-through text-muted small">$@totalSinDescuentoA.ToString("N0")</span>
+                                            <span class="badge bg-success ms-1">@pctDescuentoA% OFF</span>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="mb-1">
+                                        <span class="display-6 fw-bold">$@plan.ImporteMensual.ToString("N0")</span>
+                                        <span class="text-muted">/mes</span>
+                                    </div>
+
+                                    if (plan.ImporteAnual > 0)
+                                    {
+                                        var totalSinDescuentoM = plan.ImporteMensual * 12;
+                                        var pctDescuentoM = totalSinDescuentoM > 0
+                                            ? Math.Round((1 - plan.ImporteAnual / totalSinDescuentoM) * 100)
+                                            : 0;
+                                        <div class="mt-2 p-2 rounded" style="background-color: rgba(25,135,84,0.1);">
+                                            <span class="small text-muted">o</span>
+                                            <span class="fw-bold text-success ms-1">$@plan.ImporteAnual.ToString("N0")</span>
+                                            <span class="text-muted small">/año</span>
+                                            @if (pctDescuentoM > 0)
+                                            {
+                                                <span class="badge bg-success ms-1">@pctDescuentoM% OFF</span>
+                                            }
+                                        </div>
+                                    }
                                 }
                             </div>
                         }
@@ -167,7 +234,7 @@ else
                             <button class="btn btn-primary mt-auto"
                                     @onclick="() => MostrarConfirmUpgrade(plan)"
                                     disabled="@solicitando">
-                                <i class="bi bi-arrow-up-circle me-1"></i>Solicitar upgrade
+                                <i class="bi bi-arrow-up-circle me-1"></i>Contratar @plan.PlanDisplay
                             </button>
                         }
                     </div>
@@ -176,10 +243,52 @@ else
         }
     </div>
 
+    @* ── Sección Gestionar suscripción (solo si LSQ activa) ── *@
+    @if (licenciaInfo?.EsLemonSqueezy == true)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary bg-opacity-10">
+                <h6 class="mb-0"><i class="bi bi-credit-card me-2"></i>Gestionar suscripcion</h6>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong>Plan activo:</strong> @licenciaInfo.PlanDisplay
+                        </p>
+                        @if (licenciaInfo.PlanVencimiento.HasValue)
+                        {
+                            <p class="mb-0 text-muted">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                Proximo cobro: @licenciaInfo.PlanVencimiento.Value.ToString("dd/MM/yyyy")
+                            </p>
+                        }
+                    </div>
+                    <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                        @if (!string.IsNullOrEmpty(licenciaInfo.LsqUpdatePaymentUrl))
+                        {
+                            <a href="@licenciaInfo.LsqUpdatePaymentUrl" target="_blank"
+                               class="btn btn-outline-secondary btn-sm me-2">
+                                <i class="bi bi-credit-card me-1"></i>Actualizar tarjeta
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
+                        {
+                            <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-receipt me-1"></i>Portal de facturacion
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="text-muted small">
         <i class="bi bi-info-circle me-1"></i>
         Todos los precios estan expresados en dolares estadounidenses (USD).
-        Al solicitar un upgrade sera redirigido a la pagina de pago. Una vez confirmado, los nuevos limites se activan automaticamente.
+        Al contratar un plan sera redirigido a la pagina de pago segura. Una vez confirmado, los nuevos limites se activan automaticamente.
     </div>
 }
 
@@ -197,11 +306,11 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary bg-opacity-10">
-                    <h6 class="modal-title"><i class="bi bi-arrow-up-circle me-2"></i>Confirmar solicitud de upgrade</h6>
+                    <h6 class="modal-title"><i class="bi bi-arrow-up-circle me-2"></i>Confirmar contratacion</h6>
                     <button type="button" class="btn-close" @onclick="CerrarModal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Desea solicitar el cambio al plan <strong>@planSeleccionado.PlanDisplay</strong>?</p>
+                    <p>Desea contratar el plan <strong>@planSeleccionado.PlanDisplay</strong> (@(periodoAnual ? "anual" : "mensual"))?</p>
                     <table class="table table-sm mb-0">
                         <tbody>
                             <tr>
@@ -211,6 +320,23 @@ else
                             <tr>
                                 <td class="fw-bold">Plan solicitado:</td>
                                 <td>@planSeleccionado.PlanDisplay</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Periodo:</td>
+                                <td>@(periodoAnual ? "Anual" : "Mensual")</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Importe:</td>
+                                <td class="fw-bold text-primary">
+                                    @if (periodoAnual && planSeleccionado.ImporteAnual > 0)
+                                    {
+                                        @($"USD {planSeleccionado.ImporteAnual:N0} /año")
+                                    }
+                                    else
+                                    {
+                                        @($"USD {planSeleccionado.ImporteMensual:N0} /mes")
+                                    }
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -253,12 +379,17 @@ else
                             </tbody>
                         </table>
                     }
+
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="bi bi-lock-fill me-1"></i>
+                        Sera redirigido a una pagina de pago segura para completar la contratacion.
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary btn-sm" @onclick="CerrarModal">Cancelar</button>
-                    <button class="btn btn-primary btn-sm" @onclick="EnviarSolicitudUpgrade" disabled="@solicitando">
+                    <button class="btn btn-primary btn-sm" @onclick="IniciarCheckout" disabled="@solicitando">
                         @if (solicitando) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                        <i class="bi bi-arrow-up-circle me-1"></i>Continuar al pago
+                        <i class="bi bi-credit-card me-1"></i>Continuar al pago
                     </button>
                 </div>
             </div>
@@ -303,6 +434,7 @@ else
     private List<PlanComparacion> planes = new();
     private string planActual = "free";
     private string? companyId;
+    private int empresaId;
     private bool cargando = true;
     private bool solicitando;
     private string? mensaje;
@@ -312,24 +444,33 @@ else
     private bool emailVerificado;
     private bool mostrarEmailRequerido;
     private string? emailUsuario;
+    private bool periodoAnual;
+    private bool mostrarAlertaSuccess;
+    private bool mostrarAlertaCanceled;
+    private LicenciaInfo? licenciaInfo;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var empresaId = Tenant.EmpresaId;
+            empresaId = Tenant.EmpresaId;
             if (empresaId == 0) return;
 
-            // Si viene de un upgrade exitoso, invalidar cache
+            // Detectar query params de retorno
             var uri = new Uri(Nav.Uri);
-            if (uri.Query.Contains("upgraded"))
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            mostrarAlertaSuccess = query["success"] == "true";
+            mostrarAlertaCanceled = query["canceled"] == "true";
+
+            // Si viene de un upgrade exitoso, invalidar cache
+            if (mostrarAlertaSuccess || uri.Query.Contains("upgraded"))
             {
                 LicenciaService.InvalidarCache(empresaId);
             }
 
             // Obtener plan actual e info de empresa
-            var licencia = await LicenciaService.GetLicenciaInfoAsync(empresaId);
-            planActual = licencia.Plan;
+            licenciaInfo = await LicenciaService.GetLicenciaInfoAsync(empresaId);
+            planActual = licenciaInfo.Plan;
 
             // Obtener CompanyId (Codigo) de la empresa
             var empresa = await Db.Empresas
@@ -378,24 +519,71 @@ else
         planSeleccionado = null;
     }
 
-    private async Task EnviarSolicitudUpgrade()
+    private async Task IniciarCheckout()
     {
-        if (planSeleccionado == null || string.IsNullOrEmpty(companyId)) return;
+        if (planSeleccionado == null) return;
         solicitando = true;
         mensaje = null;
 
         try
         {
+            // Obtener variant ID según plan y período
+            var variantId = LsqService.GetVariantId(planSeleccionado.Plan, periodoAnual);
+
+            if (string.IsNullOrEmpty(variantId))
+            {
+                // Fallback al flujo anterior (Portal Licencias) si no hay variant configurado
+                await EnviarSolicitudUpgradeLegacy();
+                return;
+            }
+
+            // Crear checkout en Lemon Squeezy
+            var successUrl = $"{Nav.BaseUri}configuracion/planes?success=true";
+            var checkoutUrl = await LsqService.CreateCheckoutAsync(companyId!, variantId, successUrl);
+
+            if (string.IsNullOrEmpty(checkoutUrl))
+            {
+                mensaje = "Error al crear la sesion de pago. Intente nuevamente.";
+                esError = true;
+                CerrarModal();
+                return;
+            }
+
+            // Redirigir al checkout de Lemon Squeezy
+            CerrarModal();
+            Nav.NavigateTo(checkoutUrl, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            mensaje = "Error al iniciar el pago: " + ex.Message;
+            esError = true;
+            CerrarModal();
+        }
+        finally
+        {
+            solicitando = false;
+        }
+    }
+
+    /// <summary>
+    /// Flujo legacy para cuando no hay variant IDs de Lemon Squeezy configurados.
+    /// </summary>
+    private async Task EnviarSolicitudUpgradeLegacy()
+    {
+        if (planSeleccionado == null || string.IsNullOrEmpty(companyId)) return;
+
+        try
+        {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var emailUsuario = authState.User.Identity?.Name ?? "desconocido";
+            var email = authState.User.Identity?.Name ?? "desconocido";
 
             var client = HttpClientFactory.CreateClient("PortalLicencias");
             var request = new
             {
                 CompanyId = companyId,
                 PlanSolicitado = planSeleccionado.Plan,
-                SolicitadoPor = emailUsuario,
-                EmpresaId = 0 // La API lo resuelve por CompanyId
+                SolicitadoPor = email,
+                EmpresaId = 0
             };
 
             var response = await client.PostAsJsonAsync("/api/upgrade/solicitar", request);
@@ -405,7 +593,6 @@ else
                 var result = await response.Content.ReadFromJsonAsync<UpgradeResponse>();
                 if (result?.upgradeUrl != null)
                 {
-                    // Redirigir a la página de pago en Portal Licencias (dominio externo, usar JS)
                     CerrarModal();
                     await JS.InvokeVoidAsync("open", result.upgradeUrl, "_self");
                     return;
@@ -427,10 +614,6 @@ else
             mensaje = "Error al enviar la solicitud: " + ex.Message;
             esError = true;
             CerrarModal();
-        }
-        finally
-        {
-            solicitando = false;
         }
     }
 

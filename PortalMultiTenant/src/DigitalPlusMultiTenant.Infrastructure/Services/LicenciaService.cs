@@ -75,6 +75,23 @@ public class LicenciaService : ILicenciaService
                 return CacheAndReturn(cacheKey, new LicenciaInfo());
             }
 
+            // Leer info de suscripción LSQ desde tabla Empresas
+            await using (var conn = new SqlConnection(_adminConnectionString))
+            {
+                var lsqInfo = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                    @"SELECT PlanOrigen, PlanVencimiento, LsqUpdatePaymentUrl, LsqCustomerPortalUrl
+                      FROM Empresas WHERE CompanyId = @CompanyId",
+                    new { CompanyId = companyId });
+
+                if (lsqInfo != null)
+                {
+                    licencia.PlanOrigen = lsqInfo.PlanOrigen as string;
+                    licencia.PlanVencimiento = lsqInfo.PlanVencimiento as DateTime?;
+                    licencia.LsqUpdatePaymentUrl = lsqInfo.LsqUpdatePaymentUrl as string;
+                    licencia.LsqCustomerPortalUrl = lsqInfo.LsqCustomerPortalUrl as string;
+                }
+            }
+
             return CacheAndReturn(cacheKey, licencia);
         }
         catch (Exception ex)

@@ -110,6 +110,16 @@ public class Program
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 
+        // HttpClient para Azure Functions (Lemon Squeezy)
+        var azFuncConfig = builder.Configuration.GetSection("AzureFunctions");
+        builder.Services.AddHttpClient("AzureFunctions", client =>
+        {
+            client.BaseAddress = new Uri(azFuncConfig["BaseUrl"] ?? "https://localhost:7071/api/");
+            client.DefaultRequestHeaders.Add("X-Api-Key", azFuncConfig["ApiKey"] ?? "");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+        builder.Services.AddScoped<LemonSqueezyService>();
+
         // Terminal Movil (v2)
         builder.Services.AddScoped<UbicacionService>();
         builder.Services.AddControllers();

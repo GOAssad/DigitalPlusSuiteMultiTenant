@@ -87,6 +87,27 @@ public class Empresa
     public bool MobileHabilitado { get; set; }
     public bool KioskoHabilitado { get; set; }
 
+    // Lemon Squeezy
+    [MaxLength(50)]
+    public string? LsqCustomerId { get; set; }
+
+    [MaxLength(50)]
+    public string? LsqSubscriptionId { get; set; }
+
+    [MaxLength(50)]
+    public string? LsqVariantId { get; set; }
+
+    [MaxLength(500)]
+    public string? LsqUpdatePaymentUrl { get; set; }
+
+    [MaxLength(500)]
+    public string? LsqCustomerPortalUrl { get; set; }
+
+    public DateTime? PlanVencimiento { get; set; }
+
+    [MaxLength(20)]
+    public string? PlanOrigen { get; set; } = "manual";
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

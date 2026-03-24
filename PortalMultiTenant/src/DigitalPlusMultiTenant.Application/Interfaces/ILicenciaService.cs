@@ -10,6 +10,14 @@ public class LicenciaInfo
     public string LicenseType { get; set; } = "active";
     public DateTime? ExpiresAt { get; set; }
 
+    // Lemon Squeezy
+    public string? PlanOrigen { get; set; }
+    public DateTime? PlanVencimiento { get; set; }
+    public string? LsqUpdatePaymentUrl { get; set; }
+    public string? LsqCustomerPortalUrl { get; set; }
+
+    public bool EsLemonSqueezy => PlanOrigen == "lsq";
+
     public bool EsIlimitado(int valor) => valor == 0;
 
     public string PlanDisplay => Plan switch
