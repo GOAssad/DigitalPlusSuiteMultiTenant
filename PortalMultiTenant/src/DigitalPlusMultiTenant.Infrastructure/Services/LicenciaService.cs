@@ -79,7 +79,7 @@ public class LicenciaService : ILicenciaService
             await using (var conn = new SqlConnection(_adminConnectionString))
             {
                 var lsqInfo = await conn.QueryFirstOrDefaultAsync<dynamic>(
-                    @"SELECT PlanOrigen, PlanVencimiento, LsqUpdatePaymentUrl, LsqCustomerPortalUrl
+                    @"SELECT PlanOrigen, PlanVencimiento, LsqUpdatePaymentUrl, LsqCustomerPortalUrl, LsqStatus
                       FROM Empresas WHERE CompanyId = @CompanyId",
                     new { CompanyId = companyId });
 
@@ -89,6 +89,7 @@ public class LicenciaService : ILicenciaService
                     licencia.PlanVencimiento = lsqInfo.PlanVencimiento as DateTime?;
                     licencia.LsqUpdatePaymentUrl = lsqInfo.LsqUpdatePaymentUrl as string;
                     licencia.LsqCustomerPortalUrl = lsqInfo.LsqCustomerPortalUrl as string;
+                    licencia.LsqStatus = lsqInfo.LsqStatus as string;
                 }
             }
 

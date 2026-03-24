@@ -224,6 +224,7 @@ public class LemonSqueezyService
                     LsqCustomerPortalUrl = @CustomerPortalUrl,
                     PlanVencimiento = @PlanVencimiento,
                     PlanOrigen = 'lsq',
+                    LsqStatus = 'active',
                     UpdatedAt = SYSUTCDATETIME()
                   WHERE Id = @EmpresaId", conn, tx);
             cmdEmp.Parameters.AddWithValue("@CustomerId", customerId);
@@ -320,6 +321,9 @@ public class LemonSqueezyService
         if (!string.IsNullOrEmpty(renewsAt) && DateTime.TryParse(renewsAt, out var rv))
             planVencimiento = rv;
 
+        // Leer status de la suscripción (active, cancelled, expired, etc.)
+        var lsqStatus = attrs.TryGetProperty("status", out var statusProp) ? statusProp.GetString() : null;
+
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
@@ -346,12 +350,14 @@ public class LemonSqueezyService
                 PlanVencimiento = @PlanVencimiento,
                 LsqUpdatePaymentUrl = ISNULL(@UpdatePaymentUrl, LsqUpdatePaymentUrl),
                 LsqCustomerPortalUrl = ISNULL(@CustomerPortalUrl, LsqCustomerPortalUrl),
+                LsqStatus = ISNULL(@LsqStatus, LsqStatus),
                 UpdatedAt = SYSUTCDATETIME()
               WHERE Id = @EmpresaId", conn);
         cmdUpdate.Parameters.AddWithValue("@VariantId", newVariantId);
         cmdUpdate.Parameters.AddWithValue("@PlanVencimiento", (object?)planVencimiento ?? DBNull.Value);
         cmdUpdate.Parameters.AddWithValue("@UpdatePaymentUrl", (object?)updatePaymentUrl ?? DBNull.Value);
         cmdUpdate.Parameters.AddWithValue("@CustomerPortalUrl", (object?)customerPortalUrl ?? DBNull.Value);
+        cmdUpdate.Parameters.AddWithValue("@LsqStatus", (object?)lsqStatus ?? DBNull.Value);
         cmdUpdate.Parameters.AddWithValue("@EmpresaId", empresaId);
         await cmdUpdate.ExecuteNonQueryAsync();
 
@@ -535,6 +541,12 @@ public class LemonSqueezyService
             _logger.LogError("LSQ CancelSubscription failed: {Status} {Body}", response.StatusCode, responseBody);
             return (false, null, $"Error de Lemon Squeezy: {response.StatusCode}");
         }
+
+        // Marcar como cancelada en la BD inmediatamente (el webhook también lo hará)
+        await using var cmdStatus = new SqlCommand(
+            "UPDATE Empresas SET LsqStatus = 'cancelled', UpdatedAt = SYSUTCDATETIME() WHERE LsqSubscriptionId = @SubId", conn);
+        cmdStatus.Parameters.AddWithValue("@SubId", subscriptionId);
+        await cmdStatus.ExecuteNonQueryAsync();
 
         _logger.LogInformation("LSQ subscription {SubId} cancelled, active until {Vencimiento}",
             subscriptionId, vencimiento);

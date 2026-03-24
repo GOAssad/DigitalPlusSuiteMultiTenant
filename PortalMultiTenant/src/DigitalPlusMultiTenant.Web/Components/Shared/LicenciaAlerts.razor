@@ -148,7 +148,37 @@
                 }
             }
 
-            // 5. Licencia expirada o suspendida
+            // 5. Suscripción cancelada (sigue activa hasta vencimiento)
+            if (licencia.SuscripcionCancelada && licencia.PlanVencimiento.HasValue)
+            {
+                var diasRestantes = (licencia.PlanVencimiento.Value - DateTime.UtcNow).Days;
+                var fechaVenc = licencia.PlanVencimiento.Value.ToString("dd/MM/yyyy");
+
+                if (diasRestantes > 7)
+                {
+                    alertas.Insert(0, new AlertaLicencia
+                    {
+                        CssClass = "alert-warning",
+                        Icono = "bi-clock-history",
+                        Mensaje = $"Tu suscripcion fue cancelada. El plan {licencia.PlanDisplay} sigue activo hasta el {fechaVenc}. Despues pasara a Free.",
+                        LinkTexto = "Reactivar plan",
+                        LinkUrl = "/configuracion/planes"
+                    });
+                }
+                else if (diasRestantes > 0)
+                {
+                    alertas.Insert(0, new AlertaLicencia
+                    {
+                        CssClass = "alert-danger",
+                        Icono = "bi-exclamation-octagon",
+                        Mensaje = $"Tu plan {licencia.PlanDisplay} vence en {diasRestantes} dia{(diasRestantes == 1 ? "" : "s")} ({fechaVenc}). Contrata un plan para no perder acceso a tus datos.",
+                        LinkTexto = "Contratar plan",
+                        LinkUrl = "/configuracion/planes"
+                    });
+                }
+            }
+
+            // 6. Licencia expirada o suspendida
             if (licencia.LicenseType == "suspended")
             {
                 alertas.Insert(0, new AlertaLicencia

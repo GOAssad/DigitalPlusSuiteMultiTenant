@@ -15,8 +15,10 @@ public class LicenciaInfo
     public DateTime? PlanVencimiento { get; set; }
     public string? LsqUpdatePaymentUrl { get; set; }
     public string? LsqCustomerPortalUrl { get; set; }
+    public string? LsqStatus { get; set; }
 
     public bool EsLemonSqueezy => PlanOrigen == "lsq";
+    public bool SuscripcionCancelada => LsqStatus == "cancelled";
 
     public bool EsIlimitado(int valor) => valor == 0;
 

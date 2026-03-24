@@ -108,6 +108,9 @@ public class Empresa
     [MaxLength(20)]
     public string? PlanOrigen { get; set; } = "manual";
 
+    [MaxLength(20)]
+    public string? LsqStatus { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

@@ -279,7 +279,7 @@ else
                                 <i class="bi bi-receipt me-1"></i>Portal de facturacion
                             </a>
                         }
-                        @if (!suscripcionCancelada)
+                        @if (!(licenciaInfo?.SuscripcionCancelada ?? false))
                         {
                             <button class="btn btn-link btn-sm text-danger" @onclick="() => mostrarCancelarModal = true"
                                     disabled="@cancelando">
@@ -490,7 +490,6 @@ else
     private LicenciaInfo? licenciaInfo;
     private bool mostrarCancelarModal;
     private bool cancelando;
-    private bool suscripcionCancelada;
 
     protected override async Task OnInitializedAsync()
     {
@@ -620,7 +619,9 @@ else
 
             if (result.Ok)
             {
-                suscripcionCancelada = true;
+                // Refrescar licencia para mostrar el estado cancelado
+                LicenciaService.InvalidarCache(empresaId);
+                licenciaInfo = await LicenciaService.GetLicenciaInfoAsync(empresaId);
                 mostrarCancelarModal = false;
                 var fechaVenc = licenciaInfo?.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo";
                 mensaje = $"Tu suscripcion fue cancelada. El plan sigue activo hasta el {fechaVenc}.";
