@@ -750,6 +750,9 @@ namespace Acceso.uAreu
             HuellaLog.Write("RegistrarFichada() inicio legajo=" + sLegajoID + " nombre=" + nombre + " nLegajoID=" + nLegajoID);
             try
             {
+                // Refrescar terminal desde BD (la sucursal pudo cambiar desde el portal)
+                oTerminal.Inicializar();
+
                 sNombre = nombre;
                 oFichada.sLegajoID = sLegajoID;
                 oFichada.dRegistro = DateTime.Now;
@@ -1355,17 +1358,24 @@ namespace Acceso.uAreu
             oTerminal.sTerminalID = Environment.MachineName.ToString();
             oTerminal.Inicializar();
 
+            string configSucursalId = System.Configuration.ConfigurationManager.AppSettings["SucursalId"] ?? "";
+
             if (!oTerminal.Existe)
             {
-                // Auto-registrar terminal con la primera sucursal de la empresa
+                // Auto-registrar terminal con la sucursal del config (o la primera de la empresa)
                 try
                 {
                     int empresaId = Global.Datos.TenantContext.EmpresaId;
-                    var dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(
-                        "SELECT TOP 1 Id FROM Sucursal WHERE EmpresaId = " + empresaId + " ORDER BY Id");
-                    if (dt.Rows.Count > 0)
+                    string sucursalId = configSucursalId;
+                    if (string.IsNullOrEmpty(sucursalId) || sucursalId == "0")
                     {
-                        string sucursalId = dt.Rows[0]["Id"].ToString();
+                        var dt = Global.Datos.SQLServer.EjecutarParaSoloLectura(
+                            "SELECT TOP 1 Id FROM Sucursal WHERE EmpresaId = " + empresaId + " ORDER BY Id");
+                        if (dt.Rows.Count > 0)
+                            sucursalId = dt.Rows[0]["Id"].ToString();
+                    }
+                    if (!string.IsNullOrEmpty(sucursalId) && sucursalId != "0")
+                    {
                         oTerminal.sDescripcion = Environment.MachineName;
                         oTerminal.sSucursalID.sSucursalID = sucursalId;
                         oTerminal.Actualizar();
@@ -1373,6 +1383,18 @@ namespace Acceso.uAreu
                     }
                 }
                 catch { /* si falla el auto-registro, sigue sin terminal */ }
+            }
+            else if (!string.IsNullOrEmpty(configSucursalId) && configSucursalId != "0"
+                     && oTerminal.sSucursalID?.sSucursalID != configSucursalId)
+            {
+                // Terminal ya existe pero la sucursal del config cambió (reinstalación)
+                try
+                {
+                    oTerminal.sSucursalID.sSucursalID = configSucursalId;
+                    oTerminal.Actualizar();
+                    oTerminal.Inicializar();
+                }
+                catch { }
             }
 
             if (oTerminal.Existe)

@@ -163,6 +163,39 @@ public class Program
             await next();
         });
 
+        // Jaula por suscripción expirada: solo permite acceder a /configuracion/planes
+        app.Use(async (context, next) =>
+        {
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                var path = context.Request.Path;
+                var esRutaPermitida =
+                    path.StartsWithSegments("/configuracion/planes") ||
+                    path.StartsWithSegments("/Account") ||
+                    path.StartsWithSegments("/_blazor") ||
+                    path.StartsWithSegments("/_framework") ||
+                    path.StartsWithSegments("/mobile") ||
+                    path.StartsWithSegments("/kiosko") ||
+                    path.StartsWithSegments("/api");
+
+                if (!esRutaPermitida)
+                {
+                    var empresaIdStr = context.User.FindFirst("EmpresaId")?.Value;
+                    if (int.TryParse(empresaIdStr, out var empresaId) && empresaId > 0)
+                    {
+                        var licenciaService = context.RequestServices.GetRequiredService<DigitalPlusMultiTenant.Application.Interfaces.ILicenciaService>();
+                        var licencia = await licenciaService.GetLicenciaInfoAsync(empresaId);
+                        if (licencia.SuscripcionExpirada)
+                        {
+                            context.Response.Redirect("/configuracion/planes");
+                            return;
+                        }
+                    }
+                }
+            }
+            await next();
+        });
+
         // PWA mobile y kiosko: servir index.html
         app.Use(async (context, next) =>
         {

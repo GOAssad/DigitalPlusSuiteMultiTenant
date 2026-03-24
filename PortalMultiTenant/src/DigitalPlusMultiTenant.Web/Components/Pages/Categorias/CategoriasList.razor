@@ -88,9 +88,19 @@
                                 <td class="text-end">
                                     <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
                                         <a href="categorias/editar/@c.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(c)">
-                                            <i class="bi @(c.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
-                                        </button>
+                                        @if (confirmToggleId == c.Id)
+                                        {
+                                            <button class="btn btn-sm btn-danger" @onclick="() => ToggleActive(c)"><i class="bi bi-check-lg me-1"></i>Confirmar</button>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => confirmToggleId = 0"><i class="bi bi-x-lg"></i></button>
+                                        }
+                                        else if (c.IsActive)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => confirmToggleId = c.Id"><i class="bi bi-x-circle"></i></button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => ToggleActive(c)"><i class="bi bi-check-circle"></i></button>
+                                        }
                                     </AuthorizeView>
                                 </td>
                             </tr>
@@ -184,8 +194,11 @@
         await JS.InvokeVoidAsync("downloadFile", "categorias.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
+    private int confirmToggleId;
+
     private async Task ToggleActive(Categoria c)
     {
+        confirmToggleId = 0;
         c.IsActive = !c.IsActive;
         await Db.SaveChangesAsync();
         await CargarDatos();

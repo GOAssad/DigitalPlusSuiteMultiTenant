@@ -11,7 +11,7 @@
 {
     @foreach (var alerta in alertas)
     {
-        <div class="alert @alerta.CssClass alert-dismissible m-3 mb-0 d-flex align-items-center" role="alert">
+        <div class="alert @alerta.CssClass @(alerta.NoDismiss ? "" : "alert-dismissible") m-3 mb-0 d-flex align-items-center" role="alert">
             <i class="bi @alerta.Icono me-2 fs-5"></i>
             <div class="flex-grow-1">
                 @alerta.Mensaje
@@ -39,9 +39,9 @@
         {
             var empresaId = Tenant.EmpresaId;
             if (empresaId > 0) LicenciaService.InvalidarCache(empresaId);
-            await CargarAlertas();
-            await InvokeAsync(StateHasChanged);
         }
+        await CargarAlertas();
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
@@ -154,26 +154,41 @@
                 var diasRestantes = (licencia.PlanVencimiento.Value - DateTime.UtcNow).Days;
                 var fechaVenc = licencia.PlanVencimiento.Value.ToString("dd/MM/yyyy");
 
-                if (diasRestantes > 7)
+                if (diasRestantes <= 0)
                 {
+                    // Suscripción ya expiró — el sistema se suspenderá automáticamente
                     alertas.Insert(0, new AlertaLicencia
                     {
-                        CssClass = "alert-warning",
-                        Icono = "bi-clock-history",
-                        Mensaje = $"Tu suscripcion fue cancelada. El plan {licencia.PlanDisplay} sigue activo hasta el {fechaVenc}. Despues pasara a Free.",
-                        LinkTexto = "Reactivar plan",
-                        LinkUrl = "/configuracion/planes"
+                        CssClass = "alert-danger",
+                        Icono = "bi-exclamation-octagon",
+                        Mensaje = $"Tu plan {licencia.PlanDisplay} ha expirado. El sistema quedará inactivo en breve. Contratá un plan para mantener el acceso.",
+                        LinkTexto = "Contratar plan",
+                        LinkUrl = "/configuracion/planes",
+                        NoDismiss = true
                     });
                 }
-                else if (diasRestantes > 0)
+                else if (diasRestantes <= 7)
                 {
                     alertas.Insert(0, new AlertaLicencia
                     {
                         CssClass = "alert-danger",
                         Icono = "bi-exclamation-octagon",
-                        Mensaje = $"Tu plan {licencia.PlanDisplay} vence en {diasRestantes} dia{(diasRestantes == 1 ? "" : "s")} ({fechaVenc}). Contrata un plan para no perder acceso a tus datos.",
+                        Mensaje = $"Tu plan {licencia.PlanDisplay} expira en {diasRestantes} día{(diasRestantes == 1 ? "" : "s")} ({fechaVenc}). Después el sistema quedará inactivo.",
                         LinkTexto = "Contratar plan",
-                        LinkUrl = "/configuracion/planes"
+                        LinkUrl = "/configuracion/planes",
+                        NoDismiss = true
+                    });
+                }
+                else
+                {
+                    alertas.Insert(0, new AlertaLicencia
+                    {
+                        CssClass = "alert-warning",
+                        Icono = "bi-clock-history",
+                        Mensaje = $"Tu plan {licencia.PlanDisplay} expira el {fechaVenc}. Después de esa fecha el sistema quedará inactivo.",
+                        LinkTexto = "Contratar plan",
+                        LinkUrl = "/configuracion/planes",
+                        NoDismiss = true
                     });
                 }
             }
@@ -226,5 +241,6 @@
         public string Mensaje { get; set; } = "";
         public string? LinkTexto { get; set; }
         public string? LinkUrl { get; set; }
+        public bool NoDismiss { get; set; }
     }
 }

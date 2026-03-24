@@ -165,8 +165,10 @@ public class LemonSqueezyService
             case "subscription_updated":
                 await HandleSubscriptionUpdatedAsync(data);
                 break;
-            case "subscription_expired":
             case "subscription_cancelled":
+                await HandleSubscriptionCancelledAsync(data);
+                break;
+            case "subscription_expired":
                 await HandleSubscriptionEndedAsync(data);
                 break;
             default:
@@ -382,6 +384,49 @@ public class LemonSqueezyService
         }
     }
 
+    /// <summary>
+    /// subscription_cancelled: el usuario canceló pero la suscripción sigue activa hasta ends_at.
+    /// NO degradar a free, solo marcar como cancelled y guardar fecha de vencimiento.
+    /// </summary>
+    private async Task HandleSubscriptionCancelledAsync(JsonElement data)
+    {
+        var subscriptionId = data.GetProperty("id").ToString();
+        var attrs = data.GetProperty("attributes");
+
+        // Leer ends_at (fecha en que realmente termina)
+        DateTime? planVencimiento = null;
+        if (attrs.TryGetProperty("ends_at", out var endsAtProp) && endsAtProp.ValueKind == JsonValueKind.String)
+        {
+            var endsAtStr = endsAtProp.GetString();
+            if (!string.IsNullOrEmpty(endsAtStr) && DateTime.TryParse(endsAtStr, out var endsAt))
+                planVencimiento = endsAt;
+        }
+        // Fallback: renews_at
+        if (!planVencimiento.HasValue && attrs.TryGetProperty("renews_at", out var renewsProp) && renewsProp.ValueKind == JsonValueKind.String)
+        {
+            var renewsStr = renewsProp.GetString();
+            if (!string.IsNullOrEmpty(renewsStr) && DateTime.TryParse(renewsStr, out var renewsAt))
+                planVencimiento = renewsAt;
+        }
+
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(
+            @"UPDATE Empresas SET
+                LsqStatus = 'cancelled',
+                PlanVencimiento = ISNULL(@PlanVencimiento, PlanVencimiento),
+                UpdatedAt = SYSUTCDATETIME()
+              WHERE LsqSubscriptionId = @SubId", conn);
+        cmd.Parameters.AddWithValue("@PlanVencimiento", (object?)planVencimiento ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@SubId", subscriptionId);
+        await cmd.ExecuteNonQueryAsync();
+
+        _logger.LogInformation(
+            "LSQ subscription_cancelled: sub {SubId}, activa hasta {Vencimiento}",
+            subscriptionId, planVencimiento);
+    }
+
     private async Task HandleSubscriptionEndedAsync(JsonElement data)
     {
         var subscriptionId = data.GetProperty("id").ToString();
@@ -389,45 +434,25 @@ public class LemonSqueezyService
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        // Obtener empresaId
-        await using var cmdRead = new SqlCommand(
-            "SELECT Id FROM Empresas WHERE LsqSubscriptionId = @SubId", conn);
-        cmdRead.Parameters.AddWithValue("@SubId", subscriptionId);
-        var empresaIdObj = await cmdRead.ExecuteScalarAsync();
-
-        if (empresaIdObj == null)
-        {
-            _logger.LogWarning("LSQ subscription ended: empresa no encontrada para sub {SubId}", subscriptionId);
-            return;
-        }
-        var empresaId = (int)empresaIdObj;
-
-        using var tx = conn.BeginTransaction();
+        // Marcar como expired — NO degradar a free, el plan queda como referencia
+        // El middleware del portal "enjaula" al usuario en la página de Planes
         try
         {
-            // Limpiar datos LSQ y degradar a manual
-            await using var cmdClean = new SqlCommand(
+            await using var cmd = new SqlCommand(
                 @"UPDATE Empresas SET
+                    LsqStatus = 'expired',
                     LsqSubscriptionId = NULL,
-                    LsqVariantId = NULL,
                     LsqUpdatePaymentUrl = NULL,
                     LsqCustomerPortalUrl = NULL,
-                    PlanVencimiento = NULL,
-                    PlanOrigen = 'manual',
                     UpdatedAt = SYSUTCDATETIME()
-                  WHERE Id = @EmpresaId", conn, tx);
-            cmdClean.Parameters.AddWithValue("@EmpresaId", empresaId);
-            await cmdClean.ExecuteNonQueryAsync();
+                  WHERE LsqSubscriptionId = @SubId", conn);
+            cmd.Parameters.AddWithValue("@SubId", subscriptionId);
+            var rows = await cmd.ExecuteNonQueryAsync();
 
-            // Degradar a free
-            await ActualizarLicenciaAsync(conn, tx, empresaId, "free");
-
-            tx.Commit();
-            _logger.LogInformation("LSQ subscription ended: empresa {EmpresaId} degradada a free", empresaId);
+            _logger.LogInformation("LSQ subscription_expired: sub {SubId}, {Rows} empresa(s) marcadas como expired", subscriptionId, rows);
         }
         catch
         {
-            tx.Rollback();
             throw;
         }
     }
@@ -542,9 +567,38 @@ public class LemonSqueezyService
             return (false, null, $"Error de Lemon Squeezy: {response.StatusCode}");
         }
 
-        // Marcar como cancelada en la BD inmediatamente (el webhook también lo hará)
+        // Leer ends_at de la respuesta de LSQ (fecha en que realmente termina la suscripción)
+        try
+        {
+            using var doc = JsonDocument.Parse(responseBody);
+            var attrs = doc.RootElement.GetProperty("data").GetProperty("attributes");
+            if (attrs.TryGetProperty("ends_at", out var endsAtProp) && endsAtProp.ValueKind == JsonValueKind.String)
+            {
+                var endsAtStr = endsAtProp.GetString();
+                if (!string.IsNullOrEmpty(endsAtStr) && DateTime.TryParse(endsAtStr, out var endsAt))
+                    vencimiento = endsAt;
+            }
+            // Fallback: si no hay ends_at, usar renews_at
+            if (!vencimiento.HasValue && attrs.TryGetProperty("renews_at", out var renewsProp) && renewsProp.ValueKind == JsonValueKind.String)
+            {
+                var renewsStr = renewsProp.GetString();
+                if (!string.IsNullOrEmpty(renewsStr) && DateTime.TryParse(renewsStr, out var renewsAt))
+                    vencimiento = renewsAt;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "LSQ CancelSubscription: no se pudo parsear ends_at de la respuesta");
+        }
+
+        // Marcar como cancelada y guardar PlanVencimiento en la BD
         await using var cmdStatus = new SqlCommand(
-            "UPDATE Empresas SET LsqStatus = 'cancelled', UpdatedAt = SYSUTCDATETIME() WHERE LsqSubscriptionId = @SubId", conn);
+            @"UPDATE Empresas SET
+                LsqStatus = 'cancelled',
+                PlanVencimiento = ISNULL(@PlanVencimiento, PlanVencimiento),
+                UpdatedAt = SYSUTCDATETIME()
+              WHERE LsqSubscriptionId = @SubId", conn);
+        cmdStatus.Parameters.AddWithValue("@PlanVencimiento", (object?)vencimiento ?? DBNull.Value);
         cmdStatus.Parameters.AddWithValue("@SubId", subscriptionId);
         await cmdStatus.ExecuteNonQueryAsync();
 

@@ -14,7 +14,7 @@
 
 ; --- Identidad del instalador liviano ---
 #define AppName       "DigitalPlus Suite (Cloud)"
-#define AppVersion    "1.0.0-202603231936"
+#define AppVersion    "1.0.0-202603241544"
 #define AppPublisher  "DigitalOnePlus"
 #define AppId         "{{A1B2C3D4-5E6F-7A8B-9C0D-E1F2A3B4C5D6}"
 
@@ -330,6 +330,12 @@ var
   lblFreeResult:    TNewStaticText;
   paisIds:          array of Integer;
 
+  // Sucursal selector (en pagina de activacion)
+  lblSucursal:      TNewStaticText;
+  cmbSucursal:      TNewComboBox;
+  sucursalIds:      array of Integer;
+  nSucursalSeleccionada: Integer;
+
   // Estado interno
   sConnectionString:      String;    // Connection string a DigitalPlusMultiTenant
   sAdminConnectionString: String;    // Connection string a DigitalPlusAdmin
@@ -374,6 +380,7 @@ var
   sUrl, sBody, sResponse: String;
   StatusCode: Integer;
   iPos, iEnd: Integer;
+  iIdPos, iIdEnd, iNomPos, iNomEnd, n: Integer;
 begin
   Result := False;
   sConnectionString := '';
@@ -483,6 +490,52 @@ begin
         iEnd := PosEx('"', sResponse, iPos);
         if iEnd > iPos then
           sAdminPassword := Copy(sResponse, iPos, iEnd - iPos);
+      end;
+
+      // Parsear sucursales: "sucursales":[{"id":1,"nombre":"Casa Central"},...]
+      iPos := Pos('"sucursales":[', sResponse);
+      if iPos > 0 then
+      begin
+        SetArrayLength(sucursalIds, 0);
+        cmbSucursal.Items.Clear;
+        iPos := iPos + Length('"sucursales":[');
+        while iPos < Length(sResponse) do
+        begin
+          // Buscar "id":
+          iIdPos := PosEx('"id":', sResponse, iPos);
+          if iIdPos = 0 then Break;
+          iIdPos := iIdPos + Length('"id":');
+          iIdEnd := PosEx(',', sResponse, iIdPos);
+          if iIdEnd = 0 then iIdEnd := PosEx('}', sResponse, iIdPos);
+
+          // Buscar "nombre":"
+          iNomPos := PosEx('"nombre":"', sResponse, iIdEnd);
+          if iNomPos = 0 then Break;
+          iNomPos := iNomPos + Length('"nombre":"');
+          iNomEnd := PosEx('"', sResponse, iNomPos);
+
+          if (iIdEnd > iIdPos) and (iNomEnd > iNomPos) then
+          begin
+            n := GetArrayLength(sucursalIds);
+            SetArrayLength(sucursalIds, n + 1);
+            sucursalIds[n] := StrToIntDef(Trim(Copy(sResponse, iIdPos, iIdEnd - iIdPos)), 0);
+            cmbSucursal.Items.Add(Copy(sResponse, iNomPos, iNomEnd - iNomPos));
+          end;
+
+          iPos := iNomEnd + 1;
+          // Verificar si terminó el array
+          if PosEx(']', sResponse, iPos) < PosEx('{', sResponse, iPos) then Break;
+          if PosEx('{', sResponse, iPos) = 0 then Break;
+        end;
+
+        // Mostrar combo si hay sucursales
+        if cmbSucursal.Items.Count > 0 then
+        begin
+          lblSucursal.Visible := True;
+          cmbSucursal.Visible := True;
+          if cmbSucursal.Items.Count = 1 then
+            cmbSucursal.ItemIndex := 0;  // Auto-seleccionar si hay solo una
+        end;
       end;
 
       if (sConnectionString <> '') and (sEmpresaId <> '') then
@@ -835,6 +888,23 @@ begin
   lblActivResult.Width := ActivacionPage.SurfaceWidth;
   lblActivResult.WordWrap := True;
   lblActivResult.Caption := '';
+
+  // Selector de sucursal (oculto hasta que se active el codigo)
+  lblSucursal := TNewStaticText.Create(WizardForm);
+  lblSucursal.Parent := ActivacionPage.Surface;
+  lblSucursal.Caption := 'Sucursal donde se instala esta PC:';
+  lblSucursal.Left := 0;
+  lblSucursal.Top := lblActivResult.Top + 40;
+  lblSucursal.Width := ActivacionPage.SurfaceWidth;
+  lblSucursal.Visible := False;
+
+  cmbSucursal := TNewComboBox.Create(WizardForm);
+  cmbSucursal.Parent := ActivacionPage.Surface;
+  cmbSucursal.Left := 0;
+  cmbSucursal.Top := lblSucursal.Top + lblSucursal.Height + 5;
+  cmbSucursal.Width := 350;
+  cmbSucursal.Style := csDropDownList;
+  cmbSucursal.Visible := False;
 end;
 
 // --- Pagina: Plan Free ---
@@ -928,6 +998,7 @@ begin
       StringChange(Lines[i], '{{ADMIN_EMPRESA_ID}}', sAdminEmpresaId);
       StringChange(Lines[i], '{{NOMBRE_EMPRESA}}', sNombreEmpresa);
       StringChange(Lines[i], '{{URL_PORTAL}}', sUrlPortal);
+      StringChange(Lines[i], '{{SUCURSAL_ID}}', IntToStr(nSucursalSeleccionada));
     end;
     SaveStringsToFile(FilePath, Lines, False);
   end;
@@ -1043,7 +1114,7 @@ begin
     bActivacionOK := False;
   end;
 
-  // Validar que el codigo fue activado antes de avanzar
+  // Validar que el codigo fue activado y sucursal seleccionada antes de avanzar
   if CurPageID = ActivacionPage.ID then
   begin
     if not bActivacionOK then
@@ -1051,6 +1122,19 @@ begin
       MsgBox('Debe validar un codigo de activacion antes de continuar.',
         mbError, MB_OK);
       Result := False;
+    end
+    else if cmbSucursal.Visible and (cmbSucursal.ItemIndex < 0) then
+    begin
+      MsgBox('Seleccione la sucursal donde se instalara esta PC.',
+        mbError, MB_OK);
+      Result := False;
+    end
+    else
+    begin
+      // Guardar sucursal seleccionada
+      nSucursalSeleccionada := 0;
+      if cmbSucursal.Visible and (cmbSucursal.ItemIndex >= 0) and (cmbSucursal.ItemIndex < GetArrayLength(sucursalIds)) then
+        nSucursalSeleccionada := sucursalIds[cmbSucursal.ItemIndex];
     end;
   end;
 

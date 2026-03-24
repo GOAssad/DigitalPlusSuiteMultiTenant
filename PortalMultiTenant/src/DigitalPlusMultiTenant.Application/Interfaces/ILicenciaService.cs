@@ -19,6 +19,9 @@ public class LicenciaInfo
 
     public bool EsLemonSqueezy => PlanOrigen == "lsq";
     public bool SuscripcionCancelada => LsqStatus == "cancelled";
+    public bool SuscripcionExpirada =>
+        LsqStatus == "expired" ||
+        (SuscripcionCancelada && PlanVencimiento.HasValue && PlanVencimiento.Value < DateTime.UtcNow);
 
     public bool EsIlimitado(int valor) => valor == 0;
 

@@ -106,9 +106,19 @@
                                 <td class="text-end">
                                     <AuthorizeView Roles="SuperAdmin,AdminEmpresa">
                                         <a href="sucursales/editar/@s.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ToggleActive(s)">
-                                            <i class="bi @(s.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
-                                        </button>
+                                        @if (confirmToggleId == s.Id)
+                                        {
+                                            <button class="btn btn-sm btn-danger" @onclick="() => ToggleActive(s)"><i class="bi bi-check-lg me-1"></i>Confirmar</button>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => confirmToggleId = 0"><i class="bi bi-x-lg"></i></button>
+                                        }
+                                        else if (s.IsActive)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => confirmToggleId = s.Id"><i class="bi bi-x-circle"></i></button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => ToggleActive(s)"><i class="bi bi-check-circle"></i></button>
+                                        }
                                     </AuthorizeView>
                                 </td>
                             </tr>
@@ -207,9 +217,12 @@
         await JS.InvokeVoidAsync("downloadFile", "sucursales.csv", Convert.ToBase64String(bytes), "text/csv");
     }
 
+    private int confirmToggleId;
+
     private async Task ToggleActive(Sucursal s)
     {
         s.IsActive = !s.IsActive;
+        confirmToggleId = 0;
         await Db.SaveChangesAsync();
         await CargarDatos();
     }

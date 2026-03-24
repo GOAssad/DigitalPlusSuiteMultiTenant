@@ -637,9 +637,17 @@
                                             <button type="button" class="btn btn-outline-primary btn-sm me-1" @onclick="() => CalAbrirEditar(ev)">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => CalEliminarEvento(ev)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            @if (calConfirmEliminar == ev.Id)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => CalEliminarEvento(ev)"><i class="bi bi-check-lg me-1"></i>Confirmar</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => calConfirmEliminar = 0"><i class="bi bi-x-lg"></i></button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => calConfirmEliminar = ev.Id">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -851,9 +859,17 @@
                                     <td>
                                         @if (n.Entidad == "inc")
                                         {
-                                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => EliminarIncidenciaPorId(n.Id)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            @if (incConfirmEliminar == n.Id)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => EliminarIncidenciaPorId(n.Id)"><i class="bi bi-check-lg me-1"></i>Confirmar</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => incConfirmEliminar = 0"><i class="bi bi-x-lg"></i></button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => incConfirmEliminar = n.Id">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
                                         }
                                         else if (n.EsPrimerDiaVac)
                                         {
@@ -1342,8 +1358,11 @@
         calShowModal = false;
     }
 
+    private int calConfirmEliminar;
+
     private async Task CalEliminarEvento(EventoCalendario ev)
     {
+        calConfirmEliminar = 0;
         eventosCalendario.Remove(ev);
         if (ev.Id > 0)
         {
@@ -1648,8 +1667,11 @@
         incidenciasLegajo.Remove(il);
     }
 
+    private int incConfirmEliminar;
+
     private async Task EliminarIncidenciaPorId(int id)
     {
+        incConfirmEliminar = 0;
         var il = incidenciasLegajo.FirstOrDefault(x => x.Id == id);
         if (il != null)
         {

@@ -212,6 +212,24 @@ app.MapPost("/api/activar", async (ActivarRequest req,
         });
     }
 
+    // Obtener sucursales de la empresa en MT
+    var sucursales = new List<object>();
+    if (tenantEmpresaId.HasValue && !string.IsNullOrEmpty(tenantConnectionString))
+    {
+        try
+        {
+            using var conn = new Microsoft.Data.SqlClient.SqlConnection(tenantConnectionString);
+            await conn.OpenAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT Id, Nombre FROM Sucursal WHERE EmpresaId = @EmpresaId ORDER BY Nombre";
+            cmd.Parameters.AddWithValue("@EmpresaId", tenantEmpresaId.Value);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                sucursales.Add(new { id = reader.GetInt32(0), nombre = reader.GetString(1) });
+        }
+        catch { /* si falla, devolver lista vacia */ }
+    }
+
     return Results.Ok(new
     {
         connectionString = tenantConnectionString,
@@ -223,7 +241,8 @@ app.MapPost("/api/activar", async (ActivarRequest req,
         databaseName = empresa.DatabaseName,
         urlPortal = empresa.UrlPortal ?? "",
         email = adminEmail ?? "",
-        password = "Admin123"
+        password = "Admin123",
+        sucursales
     });
 });
 
