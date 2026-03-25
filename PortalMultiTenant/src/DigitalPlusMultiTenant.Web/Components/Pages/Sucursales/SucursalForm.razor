@@ -17,13 +17,6 @@
 
 <PageTitle>@(IsEdit ? "Editar" : "Nueva") Sucursal - DigitalPlus</PageTitle>
 
-@if (Tenant.MobileHabilitado)
-{
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/js/leaflet-map.js"></script>
-}
-
 <div class="d-flex align-items-center mb-3">
     <a href="sucursales" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i></a>
     <h4 class="mb-0">@(IsEdit ? "Editar" : "Nueva") Sucursal</h4>
@@ -223,8 +216,6 @@
     {
         if (firstRender && Tenant.MobileHabilitado)
         {
-            // Small delay to let Leaflet JS load
-            await Task.Delay(300);
             dotnetRef = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("LeafletMap.init", "sucursal-map", dotnetRef,
                 geoLatitud, geoLongitud, geoRadio);
