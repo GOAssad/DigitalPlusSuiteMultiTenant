@@ -6,6 +6,21 @@
 
 ## COMPLETADO RECIENTEMENTE
 
+### Sesion 2026-03-24 (noche)
+- [x] **Plan Enterprise completo:** Vista dedicada Portal MT (ilimitado, renovacion, contacto), activacion manual desde Portal Licencias, reversion de plan
+- [x] **Solicitud Enterprise desde Portal MT:** Boton "Solicitar Enterprise" con modal y motivo, registro en SolicitudSoporte, email a notify@integraia.tech, banner pendiente
+- [x] **Enterprise LSQ parcial:** Campo LsqVariantIdCustom en Empresas, boton "Generar link de pago" en Portal Licencias, create-checkout con custom_data.plan="enterprise", webhook lee custom_data.plan
+- [x] **Middleware jaula excluye Enterprise manual:** EsEnterpriseManual (plan=enterprise + PlanOrigen=manual) no se bloquea por expiracion
+- [x] **Completar solicitudes al activar/revertir:** Al activar Enterprise o revertir plan, las solicitudes Enterprise pendientes se marcan como Completadas
+- [x] **Badge tipo Enterprise en Portal Licencias:** Dashboard muestra badge celeste "Enterprise" en vez de rojo "Eliminacion"
+- [x] **Revertir plan desde Portal Licencias:** Boton "Revertir plan" con selector Free/Basic/Pro, resetea PlanOrigen y limpia LSQ
+- [x] **Fix combo plan LicenciaDetalle:** "Premium" cambiado a "Pro"
+- [x] **Limpieza DOC04:** Sesiones antiguas colapsadas, items completados marcados
+- [x] **Limpieza gitignore:** Patron publish-*/ excluye carpetas deploy, 290+ binarios removidos del repo
+- [x] **DOC01 actualizado a v17.0** con Enterprise, jaula, confirmacion inline, EventoCalendario, permisos sucursal
+- [x] Commits 820801a, 93e19c7, 4a141bf, 3eeee88, 444a92b pushed
+- [x] Deploy Portal MT, Portal Licencias, Azure Functions a Azure
+
 ### Sesion 2026-03-24
 - [x] **Suscripcion expirada: banner global** — Warning >7d, danger <=7d, expirado en todas las paginas del Portal MT
 - [x] **Middleware "jaula" por suscripcion expirada** — Redirige a /configuracion/planes, usuario puede recontratar
@@ -257,7 +272,8 @@
 - [x] ~~**Upgrade plan Fase 3: Lemon Squeezy**~~ COMPLETADO 2026-03-24 — Checkout, webhooks, cancelacion, alertas. Commits dae6f6f..8ee8edf
 - [x] ~~**Probar baja de plan y verificar advertencia del sistema**~~ COMPLETADO 2026-03-24 — Cancelacion probada end-to-end con Lemon Squeezy (webhook + banner + jaula + recontratar)
 - [ ] **Instalador web: cache de navegador puede descargar version vieja** — Instruir Ctrl+Shift+Supr antes de descargar
-- [ ] **Plan Enterprise: tratamiento especial en pantalla de planes** — Cuando el cliente tiene plan Enterprise, ocultar los otros planes y mostrar una pantalla dedicada
+- [x] ~~**Plan Enterprise: tratamiento especial en pantalla de planes**~~ COMPLETADO 2026-03-24 — Vista dedicada, solicitud con email, activacion manual/LSQ, reversion
+- [ ] **Enterprise LSQ end-to-end** — Probar flujo completo: crear producto custom en LSQ dashboard, cargar Variant ID, generar link, cliente paga, webhook activa plan Enterprise con cobro automatico recurrente
 - [ ] **Probar Portal MT con distintos roles** — Verificar permisos por pagina con usuarios SuperAdmin, AdminEmpresa, y roles menores
 - [ ] **TimeZone por Sucursal** — Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
 - [x] ~~**Generar PIN desde Portal MT**~~ COMPLETADO 2026-03-13 — LegajoForm tiene seccion PIN Movil (asignar, cambiar, resetear)

@@ -1,7 +1,7 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 16.0
-**Fecha:** 2026-03-20
+**Version:** 17.0
+**Fecha:** 2026-03-24
 **Generado por:** Claude Opus 4.6
 
 ---
@@ -514,13 +514,40 @@ Lemon Squeezy opera como Merchant of Record para pagos internacionales (Argentin
 - **Cancelacion:** PATCH con `cancelled=true` cancela al final del periodo actual (no inmediato)
 - **Mapeo de planes:** Configurado via variables de entorno `LemonSqueezy:VariantMap:{variantId}` en Azure Functions
 - **Alertas:** LicenciaAlerts muestra warning/danger cuando la suscripcion esta cancelada y proxima a vencer
+- **Suscripcion expirada (jaula):** Middleware en Portal MT redirige a `/configuracion/planes` cuando la suscripcion expira. El usuario puede recontratar desde ahi
+- **Confirmacion inline:** Todas las acciones destructivas en 9 listados del Portal MT requieren Confirmar/Cancelar antes de ejecutar
 
 | Evento LSQ | Accion del sistema |
 |---|---|
-| subscription_created | Guarda IDs LSQ, actualiza plan y limites desde PlanConfig |
+| subscription_created | Guarda IDs LSQ, actualiza plan y limites desde PlanConfig. Lee `custom_data.plan` para Enterprise |
 | subscription_payment_success | Renueva PlanVencimiento, reactiva si estaba suspendida |
 | subscription_updated | Actualiza LsqStatus/VariantId, cambia plan si cambio variante |
-| subscription_expired/cancelled | Degrada a Free, limpia datos LSQ |
+| subscription_cancelled | Marca LsqStatus='cancelled', plan sigue activo hasta PlanVencimiento |
+| subscription_expired | Degrada a Free, limpia datos LSQ |
+
+### Plan Enterprise
+
+El plan Enterprise soporta dos modalidades:
+
+**Enterprise Manual (PlanOrigen="manual"):**
+- IntegraIA activa el plan directamente desde Portal Licencias (boton "Activar plan Enterprise manualmente")
+- El pago se gestiona fuera de Lemon Squeezy (transferencia, factura, acuerdo directo)
+- Se establece fecha de vencimiento manual. El middleware de jaula NO aplica para Enterprise manual
+- IntegraIA renueva manualmente cuando corresponda
+
+**Enterprise LSQ (PlanOrigen="lsq"):**
+- IntegraIA crea un producto con precio personalizado en el dashboard de Lemon Squeezy
+- Carga el Variant ID en Portal Licencias (campo `LsqVariantIdCustom` en tabla Empresas)
+- Genera link de pago desde Portal Licencias (checkout directo con `custom_data.plan="enterprise"`)
+- El cliente paga y LSQ cobra automaticamente mes a mes o anualmente
+- El webhook lee `custom_data.plan` y activa el plan Enterprise con cobro recurrente
+
+**Flujo de solicitud Enterprise (Portal MT):**
+1. Cliente ve card Enterprise en `/configuracion/planes` y hace click en "Solicitar Enterprise"
+2. Se crea SolicitudSoporte con Tipo="Enterprise" + Noticia en dashboard + email a notify@integraia.tech
+3. IntegraIA recibe la solicitud, negocia y activa el plan (manual o LSQ segun acuerdo)
+4. La solicitud se marca como Completada automaticamente al activar o revertir el plan
+5. Portal Licencias permite revertir de Enterprise a otro plan (Free/Basic/Pro)
 
 ### Reglas de bloqueo
 
@@ -705,7 +732,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 
 ---
 
-## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-20)
+## 10. ESTADO ACTUAL DEL PROYECTO (Marzo 2026 - Actualizado 2026-03-24)
 
 ### Completado
 
@@ -791,19 +818,34 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Fix cross-tenant login movil con codigo de activacion:** Validacion corregida para que el codigo de activacion solo funcione dentro de la empresa correcta
 - **Fix timezone fichada movil:** Usa `Clock.Now` (hora Argentina) en vez de `DateTime.UtcNow` para registrar la hora correcta
 - **Anti-duplicado en SP EscritorioFichadasSPSALIDA:** Hint `UPDLOCK` + cooldown de 30 segundos para evitar fichadas duplicadas por doble-click o lecturas rapidas
+- **Importador Excel de legajos:** Carga masiva desde .xlsx con plantilla descargable, preview con validacion, matcheo por codigo o nombre
+- **Calendario visual:** Tipo Google Calendar en tab Legajo (grilla mensual, EventoCalendario con HoraDesde/HoraHasta)
+- **EventoCalendario integrado en 4 reportes:** Ausencias (motivo), LlegadasTarde/AsistenciaDiaria/HorasTrabajadas (excluye)
+- **Suspender/reactivar empresa:** Portal Licencias zona peligrosa, sincroniza Estado (admin) + IsActive (MT), revalidacion auth cada 1 min
+- **Validacion GPS mejorada:** Toggle deshabilitado sin coordenadas, auto-activa al poner ubicacion, default geoActivo=false
+- **Reescritura panel camara Administrador:** Sin AForge.Controls, PictureBox estandar, patron lock+BeginInvoke, deteccion camara ocupada
+- **SitioWeb integrado al repo:** integraia.tech con pagina producto, help online con 30+ anclas, ayuda contextual en Portal MT
+- **Lemon Squeezy como pasarela de pago:** Checkout, webhooks (5 eventos), cancelacion, alertas, recontratar. Store ID 324804, Azure Functions
+- **Suscripcion expirada jaula:** Middleware redirige a /planes, LicenciaAlerts con warning/danger/expirado, boton recontratar
+- **Confirmacion inline:** Patron Confirmar/Cancelar en 9 listados del Portal MT
+- **PermiteMovil condicionado:** Requiere legajo.MobileHabilitado=true, checkbox disabled si no, validacion end-to-end
+- **Fichador: refresh sucursal + instalador selector sucursal:** oTerminal.Inicializar() antes de cada fichada, /api/activar devuelve sucursales
+- **Plan Enterprise completo:** Vista dedicada en Portal MT (ilimitado), solicitud con registro+email, activacion manual o LSQ, reversion de plan
+- **Administrador simplificado:** Solo 2 pestanas (Legajo: huellas+foto, Movil), datos solo lectura, alta/edicion exclusiva desde Portal MT
+- **Permisos fichada por sucursal:** PermiteHuella/Pin/Qr/Movil/Kiosko verificados end-to-end (SP desktop + MobileController + Kiosko)
+- **PlanConfig.Valor decimal:** Soporta precios con centavos (14.50, 29.99), precios en USD, anual con descuento dinamico
 
 ### En progreso
 
 - Migracion de seguridad SQL: deshabilitar sa (pendiente estabilizacion)
 
 ### Pendiente
+- **Enterprise LSQ end-to-end:** Probar flujo completo con variant custom en Lemon Squeezy (producto por cliente, cobro automatico)
+- **SuperAdmin cross-tenant:** admin@integraia.tech debe poder seleccionar empresa y ver datos de cualquier tenant
 - **TimeZone por Sucursal:** Campo TimeZone en tabla Sucursal para soporte multi-pais (reemplazar Clock.Now hardcodeado)
-- **Generar PIN desde Portal MT:** Form de legajo web actualmente no permite asignar/cambiar PIN
+- **Probar circuito completo con usuario externo:** Enviar instalador a un usuario real
 - Deploy `dp_web_svc` en DigitalPlusWeb (pausado)
 - Deshabilitar usuario `sa`
-- Link al portal web multi-tenant en menu del Administrador
-- Verificar durabilidad licencias (por terminal vs por empresa)
-- Prueba de clonacion desde GitHub para verificar recuperabilidad
 - Paginacion en Asistencia Diaria del portal MT
 
 ### Prioridad baja
