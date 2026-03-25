@@ -797,7 +797,12 @@ else
                         }
                         @if (licencias?.Any(l => l.Plan == "enterprise") == true)
                         {
-                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Plan Enterprise activo</span>
+                            <span class="badge bg-success me-2"><i class="bi bi-check-circle me-1"></i>Plan Enterprise activo</span>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    @onclick="() => showRevertirPlanModal = true"
+                                    disabled="@procesando">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Revertir plan
+                            </button>
                         }
                         else
                         {
@@ -1037,6 +1042,41 @@ else
     </div>
 }
 
+@* Modal Revertir Plan *@
+@if (showRevertirPlanModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-secondary">
+                <div class="modal-header bg-secondary bg-opacity-10">
+                    <h5 class="modal-title"><i class="bi bi-arrow-counterclockwise me-2"></i>Revertir Plan</h5>
+                    <button type="button" class="btn-close" @onclick="() => showRevertirPlanModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Seleccione el plan al que desea revertir la empresa "<strong>@empresa?.Nombre</strong>":</p>
+                    <div class="mb-3">
+                        <select class="form-select" @bind="revertirPlanDestino">
+                            <option value="free">Free</option>
+                            <option value="basic">Basic</option>
+                            <option value="pro">Pro</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning small mb-0">
+                        Los limites se ajustaran automaticamente segun la configuracion del plan seleccionado.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showRevertirPlanModal = false">Cancelar</button>
+                    <button class="btn btn-primary" disabled="@procesando" @onclick="EjecutarRevertirPlan">
+                        @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Revertir a @revertirPlanDestino
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @* Modal Suspender Empresa *@
 @if (showSuspenderModal)
 {
@@ -1111,6 +1151,8 @@ else
     private DateTime? enterpriseVencimiento;
     private bool generandoLink;
     private string? linkPagoEnterprise;
+    private bool showRevertirPlanModal;
+    private string revertirPlanDestino = "pro";
 
     // Suspender / Limpiar / Eliminar
     private bool showSuspenderModal;
@@ -1500,6 +1542,40 @@ else
             procesando = false;
             showEnterpriseManalModal = false;
             enterpriseVencimiento = null;
+        }
+    }
+
+    private async Task EjecutarRevertirPlan()
+    {
+        if (empresa == null || licencias == null || licencias.Count == 0) return;
+        procesando = true;
+        mensaje = null;
+
+        try
+        {
+            var lic = licencias.First();
+            await Repo.ActualizarLicenciaAsync(lic.Id, revertirPlanDestino, lic.MaxLegajos, null);
+
+            empresa.PlanOrigen = "manual";
+            empresa.PlanVencimiento = null;
+            empresa.LsqStatus = null;
+            await Repo.ActualizarEmpresaAsync(empresa);
+
+            // Recargar datos
+            empresa = await Repo.GetEmpresaAsync(Id);
+            var todas = await Repo.GetLicenciasAsync(empresa!.CompanyId);
+            licencias = todas.Where(l => l.CompanyId == empresa.CompanyId).ToList();
+
+            mensaje = $"Plan revertido a {revertirPlanDestino} correctamente.";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al revertir plan: {ex.Message}";
+        }
+        finally
+        {
+            procesando = false;
+            showRevertirPlanModal = false;
         }
     }
 
