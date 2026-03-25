@@ -1,4 +1,4 @@
-const CACHE_NAME = "digitalone-v2.0.2";
+const CACHE_NAME = "digitalone-v2.0.3";
 const ASSETS = [
     "/mobile/",
     "/mobile/index.html",

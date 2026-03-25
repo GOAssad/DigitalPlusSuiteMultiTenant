@@ -28,6 +28,8 @@ let pendingActivationCode = null;
 let qrTokenLoaded = false;
 let isOnline = navigator.onLine;
 let pendingFichada = null; // Retry queue for offline fichadas
+let sugeridoEntrada = true; // true = Entrada sugerida, false = Salida sugerida
+let tipoInvertido = false;  // true = usuario invirtió manualmente
 
 function generateDeviceId() {
     let id;
@@ -511,24 +513,46 @@ async function loadEstado() {
         const data = await api("/estado");
         if (data.ok) {
             const statusEl = document.getElementById("home-status");
-            const ficharText = document.getElementById("fichar-text");
 
             if (data.ultimaFichada) {
                 const isEntrada = data.ultimaFichada.tipo === "Entrada";
                 const tipo = isEntrada ? "Entrada" : "Salida";
                 const hora = formatTime(data.ultimaFichada.fechaHora);
                 document.getElementById("status-info").textContent = tipo + " — " + hora;
-                ficharText.textContent = isEntrada ? "FICHAR SALIDA" : "FICHAR ENTRADA";
+                sugeridoEntrada = !isEntrada; // Si última fue Entrada, sugerir Salida
                 statusEl.classList.remove("hidden");
             } else {
                 statusEl.classList.add("hidden");
-                ficharText.textContent = "FICHAR ENTRADA";
+                sugeridoEntrada = true; // Sin fichadas, sugerir Entrada
             }
 
+            tipoInvertido = false;
+            actualizarBotonFichar();
             renderHistorial(data.fichadasHoy || []);
         }
     } catch {
         // Silent fail — will retry on next interaction
+    }
+}
+
+function actualizarBotonFichar() {
+    const ficharText = document.getElementById("fichar-text");
+    const btnSwap = document.getElementById("btn-swap-tipo");
+    const esEntrada = tipoInvertido ? !sugeridoEntrada : sugeridoEntrada;
+    ficharText.textContent = esEntrada ? "FICHAR ENTRADA" : "FICHAR SALIDA";
+    if (btnSwap) {
+        btnSwap.title = esEntrada ? "Cambiar a Salida" : "Cambiar a Entrada";
+    }
+}
+
+function toggleTipoFichada() {
+    tipoInvertido = !tipoInvertido;
+    actualizarBotonFichar();
+    // Breve feedback visual
+    const btnSwap = document.getElementById("btn-swap-tipo");
+    if (btnSwap) {
+        btnSwap.classList.add("swap-active");
+        setTimeout(() => btnSwap.classList.remove("swap-active"), 300);
     }
 }
 
@@ -544,11 +568,12 @@ async function handleFichar() {
     try {
         const location = await getLocation();
 
+        const esEntrada = tipoInvertido ? !sugeridoEntrada : sugeridoEntrada;
         const body = {
             timestamp: new Date().toISOString(),
             latitud: location?.latitud,
             longitud: location?.longitud,
-            tipoFichada: "Auto",
+            tipoFichada: tipoInvertido ? (esEntrada ? "Entrada" : "Salida") : "Auto",
         };
 
         const data = await api("/fichada", {
@@ -567,6 +592,7 @@ async function handleFichar() {
                 timestamp: new Date().toISOString(),
                 latitud: lastGpsCoords?.latitud,
                 longitud: lastGpsCoords?.longitud,
+                tipoFichada: body.tipoFichada,
             };
             Storage.setJSON("pendingFichada", {
                 ...pendingFichada,
@@ -605,7 +631,7 @@ async function retryPendingFichada() {
                 timestamp: saved.timestamp,
                 latitud: saved.latitud,
                 longitud: saved.longitud,
-                tipoFichada: "Auto",
+                tipoFichada: saved.tipoFichada || "Auto",
             },
         });
 
@@ -835,6 +861,7 @@ function init() {
 
     // Buttons
     document.getElementById("btn-fichar").addEventListener("click", handleFichar);
+    document.getElementById("btn-swap-tipo").addEventListener("click", toggleTipoFichada);
     document.getElementById("btn-refresh").addEventListener("click", handleRefresh);
     document.getElementById("btn-logout").addEventListener("click", logout);
     document.getElementById("btn-logout2").addEventListener("click", logout);
