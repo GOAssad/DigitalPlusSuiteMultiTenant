@@ -1561,6 +1561,16 @@ else
             empresa.LsqStatus = null;
             await Repo.ActualizarEmpresaAsync(empresa);
 
+            // Completar solicitudes Enterprise pendientes en BD MT
+            try
+            {
+                var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
+                if (mtEmpresaId.HasValue)
+                    await MTService.CompletarSolicitudesPendientesAsync(
+                        mtEmpresaId.Value, "Enterprise", $"Plan revertido a {revertirPlanDestino} por IntegraIA");
+            }
+            catch { /* best-effort */ }
+
             // Recargar datos
             empresa = await Repo.GetEmpresaAsync(Id);
             var todas = await Repo.GetLicenciasAsync(empresa!.CompanyId);
