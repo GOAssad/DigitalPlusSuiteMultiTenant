@@ -1,5 +1,6 @@
 // Contextual help: updates the help button href based on current portal page
 // Uses polling because Blazor Server navigates via SignalR, not pushState
+// Always re-applies href because Blazor re-renders can reset the DOM element
 (function () {
     var helpBase = 'https://integraia.tech/digital-one-help.html';
 
@@ -34,15 +35,11 @@
         { match: '/configuracion/', anchor: '#portal' }
     ];
 
-    var lastPath = '';
-
     function updateHelp() {
         var btn = document.getElementById('helpBtn');
         if (!btn) return;
 
         var path = window.location.pathname.replace(/\/$/, '') || '/';
-        if (path === lastPath) return;
-        lastPath = path;
 
         var anchor = routeMap[path] || '';
         if (!anchor) {
@@ -53,9 +50,13 @@
                 }
             }
         }
-        btn.href = helpBase + anchor;
+
+        var expected = helpBase + anchor;
+        if (btn.getAttribute('href') !== expected) {
+            btn.setAttribute('href', expected);
+        }
     }
 
-    // Poll every 500ms to detect Blazor navigation
+    // Poll every 500ms to detect Blazor navigation and DOM re-renders
     setInterval(updateHelp, 500);
 })();
