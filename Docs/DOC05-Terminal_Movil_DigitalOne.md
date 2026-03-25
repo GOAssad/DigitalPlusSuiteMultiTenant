@@ -283,8 +283,9 @@ X-Signature: {firma_base64}   // firma RSA del body con la clave privada del dev
       - 'Ninguno':   siempre válido (para empleados remotos habilitados)
    c. Si ninguna sucursal coincide: 403 UBICACION_INVALIDA
    d. Si más de una coincide: usar la de mayor prioridad (menor Id)
-6. Determinar tipo (Entrada/Salida) si tipoFichada == "Auto":
-   → buscar última fichada del legajo en el día, alternar
+6. Determinar tipo (Entrada/Salida):
+   - Si tipoFichada == "Auto": buscar última fichada del legajo en el día, alternar
+   - Si tipoFichada == "Entrada" o "Salida": usar el tipo explícito (el usuario invirtió manualmente desde la PWA)
 7. INSERT INTO Fichada (EmpresaId, LegajoId, SucursalId, FechaHora, TipoFichada, ...)
    VALUES (@empresaId, @legajoId, @sucursalId, @timestamp, 'Movil', ...)
 8. UPDATE TerminalMovil SET UltimoUso = GETDATE() WHERE Id = @terminalMovilId
@@ -700,6 +701,7 @@ Se descartó React Native/Expo por incompatibilidades de SDK con Expo Go en iOS.
 | PWA Login (legajo + PIN) | HECHO | wwwroot/mobile/app.js |
 | PWA Activación de dispositivo | HECHO | Código de activación de 8 caracteres |
 | PWA Fichada con GPS | HECHO | Geolocation API del browser |
+| PWA Invertir tipo fichada (swap) | HECHO | Botón ⇄ permite cambiar Entrada↔Salida manualmente |
 | PWA Historial del día | HECHO | Desde GET /api/mobile/estado |
 | Service Worker + manifest.json | HECHO | Instalable como PWA |
 | Probado en iPhone (Safari) | HECHO | Fix crypto.randomUUID fallback |

@@ -29,7 +29,7 @@ DigitalPlus es un sistema de **control de asistencia y gestion de personal** que
 
 - **Huella digital:** El empleado apoya su dedo en un lector USB y el sistema lo identifica automaticamente.
 - **PIN:** El empleado ingresa su numero de legajo y un codigo PIN personal.
-- **Movil:** El empleado ficha desde su smartphone accediendo a la PWA del portal, con validacion de ubicacion GPS.
+- **Movil:** El empleado ficha desde su smartphone accediendo a la PWA del portal, con validacion de ubicacion GPS. El sistema sugiere automaticamente si es Entrada o Salida, pero el empleado puede invertir la sugerencia tocando el boton ⇄ junto al boton de fichar.
 - **Modo demostracion:** Para pruebas sin necesidad de hardware.
 
 ### Componentes del sistema
@@ -734,6 +734,10 @@ El sistema muestra alertas cuando la suscripcion esta cancelada y proxima a venc
 ### Un empleado olvido fichar
 
 El Administrador puede cargar fichadas manuales desde **RRHH > Fichadas > Fichada Manual**.
+
+### La PWA sugiere Salida pero necesito fichar Entrada (o viceversa)
+
+Si por algun motivo el sistema sugiere el tipo de fichada incorrecto (ej: olvido fichar la salida ayer y hoy sugiere "Salida" en vez de "Entrada"), toque el boton **⇄** que aparece junto al boton FICHAR. Esto invierte la sugerencia entre Entrada y Salida. Despues de fichar, el sistema recalcula automaticamente la proxima sugerencia.
 
 ### Se perdio el codigo de activacion
 
