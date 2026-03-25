@@ -470,6 +470,7 @@
       <a href="#portal-reportes">Reportes</a>
       <a href="#portal-estructura">Estructura organizacional</a>
       <a href="#portal-usuarios">Usuarios</a>
+      <a href="#portal-auditoria">Auditoría</a>
     </div>
 
     <div class="sidebar-group">
@@ -837,6 +838,20 @@
 
     <h3 id="portal-usuarios">Usuarios <a href="#portal-usuarios" class="anchor-link">#</a></h3>
     <p>Desde <strong>Administración > Usuarios</strong>, el AdminEmpresa puede crear usuarios y asignarles roles. Cada usuario nuevo recibe una contraseña temporal y debe cambiarla en su primer ingreso.</p>
+
+    <h3 id="portal-auditoria">Auditoría <a href="#portal-auditoria" class="anchor-link">#</a></h3>
+    <p>Desde <strong>Administración > Auditoría</strong>, el administrador de la empresa puede revisar un registro completo de todas las operaciones realizadas en el sistema.</p>
+    <p><strong>Se registra automáticamente:</strong></p>
+    <ul>
+      <li><strong>Login y login fallido</strong> — desde Portal Web y desde la app móvil, con IP y origen</li>
+      <li><strong>Crear, modificar y eliminar</strong> — cualquier entidad (legajos, sucursales, horarios, feriados, etc.)</li>
+      <li><strong>Fichada manual</strong> — cuando un administrador carga una fichada desde el portal</li>
+      <li><strong>Importación Excel</strong> — carga masiva de legajos</li>
+    </ul>
+    <p><strong>Filtros:</strong> fecha desde/hasta, tipo de acción, tipo de entidad, búsqueda por usuario o descripción.</p>
+    <p>Para operaciones de modificación y eliminación, puede <strong>expandir cada fila</strong> para ver los valores anteriores y nuevos en detalle (qué campo cambió, de qué valor a qué valor).</p>
+    <p>Incluye exportación a <strong>CSV</strong> y opción de <strong>depuración</strong> de logs antiguos (3, 6, 12 o 24 meses).</p>
+    <div class="help-tip"><strong>Nota:</strong> Solo los roles AdminEmpresa y SuperAdmin tienen acceso a esta sección.</div>
 
     <!-- ═══════════════════════════════════════════ -->
     <h2 id="terminales-moviles">Terminales Móviles <a href="#terminales-moviles" class="anchor-link">#</a></h2>

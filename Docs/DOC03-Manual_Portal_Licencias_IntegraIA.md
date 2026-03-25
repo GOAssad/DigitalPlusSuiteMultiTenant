@@ -1,7 +1,7 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 12.0
-**Fecha:** 2026-03-18
+**Version:** 13.0
+**Fecha:** 2026-03-25
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
 ---
@@ -454,32 +454,55 @@ El listado muestra todos los codigos generados con:
 
 ---
 
-## 10. LOG DE AUDITORIA
+## 10. LOG DE ACTIVIDAD
 
 ### Para que sirve
 
-Registra **todas las operaciones** del sistema de licenciamiento:
+Registra **todas las operaciones** del sistema de licenciamiento para uso interno de IntegraIA:
 - Activaciones (trial y con codigo)
-- Heartbeats
+- Heartbeats de terminales desktop
+- Upgrades desde trial
 - Suspensiones y reactivaciones
-- Errores de validacion
+- Expiraciones de licencia
+
+Este log es **cross-tenant**: muestra actividad de TODAS las empresas en un solo lugar.
 
 ### Acceso
 
 Desde el menu lateral, acceda a **Log**.
 
+### Filtros disponibles
+
+| Filtro | Descripcion |
+|---|---|
+| Desde/Hasta | Rango de fechas (default: ultimos 30 dias) |
+| Empresa | Filtrar por CompanyId especifico (combo dinamico) |
+| Accion | Tipo: activacion, heartbeat, trial_start, upgrade, suspend, unsuspend, expire |
+| Buscar | Texto libre en IP, app o detalles |
+
 ### Columnas del log
 
 | Columna | Descripcion |
 |---|---|
-| Fecha | Timestamp de la operacion |
-| Accion | Tipo de operacion (activate, heartbeat, suspend, etc.) |
-| Empresa | Empresa involucrada |
+| Fecha/Hora | Timestamp de la operacion (hora local) |
+| Accion | Badge de color con icono segun tipo de operacion |
+| Empresa | CompanyId de la empresa involucrada |
 | App | Aplicacion que genero el evento (Fichador, Administrador) |
 | IP | Direccion IP del cliente |
-| Detalles | Informacion adicional |
+| Detalles | Informacion adicional (plan, legajos, etc.) |
 
-> [CAPTURA: Pantalla de log de auditoria con filtros y grilla]
+### Paginacion y Export
+
+- Los resultados se paginan de a 50 registros con navegacion anterior/siguiente
+- Boton **CSV** para exportar los registros visibles
+
+### Depuracion
+
+En la zona inferior (marcada en rojo), se pueden eliminar logs antiguos seleccionando una antiguedad minima (3, 6, 12 o 24 meses). La operacion se ejecuta en batches para no saturar el transaction log de Ferozo.
+
+### Diferencia con Auditoria del Portal MT
+
+Este log registra **actividad de licenciamiento** (heartbeats, activaciones, etc.) y es para uso de IntegraIA. La **Auditoria del Portal MT** registra operaciones CRUD de cada empresa (crear legajos, modificar horarios, etc.) y es para el administrador de la empresa.
 
 ---
 

@@ -62,6 +62,7 @@ public class Program
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ITenantService, TenantService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
+        builder.Services.AddSingleton<IAuditService, AuditService>();
 
         // Database
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

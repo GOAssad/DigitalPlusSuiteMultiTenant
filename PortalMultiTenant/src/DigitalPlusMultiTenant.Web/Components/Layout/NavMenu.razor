@@ -143,6 +143,9 @@
                         <NavLink class="sidebar-link sub" href="configuracion" Match="NavLinkMatch.All">
                             <i class="bi bi-gear"></i> Variables
                         </NavLink>
+                        <NavLink class="sidebar-link sub" href="auditoria">
+                            <i class="bi bi-shield-check"></i> Auditoría
+                        </NavLink>
                     </div>
                 </div>
             </AuthorizeView>
@@ -203,6 +206,7 @@
         ["configuracion/empresa"] = "admin",
         ["configuracion/planes"] = "admin",
         ["configuracion"] = "admin",
+        ["auditoria"] = "admin",
     };
 
     protected override async Task OnInitializedAsync()

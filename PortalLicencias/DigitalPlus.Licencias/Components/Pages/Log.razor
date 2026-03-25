@@ -2,53 +2,318 @@
 @rendermode InteractiveServer
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
+@inject IJSRuntime JS
 
 <PageTitle>Log de Actividad - DigitalPlus</PageTitle>
 
-<h3 class="mb-4">Log de Actividad</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0"><i class="bi bi-journal-text me-2"></i>Log de Actividad</h3>
+    <div>
+        <button class="btn btn-outline-secondary btn-sm me-1" @onclick="Buscar" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+        @if (logs?.Any() == true)
+        {
+            <button class="btn btn-outline-success btn-sm" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        }
+    </div>
+</div>
 
-@if (logs == null)
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaDesde" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaHasta" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Empresa</label>
+                <select class="form-select form-select-sm" @bind="filtroEmpresa">
+                    <option value="">Todas</option>
+                    @foreach (var e in empresas)
+                    {
+                        <option value="@e">@e</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Acción</label>
+                <select class="form-select form-select-sm" @bind="filtroAccion">
+                    <option value="">Todas</option>
+                    <option value="activate">Activación</option>
+                    <option value="heartbeat">Heartbeat</option>
+                    <option value="trial_start">Trial Start</option>
+                    <option value="upgrade_from_trial">Upgrade Trial</option>
+                    <option value="suspend">Suspender</option>
+                    <option value="unsuspend">Reactivar</option>
+                    <option value="expire">Expirar</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="IP, app, detalle..."
+                       @bind="filtroBusqueda" @onkeydown="OnKeyDown" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-sm" @onclick="Buscar">
+                    <i class="bi bi-search me-1"></i>Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (buscando)
 {
-    <p>Cargando...</p>
-}
-else if (logs.Count == 0)
-{
-    <div class="alert alert-info">Sin actividad registrada.</div>
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Buscando registros...</p>
+    </div>
 }
 else
 {
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Accion</th>
-                <th>Empresa</th>
-                <th>App</th>
-                <th>IP</th>
-                <th>Detalles</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var log in logs)
-            {
-                <tr>
-                    <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
-                    <td>@log.Action</td>
-                    <td>@(log.Licencia?.CompanyId ?? "-")</td>
-                    <td>@(log.App ?? "-")</td>
-                    <td><small>@(log.IP ?? "-")</small></td>
-                    <td><small>@(log.Details ?? "-")</small></td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:150px">Fecha/Hora</th>
+                        <th>Acción</th>
+                        <th>Empresa</th>
+                        <th>App</th>
+                        <th>IP</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (logs == null || !logs.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Sin actividad registrada en el periodo.
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in logs)
+                        {
+                            <tr>
+                                <td class="small text-nowrap">@log.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    <span class="badge @BadgeClass(log.Action)">
+                                        <i class="@ActionIcon(log.Action) me-1"></i>@ActionLabel(log.Action)
+                                    </span>
+                                </td>
+                                <td><strong>@(log.Licencia?.CompanyId ?? "-")</strong></td>
+                                <td>@(log.App ?? "-")</td>
+                                <td class="small text-muted">@(log.IP ?? "-")</td>
+                                <td class="small">@(log.Details ?? "-")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (logs?.Any() == true)
+        {
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small class="text-muted">@totalRegistros registro(s) — página @pagina de @totalPaginas</small>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm me-1" disabled="@(pagina <= 1)" @onclick="PaginaAnterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" disabled="@(pagina >= totalPaginas)" @onclick="PaginaSiguiente">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* Depuración *@
+    <div class="card border-danger mt-4">
+        <div class="card-header bg-danger bg-opacity-10 text-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>Depuración de logs
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">Eliminar registros de log antiguos. Esta acción no se puede deshacer.</p>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" style="width:200px" @bind="depurarMeses">
+                    <option value="3">Más de 3 meses</option>
+                    <option value="6">Más de 6 meses</option>
+                    <option value="12">Más de 1 año</option>
+                    <option value="24">Más de 2 años</option>
+                </select>
+                @if (!confirmandoDepurar)
+                {
+                    <button class="btn btn-outline-danger btn-sm" @onclick="() => confirmandoDepurar = true">
+                        <i class="bi bi-trash me-1"></i>Depurar
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-danger btn-sm" @onclick="DepurarLogs">
+                        <i class="bi bi-check-lg me-1"></i>Confirmar
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => confirmandoDepurar = false">
+                        Cancelar
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(mensajeDepurar))
+                {
+                    <span class="small text-success">@mensajeDepurar</span>
+                }
+            </div>
+        </div>
+    </div>
 }
 
 @code {
     private List<DigitalPlus.Licencias.Entidades.LicenciaLog>? logs;
+    private List<string> empresas = new();
+    private bool buscando;
+    private DateTime fechaDesde = DateTime.Today.AddDays(-30);
+    private DateTime fechaHasta = DateTime.Today;
+    private string filtroEmpresa = "";
+    private string filtroAccion = "";
+    private string filtroBusqueda = "";
+
+    // Paginación
+    private int pagina = 1;
+    private int pageSize = 50;
+    private int totalRegistros;
+    private int totalPaginas => Math.Max(1, (int)Math.Ceiling((double)totalRegistros / pageSize));
+
+    // Depuración
+    private int depurarMeses = 6;
+    private bool confirmandoDepurar;
+    private string? mensajeDepurar;
 
     protected override async Task OnInitializedAsync()
     {
-        logs = await Repo.GetLogsAsync(cantidad: 200);
+        empresas = await Repo.GetLogEmpresasAsync();
+        await Buscar();
     }
+
+    private async Task Buscar()
+    {
+        pagina = 1;
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        buscando = true;
+        StateHasChanged();
+
+        try
+        {
+            var (items, total) = await Repo.GetLogsPagedAsync(
+                desde: fechaDesde,
+                hasta: fechaHasta,
+                empresa: string.IsNullOrEmpty(filtroEmpresa) ? null : filtroEmpresa,
+                accion: string.IsNullOrEmpty(filtroAccion) ? null : filtroAccion,
+                busqueda: string.IsNullOrEmpty(filtroBusqueda) ? null : filtroBusqueda,
+                page: pagina,
+                pageSize: pageSize);
+
+            logs = items;
+            totalRegistros = total;
+        }
+        catch
+        {
+            logs = new();
+            totalRegistros = 0;
+        }
+        finally
+        {
+            buscando = false;
+        }
+    }
+
+    private async Task PaginaAnterior()
+    {
+        if (pagina > 1) { pagina--; await CargarDatos(); }
+    }
+
+    private async Task PaginaSiguiente()
+    {
+        if (pagina < totalPaginas) { pagina++; await CargarDatos(); }
+    }
+
+    private async Task DepurarLogs()
+    {
+        confirmandoDepurar = false;
+        mensajeDepurar = null;
+
+        try
+        {
+            var eliminados = await Repo.DepurarLogsAsync(depurarMeses);
+            mensajeDepurar = $"{eliminados} registro(s) eliminados.";
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            mensajeDepurar = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Buscar();
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (logs == null || !logs.Any()) return;
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Fecha,Accion,Empresa,App,IP,Detalles");
+        foreach (var l in logs)
+        {
+            sb.AppendLine($"\"{l.Timestamp.ToLocalTime():dd/MM/yyyy HH:mm:ss}\",\"{l.Action}\",\"{l.Licencia?.CompanyId}\",\"{l.App}\",\"{l.IP}\",\"{l.Details?.Replace("\"", "\"\"")}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"{{ var a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='log_licencias_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}.csv';a.click(); }}");
+    }
+
+    private static string BadgeClass(string action) => action switch
+    {
+        "activate" => "bg-success",
+        "trial_start" => "bg-info",
+        "upgrade_from_trial" => "bg-primary",
+        "heartbeat" => "bg-secondary",
+        "suspend" => "bg-danger",
+        "unsuspend" => "bg-warning text-dark",
+        "expire" => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    private static string ActionIcon(string action) => action switch
+    {
+        "activate" => "bi bi-check-circle",
+        "trial_start" => "bi bi-clock-history",
+        "upgrade_from_trial" => "bi bi-arrow-up-circle",
+        "heartbeat" => "bi bi-heart-pulse",
+        "suspend" => "bi bi-pause-circle",
+        "unsuspend" => "bi bi-play-circle",
+        "expire" => "bi bi-x-circle",
+        _ => "bi bi-circle"
+    };
+
+    private static string ActionLabel(string action) => action switch
+    {
+        "activate" => "Activación",
+        "trial_start" => "Trial",
+        "upgrade_from_trial" => "Upgrade Trial",
+        "heartbeat" => "Heartbeat",
+        "suspend" => "Suspendida",
+        "unsuspend" => "Reactivada",
+        "expire" => "Expirada",
+        _ => action
+    };
 }

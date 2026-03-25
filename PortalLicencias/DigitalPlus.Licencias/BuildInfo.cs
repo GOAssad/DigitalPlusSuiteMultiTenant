@@ -3,7 +3,7 @@ namespace DigitalPlus.Licencias;
 
 public static class BuildInfo
 {
-    public const string BuildNumber = "202603241544";
+    public const string BuildNumber = "202603251445";
     public const string Version = "1.0.0";
     public const string FullVersion = Version + "-" + BuildNumber;
 }

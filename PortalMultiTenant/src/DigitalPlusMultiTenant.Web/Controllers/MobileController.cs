@@ -23,17 +23,20 @@ public class MobileController : ControllerBase
     private readonly UbicacionService _ubicacionService;
     private readonly IConfiguration _config;
     private readonly ILicenciaService _licenciaService;
+    private readonly IAuditService _auditService;
 
     public MobileController(
         ApplicationDbContext db,
         UbicacionService ubicacionService,
         IConfiguration config,
-        ILicenciaService licenciaService)
+        ILicenciaService licenciaService,
+        IAuditService auditService)
     {
         _db = db;
         _ubicacionService = ubicacionService;
         _config = config;
         _licenciaService = licenciaService;
+        _auditService = auditService;
     }
 
     // ============================================================
@@ -178,7 +181,11 @@ public class MobileController : ControllerBase
 
             string hashIngresado = ComputeHash(request.Password, legajo.Pin.PinSalt);
             if (!string.Equals(hashIngresado, legajo.Pin.PinHash, StringComparison.Ordinal))
+            {
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                _ = _auditService.LogLoginAsync(legajo.EmpresaId, $"Legajo {request.Legajo}", ip, "Mobile", success: false);
                 return Unauthorized(new { ok = false, mensaje = "Contraseña incorrecta." });
+            }
 
             // Verificar si el device ya está registrado
             bool dispositivoRegistrado = false;
@@ -210,6 +217,10 @@ public class MobileController : ControllerBase
 
             // Generar JWT
             var token = GenerarToken(legajo);
+
+            // Auditoría: login mobile exitoso
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            _ = _auditService.LogLoginAsync(legajo.EmpresaId, $"{legajo.Apellido}, {legajo.Nombre} (Legajo {legajo.NumeroLegajo})", clientIp, "Mobile", success: true);
 
             return Ok(new
             {

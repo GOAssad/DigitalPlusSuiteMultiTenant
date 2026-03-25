@@ -635,6 +635,68 @@ public class RepositorioLicencias
             query = query.Where(l => l.LicenciaId == licenciaId.Value);
         return await query.OrderByDescending(l => l.Timestamp).Take(cantidad).ToListAsync();
     }
+
+    public async Task<(List<LicenciaLog> Items, int Total)> GetLogsPagedAsync(
+        DateTime? desde = null, DateTime? hasta = null,
+        string? empresa = null, string? accion = null, string? busqueda = null,
+        int page = 1, int pageSize = 50)
+    {
+        var query = _context.LicenciasLog.Include(l => l.Licencia).AsQueryable();
+
+        if (desde.HasValue)
+            query = query.Where(l => l.Timestamp >= desde.Value);
+        if (hasta.HasValue)
+            query = query.Where(l => l.Timestamp < hasta.Value.AddDays(1));
+        if (!string.IsNullOrEmpty(empresa))
+            query = query.Where(l => l.Licencia != null && l.Licencia.CompanyId == empresa);
+        if (!string.IsNullOrEmpty(accion))
+            query = query.Where(l => l.Action == accion);
+        if (!string.IsNullOrEmpty(busqueda))
+        {
+            var term = busqueda.Trim();
+            query = query.Where(l =>
+                (l.Details != null && l.Details.Contains(term)) ||
+                (l.IP != null && l.IP.Contains(term)) ||
+                (l.App != null && l.App.Contains(term)));
+        }
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(l => l.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, total);
+    }
+
+    public async Task<List<string>> GetLogEmpresasAsync()
+    {
+        return await _context.LicenciasLog
+            .Include(l => l.Licencia)
+            .Where(l => l.Licencia != null && l.Licencia.CompanyId != null)
+            .Select(l => l.Licencia!.CompanyId)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync();
+    }
+
+    public async Task<int> DepurarLogsAsync(int meses)
+    {
+        var limite = DateTime.UtcNow.AddMonths(-meses);
+        int totalEliminados = 0;
+        int batch;
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+        do
+        {
+            batch = await conn.ExecuteAsync(
+                "DELETE TOP(10000) FROM LicenciasLog WHERE [Timestamp] < @Limite",
+                new { Limite = limite });
+            totalEliminados += batch;
+        } while (batch >= 10000);
+        return totalEliminados;
+    }
 }
 
 public class DashboardStats

@@ -33,5 +33,8 @@ public interface IApplicationDbContext
     DbSet<SucursalGeoconfig> SucursalGeoconfigs { get; }
     DbSet<CodigoActivacionMovil> CodigosActivacionMovil { get; }
 
+    // Auditoria
+    DbSet<AuditLog> AuditLogs { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

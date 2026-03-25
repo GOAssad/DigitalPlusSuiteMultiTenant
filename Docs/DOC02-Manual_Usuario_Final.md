@@ -1,7 +1,7 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 16.0
-**Fecha:** 2026-03-20
+**Version:** 17.0
+**Fecha:** 2026-03-25
 
 ---
 
@@ -541,6 +541,7 @@ Una vez dentro del portal, en la **barra superior** se muestra:
 | **Feriados** | Gestionar dias feriados |
 | **Variables** | Configuracion general del sistema |
 | **Usuarios** | Gestionar accesos al portal (AdminEmpresa puede crear Operador y Consulta) |
+| **Auditoria** | Registro de todas las operaciones: quien hizo que, cuando y desde donde |
 
 > [CAPTURA: Dashboard principal del portal web mostrando el menu de navegacion]
 
@@ -788,7 +789,51 @@ Desde el Portal Web > Legajos:
 
 ---
 
-## 10. SOPORTE TECNICO
+## 10. AUDITORIA
+
+### Para que sirve
+
+La seccion de Auditoria permite al administrador de la empresa revisar un **registro completo de todas las operaciones** realizadas en el sistema. Responde a las preguntas: quien hizo que, cuando y desde donde.
+
+### Acceso
+
+Desde el menu lateral: **Administracion > Auditoria**. Solo los roles **AdminEmpresa** y **SuperAdmin** tienen acceso.
+
+### Que se registra automaticamente
+
+| Tipo de evento | Ejemplo |
+|---|---|
+| **Login** | "admin@empresa.com inicio sesion desde Portal" |
+| **Login fallido** | "Intento fallido de login para admin@empresa.com" |
+| **Login movil** | "Garcia, Juan (Legajo 1234) inicio sesion desde Mobile" |
+| **Crear** | "Creo Legajo #45 - Garcia, Juan" |
+| **Modificar** | "Modifico Sucursal #3 - Palermo (2 campo(s))" |
+| **Eliminar** | "Elimino Feriado #12 - Navidad" |
+| **Fichada manual** | "admin@empresa.com cargo fichada manual para Garcia, Juan" |
+| **Importacion Excel** | "admin@empresa.com importo 50 legajo(s) desde Excel" |
+
+### Filtros disponibles
+
+- **Fecha desde/hasta**: Rango de fechas a consultar
+- **Accion**: Filtrar por tipo (Login, Crear, Modificar, Eliminar, etc.)
+- **Entidad**: Filtrar por tipo de registro (Legajo, Sucursal, Horario, etc.)
+- **Buscar**: Texto libre para buscar en usuario o descripcion
+
+### Detalle de cambios
+
+Para las operaciones de **Modificar** y **Eliminar**, se puede expandir cada fila para ver los **valores anteriores** y **valores nuevos** en formato JSON. Esto permite saber exactamente que campo se cambio y de que valor a que valor.
+
+### Export CSV
+
+Boton para exportar los registros visibles en formato CSV, util para compliance y reportes.
+
+### Depuracion
+
+En la zona inferior de la pagina, los administradores pueden **depurar logs antiguos** seleccionando una antiguedad minima (3, 6, 12 o 24 meses). La operacion requiere confirmacion y no se puede deshacer.
+
+---
+
+## 11. SOPORTE TECNICO
 
 ### Version de la aplicacion
 

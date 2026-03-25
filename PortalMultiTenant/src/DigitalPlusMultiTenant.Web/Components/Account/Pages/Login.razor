@@ -13,6 +13,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject IConfiguration Configuration
 @inject DigitalPlusMultiTenant.Application.Interfaces.IApplicationDbContext Db
+@inject DigitalPlusMultiTenant.Application.Interfaces.IAuditService AuditService
 
 <PageTitle>Iniciar Sesion - DigitalPlus</PageTitle>
 
@@ -110,6 +111,8 @@
 
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
 
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
         if (result.Succeeded)
         {
             // Verificar que la empresa esta activa en DigitalPlusAdmin
@@ -123,6 +126,9 @@
                     errorMessage = "Error: El acceso a su empresa ha sido suspendido. Contacte al administrador.";
                     return;
                 }
+
+                // Auditoría: login exitoso
+                _ = AuditService.LogLoginAsync(user.EmpresaId, Input.Email, clientIp, "Portal", success: true);
             }
 
             Logger.LogInformation("User logged in.");
@@ -141,6 +147,11 @@
         }
         else
         {
+            // Auditoría: login fallido (intentar resolver empresa del usuario)
+            var failedUser = await UserManager.FindByEmailAsync(Input.Email);
+            if (failedUser != null)
+                _ = AuditService.LogLoginAsync(failedUser.EmpresaId, Input.Email, clientIp, "Portal", success: false);
+
             errorMessage = "Error: Usuario o contraseña incorrectos.";
         }
     }

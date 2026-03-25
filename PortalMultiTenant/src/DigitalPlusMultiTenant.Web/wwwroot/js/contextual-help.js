@@ -23,6 +23,7 @@
         '/reportes/ausencias': '#portal-reportes',
         '/reportes/horas-trabajadas': '#portal-reportes',
         '/usuarios': '#portal-usuarios',
+        '/auditoria': '#portal-auditoria',
         '/configuracion/empresa': '#portal',
         '/configuracion/planes': '#licencias',
         '/configuracion': '#portal',

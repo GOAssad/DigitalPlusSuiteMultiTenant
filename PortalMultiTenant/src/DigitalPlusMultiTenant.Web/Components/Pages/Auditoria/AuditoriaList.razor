@@ -1,0 +1,420 @@
+@page "/auditoria"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize(Roles = "SuperAdmin,AdminEmpresa")]
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DigitalPlusMultiTenant.Persistence.ApplicationDbContext> DbFactory
+@inject ITenantService Tenant
+@inject IJSRuntime JS
+
+<PageTitle>Auditoría - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-shield-check me-2"></i>Auditoría</h4>
+    <div>
+        <button class="btn btn-outline-secondary btn-sm me-2" @onclick="Buscar" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+        @if (logs?.Any() == true)
+        {
+            <button class="btn btn-outline-success btn-sm" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaDesde" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaHasta" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Acción</label>
+                <select class="form-select form-select-sm" @bind="filtroAccion">
+                    <option value="">Todas</option>
+                    <option value="Login">Login</option>
+                    <option value="LoginFailed">Login Fallido</option>
+                    <option value="Create">Crear</option>
+                    <option value="Update">Modificar</option>
+                    <option value="Delete">Eliminar</option>
+                    <option value="FichadaManual">Fichada Manual</option>
+                    <option value="Import">Importación</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Entidad</label>
+                <select class="form-select form-select-sm" @bind="filtroEntidad">
+                    <option value="">Todas</option>
+                    <option value="Legajo">Legajo</option>
+                    <option value="Sucursal">Sucursal</option>
+                    <option value="Sector">Sector</option>
+                    <option value="Categoria">Categoría</option>
+                    <option value="Horario">Horario</option>
+                    <option value="Fichada">Fichada</option>
+                    <option value="Incidencia">Incidencia</option>
+                    <option value="Feriado">Feriado</option>
+                    <option value="Terminal">Terminal</option>
+                    <option value="TerminalMovil">Terminal Móvil</option>
+                    <option value="Usuario">Usuario</option>
+                    <option value="EventoCalendario">Evento Calendario</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Usuario o descripción..."
+                       @bind="filtroBusqueda" @onkeydown="OnKeyDown" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-sm" @onclick="Buscar">
+                    <i class="bi bi-search me-1"></i>Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (buscando)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Buscando registros...</p>
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:140px">Fecha/Hora</th>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Entidad</th>
+                            <th>Descripción</th>
+                            <th>Origen</th>
+                            <th style="width:110px">IP</th>
+                            <th style="width:40px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (logs == null || !logs.Any())
+                        {
+                            <tr><td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                @(logs == null ? "Seleccione un rango de fechas y presione Buscar" : "No hay registros en el periodo")
+                            </td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var log in logs)
+                            {
+                                <tr>
+                                    <td class="small text-nowrap">@log.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(log.UserName ?? "<sistema>")</td>
+                                    <td>
+                                        <span class="badge @BadgeClass(log.Action)">
+                                            <i class="@ActionIcon(log.Action) me-1"></i>@ActionLabel(log.Action)
+                                        </span>
+                                    </td>
+                                    <td>@log.EntityType</td>
+                                    <td class="small">@log.Description</td>
+                                    <td><span class="badge bg-secondary bg-opacity-25 text-dark">@log.Source</span></td>
+                                    <td class="small text-muted">@log.IpAddress</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(log.OldValues) || !string.IsNullOrEmpty(log.NewValues))
+                                        {
+                                            <button class="btn btn-link btn-sm p-0" @onclick="() => ToggleDetalle(log.Id)"
+                                                    title="Ver detalle">
+                                                <i class="bi @(expandedId == log.Id ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                                @if (expandedId == log.Id)
+                                {
+                                    <tr>
+                                        <td colspan="8" class="bg-light p-3">
+                                            <div class="row">
+                                                @if (!string.IsNullOrEmpty(log.OldValues))
+                                                {
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-danger"><i class="bi bi-dash-circle me-1"></i>Valores anteriores</h6>
+                                                        <pre class="small bg-white p-2 rounded border" style="max-height:200px;overflow:auto;">@FormatJson(log.OldValues)</pre>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrEmpty(log.NewValues))
+                                                {
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-success"><i class="bi bi-plus-circle me-1"></i>Valores nuevos</h6>
+                                                        <pre class="small bg-white p-2 rounded border" style="max-height:200px;overflow:auto;">@FormatJson(log.NewValues)</pre>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (logs?.Any() == true)
+        {
+            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                <small class="text-muted">@totalRegistros registro(s) encontrados — mostrando página @pagina de @totalPaginas</small>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm me-1" disabled="@(pagina <= 1)" @onclick="PaginaAnterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" disabled="@(pagina >= totalPaginas)" @onclick="PaginaSiguiente">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* Zona peligrosa: depuracion *@
+    <div class="card border-danger border-opacity-25 shadow-sm mt-4">
+        <div class="card-header bg-danger bg-opacity-10 text-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>Depuración de logs
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">Eliminar registros de auditoría antiguos. Esta acción no se puede deshacer.</p>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" style="width:200px" @bind="depurarMeses">
+                    <option value="3">Más de 3 meses</option>
+                    <option value="6">Más de 6 meses</option>
+                    <option value="12">Más de 1 año</option>
+                    <option value="24">Más de 2 años</option>
+                </select>
+                @if (!confirmandoDepurar)
+                {
+                    <button class="btn btn-outline-danger btn-sm" @onclick="() => confirmandoDepurar = true">
+                        <i class="bi bi-trash me-1"></i>Depurar
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-danger btn-sm" @onclick="DepurarLogs">
+                        <i class="bi bi-check-lg me-1"></i>Confirmar
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => confirmandoDepurar = false">
+                        Cancelar
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(mensajeDepurar))
+                {
+                    <span class="small text-success">@mensajeDepurar</span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<AuditLog>? logs;
+    private bool buscando;
+    private DateTime fechaDesde = DateTime.Today.AddDays(-7);
+    private DateTime fechaHasta = DateTime.Today;
+    private string filtroAccion = "";
+    private string filtroEntidad = "";
+    private string filtroBusqueda = "";
+    private long? expandedId;
+
+    // Paginacion
+    private int pagina = 1;
+    private int pageSize = 50;
+    private int totalRegistros;
+    private int totalPaginas => (int)Math.Ceiling((double)totalRegistros / pageSize);
+
+    // Depuracion
+    private int depurarMeses = 6;
+    private bool confirmandoDepurar;
+    private string? mensajeDepurar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Buscar();
+    }
+
+    private async Task Buscar()
+    {
+        pagina = 1;
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        buscando = true;
+        expandedId = null;
+        StateHasChanged();
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var empresaId = Tenant.EmpresaId;
+
+            var desde = fechaDesde.Date.ToUniversalTime();
+            var hasta = fechaHasta.Date.AddDays(1).ToUniversalTime();
+
+            var query = db.AuditLogs
+                .Where(a => a.EmpresaId == empresaId
+                         && a.Timestamp >= desde
+                         && a.Timestamp < hasta);
+
+            if (!string.IsNullOrEmpty(filtroAccion))
+                query = query.Where(a => a.Action == filtroAccion);
+
+            if (!string.IsNullOrEmpty(filtroEntidad))
+                query = query.Where(a => a.EntityType == filtroEntidad);
+
+            if (!string.IsNullOrEmpty(filtroBusqueda))
+            {
+                var term = filtroBusqueda.Trim();
+                query = query.Where(a =>
+                    (a.UserName != null && a.UserName.Contains(term)) ||
+                    (a.Description != null && a.Description.Contains(term)));
+            }
+
+            totalRegistros = await query.CountAsync();
+
+            logs = await query
+                .OrderByDescending(a => a.Timestamp)
+                .Skip((pagina - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logs = new();
+            totalRegistros = 0;
+        }
+        finally
+        {
+            buscando = false;
+        }
+    }
+
+    private async Task PaginaAnterior()
+    {
+        if (pagina > 1) { pagina--; await CargarDatos(); }
+    }
+
+    private async Task PaginaSiguiente()
+    {
+        if (pagina < totalPaginas) { pagina++; await CargarDatos(); }
+    }
+
+    private async Task DepurarLogs()
+    {
+        confirmandoDepurar = false;
+        mensajeDepurar = null;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var empresaId = Tenant.EmpresaId;
+            var limite = DateTime.UtcNow.AddMonths(-depurarMeses);
+
+            // Batch delete para no llenar transaction log de Ferozo
+            int totalEliminados = 0;
+            int batch;
+            do
+            {
+                batch = await db.Database.ExecuteSqlInterpolatedAsync(
+                    $"DELETE TOP(10000) FROM AuditLog WHERE EmpresaId = {empresaId} AND [Timestamp] < {limite}");
+                totalEliminados += batch;
+            } while (batch >= 10000);
+
+            mensajeDepurar = $"{totalEliminados} registro(s) eliminados.";
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            mensajeDepurar = $"Error: {ex.Message}";
+        }
+    }
+
+    private void ToggleDetalle(long id)
+    {
+        expandedId = expandedId == id ? null : id;
+    }
+
+    private async Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Buscar();
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (logs == null || !logs.Any()) return;
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Fecha,Usuario,Accion,Entidad,Descripcion,Origen,IP");
+        foreach (var l in logs)
+        {
+            sb.AppendLine($"\"{l.Timestamp.ToLocalTime():dd/MM/yyyy HH:mm}\",\"{l.UserName}\",\"{l.Action}\",\"{l.EntityType}\",\"{l.Description?.Replace("\"", "\"\"")}\",\"{l.Source}\",\"{l.IpAddress}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"{{ var a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='auditoria_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}.csv';a.click(); }}");
+    }
+
+    private static string FormatJson(string json)
+    {
+        try
+        {
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            return System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch { return json; }
+    }
+
+    private static string BadgeClass(string action) => action switch
+    {
+        "Login" => "bg-success",
+        "LoginFailed" => "bg-danger",
+        "Create" => "bg-primary",
+        "Update" => "bg-warning text-dark",
+        "Delete" => "bg-danger",
+        "FichadaManual" => "bg-info",
+        "Import" => "bg-info",
+        _ => "bg-secondary"
+    };
+
+    private static string ActionIcon(string action) => action switch
+    {
+        "Login" => "bi bi-box-arrow-in-right",
+        "LoginFailed" => "bi bi-x-circle",
+        "Create" => "bi bi-plus-circle",
+        "Update" => "bi bi-pencil",
+        "Delete" => "bi bi-trash",
+        "FichadaManual" => "bi bi-hand-index",
+        "Import" => "bi bi-upload",
+        _ => "bi bi-circle"
+    };
+
+    private static string ActionLabel(string action) => action switch
+    {
+        "Login" => "Login",
+        "LoginFailed" => "Login Fallido",
+        "Create" => "Crear",
+        "Update" => "Modificar",
+        "Delete" => "Eliminar",
+        "FichadaManual" => "Fichada Manual",
+        "Import" => "Importación",
+        _ => action
+    };
+}
