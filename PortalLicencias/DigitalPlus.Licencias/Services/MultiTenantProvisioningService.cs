@@ -836,9 +836,12 @@ public class MultiTenantProvisioningService
             INSERT INTO Noticia (EmpresaId, Titulo, Contenido, FechaDesde, FechaHasta, IsPrivada, CreatedAt, CreatedBy)
             VALUES (@EmpresaId, @Titulo, @Contenido, @Hoy, @HastaDate, 0, @Ahora, 'IntegraIA')", conn))
         {
-            var titulo = tipo == "Limpieza"
-                ? "Limpieza de datos completada"
-                : "Eliminacion de empresa completada";
+            var titulo = tipo switch
+            {
+                "Limpieza" => "Limpieza de datos completada",
+                "Enterprise" => "Plan Enterprise activado",
+                _ => "Eliminacion de empresa completada"
+            };
             cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
             cmd.Parameters.AddWithValue("@Titulo", titulo);
             cmd.Parameters.AddWithValue("@Contenido", comentario);

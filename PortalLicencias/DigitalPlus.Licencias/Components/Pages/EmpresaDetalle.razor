@@ -795,11 +795,18 @@ else
                                 <i class="bi bi-x-circle me-1"></i>Cancelar suscripcion
                             </button>
                         }
-                        <button class="btn btn-outline-warning btn-sm"
-                                @onclick="() => showEnterpriseManalModal = true"
-                                disabled="@procesando">
-                            <i class="bi bi-star me-1"></i>Activar plan Enterprise manualmente
-                        </button>
+                        @if (licencias?.Any(l => l.Plan == "enterprise") == true)
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Plan Enterprise activo</span>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-warning btn-sm"
+                                    @onclick="() => showEnterpriseManalModal = true"
+                                    disabled="@procesando">
+                                <i class="bi bi-star me-1"></i>Activar plan Enterprise manualmente
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
@@ -1466,6 +1473,16 @@ else
             empresa.PlanVencimiento = enterpriseVencimiento;
             empresa.LsqStatus = null;
             await Repo.ActualizarEmpresaAsync(empresa);
+
+            // Completar solicitudes Enterprise pendientes en BD MT
+            try
+            {
+                var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
+                if (mtEmpresaId.HasValue)
+                    await MTService.CompletarSolicitudesPendientesAsync(
+                        mtEmpresaId.Value, "Enterprise", "Plan Enterprise activado por IntegraIA");
+            }
+            catch { /* best-effort */ }
 
             // Recargar datos
             empresa = await Repo.GetEmpresaAsync(Id);
