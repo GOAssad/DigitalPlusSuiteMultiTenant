@@ -816,10 +816,11 @@
     <p>Mismo modal — el botón "Eliminar del rango" borra los registros del rango seleccionado para los legajos marcados.</p>
 
     <h3 id="portal-reportes">Reportes <a href="#portal-reportes" class="anchor-link">#</a></h3>
-    <p>El Portal Web ofrece 4 reportes principales, todos exportables a Excel y CSV:</p>
+    <p>El Portal Web ofrece 5 reportes principales, todos exportables a Excel y CSV:</p>
     <table>
       <tr><th>Reporte</th><th>Descripción</th></tr>
-      <tr><td><strong>Asistencia Diaria</strong></td><td>Resumen de entradas y salidas por día.</td></tr>
+      <tr><td><strong>Asistencia Diaria</strong></td><td>Resumen de entradas y salidas por día. Muestra la primera entrada y última salida del legajo, independientemente de la sucursal donde estuvo.</td></tr>
+      <tr><td><strong>Recorrido Diario</strong></td><td>Detalle de asistencia por sucursal. Si un empleado trabajó en varias sucursales en el mismo día (ej: Unicenter, luego Palermo, luego Unicenter), muestra una fila por cada visita secuencial con sus horarios de entrada y salida.</td></tr>
       <tr><td><strong>Llegadas Tarde</strong></td><td>Empleados que ingresaron después de su horario.</td></tr>
       <tr><td><strong>Ausencias</strong></td><td>Empleados que no ficharon en días laborables. Toggle para mostrar/ocultar ausencias justificadas. Filtra por sector, motivo y legajo.</td></tr>
       <tr><td><strong>Horas Trabajadas</strong></td><td>Resumen de horas por empleado y período.</td></tr>
@@ -872,10 +873,13 @@
     <h3 id="fichada-movil">Fichada desde el celular <a href="#fichada-movil" class="anchor-link">#</a></h3>
     <p>Con Digital One Mobile, los empleados fichan directamente desde su smartphone accediendo a la PWA del portal. No necesitan instalar ninguna app — abren el navegador, ingresan y fichan.</p>
     <ul>
-      <li><strong>Validación GPS:</strong> El sistema verifica que el empleado esté dentro del radio de la sucursal.</li>
+      <li><strong>Detección de sucursal en tiempo real:</strong> Antes de fichar, la pantalla muestra <em>"Estás en: [nombre de sucursal]"</em> cuando el GPS detecta que el empleado está dentro del radio configurado. Si no se detecta ninguna sucursal, se muestra <em>"Fuera de sucursal"</em> en amarillo. Después de fichar, el resultado confirma la sucursal: <em>"Entrada registrada en [sucursal]"</em>.</li>
+      <li><strong>Validación GPS:</strong> El sistema verifica que el empleado esté dentro del radio de la sucursal antes de permitir la fichada.</li>
       <li><strong>PIN Móvil:</strong> Identificación con legajo y PIN personal.</li>
-      <li><strong>PWA:</strong> Funciona como app desde el navegador. Compatible con Android e iOS.</li>
+      <li><strong>Instalación como app:</strong> Al abrir la PWA por primera vez, aparece un banner para <strong>agregar Digital One a la pantalla de inicio</strong> del celular. Esto permite acceder con un solo toque, como una app nativa. Compatible con Android e iOS.</li>
+      <li><strong>Guía de inicio (onboarding):</strong> La primera vez que un empleado abre la PWA, se muestra una guía visual de 3 pasos: (1) instalar la app en el celular, (2) pedir el código de activación al administrador, (3) ingresar con legajo, PIN y código para activar el dispositivo. Se puede omitir y no vuelve a aparecer.</li>
       <li><strong>Multi-empresa:</strong> Si el empleado pertenece a más de una empresa, puede seleccionar a cuál fichar.</li>
+      <li><strong>Historial con sucursal:</strong> En la pestaña Historial, cada fichada del día muestra la hora y la sucursal donde se registró.</li>
       <li><strong>Invertir tipo de fichada:</strong> El sistema sugiere automáticamente si es Entrada o Salida según la última fichada. Si la sugerencia no es correcta (por ejemplo, olvidó fichar la salida), toque el botón <strong>⇄</strong> junto al botón FICHAR para invertir entre Entrada y Salida. Después de fichar, la sugerencia se recalcula automáticamente.</li>
     </ul>
 

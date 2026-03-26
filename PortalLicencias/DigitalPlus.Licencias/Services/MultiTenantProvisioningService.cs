@@ -448,6 +448,29 @@ public class MultiTenantProvisioningService
             cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
             await cmd.ExecuteNonQueryAsync();
         }
+
+        // Variables de sistema (configuracion de fichada)
+        var variables = new (string Clave, string Valor)[]
+        {
+            ("FichadaModoPIN", "true"),
+            ("FichadaModoDemo", "true"),
+            ("PinExpiraDias", "90"),
+        };
+
+        const string sqlVariable = @"
+            INSERT INTO VariableSistema (Clave, Valor, EmpresaId, CreatedAt, CreatedBy)
+            VALUES (@Clave, @Valor, @EmpresaId, @Now, @CreatedBy)";
+
+        foreach (var (clave, valor) in variables)
+        {
+            await using var cmdVar = new SqlCommand(sqlVariable, conn, tx);
+            cmdVar.Parameters.AddWithValue("@Clave", clave);
+            cmdVar.Parameters.AddWithValue("@Valor", valor);
+            cmdVar.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmdVar.Parameters.AddWithValue("@Now", now);
+            cmdVar.Parameters.AddWithValue("@CreatedBy", createdBy);
+            await cmdVar.ExecuteNonQueryAsync();
+        }
     }
 
     /// <summary>

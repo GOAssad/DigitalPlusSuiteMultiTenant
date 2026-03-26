@@ -821,6 +821,7 @@ El Portal de Licencias esta sincronizado dentro del repo principal en `PortalLic
 - **Importador Excel de legajos:** Carga masiva desde .xlsx con plantilla descargable, preview con validacion, matcheo por codigo o nombre
 - **Calendario visual:** Tipo Google Calendar en tab Legajo (grilla mensual, EventoCalendario con HoraDesde/HoraHasta)
 - **EventoCalendario integrado en 4 reportes:** Ausencias (motivo), LlegadasTarde/AsistenciaDiaria/HorasTrabajadas (excluye)
+- **Recorrido Diario:** Nuevo reporte que muestra asistencia desglosada por bloques secuenciales de sucursal. Si un legajo trabaja en Unicenter, luego Palermo, luego vuelve a Unicenter, genera 3 filas con entrada/salida/horas por cada visita
 - **Suspender/reactivar empresa:** Portal Licencias zona peligrosa, sincroniza Estado (admin) + IsActive (MT), revalidacion auth cada 1 min
 - **Validacion GPS mejorada:** Toggle deshabilitado sin coordenadas, auto-activa al poner ubicacion, default geoActivo=false
 - **Reescritura panel camara Administrador:** Sin AForge.Controls, PictureBox estandar, patron lock+BeginInvoke, deteccion camara ocupada

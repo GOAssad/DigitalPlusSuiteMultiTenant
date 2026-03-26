@@ -30,6 +30,10 @@ let isOnline = navigator.onLine;
 let pendingFichada = null; // Retry queue for offline fichadas
 let sugeridoEntrada = true; // true = Entrada sugerida, false = Salida sugerida
 let tipoInvertido = false;  // true = usuario invirtió manualmente
+let sucursalDetectada = null; // { sucursalId, sucursal } — null if not resolved
+let ubicacionCheckTimer = null;
+let deferredInstallPrompt = null; // A2HS beforeinstallprompt event
+let onboardingShown = false;
 
 function generateDeviceId() {
     let id;
@@ -184,6 +188,7 @@ function handleExpiredToken() {
     qrTokenLoaded = false;
     stopClock();
     stopGpsWatch();
+    stopUbicacionCheck();
     checkEmpresas();
 }
 
@@ -318,6 +323,47 @@ function updateGpsStatus(status, title, detail) {
     el.className = "gps-validation " + status;
     document.getElementById("gps-status-title").textContent = title;
     document.getElementById("gps-status-detail").textContent = detail;
+}
+
+// ======================================================================
+// Sucursal detection (real-time)
+// ======================================================================
+function startUbicacionCheck() {
+    stopUbicacionCheck();
+    checkUbicacion(); // immediate
+    ubicacionCheckTimer = setInterval(checkUbicacion, 8000); // every 8s
+}
+
+function stopUbicacionCheck() {
+    if (ubicacionCheckTimer) {
+        clearInterval(ubicacionCheckTimer);
+        ubicacionCheckTimer = null;
+    }
+    sucursalDetectada = null;
+}
+
+async function checkUbicacion() {
+    if (!lastGpsCoords || !state.token) return;
+
+    try {
+        const data = await api(`/mi-ubicacion?lat=${lastGpsCoords.latitud}&lon=${lastGpsCoords.longitud}`);
+        const el = document.getElementById("sucursal-detectada");
+        if (!el) return;
+
+        if (data.ok && data.sucursal) {
+            sucursalDetectada = { sucursalId: data.sucursalId, sucursal: data.sucursal };
+            el.textContent = data.sucursal;
+            el.className = "sucursal-label sucursal-ok";
+            el.closest(".sucursal-indicator")?.classList.remove("hidden");
+        } else {
+            sucursalDetectada = null;
+            el.textContent = "Fuera de sucursal";
+            el.className = "sucursal-label sucursal-none";
+            el.closest(".sucursal-indicator")?.classList.remove("hidden");
+        }
+    } catch {
+        // silent — will retry on next interval
+    }
 }
 
 // ======================================================================
@@ -473,6 +519,7 @@ function enterHome() {
     showScreen("home");
     startClock();
     startGpsWatch();
+    startUbicacionCheck();
     loadEstado();
     updateSwitcherBadge();
 }
@@ -581,7 +628,8 @@ async function handleFichar() {
             body,
         });
 
-        result.textContent = data.mensaje || (data.tipo + " registrada");
+        const sucMsg = data.sucursalNombre ? ` en ${data.sucursalNombre}` : "";
+        result.textContent = `${data.tipo} registrada${sucMsg}`;
         result.className = "result-banner success";
         pendingFichada = null;
         await loadEstado();
@@ -663,11 +711,12 @@ function renderHistorial(fichadas) {
     empty.classList.add("hidden");
     list.innerHTML = fichadas.map(f => {
         const isEntrada = f.tipo === "Entrada";
+        const sucLine = f.sucursal ? `<div class="fichada-sucursal">${f.sucursal}</div>` : "";
         return `<div class="fichada-item">
             <div class="fichada-badge ${isEntrada ? 'entrada' : 'salida'}">${isEntrada ? 'E' : 'S'}</div>
             <div class="fichada-info">
                 <div class="fichada-tipo">${isEntrada ? 'Entrada' : 'Salida'}</div>
-                <div class="fichada-hora">${formatTimeFull(f.fechaHora)}</div>
+                <div class="fichada-hora">${formatTimeFull(f.fechaHora)}${f.sucursal ? ' · ' + f.sucursal : ''}</div>
             </div>
         </div>`;
     }).join("");
@@ -734,15 +783,18 @@ function handleTab(tabName) {
         showScreen("home");
         startClock();
         startGpsWatch();
+        startUbicacionCheck();
         loadEstado();
     } else if (tabName === "historial") {
         stopClock();
         stopGpsWatch();
+        stopUbicacionCheck();
         showScreen("historial");
         loadEstado();
     } else if (tabName === "miqr") {
         stopClock();
         stopGpsWatch();
+        stopUbicacionCheck();
         showScreen("miqr");
         loadMiQR();
     }
@@ -818,6 +870,7 @@ function selectEmpresa(id, nombre) {
 async function switchEmpresa() {
     stopClock();
     stopGpsWatch();
+    stopUbicacionCheck();
     qrTokenLoaded = false;
     // Don't clear current session — just go to selector
     checkEmpresas();
@@ -833,6 +886,7 @@ function logout() {
     qrTokenLoaded = false;
     stopClock();
     stopGpsWatch();
+    stopUbicacionCheck();
     document.getElementById("login-empresa-badge").classList.add("hidden");
     document.getElementById("btn-cambiar-empresa").classList.add("hidden");
     checkEmpresas();
@@ -920,6 +974,10 @@ function init() {
     } else {
         // No valid saved session — check registered companies
         checkEmpresas();
+        // Show onboarding for first-time users
+        if (shouldShowOnboarding()) {
+            setTimeout(showOnboarding, 500);
+        }
     }
 
     // Check for pending fichada to retry
@@ -953,6 +1011,73 @@ function migrateOldStorage() {
         Storage.remove("user");
         Storage.remove("deviceRegistered");
     }
+}
+
+// ======================================================================
+// A2HS Install Prompt
+// ======================================================================
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    showInstallBanner();
+});
+
+function showInstallBanner() {
+    const banner = document.getElementById("install-banner");
+    if (banner) banner.classList.remove("hidden");
+}
+
+function hideInstallBanner() {
+    const banner = document.getElementById("install-banner");
+    if (banner) banner.classList.add("hidden");
+}
+
+async function handleInstallApp() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    hideInstallBanner();
+    if (outcome === "accepted") {
+        Storage.set("a2hs_installed", "1");
+    }
+}
+
+// ======================================================================
+// Onboarding
+// ======================================================================
+function shouldShowOnboarding() {
+    // Show if never completed AND no saved sessions
+    if (Storage.get("onboarding_done")) return false;
+    const sessions = getAllSavedSessions();
+    return sessions.length === 0;
+}
+
+function showOnboarding() {
+    if (onboardingShown) return;
+    onboardingShown = true;
+    const overlay = document.getElementById("onboarding-overlay");
+    if (overlay) {
+        overlay.classList.remove("hidden");
+        showOnboardingStep(1);
+    }
+}
+
+function showOnboardingStep(step) {
+    document.querySelectorAll(".onboarding-step").forEach(s => s.classList.remove("active"));
+    const el = document.getElementById("onboarding-step-" + step);
+    if (el) el.classList.add("active");
+
+    // Update dots
+    document.querySelectorAll(".onboarding-dot").forEach((d, i) => {
+        d.classList.toggle("active", i + 1 === step);
+    });
+}
+
+function closeOnboarding() {
+    Storage.set("onboarding_done", "1");
+    const overlay = document.getElementById("onboarding-overlay");
+    if (overlay) overlay.classList.add("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", init);

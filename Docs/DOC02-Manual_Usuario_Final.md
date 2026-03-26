@@ -474,7 +474,8 @@ El formulario de legajos tiene **2 pestanas**:
 ### 5.2 Reportes del Portal Web
 
 El portal web ofrece reportes:
-- **Asistencia Diaria:** Resumen de entradas y salidas por dia
+- **Asistencia Diaria:** Resumen de entradas y salidas por dia. Muestra la primera entrada y ultima salida del legajo, independientemente de la sucursal donde estuvo.
+- **Recorrido Diario:** Detalle de asistencia por sucursal. Si un empleado trabajo en varias sucursales en el mismo dia (ej: deposito Unicenter, luego Palermo, luego vuelve a Unicenter), muestra una fila por cada visita secuencial con sus horarios de entrada/salida y horas en cada ubicacion. Columna # indica el orden de la visita.
 - **Llegadas Tarde:** Listado de empleados que ingresaron despues de su horario
 - **Ausencias:** Listado de empleados que no ficharon en dias laborables. Incluye checkbox "Incidencias" para mostrar u ocultar ausencias justificadas (incidencias registradas). Filtra por sector, motivo y legajo.
 - **Horas Trabajadas:** Resumen de horas por empleado y periodo
@@ -626,6 +627,20 @@ Desde la pagina **Terminales Moviles** del Portal Web, el administrador puede ge
 > **Nota:** El empleado debe tener un email cargado en su legajo para recibir el codigo. Si no tiene email, el codigo se muestra en pantalla para que el administrador lo comunique manualmente.
 
 Tambien puede generar el codigo desde la pestana **Movil** dentro del formulario de edicion de un legajo individual.
+
+### Experiencia del Empleado en la PWA Mobile
+
+Al abrir la PWA por primera vez, el empleado ve una **guia de inicio de 3 pasos** que lo acompana en el proceso:
+
+1. **Instalar la app:** Agregar Digital One a la pantalla de inicio del celular para acceso rapido. Tambien aparece un banner automatico que facilita la instalacion.
+2. **Obtener el codigo:** El administrador genera un codigo de activacion y se lo envia por email.
+3. **Activar y fichar:** Ingresa con legajo y PIN, luego activa el dispositivo con el codigo.
+
+Una vez activado, la pantalla principal muestra:
+
+- **Sucursal detectada en tiempo real:** Antes de fichar, la PWA muestra "Estas en: [nombre de sucursal]" cuando el GPS detecta que el empleado esta dentro del radio configurado. Si no se detecta ninguna sucursal, se muestra "Fuera de sucursal" en amarillo.
+- **Confirmacion con sucursal:** Despues de fichar, el resultado confirma "Entrada registrada en [sucursal]".
+- **Historial con sucursal:** En la pestana Historial, cada fichada del dia muestra la hora y la sucursal donde se registro.
 
 ### Gestion de Incidencias
 

@@ -147,6 +147,8 @@ namespace Acceso.Clases.Datos.RRHH
         public static bool ModoPinHabilitado()
         {
             string valor = Generales.GRALVariablesGlobales.TraerValorDataBase("FichadaModoPIN");
+            // Si la variable no existe (string vacio), default = true
+            if (string.IsNullOrEmpty(valor)) return true;
             return string.Equals(valor, "true", StringComparison.OrdinalIgnoreCase);
         }
 
@@ -156,6 +158,8 @@ namespace Acceso.Clases.Datos.RRHH
         public static bool ModoDemoHabilitado()
         {
             string valor = Generales.GRALVariablesGlobales.TraerValorDataBase("FichadaModoDemo");
+            // Si la variable no existe (string vacio), default = true
+            if (string.IsNullOrEmpty(valor)) return true;
             return string.Equals(valor, "true", StringComparison.OrdinalIgnoreCase);
         }
 

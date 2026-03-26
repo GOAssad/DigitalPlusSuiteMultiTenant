@@ -480,7 +480,9 @@ public class MobileController : ControllerBase
             .IgnoreQueryFilters()
             .Where(f => f.LegajoId == legajoId && f.EmpresaId == empresaId && f.FechaHora >= hoy)
             .OrderBy(f => f.FechaHora)
-            .Select(f => new { tipo = f.Tipo == "E" ? "Entrada" : "Salida", fechaHora = f.FechaHora })
+            .Join(_db.Sucursales.IgnoreQueryFilters(),
+                  f => f.SucursalId, s => s.Id,
+                  (f, s) => new { tipo = f.Tipo == "E" ? "Entrada" : "Salida", fechaHora = f.FechaHora, sucursal = s.Nombre })
             .ToListAsync();
 
         var ultima = fichadasHoy.LastOrDefault();
@@ -764,6 +766,52 @@ public class MobileController : ControllerBase
                 device = "Android";
         }
         return $"{device} de {nombreEmpleado}";
+    }
+
+    // ============================================================
+    // GET /api/mobile/mi-ubicacion?lat=X&lon=X
+    // Resuelve sucursal en tiempo real para mostrar antes de fichar
+    // ============================================================
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [HttpGet("mi-ubicacion")]
+    public async Task<IActionResult> MiUbicacion([FromQuery] decimal? lat, [FromQuery] decimal? lon)
+    {
+        var (empresaId, legajoId) = ExtraerClaims();
+        if (legajoId == 0)
+            return Unauthorized(new { ok = false, mensaje = "Token inválido." });
+
+        var sucursalesAsignadas = await _db.LegajoSucursales
+            .IgnoreQueryFilters()
+            .Where(ls => ls.LegajoId == legajoId && ls.PermiteMovil)
+            .Select(ls => ls.SucursalId)
+            .ToListAsync();
+
+        if (!sucursalesAsignadas.Any())
+            return Ok(new { ok = false, sucursal = (string?)null, mensaje = "Sin sucursales con fichado móvil." });
+
+        var geoConfigs = await _db.SucursalGeoconfigs
+            .IgnoreQueryFilters()
+            .Where(g => g.EmpresaId == empresaId && g.Activo && sucursalesAsignadas.Contains(g.SucursalId))
+            .Join(_db.Sucursales.IgnoreQueryFilters(),
+                  g => g.SucursalId, s => s.Id,
+                  (g, s) => new UbicacionService.GeoConfigInfo(
+                      s.Id, s.Nombre, g.WifiBSSID, g.Latitud, g.Longitud, g.RadioMetros, g.MetodoValidacion))
+            .ToListAsync();
+
+        if (!geoConfigs.Any())
+            return Ok(new { ok = false, sucursal = (string?)null, mensaje = "Sin configuración GPS." });
+
+        var ubicacion = _ubicacionService.ResolverSucursal(geoConfigs, null, lat, lon);
+
+        return Ok(new
+        {
+            ok = ubicacion.Ok,
+            sucursalId = ubicacion.SucursalId,
+            sucursal = ubicacion.SucursalNombre,
+            mensaje = ubicacion.Ok
+                ? $"Estás en {ubicacion.SucursalNombre}"
+                : "No estás en ninguna sucursal habilitada"
+        });
     }
 
     // ============================================================

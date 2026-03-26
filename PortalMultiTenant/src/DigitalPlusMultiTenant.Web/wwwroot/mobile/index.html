@@ -45,7 +45,7 @@
                 <button type="submit" id="btn-login" class="btn-primary">INGRESAR</button>
             </form>
             <button id="btn-cambiar-empresa" class="btn-link hidden" style="margin-top:8px;">Cambiar empresa</button>
-            <div class="version-label">v2.0.0-20260322</div>
+            <div class="version-label">v2.1.0-20260326</div>
         </div>
     </div>
 
@@ -89,6 +89,12 @@
             <div class="info-label">EMPRESA</div>
             <div id="home-empresa" class="info-empresa"></div>
             <div id="home-clock" class="live-clock">--:--</div>
+        </div>
+
+        <!-- Sucursal Indicator -->
+        <div class="sucursal-indicator hidden">
+            <span class="sucursal-icon">📍</span>
+            <span id="sucursal-detectada" class="sucursal-label sucursal-none">Detectando...</span>
         </div>
 
         <!-- GPS Map Area -->
@@ -168,7 +174,7 @@
             <span id="status-badge" class="last-record-badge">Normal</span>
         </div>
 
-        <div class="version-label">v2.0.0-20260322</div>
+        <div class="version-label">v2.1.0-20260326</div>
 
         <!-- Tab Bar -->
         <nav class="tab-bar">
@@ -250,6 +256,61 @@
     <!-- OFFLINE INDICATOR -->
     <div id="offline-indicator" class="offline-indicator hidden">
         <span class="offline-dot"></span> Sin conexión
+    </div>
+
+    <!-- INSTALL BANNER -->
+    <div id="install-banner" class="install-banner hidden">
+        <div class="install-banner-content">
+            <div class="install-banner-text">
+                <strong>Instalar Digital One</strong>
+                <span>Acceso rápido desde tu pantalla de inicio</span>
+            </div>
+            <button class="install-banner-btn" onclick="handleInstallApp()">Instalar</button>
+            <button class="install-banner-close" onclick="hideInstallBanner()">✕</button>
+        </div>
+    </div>
+
+    <!-- ONBOARDING OVERLAY -->
+    <div id="onboarding-overlay" class="onboarding-overlay hidden">
+        <div class="onboarding-card">
+            <!-- Step 1 -->
+            <div id="onboarding-step-1" class="onboarding-step active">
+                <div class="onboarding-emoji">📲</div>
+                <h2>Instalá la app</h2>
+                <p>Agregá Digital One a tu pantalla de inicio para acceso rápido y una mejor experiencia.</p>
+                <div class="onboarding-tip">
+                    <strong>¿Cómo?</strong> Tocá el menú de tu navegador (⋮ o ⎙) y elegí <em>"Agregar a pantalla de inicio"</em>.
+                </div>
+                <button class="btn-primary onboarding-next" onclick="showOnboardingStep(2)">SIGUIENTE</button>
+            </div>
+            <!-- Step 2 -->
+            <div id="onboarding-step-2" class="onboarding-step">
+                <div class="onboarding-emoji">🔑</div>
+                <h2>Pedí tu código</h2>
+                <p>Tu administrador debe habilitarte como terminal móvil y darte un <strong>código de activación</strong>.</p>
+                <div class="onboarding-tip">
+                    <strong>¿Dónde?</strong> Revisá tu email o contactá a RRHH. Recibirás un código como <em>ABC123</em>.
+                </div>
+                <button class="btn-primary onboarding-next" onclick="showOnboardingStep(3)">SIGUIENTE</button>
+            </div>
+            <!-- Step 3 -->
+            <div id="onboarding-step-3" class="onboarding-step">
+                <div class="onboarding-emoji">✅</div>
+                <h2>Activá y fichá</h2>
+                <p>Ingresá con tu <strong>número de legajo</strong> y <strong>PIN</strong>, luego usá el código de activación para registrar este dispositivo.</p>
+                <div class="onboarding-tip">
+                    <strong>¡Listo!</strong> Una vez activado, podrás fichar entrada y salida desde tu celular.
+                </div>
+                <button class="btn-primary onboarding-next" onclick="closeOnboarding()">¡EMPEZAR!</button>
+            </div>
+            <!-- Dots -->
+            <div class="onboarding-dots">
+                <span class="onboarding-dot active" onclick="showOnboardingStep(1)"></span>
+                <span class="onboarding-dot" onclick="showOnboardingStep(2)"></span>
+                <span class="onboarding-dot" onclick="showOnboardingStep(3)"></span>
+            </div>
+            <button class="onboarding-skip" onclick="closeOnboarding()">Omitir</button>
+        </div>
     </div>
 
     <!-- TOAST -->

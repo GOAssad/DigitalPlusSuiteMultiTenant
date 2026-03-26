@@ -1,0 +1,437 @@
+@page "/reportes/recorrido-diario"
+@inherits DigitalPlusMultiTenant.Web.Components.DbComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlusMultiTenant.Application.Interfaces
+@using DigitalPlusMultiTenant.Domain.Entities
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject IJSRuntime JS
+@inject ITenantService Tenant
+@using DigitalPlusMultiTenant.Web.Helpers
+
+<PageTitle>Recorrido Diario - DigitalPlus</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Recorrido Diario</h4>
+    <div>
+        <button class="btn btn-outline-secondary btn-sm me-2" @onclick="Generar" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+        @if (items?.Any() == true)
+        {
+            <button class="btn btn-outline-success btn-sm me-1" @onclick="ExportarExcel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ExportarCsv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaDesde" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="fechaHasta" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Sucursal</label>
+                <select class="form-select form-select-sm" @bind="filtroSucursal">
+                    <option value="0">Todas</option>
+                    @foreach (var s in sucursales)
+                    {
+                        <option value="@s.Id">@s.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Sector</label>
+                <select class="form-select form-select-sm" @bind="filtroSector">
+                    <option value="0">Todos</option>
+                    @foreach (var s in sectores)
+                    {
+                        <option value="@s.Id">@s.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Legajo..." @bind="filtroLegajo" />
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-primary btn-sm" @onclick="Generar" disabled="@cargando">
+                    @if (cargando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    <i class="bi bi-search me-1"></i>Generar
+                </button>
+                @if (cargando)
+                {
+                    <button class="btn btn-outline-danger btn-sm" @onclick="Cancelar">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                }
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger py-1 mt-2 mb-0 small">@mensajeError</div>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th role="button" @onclick='() => SetOrden("fecha")'>Fecha @SortIcon("fecha")</th>
+                        <th role="button" @onclick='() => SetOrden("legajo")'>Legajo @SortIcon("legajo")</th>
+                        <th role="button" @onclick='() => SetOrden("nombre")'>Apellido y Nombre @SortIcon("nombre")</th>
+                        <th>Sucursal</th>
+                        <th role="button" @onclick='() => SetOrden("orden")'># @SortIcon("orden")</th>
+                        <th role="button" @onclick='() => SetOrden("entrada")'>Entrada @SortIcon("entrada")</th>
+                        <th role="button" @onclick='() => SetOrden("salida")'>Salida @SortIcon("salida")</th>
+                        <th role="button" @onclick='() => SetOrden("horas")'>Horas @SortIcon("horas")</th>
+                        <th>Origen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items == null)
+                    {
+                        <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-geo-alt fs-3 d-block mb-2"></i>Seleccione rango de fechas y presione Generar</td></tr>
+                    }
+                    else if (!items.Any())
+                    {
+                        <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin resultados para el rango seleccionado</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in items)
+                        {
+                            <tr>
+                                <td>@r.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge bg-secondary">@r.NumeroLegajo</span></td>
+                                <td><strong>@r.Apellido</strong>, @r.Nombre</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(r.Sucursal))
+                                    {
+                                        <span class="badge bg-info text-dark">@r.Sucursal</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td><span class="text-muted small">@r.OrdenBloque</span></td>
+                                <td>
+                                    @if (r.Entrada.HasValue)
+                                    {
+                                        <span class="@(r.LlegaTarde ? "text-danger fw-bold" : "")">@r.Entrada.Value.ToString("HH:mm")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@(r.Salida.HasValue ? r.Salida.Value.ToString("HH:mm") : "-")</td>
+                                <td>
+                                    @if (r.HorasTrabajadas.HasValue)
+                                    {
+                                        var h = r.HorasTrabajadas.Value;
+                                        <span class="@(h.TotalHours < 1 ? "text-warning fw-bold" : "")">@($"{(int)h.TotalHours}:{h.Minutes:D2}")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@OrigenBadge(r.OrigenEntrada)</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (items != null && items.Any())
+    {
+        <div class="card-footer text-muted small">
+            @items.Count registros &mdash;
+            @items.Select(r => new { r.Fecha, r.NumeroLegajo }).Distinct().Count() legajo-dias &mdash;
+            @items.Select(r => r.Sucursal).Where(s => !string.IsNullOrEmpty(s)).Distinct().Count() sucursales
+        </div>
+    }
+</div>
+
+@code {
+    private List<RecorridoRow>? items;
+    private List<Sucursal> sucursales = new();
+    private List<Sector> sectores = new();
+    private DateTime fechaDesde = Clock.Today.AddDays(-7);
+    private DateTime fechaHasta = Clock.Today;
+    private int filtroSucursal;
+    private int filtroSector;
+    private string filtroLegajo = "";
+    private bool cargando;
+    private string ordenColumna = "fecha";
+    private bool ordenDesc;
+    private string mensajeError = "";
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sucursales = await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+        sectores = await Db.Sectores.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+    }
+
+    private async Task Generar()
+    {
+        mensajeError = "";
+        if (fechaDesde > fechaHasta) { mensajeError = "La fecha Desde no puede ser posterior a Hasta."; return; }
+        if ((fechaHasta - fechaDesde).TotalDays > 366) { mensajeError = "El rango maximo permitido es de 1 ano (366 dias)."; return; }
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            var desde = DateOnly.FromDateTime(fechaDesde);
+            var hasta = DateOnly.FromDateTime(fechaHasta);
+
+            var legajosQuery = Db.Legajos
+                .Include(l => l.Horario).ThenInclude(h => h!.Detalles)
+                .Include(l => l.Sector)
+                .Where(l => l.IsActive);
+
+            if (filtroSector > 0)
+                legajosQuery = legajosQuery.Where(l => l.SectorId == filtroSector);
+
+            if (!string.IsNullOrWhiteSpace(filtroLegajo))
+            {
+                var f = filtroLegajo.Trim().ToLower();
+                legajosQuery = legajosQuery.Where(l => l.Apellido.ToLower().Contains(f)
+                    || l.Nombre.ToLower().Contains(f)
+                    || l.NumeroLegajo.ToLower().Contains(f));
+            }
+
+            var legajos = await legajosQuery.ToListAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            var fichadasQuery = Db.Fichadas
+                .Include(f => f.Sucursal)
+                .Where(f => f.FechaHora >= fechaDesde.Date && f.FechaHora < fechaHasta.Date.AddDays(1));
+
+            if (filtroSucursal > 0)
+                fichadasQuery = fichadasQuery.Where(f => f.SucursalId == filtroSucursal);
+
+            var fichadas = await fichadasQuery.ToListAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            var resultado = new List<RecorridoRow>();
+
+            for (var dia = desde; dia <= hasta; dia = dia.AddDays(1))
+            {
+                token.ThrowIfCancellationRequested();
+
+                foreach (var leg in legajos)
+                {
+                    var fichadasDia = fichadas
+                        .Where(f => f.LegajoId == leg.Id && DateOnly.FromDateTime(f.FechaHora) == dia)
+                        .OrderBy(f => f.FechaHora)
+                        .ToList();
+
+                    if (fichadasDia.Count == 0) continue;
+
+                    // Agrupar en bloques secuenciales por sucursal.
+                    // Cada vez que cambia la sucursal se crea un bloque nuevo.
+                    // Unicenter -> Palermo -> Unicenter = 3 bloques separados.
+                    var bloques = new List<(int sucursalId, string sucursalNombre, List<Fichada> items)>();
+                    int bloqueActualSucId = -1;
+                    foreach (var f in fichadasDia)
+                    {
+                        int sucId = f.SucursalId;
+                        if (sucId != bloqueActualSucId)
+                        {
+                            string nombreSuc = f.Sucursal?.Nombre ?? "";
+                            bloques.Add((sucId, nombreSuc, new List<Fichada>()));
+                            bloqueActualSucId = sucId;
+                        }
+                        bloques[^1].items.Add(f);
+                    }
+
+                    var horarioDia = leg.Horario?.Detalles?.FirstOrDefault(d => (int)d.DiaSemana == (int)dia.DayOfWeek + 1);
+                    var esCerrado = horarioDia?.IsCerrado ?? true;
+
+                    var orden = 1;
+                    foreach (var bloque in bloques)
+                    {
+                        var entrada = bloque.items.Where(f => f.Tipo == "E").OrderBy(f => f.FechaHora).FirstOrDefault();
+                        var salida = bloque.items.Where(f => f.Tipo == "S").OrderByDescending(f => f.FechaHora).FirstOrDefault();
+
+                        var llegaTarde = false;
+                        if (orden == 1 && entrada != null && horarioDia != null && !esCerrado)
+                        {
+                            var horaEntrada = TimeOnly.FromDateTime(entrada.FechaHora);
+                            llegaTarde = horaEntrada > horarioDia.HoraDesde.AddMinutes(5);
+                        }
+
+                        var horas = (entrada != null && salida != null && salida.FechaHora > entrada.FechaHora)
+                            ? salida.FechaHora - entrada.FechaHora
+                            : (TimeSpan?)null;
+
+                        resultado.Add(new RecorridoRow
+                        {
+                            Fecha = dia,
+                            NumeroLegajo = leg.NumeroLegajo,
+                            Apellido = leg.Apellido,
+                            Nombre = leg.Nombre,
+                            Sucursal = bloque.sucursalNombre,
+                            OrdenBloque = orden,
+                            Entrada = entrada != null ? TimeOnly.FromDateTime(entrada.FechaHora) : null,
+                            Salida = salida != null ? TimeOnly.FromDateTime(salida.FechaHora) : null,
+                            HorasTrabajadas = horas,
+                            LlegaTarde = llegaTarde,
+                            OrigenEntrada = string.Join(", ", bloque.items.Select(f => f.Origen).Where(o => !string.IsNullOrEmpty(o)).Distinct())
+                        });
+                        orden++;
+                    }
+                }
+            }
+
+            items = Ordenar(resultado);
+        }
+        catch (OperationCanceledException)
+        {
+            mensajeError = "Consulta cancelada.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        _cts?.Cancel();
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        await base.DisposeAsync();
+    }
+
+    private void SetOrden(string columna)
+    {
+        if (ordenColumna == columna) ordenDesc = !ordenDesc;
+        else { ordenColumna = columna; ordenDesc = false; }
+        if (items != null) items = Ordenar(items);
+    }
+
+    private List<RecorridoRow> Ordenar(List<RecorridoRow> data)
+    {
+        return (ordenColumna switch
+        {
+            "legajo" => ordenDesc ? data.OrderByDescending(r => r.NumeroLegajo) : data.OrderBy(r => r.NumeroLegajo),
+            "nombre" => ordenDesc ? data.OrderByDescending(r => r.Apellido).ThenByDescending(r => r.Nombre) : data.OrderBy(r => r.Apellido).ThenBy(r => r.Nombre),
+            "orden" => ordenDesc ? data.OrderByDescending(r => r.OrdenBloque) : data.OrderBy(r => r.OrdenBloque),
+            "entrada" => ordenDesc ? data.OrderByDescending(r => r.Entrada) : data.OrderBy(r => r.Entrada),
+            "salida" => ordenDesc ? data.OrderByDescending(r => r.Salida) : data.OrderBy(r => r.Salida),
+            "horas" => ordenDesc ? data.OrderByDescending(r => r.HorasTrabajadas) : data.OrderBy(r => r.HorasTrabajadas),
+            _ => ordenDesc ? data.OrderByDescending(r => r.Fecha).ThenBy(r => r.Apellido).ThenBy(r => r.OrdenBloque)
+                           : data.OrderBy(r => r.Fecha).ThenBy(r => r.Apellido).ThenBy(r => r.OrdenBloque),
+        }).ToList();
+    }
+
+    private MarkupString OrigenBadge(string origenes)
+    {
+        if (string.IsNullOrEmpty(origenes))
+            return new MarkupString("<span class=\"text-muted\">—</span>");
+
+        var badges = new System.Text.StringBuilder();
+        foreach (var origen in origenes.Split(',', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            var (text, css) = origen switch
+            {
+                "Huella" => ("Huella", "bg-primary"),
+                "PIN" => ("PIN", "bg-warning text-dark"),
+                "Demo" => ("Demo", "bg-secondary"),
+                "Manual" => ("Manual", "bg-info"),
+                "Web" => ("Web", "bg-dark"),
+                "QR" => ("QR", "bg-dark"),
+                "Movil" => ("Movil", "bg-success"),
+                _ => (origen, "bg-secondary")
+            };
+            badges.Append($"<span class=\"badge {css} me-1\">{text}</span>");
+        }
+        return new MarkupString(badges.ToString());
+    }
+
+    private MarkupString SortIcon(string columna)
+    {
+        if (ordenColumna != columna)
+            return new MarkupString("<i class=\"bi bi-chevron-expand text-muted small\"></i>");
+        return ordenDesc
+            ? new MarkupString("<i class=\"bi bi-sort-down\"></i>")
+            : new MarkupString("<i class=\"bi bi-sort-up\"></i>");
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (items == null) return;
+        var filtros = new List<string>();
+        if (filtroSucursal > 0) filtros.Add($"Sucursal: {sucursales.FirstOrDefault(s => s.Id == filtroSucursal)?.Nombre}");
+        if (filtroSector > 0) filtros.Add($"Sector: {sectores.FirstOrDefault(s => s.Id == filtroSector)?.Nombre}");
+        if (!string.IsNullOrWhiteSpace(filtroLegajo)) filtros.Add($"Legajo: {filtroLegajo}");
+        var bytes = ExcelExporter.Generar(items,
+            new ExcelExportConfig { Titulo = "Reporte Recorrido Diario", NombreEmpresa = Tenant.EmpresaNombre,
+                FechaDesde = fechaDesde.ToString("dd/MM/yyyy"), FechaHasta = fechaHasta.ToString("dd/MM/yyyy"),
+                Filtros = filtros,
+                Encabezados = ["Fecha", "Legajo", "Apellido", "Nombre", "Sucursal", "#", "Entrada", "Salida", "Horas", "Origen"],
+                Formatos = [ExcelColFormat.Fecha, ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Texto,
+                           ExcelColFormat.Texto, ExcelColFormat.Texto, ExcelColFormat.Hora, ExcelColFormat.Hora, ExcelColFormat.Texto, ExcelColFormat.Texto] },
+            r => [r.Fecha, r.NumeroLegajo, r.Apellido, r.Nombre, r.Sucursal, r.OrdenBloque,
+                  r.Entrada.HasValue ? (object)r.Entrada.Value : "", r.Salida.HasValue ? (object)r.Salida.Value : "",
+                  r.HorasTrabajadas.HasValue ? $"{(int)r.HorasTrabajadas.Value.TotalHours}:{r.HorasTrabajadas.Value.Minutes:D2}" : "",
+                  string.IsNullOrEmpty(r.OrigenEntrada) ? "—" : r.OrigenEntrada]);
+        await JS.InvokeVoidAsync("downloadFile", "recorrido_diario.xlsx", Convert.ToBase64String(bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private async Task ExportarCsv()
+    {
+        if (items == null) return;
+        var bytes = CsvExporter.ToCsvBytes(items,
+            ["Fecha", "Legajo", "Apellido", "Nombre", "Sucursal", "#", "Entrada", "Salida", "Horas", "Origen"],
+            r => [r.Fecha.ToString("dd/MM/yyyy"), r.NumeroLegajo, r.Apellido, r.Nombre, r.Sucursal,
+                  r.OrdenBloque.ToString(),
+                  r.Entrada?.ToString("HH:mm") ?? "", r.Salida?.ToString("HH:mm") ?? "",
+                  r.HorasTrabajadas.HasValue ? $"{(int)r.HorasTrabajadas.Value.TotalHours}:{r.HorasTrabajadas.Value.Minutes:D2}" : "",
+                  string.IsNullOrEmpty(r.OrigenEntrada) ? "" : r.OrigenEntrada]);
+        await JS.InvokeVoidAsync("downloadFile", "recorrido_diario.csv", Convert.ToBase64String(bytes), "text/csv");
+    }
+
+    private class RecorridoRow
+    {
+        public DateOnly Fecha { get; set; }
+        public string NumeroLegajo { get; set; } = "";
+        public string Apellido { get; set; } = "";
+        public string Nombre { get; set; } = "";
+        public string Sucursal { get; set; } = "";
+        public int OrdenBloque { get; set; }
+        public TimeOnly? Entrada { get; set; }
+        public TimeOnly? Salida { get; set; }
+        public TimeSpan? HorasTrabajadas { get; set; }
+        public bool LlegaTarde { get; set; }
+        public string OrigenEntrada { get; set; } = "";
+    }
+}
