@@ -14,6 +14,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Pais> Paises { get; set; }
     public DbSet<TipoIdentificacionFiscal> TiposIdentificacionFiscal { get; set; }
     public DbSet<PlanConfig> PlanConfigs { get; set; }
+    public DbSet<Moneda> Monedas { get; set; }
+    public DbSet<TipoCambio> TiposCambio { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -57,6 +59,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<PlanConfig>(e =>
         {
             e.ToTable("PlanConfig", t => t.ExcludeFromMigrations());
+        });
+
+        builder.Entity<Moneda>(e =>
+        {
+            e.HasIndex(m => m.Codigo).IsUnique();
+            e.ToTable(t => t.ExcludeFromMigrations());
+        });
+
+        builder.Entity<TipoCambio>(e =>
+        {
+            e.ToTable(t => t.ExcludeFromMigrations());
         });
     }
 }

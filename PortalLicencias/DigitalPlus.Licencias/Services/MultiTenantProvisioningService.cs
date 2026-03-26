@@ -962,6 +962,54 @@ public class MultiTenantProvisioningService
                 span[i] = chars[b[i] % chars.Length];
         });
     }
+
+    /// <summary>
+    /// Crea una Noticia en la BD Multi-Tenant para notificar al usuario sobre un cambio de plan.
+    /// Best-effort: no lanza excepcion si falla.
+    /// </summary>
+    public async Task NotificarCambioPlanAsync(int empresaId, string planAnterior, string planNuevo, string? detalle = null)
+    {
+        try
+        {
+            var titulo = planAnterior == planNuevo
+                ? $"Plan {Capitalizar(planNuevo)} renovado"
+                : $"Plan actualizado a {Capitalizar(planNuevo)}";
+
+            var contenido = planAnterior == planNuevo
+                ? $"Su plan {Capitalizar(planNuevo)} fue renovado exitosamente."
+                : $"Su plan fue cambiado de {Capitalizar(planAnterior)} a {Capitalizar(planNuevo)}.";
+
+            if (!string.IsNullOrEmpty(detalle))
+                contenido += $" {detalle}";
+
+            var ahora = DateTime.UtcNow;
+            var hoy = ahora.ToString("yyyy-MM-dd");
+            var hasta = ahora.AddDays(30).ToString("yyyy-MM-dd");
+
+            await using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new SqlCommand(@"
+                INSERT INTO Noticia (EmpresaId, Titulo, Contenido, FechaDesde, FechaHasta, IsPrivada, CreatedAt, CreatedBy)
+                VALUES (@EmpresaId, @Titulo, @Contenido, @Hoy, @Hasta, 0, @Ahora, 'IntegraIA')", conn);
+            cmd.Parameters.AddWithValue("@EmpresaId", empresaId);
+            cmd.Parameters.AddWithValue("@Titulo", titulo);
+            cmd.Parameters.AddWithValue("@Contenido", contenido);
+            cmd.Parameters.AddWithValue("@Hoy", hoy);
+            cmd.Parameters.AddWithValue("@Hasta", hasta);
+            cmd.Parameters.AddWithValue("@Ahora", ahora);
+            await cmd.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Noticia cambio plan: empresa {EmpresaId}, {PlanAnterior} -> {PlanNuevo}",
+                empresaId, planAnterior, planNuevo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "No se pudo crear noticia de cambio de plan para empresa {EmpresaId}", empresaId);
+        }
+    }
+
+    private static string Capitalizar(string s) =>
+        string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
 }
 
 public class LegajoListDto

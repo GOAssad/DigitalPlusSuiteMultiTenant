@@ -6,6 +6,7 @@
 @inject IJSRuntime JS
 @inject DigitalPlus.Licencias.Services.MultiTenantProvisioningService MTService
 @inject IConfiguration Config
+@inject DigitalPlus.Licencias.Services.IEmailService EmailService
 
 <PageTitle>Detalle Empresa - DigitalPlus</PageTitle>
 
@@ -699,15 +700,15 @@ else
                             <tr>
                                 <td class="fw-bold" style="width:200px;">Origen del plan</td>
                                 <td>
-                                    <span class="badge @(empresa.PlanOrigen == "lsq" ? "bg-info" : empresa.PlanOrigen == "manual" ? "bg-secondary" : "bg-light text-dark")">
-                                        @(empresa.PlanOrigen ?? "manual")
+                                    <span class="badge @(empresa.PlanOrigen switch { "lsq" => "bg-info", "mp" => "bg-primary", "manual" => "bg-secondary", _ => "bg-light text-dark" })">
+                                        @(empresa.PlanOrigen switch { "lsq" => "Lemon Squeezy", "mp" => "MercadoPago", "manual" => "Manual", _ => empresa.PlanOrigen ?? "manual" })
                                     </span>
                                 </td>
                             </tr>
                             @if (empresa.PlanOrigen == "lsq")
                             {
                                 <tr>
-                                    <td class="fw-bold">Customer ID</td>
+                                    <td class="fw-bold">Customer ID (LSQ)</td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(empresa.LsqCustomerId))
                                         {
@@ -722,7 +723,7 @@ else
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Subscription ID</td>
+                                    <td class="fw-bold">Subscription ID (LSQ)</td>
                                     <td>@(empresa.LsqSubscriptionId ?? "-")</td>
                                 </tr>
                                 <tr>
@@ -735,6 +736,38 @@ else
                                         else if (!string.IsNullOrEmpty(empresa.LsqSubscriptionId))
                                         {
                                             <span class="badge bg-success">Activa</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Sin suscripcion</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            @if (empresa.PlanOrigen == "mp")
+                            {
+                                <tr>
+                                    <td class="fw-bold">Customer ID (MP)</td>
+                                    <td>@(empresa.MpCustomerId ?? "-")</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Subscription ID (MP)</td>
+                                    <td>@(empresa.MpSubscriptionId ?? "-")</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Estado</td>
+                                    <td>
+                                        @if (empresa.MpStatus == "cancelled")
+                                        {
+                                            <span class="badge bg-warning text-dark">Cancelada</span>
+                                        }
+                                        else if (empresa.MpStatus == "active" || empresa.MpStatus == "authorized")
+                                        {
+                                            <span class="badge bg-success">Activa</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(empresa.MpStatus))
+                                        {
+                                            <span class="badge bg-secondary">@empresa.MpStatus</span>
                                         }
                                         else
                                         {
@@ -787,30 +820,47 @@ else
 
                     <hr />
                     <div class="d-flex gap-2 flex-wrap">
-                        @if (!string.IsNullOrEmpty(empresa.LsqSubscriptionId) && empresa.LsqStatus != "cancelled")
+                        @if ((!string.IsNullOrEmpty(empresa.LsqSubscriptionId) && empresa.LsqStatus != "cancelled") ||
+                             (!string.IsNullOrEmpty(empresa.MpSubscriptionId) && empresa.MpStatus != "cancelled"))
                         {
                             <button class="btn btn-outline-danger btn-sm"
                                     @onclick="() => showCancelarLsqModal = true"
                                     disabled="@procesando">
-                                <i class="bi bi-x-circle me-1"></i>Cancelar suscripcion
+                                <i class="bi bi-x-circle me-1"></i>Cancelar suscripcion (@(empresa.PlanOrigen == "mp" ? "MercadoPago" : "Lemon Squeezy"))
                             </button>
                         }
-                        @if (licencias?.Any(l => l.Plan == "enterprise") == true)
-                        {
-                            <span class="badge bg-success me-2"><i class="bi bi-check-circle me-1"></i>Plan Enterprise activo</span>
-                            <button class="btn btn-outline-secondary btn-sm"
-                                    @onclick="() => showRevertirPlanModal = true"
-                                    disabled="@procesando">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i>Revertir plan
-                            </button>
+                        @{
+                            var planActual = licencias?.FirstOrDefault()?.Plan ?? "free";
                         }
-                        else
+                        <span class="badge bg-secondary me-2">Plan: @planActual</span>
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick="() => showRevertirPlanModal = true"
+                                disabled="@procesando">
+                            <i class="bi bi-arrow-repeat me-1"></i>Cambiar plan
+                        </button>
+                        @if (planActual != "enterprise")
                         {
                             <button class="btn btn-outline-warning btn-sm"
                                     @onclick="() => showEnterpriseManalModal = true"
                                     disabled="@procesando">
-                                <i class="bi bi-star me-1"></i>Activar plan Enterprise manualmente
+                                <i class="bi bi-star me-1"></i>Activar Enterprise manual
                             </button>
+                        }
+                        <button class="btn btn-outline-info btn-sm"
+                                @onclick="GenerarLinkMpEnterprise"
+                                disabled="@(procesando || generandoLinkMp)">
+                            @if (generandoLinkMp) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-credit-card-2-front me-1"></i>Generar link MercadoPago (Enterprise)
+                        </button>
+                        @if (!string.IsNullOrEmpty(linkMpEnterprise))
+                        {
+                            <div class="w-100 mt-1 p-2 bg-light border rounded small">
+                                <strong>Link MercadoPago:</strong>
+                                <a href="@linkMpEnterprise" target="_blank">@linkMpEnterprise</a>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="CopiarLinkMp">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
                         }
                     </div>
                 </div>
@@ -1049,27 +1099,30 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-secondary">
                 <div class="modal-header bg-secondary bg-opacity-10">
-                    <h5 class="modal-title"><i class="bi bi-arrow-counterclockwise me-2"></i>Revertir Plan</h5>
+                    <h5 class="modal-title"><i class="bi bi-arrow-repeat me-2"></i>Cambiar Plan</h5>
                     <button type="button" class="btn-close" @onclick="() => showRevertirPlanModal = false"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Seleccione el plan al que desea revertir la empresa "<strong>@empresa?.Nombre</strong>":</p>
+                    <p>Seleccione el plan para la empresa "<strong>@empresa?.Nombre</strong>":</p>
                     <div class="mb-3">
                         <select class="form-select" @bind="revertirPlanDestino">
                             <option value="free">Free</option>
                             <option value="basic">Basic</option>
                             <option value="pro">Pro</option>
+                            <option value="enterprise">Enterprise</option>
                         </select>
                     </div>
-                    <div class="alert alert-warning small mb-0">
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
                         Los limites se ajustaran automaticamente segun la configuracion del plan seleccionado.
+                        Si hay una suscripcion activa (LSQ/MP), el PlanOrigen se mantiene.
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @onclick="() => showRevertirPlanModal = false">Cancelar</button>
                     <button class="btn btn-primary" disabled="@procesando" @onclick="EjecutarRevertirPlan">
                         @if (procesando) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                        Revertir a @revertirPlanDestino
+                        Cambiar a @revertirPlanDestino
                     </button>
                 </div>
             </div>
@@ -1151,6 +1204,8 @@ else
     private DateTime? enterpriseVencimiento;
     private bool generandoLink;
     private string? linkPagoEnterprise;
+    private bool generandoLinkMp;
+    private string? linkMpEnterprise;
     private bool showRevertirPlanModal;
     private string revertirPlanDestino = "pro";
 
@@ -1500,6 +1555,70 @@ else
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", linkPagoEnterprise);
     }
 
+    private async Task GenerarLinkMpEnterprise()
+    {
+        if (empresa == null) return;
+        generandoLinkMp = true;
+        linkMpEnterprise = null;
+        mensaje = null;
+
+        try
+        {
+            // Leer precio Enterprise de PlanConfig
+            using var conn = new Microsoft.Data.SqlClient.SqlConnection(
+                Config.GetConnectionString("DefaultConnection"));
+            await conn.OpenAsync();
+            using var cmd = new Microsoft.Data.SqlClient.SqlCommand(
+                "SELECT Valor FROM PlanConfig WHERE [Plan] = 'enterprise' AND Parametro = 'ImporteAnual'", conn);
+            var montoResult = await cmd.ExecuteScalarAsync();
+            var monto = montoResult != null && montoResult != DBNull.Value ? Convert.ToDecimal(montoResult) : 500m;
+
+            var baseUrl = Config["AzureFunctions:BaseUrl"] ?? "https://digitalplus-provision.azurewebsites.net/api/";
+            var apiKey = Config["AzureFunctions:ApiKey"] ?? "";
+
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                empresaId = empresa.Id,
+                monto,
+                descripcion = $"DigitalPlus Enterprise - {empresa.Nombre}",
+                successUrl = $"https://digitalpluslicencias.azurewebsites.net/empresas/{empresa.Id}"
+            });
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+            var response = await client.PostAsync(
+                $"{baseUrl}mp/create-checkout",
+                new StringContent(payload, System.Text.Encoding.UTF8, "application/json"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await System.Text.Json.JsonSerializer.DeserializeAsync<System.Text.Json.JsonElement>(
+                    await response.Content.ReadAsStreamAsync());
+                linkMpEnterprise = json.GetProperty("checkoutUrl").GetString();
+                mensaje = "Link de pago MercadoPago generado.";
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                mensaje = $"Error al generar link MP: {response.StatusCode} - {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            generandoLinkMp = false;
+        }
+    }
+
+    private async Task CopiarLinkMp()
+    {
+        if (!string.IsNullOrEmpty(linkMpEnterprise))
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", linkMpEnterprise);
+    }
+
     private async Task EjecutarActivarEnterprise()
     {
         if (empresa == null || licencias == null || licencias.Count == 0) return;
@@ -1516,15 +1635,31 @@ else
             empresa.LsqStatus = null;
             await Repo.ActualizarEmpresaAsync(empresa);
 
-            // Completar solicitudes Enterprise pendientes en BD MT
+            // Completar solicitudes Enterprise pendientes + notificar en BD MT
             try
             {
                 var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
                 if (mtEmpresaId.HasValue)
+                {
                     await MTService.CompletarSolicitudesPendientesAsync(
                         mtEmpresaId.Value, "Enterprise", "Plan Enterprise activado por IntegraIA");
+                    await MTService.NotificarCambioPlanAsync(
+                        mtEmpresaId.Value, lic.Plan, "enterprise", "Activado por IntegraIA.");
+                }
             }
             catch { /* best-effort */ }
+
+            // Email al contacto de la empresa
+            if (!string.IsNullOrEmpty(empresa.Email))
+            {
+                try
+                {
+                    await EmailService.SendAsync(empresa.Email,
+                        $"[DigitalPlus] Plan Enterprise activado - {empresa.Nombre}",
+                        $"<h2>Plan Enterprise activado</h2><p>Su empresa <strong>{empresa.Nombre}</strong> fue actualizada al plan <strong>Enterprise</strong> por IntegraIA.</p><p>Los nuevos limites ya estan activos.</p>");
+                }
+                catch { /* best-effort */ }
+            }
 
             // Recargar datos
             empresa = await Repo.GetEmpresaAsync(Id);
@@ -1561,15 +1696,31 @@ else
             empresa.LsqStatus = null;
             await Repo.ActualizarEmpresaAsync(empresa);
 
-            // Completar solicitudes Enterprise pendientes en BD MT
+            // Completar solicitudes Enterprise pendientes + notificar en BD MT
             try
             {
                 var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
                 if (mtEmpresaId.HasValue)
+                {
                     await MTService.CompletarSolicitudesPendientesAsync(
                         mtEmpresaId.Value, "Enterprise", $"Plan revertido a {revertirPlanDestino} por IntegraIA");
+                    await MTService.NotificarCambioPlanAsync(
+                        mtEmpresaId.Value, lic.Plan, revertirPlanDestino, "Cambio realizado por IntegraIA.");
+                }
             }
             catch { /* best-effort */ }
+
+            // Email al contacto de la empresa
+            if (!string.IsNullOrEmpty(empresa.Email))
+            {
+                try
+                {
+                    await EmailService.SendAsync(empresa.Email,
+                        $"[DigitalPlus] Plan actualizado - {empresa.Nombre}",
+                        $"<h2>Plan actualizado</h2><p>El plan de su empresa <strong>{empresa.Nombre}</strong> fue cambiado de <strong>{lic.Plan}</strong> a <strong>{revertirPlanDestino}</strong> por IntegraIA.</p><p>Los nuevos limites ya estan activos.</p>");
+                }
+                catch { /* best-effort */ }
+            }
 
             // Recargar datos
             empresa = await Repo.GetEmpresaAsync(Id);

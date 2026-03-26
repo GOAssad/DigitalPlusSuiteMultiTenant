@@ -1,6 +1,6 @@
 # DIGITALPLUS - Reporte de Arquitectura para Project Leader
 
-**Version:** 17.0
+**Version:** 18.0
 **Fecha:** 2026-03-24
 **Generado por:** Claude Opus 4.6
 
@@ -314,6 +314,10 @@ INFRAESTRUCTURA CLOUD
 - `POST /api/lsq/create-checkout` - Crear checkout de Lemon Squeezy para upgrade de plan
 - `POST /api/lsq/webhook` - Recibir webhooks de Lemon Squeezy (subscription_created/updated/payment_success/expired/cancelled)
 - `POST /api/lsq/cancel-subscription` - Cancelar suscripcion activa (PATCH cancelled=true al final del periodo)
+- `POST /api/mp/create-subscription` - Crear Checkout Pro de MercadoPago para contratar plan (ARS, conversion USD via TC)
+- `POST /api/mp/create-checkout` - Crear Checkout Pro con monto custom (Enterprise manual)
+- `POST /api/mp/webhook` - Recibir webhooks de MercadoPago (payment approved)
+- `POST /api/mp/cancel-subscription` - Cancelar plan MercadoPago (solo estado local, no hay suscripcion en MP)
 
 ### 3.6 Instaladores
 
@@ -505,7 +509,11 @@ En modo multi-tenant, la validacion de licencia esta **deshabilitada** en las ap
 - Codigos de uso unico con flag `UsedAt` en BD
 - UPDLOCK + HOLDLOCK en stored procedures para evitar race conditions
 
-### Pasarela de pago: Lemon Squeezy
+### Pasarelas de pago
+
+El sistema soporta dos pasarelas de pago: **MercadoPago** (Argentina) y **Lemon Squeezy** (internacional). El Portal MT detecta el pais de la empresa y muestra la pasarela preferida primero.
+
+#### Lemon Squeezy (pagos internacionales)
 
 Lemon Squeezy opera como Merchant of Record para pagos internacionales (Argentina no esta soportada por Stripe). La integracion incluye:
 
@@ -515,7 +523,6 @@ Lemon Squeezy opera como Merchant of Record para pagos internacionales (Argentin
 - **Mapeo de planes:** Configurado via variables de entorno `LemonSqueezy:VariantMap:{variantId}` en Azure Functions
 - **Alertas:** LicenciaAlerts muestra warning/danger cuando la suscripcion esta cancelada y proxima a vencer
 - **Suscripcion expirada (jaula):** Middleware en Portal MT redirige a `/configuracion/planes` cuando la suscripcion expira. El usuario puede recontratar desde ahi
-- **Confirmacion inline:** Todas las acciones destructivas en 9 listados del Portal MT requieren Confirmar/Cancelar antes de ejecutar
 
 | Evento LSQ | Accion del sistema |
 |---|---|
@@ -524,6 +531,37 @@ Lemon Squeezy opera como Merchant of Record para pagos internacionales (Argentin
 | subscription_updated | Actualiza LsqStatus/VariantId, cambia plan si cambio variante |
 | subscription_cancelled | Marca LsqStatus='cancelled', plan sigue activo hasta PlanVencimiento |
 | subscription_expired | Degrada a Free, limpia datos LSQ |
+
+#### MercadoPago (Argentina)
+
+MercadoPago usa **Checkout Pro** (pago unico) en vez de Preapproval (suscripciones recurrentes), porque Preapproval requiere coincidencia de email pagador = email suscripcion, incompatible con cuentas admin compartidas.
+
+- **Checkout Pro:** Pago unico en ARS. Precio USD de PlanConfig se convierte via tipo de cambio vigente (tabla TiposCambio)
+- **ExternalReference:** `emp_{empresaId}_plan_{plan}_{monthly|annual}` — incluye periodo para calcular vencimiento automaticamente
+- **Webhook:** Recibe `payment.approved`, parsea ExternalReference, actualiza Empresa + Licencia + PlanVencimiento (30 dias mensual, 365 dias anual)
+- **Cancelacion:** Solo local (no hay suscripcion en MP). Se marca MpStatus='cancelled' y la licencia expira naturalmente en PlanVencimiento
+- **Enterprise manual:** Checkout Pro con monto custom en USD (IntegraIA genera link desde Portal Licencias)
+- **Monedas y tipo de cambio:** Tabla Monedas (USD base, ARS) + TiposCambio con historial. Gestion en Portal Licencias > Atributos > Monedas
+
+| Campo Empresa | Descripcion |
+|---|---|
+| MpSubscriptionId | ID de la preference de Checkout Pro |
+| MpCustomerId | ID del pagador en MP |
+| MpStatus | pending, active, cancelled |
+| PlanOrigen | 'mp' (MercadoPago), 'lsq' (Lemon Squeezy), 'manual' |
+
+### Auditoria de licencias (LicenciasLog)
+
+Todas las operaciones sobre licencias se registran en la tabla `LicenciasLog` con origen (App) para trazabilidad completa:
+
+| Origen | Acciones registradas |
+|---|---|
+| License_Activate (SP) | trial_start, activate, upgrade_from_trial |
+| License_Heartbeat (SP) | heartbeat |
+| MercadoPago (Azure Functions) | mp_checkout_created, mp_payment_approved, mp_cancelled |
+| LemonSqueezy (Azure Functions) | lsq_subscription_created, lsq_payment_success, lsq_plan_changed, lsq_subscription_updated, lsq_cancelled, lsq_cancelled_by_user, lsq_expired |
+| AzureFunctions (LicenseUpdateService) | payment_approved (compartido MP+LSQ) |
+| PortalLicencias | create, update, plan_change, extend, suspend, unsuspend, upgrade |
 
 ### Plan Enterprise
 

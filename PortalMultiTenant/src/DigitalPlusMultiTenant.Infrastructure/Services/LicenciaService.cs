@@ -75,21 +75,26 @@ public class LicenciaService : ILicenciaService
                 return CacheAndReturn(cacheKey, new LicenciaInfo());
             }
 
-            // Leer info de suscripción LSQ desde tabla Empresas
+            // Leer info de suscripción (LSQ + MP) desde tabla Empresas
             await using (var conn = new SqlConnection(_adminConnectionString))
             {
-                var lsqInfo = await conn.QueryFirstOrDefaultAsync<dynamic>(
-                    @"SELECT PlanOrigen, PlanVencimiento, LsqUpdatePaymentUrl, LsqCustomerPortalUrl, LsqStatus
+                var subInfo = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                    @"SELECT PlanOrigen, PlanVencimiento,
+                             LsqUpdatePaymentUrl, LsqCustomerPortalUrl, LsqStatus,
+                             MpSubscriptionId, MpStatus, PaisId
                       FROM Empresas WHERE CompanyId = @CompanyId",
                     new { CompanyId = companyId });
 
-                if (lsqInfo != null)
+                if (subInfo != null)
                 {
-                    licencia.PlanOrigen = lsqInfo.PlanOrigen as string;
-                    licencia.PlanVencimiento = lsqInfo.PlanVencimiento as DateTime?;
-                    licencia.LsqUpdatePaymentUrl = lsqInfo.LsqUpdatePaymentUrl as string;
-                    licencia.LsqCustomerPortalUrl = lsqInfo.LsqCustomerPortalUrl as string;
-                    licencia.LsqStatus = lsqInfo.LsqStatus as string;
+                    licencia.PlanOrigen = subInfo.PlanOrigen as string;
+                    licencia.PlanVencimiento = subInfo.PlanVencimiento as DateTime?;
+                    licencia.LsqUpdatePaymentUrl = subInfo.LsqUpdatePaymentUrl as string;
+                    licencia.LsqCustomerPortalUrl = subInfo.LsqCustomerPortalUrl as string;
+                    licencia.LsqStatus = subInfo.LsqStatus as string;
+                    licencia.MpSubscriptionId = subInfo.MpSubscriptionId as string;
+                    licencia.MpStatus = subInfo.MpStatus as string;
+                    licencia.PaisId = subInfo.PaisId as int?;
                 }
             }
 

@@ -56,10 +56,14 @@ public class RepositorioLicencias
 
     public async Task ActualizarLicenciaAsync(int id, string plan, int maxLegajos, DateTime? expiresAt)
     {
-        // Si cambió el plan, aplicar límites de PlanConfig automáticamente
         var lic = await _context.Licencias.FindAsync(id);
-        if (lic != null && lic.Plan != plan)
+        if (lic == null) return;
+
+        var planAnterior = lic.Plan;
+
+        if (lic.Plan != plan)
         {
+            // Cambió el plan — aplicar límites de PlanConfig automáticamente
             var valores = await GetPlanValoresAsync(plan);
             if (valores.TryGetValue("MaxLegajos", out var ml)) maxLegajos = (int)ml;
             var maxSuc = (int)valores.GetValueOrDefault("MaxSucursales", 0);
@@ -72,6 +76,8 @@ public class RepositorioLicencias
                   ExpiresAt = @ExpiresAt, UpdatedAt = SYSUTCDATETIME() WHERE Id = @Id",
                 new { Id = id, Plan = plan, MaxLegajos = maxLegajos,
                       MaxSucursales = maxSuc, MaxFichadasMes = maxFich, ExpiresAt = expiresAt });
+
+            await LogAsync(id, "plan_change", $"Plan: {planAnterior} -> {plan}, MaxLeg={maxLegajos}, MaxSuc={maxSuc}, MaxFich={maxFich}");
         }
         else
         {
@@ -80,6 +86,8 @@ public class RepositorioLicencias
                 @"UPDATE Licencias SET [Plan] = @Plan, MaxLegajos = @MaxLegajos,
                   ExpiresAt = @ExpiresAt, UpdatedAt = SYSUTCDATETIME() WHERE Id = @Id",
                 new { Id = id, Plan = plan, MaxLegajos = maxLegajos, ExpiresAt = expiresAt });
+
+            await LogAsync(id, "update", $"MaxLeg={maxLegajos}, Expires={expiresAt?.ToString("yyyy-MM-dd") ?? "sin vencimiento"}");
         }
     }
 
@@ -92,6 +100,8 @@ public class RepositorioLicencias
                    THEN SYSUTCDATETIME() ELSE ExpiresAt END),
               LicenseType = 'active', UpdatedAt = SYSUTCDATETIME() WHERE Id = @Id",
             new { Id = id, Dias = dias });
+
+        await LogAsync(id, "extend", $"Extendida {dias} dias");
     }
 
     public async Task SuspenderLicenciaAsync(int id, bool suspender)
@@ -103,6 +113,7 @@ public class RepositorioLicencias
                 @"UPDATE Licencias SET LicenseType = 'suspended', SuspendedAt = SYSUTCDATETIME(),
                   GraceEndsAt = DATEADD(DAY, 7, SYSUTCDATETIME()), UpdatedAt = SYSUTCDATETIME()
                   WHERE Id = @Id", new { Id = id });
+            await LogAsync(id, "suspend", "Licencia suspendida (gracia 7 dias)");
         }
         else
         {
@@ -110,6 +121,7 @@ public class RepositorioLicencias
                 @"UPDATE Licencias SET LicenseType = 'active', SuspendedAt = NULL,
                   GraceEndsAt = NULL, UpdatedAt = SYSUTCDATETIME()
                   WHERE Id = @Id", new { Id = id });
+            await LogAsync(id, "unsuspend", "Licencia reactivada");
         }
     }
 
@@ -326,7 +338,9 @@ public class RepositorioLicencias
             new { CompanyId = companyId, Plan = plan, MaxLegajos = maxLegajos,
                   ExpiresAt = now.AddDays(durationDays) });
 
-        return (await _context.Licencias.FirstAsync(l => l.CompanyId == companyId && l.MachineId == "pending"));
+        var lic = await _context.Licencias.FirstAsync(l => l.CompanyId == companyId && l.MachineId == "pending");
+        await LogAsync(lic.Id, "create", $"Licencia creada: plan={plan}, maxLeg={maxLegajos}, duracion={durationDays}d");
+        return lic;
     }
 
     public async Task<Licencia> CrearLicenciaParaEmpresaConLimitesAsync(
@@ -342,7 +356,9 @@ public class RepositorioLicencias
             new { CompanyId = companyId, Plan = plan, MaxLegajos = maxLegajos,
                   MaxSucursales = maxSucursales, MaxFichadasMes = maxFichadasMes, ExpiresAt = expiresAt });
 
-        return (await _context.Licencias.FirstAsync(l => l.CompanyId == companyId && l.MachineId == "pending"));
+        var lic = await _context.Licencias.FirstAsync(l => l.CompanyId == companyId && l.MachineId == "pending");
+        await LogAsync(lic.Id, "create", $"Licencia creada: plan={plan}, maxLeg={maxLegajos}, maxSuc={maxSucursales}, maxFich={maxFichadasMes}");
+        return lic;
     }
 
     // --- Activacion por codigo (para instalador liviano) ---
@@ -599,6 +615,14 @@ public class RepositorioLicencias
             }
 
             tx.Commit();
+
+            // Log fuera de la transacción (best-effort)
+            var licId = await conn.QueryFirstOrDefaultAsync<int?>(
+                "SELECT Id FROM Licencias WHERE CompanyId = @CompanyId",
+                new { CompanyId = companyId });
+            if (licId.HasValue)
+                await LogAsync(licId.Value, "upgrade", $"Upgrade aplicado: {solicitud.PlanActual} -> {planSolicitado}");
+
             return true;
         }
         catch
@@ -627,6 +651,25 @@ public class RepositorioLicencias
     }
 
     // --- Log ---
+
+    /// <summary>
+    /// Registra una entrada en LicenciasLog desde operaciones admin del Portal Licencias.
+    /// </summary>
+    private async Task LogAsync(int licenciaId, string action, string? details = null)
+    {
+        try
+        {
+            await using var conn = new SqlConnection(_connectionString);
+            await conn.ExecuteAsync(
+                @"INSERT INTO LicenciasLog (LicenciaId, Action, App, Details, Timestamp)
+                  VALUES (@LicenciaId, @Action, 'PortalLicencias', @Details, SYSUTCDATETIME())",
+                new { LicenciaId = licenciaId, Action = action, Details = details });
+        }
+        catch
+        {
+            // best-effort: no fallar la operación principal si el log falla
+        }
+    }
 
     public async Task<List<LicenciaLog>> GetLogsAsync(int? licenciaId = null, int cantidad = 100)
     {

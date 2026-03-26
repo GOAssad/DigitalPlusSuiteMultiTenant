@@ -14,8 +14,19 @@ namespace Acceso
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Licencia: en multi-tenant la activacion se hace desde el instalador
+            // Licencia: validar al inicio (carga cache, intenta heartbeat)
             var licMgr = new LicenseManager("", "Fichador");
+            var licResult = licMgr.ValidateAtStartup(ContarLegajos());
+
+            if (licResult.IsBlocked)
+            {
+                // Mostrar formulario de activacion (permite ingresar codigo)
+                using (var frm = new FrmLicenseBlocked(licResult, licMgr))
+                {
+                    if (frm.ShowDialog() != DialogResult.OK)
+                        return; // Usuario cancelo -> salir
+                }
+            }
 
             Application.Run(new Acceso.uAreu.FrmFichar(licMgr));
         }

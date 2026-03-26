@@ -120,6 +120,7 @@ public class Program
             client.Timeout = TimeSpan.FromSeconds(30);
         });
         builder.Services.AddScoped<LemonSqueezyService>();
+        builder.Services.AddScoped<MercadoPagoService>();
 
         // Terminal Movil (v2)
         builder.Services.AddScoped<UbicacionService>();

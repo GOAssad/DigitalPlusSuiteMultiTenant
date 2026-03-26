@@ -16,6 +16,8 @@ builder.Services.AddSingleton<CompanyNameSanitizer>();
 builder.Services.AddSingleton<ActivationCodeService>();
 builder.Services.AddSingleton<DatabaseProvisioningService>();
 builder.Services.AddSingleton<LicenseService>();
+builder.Services.AddSingleton<LicenseUpdateService>();
 builder.Services.AddSingleton<LemonSqueezyService>();
+builder.Services.AddSingleton<MercadoPagoService>();
 
 builder.Build().Run();

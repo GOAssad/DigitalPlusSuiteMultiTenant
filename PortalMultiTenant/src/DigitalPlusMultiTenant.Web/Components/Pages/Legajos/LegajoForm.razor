@@ -14,6 +14,7 @@
 @inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
 @inject DigitalPlusMultiTenant.Application.Interfaces.ILicenciaService LicenciaService
 @inject DigitalPlusMultiTenant.Infrastructure.Services.IEmailService EmailService
+@inject IJSRuntime JS
 
 <PageTitle>@(IsEdit ? "Editar" : "Nuevo") Legajo - DigitalPlus</PageTitle>
 
@@ -549,7 +550,7 @@
                     <tbody>
                         @{
                             var dias = GetCalDias();
-                            var hoy = DateOnly.FromDateTime(DateTime.Today);
+                            var hoy = Clock.TodayDate;
                         }
                         @for (int fila = 0; fila < dias.Count / 7; fila++)
                         {
@@ -914,6 +915,11 @@
                                     <dl class="row mb-0 small">
                                         <dt class="col-sm-4">Dispositivo</dt>
                                         <dd class="col-sm-8">@(terminalMovil.Nombre ?? "(sin nombre)")</dd>
+                                        @if (!string.IsNullOrEmpty(terminalMovil.Descripcion))
+                                        {
+                                            <dt class="col-sm-4">Descripcion</dt>
+                                            <dd class="col-sm-8">@terminalMovil.Descripcion</dd>
+                                        }
                                         <dt class="col-sm-4">Plataforma</dt>
                                         <dd class="col-sm-8"><span class="badge bg-info">@(terminalMovil.Plataforma ?? "-")</span></dd>
                                         <dt class="col-sm-4">Registrado</dt>
@@ -975,6 +981,18 @@
                                     <div class="text-muted small mb-1">Codigo de activacion:</div>
                                     <span style="font-family: monospace; font-size: 1.8rem; font-weight: bold; letter-spacing: 4px;">@codigoActivacionGenerado</span>
                                     <div class="text-muted small mt-1">Valido por 24 horas</div>
+                                    <div class="mt-2 d-flex gap-2 justify-content-center flex-wrap">
+                                        <a href="@GetWhatsAppUrl()" target="_blank" class="btn btn-success btn-sm">
+                                            <i class="bi bi-whatsapp me-1"></i>Enviar por WhatsApp
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CopiarLinkMovil">
+                                            <i class="bi bi-clipboard me-1"></i>Copiar link
+                                        </button>
+                                    </div>
+                                    @if (linkCopiado)
+                                    {
+                                        <div class="text-success small mt-1"><i class="bi bi-check me-1"></i>Copiado</div>
+                                    }
                                 </div>
                             }
 
@@ -1100,11 +1118,11 @@
     // Calendario
     private List<EventoCalendario> eventosCalendario = new();
     private List<EventoCalendario> eventosEliminados = new();
-    private DateOnly calMes = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly calMes = Clock.TodayDate;
     private bool calShowModal;
     private EventoCalendario? calEditando;
-    private DateOnly calModalDesde = DateOnly.FromDateTime(DateTime.Today);
-    private DateOnly calModalHasta = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly calModalDesde = Clock.TodayDate;
+    private DateOnly calModalHasta = Clock.TodayDate;
     private TimeOnly calModalHoraDesde = new(9, 0);
     private TimeOnly calModalHoraHasta = new(18, 0);
     private string? calModalNota;
@@ -1113,6 +1131,7 @@
     // Movil
     private TerminalMovil? terminalMovil;
     private string? codigoActivacionGenerado;
+    private bool linkCopiado;
     private bool generandoCodigo;
     private bool movilEmailEnviado;
     private string? movilEmailError;
@@ -1122,16 +1141,16 @@
     private List<Fichada>? ficItems;
     private List<IncidenciaLegajo> ficIncidencias = new();
     private List<Sucursal> ficSucursales = new();
-    private DateTime ficDesde = DateTime.Today.AddDays(-7);
-    private DateTime ficHasta = DateTime.Today;
+    private DateTime ficDesde = Clock.Today.AddDays(-7);
+    private DateTime ficHasta = Clock.Today;
     private bool ficCargando;
     private int ficConfirmEliminar;
     private string? ficMensaje;
     private bool ficMensajeOk;
     private bool ficShowModal;
     private Fichada? ficEditando;
-    private DateOnly ficModalFecha = DateOnly.FromDateTime(DateTime.Today);
-    private TimeOnly ficModalHora = TimeOnly.FromDateTime(DateTime.Now);
+    private DateOnly ficModalFecha = Clock.TodayDate;
+    private TimeOnly ficModalHora = TimeOnly.FromDateTime(Clock.Now);
     private string ficModalTipo = "E";
     private int ficModalSucursalId;
 
@@ -1139,21 +1158,21 @@
     private List<Incidencia> incidenciasDisponibles = new();
     private List<IncidenciaLegajo> incidenciasLegajo = new();
     private int incIndividualId;
-    private DateOnly incDesde = DateOnly.FromDateTime(DateTime.Today);
-    private DateOnly incHasta = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly incDesde = Clock.TodayDate;
+    private DateOnly incHasta = Clock.TodayDate;
     private string? incDetalle;
     private string? incMensaje;
     private bool incMensajeOk;
 
     // Vacaciones individuales
     private List<Vacacion> vacacionesLegajo = new();
-    private DateOnly vacDesde = DateOnly.FromDateTime(DateTime.Today);
-    private DateOnly vacHasta = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly vacDesde = Clock.TodayDate;
+    private DateOnly vacHasta = Clock.TodayDate;
     private string? vacNota;
 
     // Filtro novedades
-    private DateOnly novDesde = DateOnly.FromDateTime(DateTime.Today.AddDays(-30));
-    private DateOnly novHasta = DateOnly.FromDateTime(DateTime.Today.AddDays(30));
+    private DateOnly novDesde = DateOnly.FromDateTime(Clock.Today.AddDays(-30));
+    private DateOnly novHasta = DateOnly.FromDateTime(Clock.Today.AddDays(30));
     private string novFiltroTipo = "";
     private int novConfirmEliminar;
 
@@ -1263,7 +1282,7 @@
     // --- Calendario ---
     private void CalMesAnterior() => calMes = calMes.AddMonths(-1);
     private void CalMesSiguiente() => calMes = calMes.AddMonths(1);
-    private void CalMesHoy() => calMes = DateOnly.FromDateTime(DateTime.Today);
+    private void CalMesHoy() => calMes = Clock.TodayDate;
 
     private List<DateOnly?> GetCalDias()
     {
@@ -1456,15 +1475,26 @@
     }
 
     // --- Fichadas ---
+    private bool ficOperacionEnCurso;
+
     private async Task CargarTabFichadas()
     {
         activeTab = "fichadas";
-        if (ficSucursales.Count == 0)
-            ficSucursales = SucursalesAsignadas.Any()
-                ? SucursalesAsignadas
-                : await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
-        if (ficItems == null)
-            await CargarFichadas();
+        if (ficOperacionEnCurso) return;
+        ficOperacionEnCurso = true;
+        try
+        {
+            if (ficSucursales.Count == 0)
+                ficSucursales = SucursalesAsignadas.Any()
+                    ? SucursalesAsignadas
+                    : await Db.Sucursales.Where(s => s.IsActive).OrderBy(s => s.Nombre).ToListAsync();
+            if (ficItems == null)
+                await CargarFichadas();
+        }
+        finally
+        {
+            ficOperacionEnCurso = false;
+        }
     }
 
     private async Task CargarFichadas()
@@ -1501,8 +1531,8 @@
     private void AbrirNuevaFichada()
     {
         ficEditando = null;
-        ficModalFecha = DateOnly.FromDateTime(DateTime.Today);
-        ficModalHora = TimeOnly.FromDateTime(DateTime.Now);
+        ficModalFecha = Clock.TodayDate;
+        ficModalHora = TimeOnly.FromDateTime(Clock.Now);
         ficModalTipo = "E";
         ficModalSucursalId = ficSucursales.FirstOrDefault()?.Id ?? 0;
         ficShowModal = true;
@@ -1863,6 +1893,28 @@
         {
             reenviandoEmail = false;
         }
+    }
+
+    private string GetWhatsAppUrl()
+    {
+        if (string.IsNullOrEmpty(codigoActivacionGenerado)) return "#";
+        var baseUrl = Nav.BaseUri.TrimEnd('/');
+        var link = $"{baseUrl}/mobile/?code={codigoActivacionGenerado}";
+        var nombre = model.Nombre ?? model.Apellido ?? "empleado";
+        var msg = $"Hola {nombre}! Tu codigo de activacion para fichaje movil es: *{codigoActivacionGenerado}*\n\nIngresa desde tu celular:\n{link}\n\nEl codigo es valido por 24 horas.";
+        return $"https://wa.me/?text={Uri.EscapeDataString(msg)}";
+    }
+
+    private async Task CopiarLinkMovil()
+    {
+        if (string.IsNullOrEmpty(codigoActivacionGenerado)) return;
+        var baseUrl = Nav.BaseUri.TrimEnd('/');
+        var link = $"{baseUrl}/mobile/?code={codigoActivacionGenerado}";
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", link);
+        linkCopiado = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        linkCopiado = false;
     }
 
     private static string GenerarCodigoAleatorio(int longitud)

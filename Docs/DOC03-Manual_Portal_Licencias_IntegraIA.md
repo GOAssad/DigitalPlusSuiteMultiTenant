@@ -1,6 +1,6 @@
 # PORTAL DE LICENCIAS DIGITALPLUS - Manual para Integra IA
 
-**Version:** 13.0
+**Version:** 14.0
 **Fecha:** 2026-03-25
 **Audiencia:** Equipo interno de Integra IA (administradores del sistema)
 
@@ -691,6 +691,56 @@ En el detalle de empresa, seccion "Suscripcion Lemon Squeezy", el boton **Cancel
 | 1439800 | Pro | Anual |
 
 El mapeo variant → plan se configura en las Azure Functions via variables de entorno `LemonSqueezy__VariantMap__{id}`.
+
+### 13.10 Integracion con MercadoPago
+
+MercadoPago es la pasarela de pago para clientes de Argentina. Usa **Checkout Pro** (pago unico) en vez de Preapproval (suscripciones recurrentes), porque Preapproval requiere que el email del pagador coincida con el email de la suscripcion.
+
+**Flujo de pago:**
+
+1. El Portal MT detecta que la empresa es de Argentina (PaisId=1) y muestra MercadoPago como opcion principal
+2. Crea un Checkout Pro via Azure Function (`POST /api/mp/create-subscription`)
+3. El precio en USD se convierte a ARS usando el tipo de cambio vigente (tabla TiposCambio)
+4. El usuario paga en MercadoPago (ARS)
+5. MP envia webhook (`POST /api/mp/webhook`) con `payment.approved`
+6. El webhook parsea el ExternalReference (`emp_{id}_plan_{plan}_{monthly|annual}`) y actualiza licencia + vencimiento
+
+**Campos MP en tabla Empresas:**
+
+| Campo | Descripcion |
+|---|---|
+| MpSubscriptionId | ID de la preference de Checkout Pro |
+| MpCustomerId | ID del pagador en MP |
+| MpStatus | Estado: pending, active, cancelled |
+| PlanOrigen | 'mp' cuando el pago fue via MercadoPago |
+
+**Vencimiento automatico:**
+- Mensual: 30 dias desde el pago
+- Anual: 365 dias desde el pago
+- Enterprise manual: sin vencimiento automatico
+
+**Cancelacion:** Con Checkout Pro no hay suscripcion recurrente en MP. La cancelacion solo marca MpStatus='cancelled' localmente. La licencia expira naturalmente en PlanVencimiento.
+
+**Monedas y Tipo de Cambio:**
+- Tabla `Monedas`: USD (base), ARS
+- Tabla `TiposCambio`: historial de conversion con VigenteDesde
+- Gestion: Portal Licencias > Atributos > Monedas (CRUD + modal tipo de cambio con historial)
+- Los precios se cargan una sola vez en USD (PlanConfig) y se convierten al cobrar en ARS
+
+### 13.11 Auditoria de licencias (LicenciasLog)
+
+Todas las operaciones sobre licencias se registran en la tabla `LicenciasLog` con el campo `App` indicando el origen:
+
+| Origen (App) | Acciones registradas |
+|---|---|
+| License_Activate (SP) | trial_start, activate, upgrade_from_trial |
+| License_Heartbeat (SP) | heartbeat |
+| MercadoPago | mp_checkout_created, mp_payment_approved, mp_cancelled |
+| LemonSqueezy | lsq_subscription_created, lsq_payment_success, lsq_plan_changed, lsq_cancelled, lsq_expired |
+| AzureFunctions | payment_approved (compartido MP+LSQ al actualizar licencia) |
+| PortalLicencias | create, update, plan_change, extend, suspend, unsuspend, upgrade |
+
+La pagina **/log** del Portal Licencias muestra todos estos eventos con filtros por fecha, empresa, accion y busqueda.
 
 ---
 

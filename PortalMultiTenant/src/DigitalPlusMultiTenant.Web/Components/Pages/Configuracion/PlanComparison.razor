@@ -12,6 +12,7 @@
 @inject ITenantService Tenant
 @inject ILicenciaService LicenciaService
 @inject LemonSqueezyService LsqService
+@inject MercadoPagoService MpService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
@@ -22,13 +23,28 @@
 
 <PageTitle>Planes - DigitalPlus</PageTitle>
 
-@* ── Alertas de retorno de checkout ── *@
+@* ── Modal de retorno exitoso de checkout ── *@
 @if (mostrarAlertaSuccess)
 {
-    <div class="alert alert-success alert-dismissible mb-3">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <strong>Tu plan fue actualizado!</strong> Los nuevos limites estan activos.
-        <button type="button" class="btn-close" @onclick="() => mostrarAlertaSuccess = false"></button>
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success bg-opacity-10">
+                    <h6 class="modal-title"><i class="bi bi-check-circle-fill text-success me-2"></i>Pago completado</h6>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <p class="mt-3 mb-1 fw-bold">Tu plan fue actualizado correctamente.</p>
+                    <p class="text-muted">Para aplicar los nuevos limites es necesario reiniciar la sesion.</p>
+                </div>
+                <div class="modal-footer justify-content-center flex-column gap-2">
+                    <button class="btn btn-success" @onclick="() => mostrarAlertaSuccess = false">
+                        <i class="bi bi-check-lg me-1"></i>Entendido
+                    </button>
+                    <span class="text-muted small">Para aplicar todos los cambios, cierra sesion desde el menu y volve a entrar.</span>
+                </div>
+            </div>
+        </div>
     </div>
 }
 @if (mostrarAlertaCanceled)
@@ -101,23 +117,32 @@ else if (esEnterprisePlan)
                         </p>
                     }
 
-                    @if (licenciaInfo?.EsLemonSqueezy == true)
+                    @if (licenciaInfo?.TieneSuscripcionActiva == true || licenciaInfo?.SuscripcionCancelada == true)
                     {
                         <hr />
                         <div class="d-flex gap-2 justify-content-center flex-wrap">
-                            @if (!string.IsNullOrEmpty(licenciaInfo.LsqUpdatePaymentUrl))
+                            @if (licenciaInfo.EsLemonSqueezy)
                             {
-                                <a href="@licenciaInfo.LsqUpdatePaymentUrl" target="_blank"
-                                   class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-credit-card me-1"></i>Actualizar tarjeta
-                                </a>
+                                @if (!string.IsNullOrEmpty(licenciaInfo.LsqUpdatePaymentUrl))
+                                {
+                                    <a href="@licenciaInfo.LsqUpdatePaymentUrl" target="_blank"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-credit-card me-1"></i>Actualizar tarjeta
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
+                                {
+                                    <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-receipt me-1"></i>Portal de facturacion
+                                    </a>
+                                }
                             }
-                            @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
+                            @if (licenciaInfo.EsMercadoPago)
                             {
-                                <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
-                                   class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-receipt me-1"></i>Portal de facturacion
-                                </a>
+                                <span class="badge bg-info text-dark">
+                                    <i class="bi bi-credit-card-2-front me-1"></i>MercadoPago
+                                </span>
                             }
                             @if (!(licenciaInfo?.SuscripcionCancelada ?? false))
                             {
@@ -221,18 +246,18 @@ else
                                         : 0;
 
                                     <div class="mb-1">
-                                        <span class="display-6 fw-bold">$@precioMensualEquiv.ToString("N0")</span>
+                                        <span class="display-6 fw-bold">$@precioMensualEquiv.ToString("N2")</span>
                                         <span class="text-muted">/mes</span>
                                     </div>
                                     <div class="mt-1">
                                         <span class="text-muted small">Facturado anualmente:</span>
-                                        <span class="fw-bold text-success">$@plan.ImporteAnual.ToString("N0")</span>
+                                        <span class="fw-bold text-success">$@plan.ImporteAnual.ToString("N2")</span>
                                         <span class="text-muted small">/año</span>
                                     </div>
                                     if (pctDescuentoA > 0)
                                     {
                                         <div class="mt-1">
-                                            <span class="text-decoration-line-through text-muted small">$@totalSinDescuentoA.ToString("N0")</span>
+                                            <span class="text-decoration-line-through text-muted small">$@totalSinDescuentoA.ToString("N2")</span>
                                             <span class="badge bg-success ms-1">@pctDescuentoA% OFF</span>
                                         </div>
                                     }
@@ -240,7 +265,7 @@ else
                                 else
                                 {
                                     <div class="mb-1">
-                                        <span class="display-6 fw-bold">$@plan.ImporteMensual.ToString("N0")</span>
+                                        <span class="display-6 fw-bold">$@plan.ImporteMensual.ToString("N2")</span>
                                         <span class="text-muted">/mes</span>
                                     </div>
 
@@ -252,7 +277,7 @@ else
                                             : 0;
                                         <div class="mt-2 p-2 rounded" style="background-color: rgba(25,135,84,0.1);">
                                             <span class="small text-muted">o</span>
-                                            <span class="fw-bold text-success ms-1">$@plan.ImporteAnual.ToString("N0")</span>
+                                            <span class="fw-bold text-success ms-1">$@plan.ImporteAnual.ToString("N2")</span>
                                             <span class="text-muted small">/año</span>
                                             @if (pctDescuentoM > 0)
                                             {
@@ -355,8 +380,8 @@ else
         }
     </div>
 
-    @* ── Sección Gestionar suscripción (solo si LSQ activa) ── *@
-    @if (licenciaInfo?.EsLemonSqueezy == true)
+    @* ── Sección Gestionar suscripción (LSQ o MP activa) ── *@
+    @if (licenciaInfo?.TieneSuscripcionActiva == true || licenciaInfo?.SuscripcionCancelada == true)
     {
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary bg-opacity-10">
@@ -367,6 +392,14 @@ else
                     <div class="col-md-6">
                         <p class="mb-1">
                             <strong>Plan activo:</strong> @licenciaInfo.PlanDisplay
+                            @if (licenciaInfo.EsMercadoPago)
+                            {
+                                <span class="badge bg-info text-dark ms-2">MercadoPago</span>
+                            }
+                            else if (licenciaInfo.EsLemonSqueezy)
+                            {
+                                <span class="badge bg-secondary ms-2">Tarjeta internacional</span>
+                            }
                         </p>
                         @if (licenciaInfo.PlanVencimiento.HasValue)
                         {
@@ -377,19 +410,22 @@ else
                         }
                     </div>
                     <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                        @if (!string.IsNullOrEmpty(licenciaInfo.LsqUpdatePaymentUrl))
+                        @if (licenciaInfo.EsLemonSqueezy)
                         {
-                            <a href="@licenciaInfo.LsqUpdatePaymentUrl" target="_blank"
-                               class="btn btn-outline-secondary btn-sm me-2">
-                                <i class="bi bi-credit-card me-1"></i>Actualizar tarjeta
-                            </a>
-                        }
-                        @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
-                        {
-                            <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
-                               class="btn btn-outline-primary btn-sm me-2">
-                                <i class="bi bi-receipt me-1"></i>Portal de facturacion
-                            </a>
+                            @if (!string.IsNullOrEmpty(licenciaInfo.LsqUpdatePaymentUrl))
+                            {
+                                <a href="@licenciaInfo.LsqUpdatePaymentUrl" target="_blank"
+                                   class="btn btn-outline-secondary btn-sm me-2">
+                                    <i class="bi bi-credit-card me-1"></i>Actualizar tarjeta
+                                </a>
+                            }
+                            @if (!string.IsNullOrEmpty(licenciaInfo.LsqCustomerPortalUrl))
+                            {
+                                <a href="@licenciaInfo.LsqCustomerPortalUrl" target="_blank"
+                                   class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="bi bi-receipt me-1"></i>Portal de facturacion
+                                </a>
+                            }
                         }
                         @if (!(licenciaInfo?.SuscripcionCancelada ?? false))
                         {
@@ -401,7 +437,7 @@ else
                         else
                         {
                             <span class="text-danger small d-block mb-2">
-                                <i class="bi bi-exclamation-triangle me-1"></i>Suscripcion cancelada — activa hasta @(licenciaInfo.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo"). Después el sistema quedará inactivo.
+                                <i class="bi bi-exclamation-triangle me-1"></i>Suscripcion cancelada — activa hasta @(licenciaInfo.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo"). Despues el sistema quedara inactivo.
                             </span>
                             <button class="btn btn-success btn-sm" @onclick="() => RecontratarPlanActual()" disabled="@solicitando">
                                 <i class="bi bi-arrow-repeat me-1"></i>Volver a suscribir
@@ -415,8 +451,13 @@ else
 
     <div class="text-muted small">
         <i class="bi bi-info-circle me-1"></i>
-        Todos los precios estan expresados en dolares estadounidenses (USD).
+        Todos los precios estan expresados en USD.
         Al contratar un plan sera redirigido a la pagina de pago segura. Una vez confirmado, los nuevos limites se activan automaticamente.
+    </div>
+    <div class="text-center mt-3">
+        <a href="mailto:notify@integraia.tech?subject=Consulta%20de%20pago%20-%20@(empresaNombre)&body=Empresa:%20@(empresaNombre)%0A%0ADescribi%20tu%20consulta:" class="text-muted small">
+            <i class="bi bi-envelope me-1"></i>Tenes problemas para pagar? Contactanos
+        </a>
     </div>
 }
 
@@ -458,11 +499,11 @@ else
                                 <td class="fw-bold text-primary">
                                     @if (periodoAnual && planSeleccionado.ImporteAnual > 0)
                                     {
-                                        @($"USD {planSeleccionado.ImporteAnual:N0} /año")
+                                        @($"USD {planSeleccionado.ImporteAnual:N2} /año")
                                     }
                                     else
                                     {
-                                        @($"USD {planSeleccionado.ImporteMensual:N0} /mes")
+                                        @($"USD {planSeleccionado.ImporteMensual:N2} /mes")
                                     }
                                 </td>
                             </tr>
@@ -513,12 +554,40 @@ else
                         Sera redirigido a una pagina de pago segura para completar la contratacion.
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary btn-sm" @onclick="CerrarModal">Cancelar</button>
-                    <button class="btn btn-primary btn-sm" @onclick="IniciarCheckout" disabled="@solicitando">
-                        @if (solicitando) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                        <i class="bi bi-credit-card me-1"></i>Continuar al pago
-                    </button>
+                <div class="modal-footer d-flex flex-column align-items-stretch gap-2">
+                    @{
+                        var esArgentina = licenciaInfo?.PaisId == 1;
+                    }
+                    @if (esArgentina)
+                    {
+                        <button class="btn btn-primary" @onclick='() => IniciarCheckout("mp")' disabled="@solicitando">
+                            @if (solicitando && pasarelaSeleccionada == "mp") { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-credit-card-2-front me-1"></i>Pagar con MercadoPago
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick='() => IniciarCheckout("lsq")' disabled="@solicitando">
+                            @if (solicitando && pasarelaSeleccionada == "lsq") { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-globe me-1"></i>Pagar con tarjeta internacional
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" @onclick='() => IniciarCheckout("lsq")' disabled="@solicitando">
+                            @if (solicitando && pasarelaSeleccionada == "lsq") { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-credit-card me-1"></i>Pagar con tarjeta internacional
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick='() => IniciarCheckout("mp")' disabled="@solicitando">
+                            @if (solicitando && pasarelaSeleccionada == "mp") { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-credit-card-2-front me-1"></i>Pagar con MercadoPago
+                        </button>
+                    }
+                    <hr class="w-100 my-1" />
+                    <div class="text-center">
+                        <small class="text-muted">Tenes problemas para pagar?</small>
+                        <a href="mailto:notify@integraia.tech?subject=Consulta%20de%20pago%20-%20@(empresaNombre)&body=Empresa:%20@(empresaNombre)%0APlan%20solicitado:%20@(planSeleccionado?.PlanDisplay)%0A%0ADescribi%20tu%20consulta:" class="btn btn-link btn-sm">
+                            <i class="bi bi-envelope me-1"></i>Contactar a IntegraIA
+                        </a>
+                    </div>
+                    <button class="btn btn-link btn-sm text-muted" @onclick="CerrarModal">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -648,6 +717,7 @@ else
     private bool mostrarSolicitarEnterprise;
     private string motivoEnterprise = "";
     private SolicitudSoporte? solicitudEnterprise;
+    private string pasarelaSeleccionada = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -734,27 +804,37 @@ else
         planSeleccionado = null;
     }
 
-    private async Task IniciarCheckout()
+    private async Task IniciarCheckout(string pasarela)
     {
         if (planSeleccionado == null) return;
         solicitando = true;
+        pasarelaSeleccionada = pasarela;
         mensaje = null;
 
         try
         {
-            // Obtener variant ID según plan y período
-            var variantId = LsqService.GetVariantId(planSeleccionado.Plan, periodoAnual);
-
-            if (string.IsNullOrEmpty(variantId))
-            {
-                // Fallback al flujo anterior (Portal Licencias) si no hay variant configurado
-                await EnviarSolicitudUpgradeLegacy();
-                return;
-            }
-
-            // Crear checkout en Lemon Squeezy
             var successUrl = $"{Nav.BaseUri}configuracion/planes?success=true";
-            var checkoutUrl = await LsqService.CreateCheckoutAsync(companyId!, variantId, successUrl);
+            string? checkoutUrl = null;
+
+            if (pasarela == "mp")
+            {
+                // MercadoPago — Checkout Pro (pago único con vencimiento)
+                checkoutUrl = await MpService.CreateCheckoutAsync(
+                    companyId!, planSeleccionado.Plan, periodoAnual, successUrl);
+            }
+            else
+            {
+                // Lemon Squeezy
+                var variantId = LsqService.GetVariantId(planSeleccionado.Plan, periodoAnual);
+
+                if (string.IsNullOrEmpty(variantId))
+                {
+                    await EnviarSolicitudUpgradeLegacy();
+                    return;
+                }
+
+                checkoutUrl = await LsqService.CreateCheckoutAsync(companyId!, variantId, successUrl);
+            }
 
             if (string.IsNullOrEmpty(checkoutUrl))
             {
@@ -764,7 +844,6 @@ else
                 return;
             }
 
-            // Redirigir al checkout de Lemon Squeezy
             CerrarModal();
             Nav.NavigateTo(checkoutUrl, forceLoad: true);
         }
@@ -777,6 +856,7 @@ else
         finally
         {
             solicitando = false;
+            pasarelaSeleccionada = "";
         }
     }
 
@@ -788,21 +868,34 @@ else
 
         try
         {
-            var result = await LsqService.CancelSubscriptionAsync(companyId);
+            bool cancelOk;
+            string? cancelError;
 
-            if (result.Ok)
+            if (licenciaInfo?.EsMercadoPago == true)
             {
-                // Refrescar licencia para mostrar el estado cancelado
+                var mpResult = await MpService.CancelSubscriptionAsync(companyId);
+                cancelOk = mpResult.Ok;
+                cancelError = mpResult.Error;
+            }
+            else
+            {
+                var lsqResult = await LsqService.CancelSubscriptionAsync(companyId);
+                cancelOk = lsqResult.Ok;
+                cancelError = lsqResult.Error;
+            }
+
+            if (cancelOk)
+            {
                 LicenciaService.InvalidarCache(empresaId);
                 licenciaInfo = await LicenciaService.GetLicenciaInfoAsync(empresaId);
                 mostrarCancelarModal = false;
                 var fechaVenc = licenciaInfo?.PlanVencimiento?.ToString("dd/MM/yyyy") ?? "fin del periodo";
-                mensaje = $"Tu suscripcion fue cancelada. El plan sigue activo hasta el {fechaVenc}. Después el sistema quedará inactivo.";
+                mensaje = $"Tu suscripcion fue cancelada. El plan sigue activo hasta el {fechaVenc}. Despues el sistema quedara inactivo.";
                 esError = false;
             }
             else
             {
-                mensaje = result.Error ?? "Error al cancelar la suscripcion.";
+                mensaje = cancelError ?? "Error al cancelar la suscripcion.";
                 esError = true;
                 mostrarCancelarModal = false;
             }

@@ -114,6 +114,16 @@ public class Empresa
     [MaxLength(20)]
     public string? LsqStatus { get; set; }
 
+    // MercadoPago
+    [MaxLength(50)]
+    public string? MpCustomerId { get; set; }
+
+    [MaxLength(50)]
+    public string? MpSubscriptionId { get; set; }
+
+    [MaxLength(20)]
+    public string? MpStatus { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

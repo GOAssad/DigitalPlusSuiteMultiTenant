@@ -1,10 +1,21 @@
 # DIGITALPLUS - Lista de Pendientes
 
-**Fecha:** 2026-03-24
+**Fecha:** 2026-03-26
 
 ---
 
 ## COMPLETADO RECIENTEMENTE
+
+### Sesion 2026-03-26
+- [x] **MercadoPago migrado a Checkout Pro:** Preapproval descartado (requiere email match). Checkout Pro con pago unico en ARS (conversion USD via TC vigente). ExternalReference incluye periodo. Webhook procesa todos los pagos. Cancelacion solo local
+- [x] **LicenciasLog completo:** Operaciones admin Portal Licencias + pagos MP + pagos LSQ + LicenseUpdateService ahora escriben a LicenciasLog. Metodo LogEventAsync centralizado en LicenseUpdateService
+- [x] **Fix Fichador ValidateAtStartup:** Program.cs ahora llama ValidateAtStartup() al iniciar. Si no hay licencia, muestra FrmLicenseBlocked con campo para codigo de activacion. Timer 4h funciona correctamente con _currentTicket cargado
+- [x] **Instalador recompilado** con fix de licencia Fichador
+- [x] Deploy Azure Functions + Portal MT + Portal Licencias
+- [x] DOC01 v18.0, DOC02 v18.0, DOC03 v14.0 actualizados (MercadoPago, LicenciasLog, licencia Fichador)
+- [x] **Notificacion cambio de plan:** Noticia en dashboard MT + email al contacto en activar Enterprise, revertir plan, pagos MP/LSQ
+- [x] **QR Fichada Movil:** Pagina /configuracion/qr-movil con QR imprimible (QRCoder SVG), compartir link (WhatsApp, email, copiar), instrucciones. Link en NavMenu > Administracion
+- [x] **WhatsApp en LegajoForm:** Boton "Enviar por WhatsApp" + "Copiar link" al generar codigo de activacion movil
 
 ### Sesion 2026-03-24 (noche)
 - [x] **Plan Enterprise completo:** Vista dedicada Portal MT (ilimitado, renovacion, contacto), activacion manual desde Portal Licencias, reversion de plan

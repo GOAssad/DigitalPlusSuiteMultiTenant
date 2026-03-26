@@ -3,6 +3,8 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject DigitalPlus.Licencias.Repositorios.RepositorioLicencias Repo
 @inject NavigationManager Nav
+@inject DigitalPlus.Licencias.Services.MultiTenantProvisioningService MTService
+@inject DigitalPlus.Licencias.Services.IEmailService EmailService
 
 <PageTitle>Detalle Licencia - DigitalPlus</PageTitle>
 
@@ -142,7 +144,21 @@ else
 
     private async Task Guardar()
     {
+        var planAnterior = lic?.Plan ?? "free";
         await Repo.ActualizarLicenciaAsync(Id, editPlan, editMaxLegajos, editExpires);
+
+        // Notificar si cambió el plan
+        if (planAnterior != editPlan && lic != null)
+        {
+            try
+            {
+                var mtEmpresaId = await MTService.BuscarEmpresaIdPorCodigoAsync(lic.CompanyId);
+                if (mtEmpresaId.HasValue)
+                    await MTService.NotificarCambioPlanAsync(mtEmpresaId.Value, planAnterior, editPlan, "Cambio realizado por IntegraIA.");
+            }
+            catch { /* best-effort */ }
+        }
+
         await Cargar();
         mensaje = "Guardado correctamente";
     }

@@ -1,0 +1,390 @@
+@page "/atributos/monedas"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject DigitalPlus.Licencias.Data.ApplicationDbContext Db
+@inject IConfiguration Config
+@using Microsoft.EntityFrameworkCore
+@using DigitalPlus.Licencias.Entidades
+
+<PageTitle>Monedas - Atributos</PageTitle>
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/atributos">Atributos</a></li>
+        <li class="breadcrumb-item active">Monedas</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Monedas y Tipos de Cambio</h3>
+    <button class="btn btn-primary" @onclick="NuevaMoneda">Nueva Moneda</button>
+</div>
+
+@if (mensaje != null)
+{
+    <div class="alert @(esError ? "alert-danger" : "alert-success") alert-dismissible">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => mensaje = null"></button>
+    </div>
+}
+
+@* ── Formulario edicion moneda ── *@
+@if (editando)
+{
+    <div class="card mb-4">
+        <div class="card-header">@(editId == 0 ? "Nueva Moneda" : "Editar Moneda")</div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Codigo</label>
+                    <input type="text" class="form-control" @bind="editCodigo" maxlength="10" placeholder="USD" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" @bind="editNombre" placeholder="Dolar estadounidense" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Simbolo</label>
+                    <input type="text" class="form-control" @bind="editSimbolo" maxlength="10" placeholder="US$" />
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Base</label>
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" @bind="editEsBase" />
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button class="btn btn-success" @onclick="Guardar">Guardar</button>
+                    <button class="btn btn-outline-secondary" @onclick="() => editando = false">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Tabla monedas ── *@
+@if (monedas == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Codigo</th>
+                <th>Nombre</th>
+                <th>Simbolo</th>
+                <th>Base</th>
+                <th>Activa</th>
+                <th>TC vigente (vs @monedaBase?.Codigo)</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in monedas)
+            {
+                var tcVigente = tiposCambioVigentes.GetValueOrDefault(m.Id);
+                <tr>
+                    <td><code>@m.Codigo</code></td>
+                    <td>@m.Nombre</td>
+                    <td>@m.Simbolo</td>
+                    <td>
+                        @if (m.EsBase) { <span class="badge bg-primary">Base</span> }
+                    </td>
+                    <td>
+                        <span class="badge @(m.Activa ? "bg-success" : "bg-secondary")">@(m.Activa ? "Si" : "No")</span>
+                    </td>
+                    <td>
+                        @if (m.EsBase)
+                        {
+                            <span class="text-muted">1.0000</span>
+                        }
+                        else if (tcVigente != null)
+                        {
+                            <strong>@tcVigente.Valor.ToString("N4")</strong>
+                            <span class="text-muted small ms-1">desde @tcVigente.VigenteDesde.ToString("dd/MM/yyyy")</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">Sin tipo de cambio</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(m)">Editar</button>
+                        @if (!m.EsBase)
+                        {
+                            <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => AbrirTipoCambio(m)">
+                                <i class="bi bi-arrow-left-right me-1"></i>TC
+                            </button>
+                        }
+                        @if (!m.EsBase && m.Activa)
+                        {
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => ToggleActiva(m)">Desactivar</button>
+                        }
+                        else if (!m.EsBase && !m.Activa)
+                        {
+                            <button class="btn btn-sm btn-outline-success" @onclick="() => ToggleActiva(m)">Activar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@* ── Modal Tipo de Cambio ── *@
+@if (tcMoneda != null)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h5 class="modal-title">
+                        <i class="bi bi-arrow-left-right me-2"></i>Tipo de Cambio: @monedaBase?.Codigo → @tcMoneda.Codigo
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="() => tcMoneda = null"></button>
+                </div>
+                <div class="modal-body">
+                    @* Nuevo tipo de cambio *@
+                    <div class="card mb-3 border-primary">
+                        <div class="card-body">
+                            <h6>Actualizar tipo de cambio</h6>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label">1 @monedaBase?.Codigo =</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <input type="number" step="0.0001" class="form-control" @bind="tcNuevoValor" />
+                                        <span class="input-group-text">@tcMoneda.Codigo</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary" @onclick="GuardarTipoCambio" disabled="@guardandoTc">
+                                        @if (guardandoTc) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                        Actualizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Historial *@
+                    <h6>Historial de tipos de cambio</h6>
+                    @if (tcHistorial == null || tcHistorial.Count == 0)
+                    {
+                        <p class="text-muted">Sin historial.</p>
+                    }
+                    else
+                    {
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Valor</th>
+                                        <th>Vigente desde</th>
+                                        <th>Cargado por</th>
+                                        <th>Fecha carga</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tc in tcHistorial)
+                                    {
+                                        <tr class="@(tc == tcHistorial.First() ? "table-warning fw-bold" : "")">
+                                            <td>@tc.Valor.ToString("N4")</td>
+                                            <td>@tc.VigenteDesde.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@(tc.CreadoPor ?? "-")</td>
+                                            <td>@tc.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => tcMoneda = null">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Moneda>? monedas;
+    private Moneda? monedaBase;
+    private Dictionary<int, TipoCambio> tiposCambioVigentes = new();
+
+    // Edicion moneda
+    private bool editando;
+    private int editId;
+    private string editCodigo = "";
+    private string editNombre = "";
+    private string editSimbolo = "$";
+    private bool editEsBase;
+    private string? mensaje;
+    private bool esError;
+
+    // Modal tipo de cambio
+    private Moneda? tcMoneda;
+    private decimal tcNuevoValor;
+    private List<TipoCambio>? tcHistorial;
+    private bool guardandoTc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        monedas = await Db.Monedas.OrderByDescending(m => m.EsBase).ThenBy(m => m.Codigo).ToListAsync();
+        monedaBase = monedas.FirstOrDefault(m => m.EsBase);
+
+        // Cargar TC vigente para cada moneda (el más reciente por par)
+        tiposCambioVigentes.Clear();
+        if (monedaBase != null)
+        {
+            var todos = await Db.TiposCambio
+                .Where(tc => tc.MonedaOrigenId == monedaBase.Id)
+                .OrderByDescending(tc => tc.VigenteDesde)
+                .ToListAsync();
+
+            foreach (var tc in todos)
+            {
+                tiposCambioVigentes.TryAdd(tc.MonedaDestinoId, tc);
+            }
+        }
+    }
+
+    private void NuevaMoneda()
+    {
+        editando = true;
+        editId = 0;
+        editCodigo = "";
+        editNombre = "";
+        editSimbolo = "$";
+        editEsBase = false;
+    }
+
+    private void Editar(Moneda m)
+    {
+        editando = true;
+        editId = m.Id;
+        editCodigo = m.Codigo;
+        editNombre = m.Nombre;
+        editSimbolo = m.Simbolo;
+        editEsBase = m.EsBase;
+    }
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(editCodigo) || string.IsNullOrWhiteSpace(editNombre))
+        {
+            mensaje = "Codigo y Nombre son obligatorios.";
+            esError = true;
+            return;
+        }
+
+        try
+        {
+            var codigo = editCodigo.Trim().ToUpper();
+            if (editId == 0)
+            {
+                Db.Monedas.Add(new Moneda
+                {
+                    Codigo = codigo,
+                    Nombre = editNombre.Trim(),
+                    Simbolo = editSimbolo.Trim(),
+                    EsBase = editEsBase,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                var m = await Db.Monedas.FindAsync(editId);
+                if (m != null)
+                {
+                    m.Codigo = codigo;
+                    m.Nombre = editNombre.Trim();
+                    m.Simbolo = editSimbolo.Trim();
+                    m.EsBase = editEsBase;
+                    m.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await Db.SaveChangesAsync();
+            editando = false;
+            mensaje = editId == 0 ? "Moneda creada" : "Moneda actualizada";
+            esError = false;
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.InnerException?.Message ?? ex.Message}";
+            esError = true;
+        }
+    }
+
+    private async Task ToggleActiva(Moneda m)
+    {
+        m.Activa = !m.Activa;
+        m.UpdatedAt = DateTime.UtcNow;
+        await Db.SaveChangesAsync();
+        mensaje = $"Moneda {m.Codigo} {(m.Activa ? "activada" : "desactivada")}";
+        esError = false;
+    }
+
+    private async Task AbrirTipoCambio(Moneda m)
+    {
+        tcMoneda = m;
+        var tcVigente = tiposCambioVigentes.GetValueOrDefault(m.Id);
+        tcNuevoValor = tcVigente?.Valor ?? 0;
+
+        tcHistorial = await Db.TiposCambio
+            .Where(tc => tc.MonedaOrigenId == monedaBase!.Id && tc.MonedaDestinoId == m.Id)
+            .OrderByDescending(tc => tc.VigenteDesde)
+            .Take(50)
+            .ToListAsync();
+    }
+
+    private async Task GuardarTipoCambio()
+    {
+        if (tcMoneda == null || monedaBase == null || tcNuevoValor <= 0) return;
+        guardandoTc = true;
+
+        try
+        {
+            var nuevo = new TipoCambio
+            {
+                MonedaOrigenId = monedaBase.Id,
+                MonedaDestinoId = tcMoneda.Id,
+                Valor = tcNuevoValor,
+                VigenteDesde = DateTime.UtcNow,
+                CreadoPor = "admin",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            Db.TiposCambio.Add(nuevo);
+            await Db.SaveChangesAsync();
+
+            mensaje = $"Tipo de cambio actualizado: 1 {monedaBase.Codigo} = {tcNuevoValor:N4} {tcMoneda.Codigo}";
+            esError = false;
+
+            // Refrescar historial y tabla principal
+            await Cargar();
+            await AbrirTipoCambio(tcMoneda);
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+            esError = true;
+        }
+        finally
+        {
+            guardandoTc = false;
+        }
+    }
+}

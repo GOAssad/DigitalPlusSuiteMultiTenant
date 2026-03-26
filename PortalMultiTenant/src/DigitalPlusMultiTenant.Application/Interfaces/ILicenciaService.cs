@@ -10,19 +10,41 @@ public class LicenciaInfo
     public string LicenseType { get; set; } = "active";
     public DateTime? ExpiresAt { get; set; }
 
-    // Lemon Squeezy
+    // Empresa
+    public int? PaisId { get; set; }
+
+    // Suscripción (compartido LSQ/MP)
     public string? PlanOrigen { get; set; }
     public DateTime? PlanVencimiento { get; set; }
+
+    // Lemon Squeezy
     public string? LsqUpdatePaymentUrl { get; set; }
     public string? LsqCustomerPortalUrl { get; set; }
     public string? LsqStatus { get; set; }
 
+    // MercadoPago
+    public string? MpSubscriptionId { get; set; }
+    public string? MpStatus { get; set; }
+
+    // Helpers de pasarela
     public bool EsLemonSqueezy => PlanOrigen == "lsq";
-    public bool SuscripcionCancelada => LsqStatus == "cancelled";
+    public bool EsMercadoPago => PlanOrigen == "mp";
     public bool EsEnterpriseManual => Plan == "enterprise" && PlanOrigen == "manual";
+
+    /// <summary>Status activo de la pasarela actual (LSQ o MP).</summary>
+    public string? StatusSuscripcion => EsLemonSqueezy ? LsqStatus : EsMercadoPago ? MpStatus : null;
+
+    public bool TieneSuscripcionActiva =>
+        (EsLemonSqueezy && LsqStatus == "active") ||
+        (EsMercadoPago && MpStatus == "active");
+
+    public bool SuscripcionCancelada =>
+        (EsLemonSqueezy && LsqStatus == "cancelled") ||
+        (EsMercadoPago && MpStatus == "cancelled");
+
     public bool SuscripcionExpirada =>
         !EsEnterpriseManual &&
-        (LsqStatus == "expired" ||
+        (StatusSuscripcion == "expired" ||
         (SuscripcionCancelada && PlanVencimiento.HasValue && PlanVencimiento.Value < DateTime.UtcNow));
 
     public bool EsIlimitado(int valor) => valor == 0;

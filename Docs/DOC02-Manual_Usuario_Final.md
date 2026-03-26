@@ -1,6 +1,6 @@
 # DIGITALPLUS - Manual del Usuario
 
-**Version:** 17.0
+**Version:** 18.0
 **Fecha:** 2026-03-25
 
 ---
@@ -626,14 +626,26 @@ Desde la pagina **Terminales Moviles** del Portal Web, el administrador puede ge
 
 > **Nota:** El empleado debe tener un email cargado en su legajo para recibir el codigo. Si no tiene email, el codigo se muestra en pantalla para que el administrador lo comunique manualmente.
 
-Tambien puede generar el codigo desde la pestana **Movil** dentro del formulario de edicion de un legajo individual.
+Tambien puede generar el codigo desde la pestana **Movil** dentro del formulario de edicion de un legajo individual. Al generar el codigo, aparecen botones para:
+
+- **Enviar por WhatsApp:** Abre WhatsApp con un mensaje pre-armado que incluye el nombre del empleado, el codigo de activacion y el link directo a la PWA.
+- **Copiar link:** Copia al portapapeles la URL de la PWA con el codigo incluido para compartir por cualquier medio.
+
+### QR para Fichada Movil
+
+En **Administracion > QR Fichada Movil** el administrador puede generar un **cartel QR imprimible** con la URL de la PWA mobile:
+
+- **Imprimir:** Genera una hoja optimizada para impresion con el QR, nombre de la empresa e instrucciones paso a paso. Ideal para pegar en recepcion, oficinas o vestuarios.
+- **Compartir:** Botones para enviar el link por WhatsApp, email o copiar al portapapeles.
+
+Los empleados escanean el QR con la camara de su celular, acceden a la PWA y luego ingresan el codigo de activacion que les dio su supervisor.
 
 ### Experiencia del Empleado en la PWA Mobile
 
 Al abrir la PWA por primera vez, el empleado ve una **guia de inicio de 3 pasos** que lo acompana en el proceso:
 
 1. **Instalar la app:** Agregar Digital One a la pantalla de inicio del celular para acceso rapido. Tambien aparece un banner automatico que facilita la instalacion.
-2. **Obtener el codigo:** El administrador genera un codigo de activacion y se lo envia por email.
+2. **Obtener el codigo:** El administrador genera un codigo de activacion y se lo envia por email o WhatsApp.
 3. **Activar y fichar:** Ingresa con legajo y PIN, luego activa el dispositivo con el codigo.
 
 Una vez activado, la pantalla principal muestra:
@@ -664,7 +676,7 @@ Las incidencias representan motivos de ausencia o novedades (vacaciones, enferme
 
 ## 7. SISTEMA DE LICENCIAS
 
-> **Nota importante:** En instalaciones **multi-tenant (nube)**, el sistema de licencias funciona de manera diferente. La activacion se realiza durante la instalacion mediante el codigo de activacion. Las aplicaciones de escritorio **no validan licencias al iniciar** - se conectan directamente a la base de datos en la nube. El sistema de trial y licencias descrito a continuacion aplica **unicamente a instalaciones LOCALES**.
+> **Nota:** En instalaciones **multi-tenant (nube)**, las aplicaciones de escritorio validan la licencia al iniciar y cada 4 horas. La primera activacion se realiza durante la instalacion mediante el codigo de activacion. Si el Fichador no tiene licencia cacheada, muestra un formulario de activacion donde se ingresa el codigo de la empresa.
 
 ### Periodo de prueba (Trial)
 
@@ -725,8 +737,13 @@ Los planes de Digital One determinan los limites de uso del sistema:
 1. Ir a **Administracion > Planes** en el Portal Web
 2. Seleccionar el periodo deseado: **Mensual** o **Anual** (con descuento)
 3. Hacer click en **Contratar** en el plan elegido
-4. Completar el pago en la pagina segura de Lemon Squeezy
-5. Al confirmar, los nuevos limites se activan automaticamente
+4. Elegir pasarela de pago:
+   - **MercadoPago** (empresas de Argentina): pago unico en pesos argentinos
+   - **Tarjeta internacional** (Lemon Squeezy): suscripcion recurrente en dolares
+5. Completar el pago en la pagina segura
+6. Al confirmar, los nuevos limites se activan automaticamente
+
+> **Nota:** Para MercadoPago, el precio se muestra en ARS (convertido del precio USD al tipo de cambio vigente). El plan se activa por el periodo contratado (30 dias mensual, 365 dias anual) y debe renovarse manualmente al vencer.
 
 Los precios estan expresados en dolares estadounidenses (USD).
 

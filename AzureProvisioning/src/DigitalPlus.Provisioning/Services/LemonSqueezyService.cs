@@ -16,10 +16,11 @@ public class LemonSqueezyService
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _config;
     private readonly ILogger<LemonSqueezyService> _logger;
+    private readonly LicenseUpdateService _licenseUpdate;
 
     private const string LsqApiBase = "https://api.lemonsqueezy.com/v1";
 
-    public LemonSqueezyService(IConfiguration config, ILogger<LemonSqueezyService> logger)
+    public LemonSqueezyService(IConfiguration config, ILogger<LemonSqueezyService> logger, LicenseUpdateService licenseUpdate)
     {
         _connectionString = config["ProvisioningDb"]
             ?? throw new InvalidOperationException("ProvisioningDb not configured.");
@@ -28,9 +29,9 @@ public class LemonSqueezyService
         _storeId = config["LemonSqueezy:StoreId"] ?? config["LemonSqueezy__StoreId"] ?? "";
         _config = config;
         _logger = logger;
+        _licenseUpdate = licenseUpdate;
 
         _httpClient = new HttpClient();
-        // No setear auth headers en constructor — se agregan por request para garantizar que _apiKey ya esté resuelto
     }
 
     /// <summary>
@@ -250,6 +251,10 @@ public class LemonSqueezyService
             _logger.LogInformation(
                 "LSQ subscription_created: empresa {EmpresaId} -> plan {Plan}, sub {SubId}",
                 empresaId, plan, subscriptionId);
+
+            await _licenseUpdate.LogEventAsync(empresaId, "lsq_subscription_created", "LemonSqueezy",
+                $"Suscripcion creada: plan={plan}, subId={subscriptionId}, vence={planVencimiento?.ToString("yyyy-MM-dd") ?? "?"}");
+            await _licenseUpdate.NotificarCambioPlanMTAsync(empresaId, "free", plan, "Lemon Squeezy");
         }
         catch
         {
@@ -305,6 +310,19 @@ public class LemonSqueezyService
             _logger.LogInformation("LSQ payment_success: empresa reactivada, sub {SubId}", subscriptionId);
 
         _logger.LogInformation("LSQ payment_success: sub {SubId} renovada", subscriptionId);
+
+        // Log: buscar empresaId por subscriptionId
+        await using var cmdEmpId = new SqlCommand(
+            "SELECT Id FROM Empresas WHERE LsqSubscriptionId = @SubId", conn);
+        cmdEmpId.Parameters.AddWithValue("@SubId", subscriptionId);
+        var empIdResult = await cmdEmpId.ExecuteScalarAsync();
+        if (empIdResult is int empId)
+        {
+            var detail = reactivadas > 0
+                ? $"Pago exitoso + reactivacion, subId={subscriptionId}, vence={planVencimiento?.ToString("yyyy-MM-dd") ?? "?"}"
+                : $"Pago exitoso (renovacion), subId={subscriptionId}, vence={planVencimiento?.ToString("yyyy-MM-dd") ?? "?"}";
+            await _licenseUpdate.LogEventAsync(empId, "lsq_payment_success", "LemonSqueezy", detail);
+        }
     }
 
     private async Task HandleSubscriptionUpdatedAsync(JsonElement data)
@@ -380,12 +398,22 @@ public class LemonSqueezyService
                 _logger.LogInformation(
                     "LSQ subscription_updated: empresa {EmpresaId} cambió a plan {Plan}",
                     empresaId, plan);
+
+                await _licenseUpdate.LogEventAsync(empresaId, "lsq_plan_changed", "LemonSqueezy",
+                    $"Cambio de plan: variant {oldVariantId} -> {newVariantId}, plan={plan}");
+                var oldPlan = ResolvePlanFromVariantId(oldVariantId);
+                await _licenseUpdate.NotificarCambioPlanMTAsync(empresaId, oldPlan, plan, "Lemon Squeezy");
             }
             catch
             {
                 tx.Rollback();
                 throw;
             }
+        }
+        else
+        {
+            await _licenseUpdate.LogEventAsync(empresaId, "lsq_subscription_updated", "LemonSqueezy",
+                $"Suscripcion actualizada: status={lsqStatus}, vence={planVencimiento?.ToString("yyyy-MM-dd") ?? "?"}");
         }
     }
 
@@ -430,6 +458,17 @@ public class LemonSqueezyService
         _logger.LogInformation(
             "LSQ subscription_cancelled: sub {SubId}, activa hasta {Vencimiento}",
             subscriptionId, planVencimiento);
+
+        // Log
+        await using var cmdEmpId = new SqlCommand(
+            "SELECT Id FROM Empresas WHERE LsqSubscriptionId = @SubId", conn);
+        cmdEmpId.Parameters.AddWithValue("@SubId", subscriptionId);
+        var empIdResult = await cmdEmpId.ExecuteScalarAsync();
+        if (empIdResult is int empId)
+        {
+            await _licenseUpdate.LogEventAsync(empId, "lsq_cancelled", "LemonSqueezy",
+                $"Suscripcion cancelada, activa hasta {planVencimiento?.ToString("yyyy-MM-dd") ?? "fin del periodo"}");
+        }
     }
 
     private async Task HandleSubscriptionEndedAsync(JsonElement data)
@@ -452,9 +491,21 @@ public class LemonSqueezyService
                     UpdatedAt = SYSUTCDATETIME()
                   WHERE LsqSubscriptionId = @SubId", conn);
             cmd.Parameters.AddWithValue("@SubId", subscriptionId);
+            // Obtener empresaId antes de limpiar subscriptionId
+            await using var cmdEmpId = new SqlCommand(
+                "SELECT Id FROM Empresas WHERE LsqSubscriptionId = @SubId", conn);
+            cmdEmpId.Parameters.AddWithValue("@SubId", subscriptionId);
+            var empIdResult = await cmdEmpId.ExecuteScalarAsync();
+
             var rows = await cmd.ExecuteNonQueryAsync();
 
             _logger.LogInformation("LSQ subscription_expired: sub {SubId}, {Rows} empresa(s) marcadas como expired", subscriptionId, rows);
+
+            if (empIdResult is int empId)
+            {
+                await _licenseUpdate.LogEventAsync(empId, "lsq_expired", "LemonSqueezy",
+                    $"Suscripcion expirada, subId={subscriptionId}");
+            }
         }
         catch
         {
@@ -464,55 +515,10 @@ public class LemonSqueezyService
 
     /// <summary>
     /// Actualiza la licencia de una empresa al plan especificado usando PlanConfig.
+    /// Delega a LicenseUpdateService (compartido con MercadoPagoService).
     /// </summary>
-    private async Task ActualizarLicenciaAsync(SqlConnection conn, SqlTransaction tx, int empresaId, string plan)
-    {
-        // 1. Obtener CompanyId
-        await using var cmdCompany = new SqlCommand(
-            "SELECT CompanyId FROM Empresas WHERE Id = @Id", conn, tx);
-        cmdCompany.Parameters.AddWithValue("@Id", empresaId);
-        var companyId = await cmdCompany.ExecuteScalarAsync() as string;
-
-        if (string.IsNullOrEmpty(companyId))
-        {
-            _logger.LogError("ActualizarLicencia: empresa {EmpresaId} no encontrada", empresaId);
-            return;
-        }
-
-        // 2. Leer limites de PlanConfig
-        await using var cmdConfig = new SqlCommand(
-            "SELECT Parametro, Valor FROM PlanConfig WHERE [Plan] = @Plan", conn, tx);
-        cmdConfig.Parameters.AddWithValue("@Plan", plan);
-
-        var valores = new Dictionary<string, decimal>();
-        await using var reader = await cmdConfig.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-            valores[reader.GetString(0)] = reader.GetDecimal(1);
-        reader.Close();
-
-        var maxLegajos = (int)valores.GetValueOrDefault("MaxLegajos", 5);
-        var maxSucursales = (int)valores.GetValueOrDefault("MaxSucursales", 1);
-        var maxFichadasMes = (int)valores.GetValueOrDefault("MaxFichadasRolling30d", 200);
-        var duracionDias = (int)valores.GetValueOrDefault("DuracionDias", 0);
-
-        DateTime? expiresAt = duracionDias > 0 ? DateTime.UtcNow.AddDays(duracionDias) : null;
-
-        // 3. Actualizar licencia
-        await using var cmdLic = new SqlCommand(
-            @"UPDATE Licencias SET
-                [Plan] = @Plan, MaxLegajos = @MaxLegajos,
-                MaxSucursales = @MaxSucursales, MaxFichadasMes = @MaxFichadasMes,
-                ExpiresAt = @ExpiresAt, LicenseType = 'active',
-                UpdatedAt = SYSUTCDATETIME()
-              WHERE CompanyId = @CompanyId", conn, tx);
-        cmdLic.Parameters.AddWithValue("@Plan", plan);
-        cmdLic.Parameters.AddWithValue("@MaxLegajos", maxLegajos);
-        cmdLic.Parameters.AddWithValue("@MaxSucursales", maxSucursales);
-        cmdLic.Parameters.AddWithValue("@MaxFichadasMes", maxFichadasMes);
-        cmdLic.Parameters.AddWithValue("@ExpiresAt", (object?)expiresAt ?? DBNull.Value);
-        cmdLic.Parameters.AddWithValue("@CompanyId", companyId);
-        await cmdLic.ExecuteNonQueryAsync();
-    }
+    private Task ActualizarLicenciaAsync(SqlConnection conn, SqlTransaction tx, int empresaId, string plan)
+        => _licenseUpdate.ActualizarLicenciaAsync(conn, tx, empresaId, plan);
 
     /// <summary>
     /// Cancela una suscripción activa en Lemon Squeezy (al final del período actual).
@@ -609,6 +615,17 @@ public class LemonSqueezyService
 
         _logger.LogInformation("LSQ subscription {SubId} cancelled, active until {Vencimiento}",
             subscriptionId, vencimiento);
+
+        // Log
+        await using var cmdEmpLog = new SqlCommand(
+            "SELECT Id FROM Empresas WHERE LsqSubscriptionId = @SubId", conn);
+        cmdEmpLog.Parameters.AddWithValue("@SubId", subscriptionId);
+        var empLogId = await cmdEmpLog.ExecuteScalarAsync();
+        if (empLogId is int eid)
+        {
+            await _licenseUpdate.LogEventAsync(eid, "lsq_cancelled_by_user", "LemonSqueezy",
+                $"Cancelacion solicitada por usuario, activa hasta {vencimiento?.ToString("yyyy-MM-dd") ?? "?"}");
+        }
 
         return (true, vencimiento, null);
     }
