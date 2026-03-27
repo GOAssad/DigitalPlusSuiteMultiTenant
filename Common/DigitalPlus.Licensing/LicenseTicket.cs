@@ -9,6 +9,9 @@ namespace DigitalPlus.Licensing
         [DataMember(Name = "v")]
         public int Version { get; set; }
 
+        [DataMember(Name = "empresaId")]
+        public int EmpresaId { get; set; }
+
         [DataMember(Name = "companyId")]
         public string CompanyId { get; set; }
 

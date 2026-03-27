@@ -56,14 +56,12 @@ public class LicenseService
         await conn.OpenAsync();
 
         // ── Buscar licencia existente con MachineId="pending" (creada desde Portal Licencias/pagos) ──
-        // El Portal usa CompanyId directo (ej: "new-family"), el Fichador sanitiza a "DP_New_Family".
-        // Intentamos vincular la licencia existente al MachineId real.
-        var pendingLicId = await TryClaimPendingLicenseAsync(conn, request.CompanyName, companyId, request.MachineId);
+        var pendingLicId = await TryClaimPendingLicenseAsync(conn, request.EmpresaId, request.CompanyName, companyId, request.MachineId);
         if (pendingLicId.HasValue)
         {
             _logger.LogInformation(
-                "License activate: claimed pending license {LicId} for company={Company}, machine={Machine}",
-                pendingLicId.Value, request.CompanyName, request.MachineId);
+                "License activate: claimed pending license {LicId} for empresaId={EmpresaId}, company={Company}, machine={Machine}",
+                pendingLicId.Value, request.EmpresaId, request.CompanyName, request.MachineId);
 
             var pendingTicket = await BuildTicketFromDbAsync(conn, pendingLicId.Value, now);
             if (pendingTicket != null)
@@ -112,6 +110,7 @@ public class LicenseService
         cmd.Parameters.AddWithValue("@Plan", plan);
         cmd.Parameters.AddWithValue("@MaxLegajos", maxLegajos);
         cmd.Parameters.AddWithValue("@ExpiresAt", (object?)expiresAt ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@EmpresaId", (object?)request.EmpresaId ?? DBNull.Value);
 
         var pResult = cmd.Parameters.Add("@Result", System.Data.SqlDbType.Int);
         pResult.Direction = System.Data.ParameterDirection.Output;
@@ -153,6 +152,7 @@ public class LicenseService
         cmd.Parameters.AddWithValue("@MachineId", request.MachineId);
         cmd.Parameters.AddWithValue("@App", string.IsNullOrEmpty(request.App) ? DBNull.Value : request.App);
         cmd.Parameters.AddWithValue("@ActiveLegajos", request.ActiveLegajos);
+        cmd.Parameters.AddWithValue("@EmpresaId", (object?)request.EmpresaId ?? DBNull.Value);
 
         var pResult = cmd.Parameters.Add("@Result", System.Data.SqlDbType.Int);
         pResult.Direction = System.Data.ParameterDirection.Output;
@@ -186,6 +186,7 @@ public class LicenseService
         var ticket = new LicenseTicket
         {
             Version = 1,
+            EmpresaId = request.EmpresaId,
             CompanyId = request.CompanyId,
             MachineId = request.MachineId,
             LicenseType = pType.Value as string ?? "trial",
@@ -216,7 +217,7 @@ public class LicenseService
     {
         await using var cmd = new SqlCommand(
             @"SELECT CompanyId, MachineId, LicenseType, [Plan], MaxLegajos,
-                     TrialEndsAt, ExpiresAt, SuspendedAt, GraceEndsAt
+                     TrialEndsAt, ExpiresAt, SuspendedAt, GraceEndsAt, EmpresaId
               FROM Licencias WHERE Id = @Id", conn);
         cmd.Parameters.AddWithValue("@Id", licenciaId);
 
@@ -226,6 +227,7 @@ public class LicenseService
         return new LicenseTicket
         {
             Version = 1,
+            EmpresaId = reader.IsDBNull(9) ? null : reader.GetInt32(9),
             CompanyId = reader.GetString(0),
             MachineId = reader.GetString(1),
             LicenseType = reader.GetString(2),
@@ -294,18 +296,22 @@ public class LicenseService
     /// Busca por: CompanyId exacto en Empresas que matchee con Licencias.CompanyId.
     /// </summary>
     private async Task<int?> TryClaimPendingLicenseAsync(
-        SqlConnection conn, string companyName, string sanitizedCompanyId, string machineId)
+        SqlConnection conn, int? empresaId, string companyName, string sanitizedCompanyId, string machineId)
     {
         try
         {
-            // Buscar en Empresas por nombre (case-insensitive) para obtener el CompanyId real
+            // Buscar licencia pending: primero por EmpresaId (confiable), luego por nombre/slug
             await using var cmdFind = new SqlCommand(
                 @"SELECT TOP 1 l.Id
                   FROM Licencias l
-                  INNER JOIN Empresas e ON l.CompanyId = e.CompanyId
-                  WHERE (e.Nombre LIKE @CompanyName OR e.CompanyId = @SanitizedId)
-                    AND l.MachineId = 'pending'
-                    AND l.LicenseType = 'active'", conn);
+                  LEFT JOIN Empresas e ON l.CompanyId = e.CompanyId
+                  WHERE l.MachineId = 'pending'
+                    AND l.LicenseType = 'active'
+                    AND (
+                        (@EmpresaId IS NOT NULL AND (l.EmpresaId = @EmpresaId OR e.Id = @EmpresaId))
+                        OR (@EmpresaId IS NULL AND (e.Nombre LIKE @CompanyName OR e.CompanyId = @SanitizedId))
+                    )", conn);
+            cmdFind.Parameters.AddWithValue("@EmpresaId", (object?)empresaId ?? DBNull.Value);
             cmdFind.Parameters.AddWithValue("@CompanyName", companyName);
             cmdFind.Parameters.AddWithValue("@SanitizedId", sanitizedCompanyId);
             var result = await cmdFind.ExecuteScalarAsync();
@@ -313,12 +319,14 @@ public class LicenseService
             if (result is not int licId)
                 return null;
 
-            // Vincular: actualizar MachineId de "pending" al real + registrar heartbeat
+            // Vincular: actualizar MachineId de "pending" al real + EmpresaId + registrar heartbeat
             await using var cmdClaim = new SqlCommand(
-                @"UPDATE Licencias SET MachineId = @MachineId, LastHeartbeat = SYSUTCDATETIME(), UpdatedAt = SYSUTCDATETIME()
+                @"UPDATE Licencias SET MachineId = @MachineId, LastHeartbeat = SYSUTCDATETIME(), UpdatedAt = SYSUTCDATETIME(),
+                         EmpresaId = COALESCE(@EmpresaId, EmpresaId)
                   WHERE Id = @Id AND MachineId = 'pending'", conn);
             cmdClaim.Parameters.AddWithValue("@MachineId", machineId);
             cmdClaim.Parameters.AddWithValue("@Id", licId);
+            cmdClaim.Parameters.AddWithValue("@EmpresaId", (object?)empresaId ?? DBNull.Value);
             var rows = await cmdClaim.ExecuteNonQueryAsync();
 
             if (rows > 0)

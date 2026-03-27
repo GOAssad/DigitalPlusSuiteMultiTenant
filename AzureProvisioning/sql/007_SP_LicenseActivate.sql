@@ -1,6 +1,7 @@
 -- ============================================================
 -- SP: License_Activate
 -- Crea o recupera licencia. Soporta trial (sin codigo) y activacion con codigo.
+-- Acepta @EmpresaId (preferido) o @CompanyId (fallback para clientes viejos).
 -- Ejecutar en: Ferozo (DigitalPlusAdmin)
 -- ============================================================
 
@@ -11,6 +12,7 @@ CREATE OR ALTER PROCEDURE [dbo].[License_Activate]
     @Plan           NVARCHAR(50)  = 'free',
     @MaxLegajos     INT           = 5,
     @ExpiresAt      DATETIME2(7)  = NULL,   -- NULL para trial (usa TrialEndsAt)
+    @EmpresaId      INT           = NULL,   -- Preferido sobre CompanyId
     @Result         INT           OUTPUT,    -- 0=OK nueva, 1=OK existente, 2=error
     @LicenciaId     INT           OUTPUT
 AS
@@ -24,15 +26,33 @@ BEGIN
 
     BEGIN TRANSACTION;
 
-    -- Buscar licencia existente para esta empresa+maquina
-    SELECT @ExistingId = [Id], @ExistingType = [LicenseType]
-    FROM [dbo].[Licencias] WITH (UPDLOCK, HOLDLOCK)
-    WHERE [CompanyId] = @CompanyId AND [MachineId] = @MachineId;
+    -- Buscar licencia existente: primero por EmpresaId+MachineId, luego por CompanyId+MachineId
+    IF @EmpresaId IS NOT NULL
+    BEGIN
+        SELECT @ExistingId = [Id], @ExistingType = [LicenseType]
+        FROM [dbo].[Licencias] WITH (UPDLOCK, HOLDLOCK)
+        WHERE [EmpresaId] = @EmpresaId AND [MachineId] = @MachineId;
+    END
+
+    IF @ExistingId IS NULL
+    BEGIN
+        SELECT @ExistingId = [Id], @ExistingType = [LicenseType]
+        FROM [dbo].[Licencias] WITH (UPDLOCK, HOLDLOCK)
+        WHERE [CompanyId] = @CompanyId AND [MachineId] = @MachineId;
+    END
 
     IF @ExistingId IS NOT NULL
     BEGIN
         -- Ya existe: retornar la existente
         SET @LicenciaId = @ExistingId;
+
+        -- Asegurar que EmpresaId este poblado
+        IF @EmpresaId IS NOT NULL
+        BEGIN
+            UPDATE [dbo].[Licencias]
+            SET [EmpresaId] = @EmpresaId, [UpdatedAt] = @Now
+            WHERE [Id] = @ExistingId AND ([EmpresaId] IS NULL OR [EmpresaId] <> @EmpresaId);
+        END
 
         -- Si viene con activation code y la licencia era trial, upgradeamos
         IF @ActivationCode IS NOT NULL AND @ExistingType = 'trial'
@@ -69,20 +89,20 @@ BEGIN
         -- Trial
         INSERT INTO [dbo].[Licencias]
             ([CompanyId], [MachineId], [LicenseType], [Plan], [MaxLegajos],
-             [TrialStartedAt], [TrialEndsAt], [LastHeartbeat])
+             [TrialStartedAt], [TrialEndsAt], [LastHeartbeat], [EmpresaId])
         VALUES
             (@CompanyId, @MachineId, 'trial', 'free', 5,
-             @Now, DATEADD(DAY, 14, @Now), @Now);
+             @Now, DATEADD(DAY, 14, @Now), @Now, @EmpresaId);
     END
     ELSE
     BEGIN
         -- Licencia activa con codigo
         INSERT INTO [dbo].[Licencias]
             ([CompanyId], [MachineId], [LicenseType], [Plan], [MaxLegajos],
-             [ActivationCode], [ExpiresAt], [LastHeartbeat])
+             [ActivationCode], [ExpiresAt], [LastHeartbeat], [EmpresaId])
         VALUES
             (@CompanyId, @MachineId, 'active', @Plan, @MaxLegajos,
-             @ActivationCode, @ExpiresAt, @Now);
+             @ActivationCode, @ExpiresAt, @Now, @EmpresaId);
     END
 
     SET @LicenciaId = SCOPE_IDENTITY();

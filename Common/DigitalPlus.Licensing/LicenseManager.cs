@@ -17,6 +17,18 @@ namespace DigitalPlus.Licensing
             _appName = appName;
         }
 
+        /// <summary>
+        /// Lee EmpresaId (AdminEmpresaId) de app.config. Retorna 0 si no existe (clientes viejos).
+        /// </summary>
+        private static int GetEmpresaIdFromConfig()
+        {
+            var val = ConfigurationManager.AppSettings["AdminEmpresaId"];
+            int id;
+            if (!string.IsNullOrEmpty(val) && int.TryParse(val, out id))
+                return id;
+            return 0;
+        }
+
         public LicenseTicket CurrentTicket => _currentTicket;
 
         /// <summary>
@@ -162,9 +174,10 @@ namespace DigitalPlus.Licensing
         {
             var companyName = ConfigurationManager.AppSettings["NombreEmpresa"] ?? "Unknown";
             var machineId = MachineIdProvider.GetMachineId();
+            var empresaId = GetEmpresaIdFromConfig();
 
             var client = new LicenseClient(_apiKey);
-            if (client.TryActivate(activationCode, companyName, machineId, "local",
+            if (client.TryActivate(activationCode, companyName, machineId, "local", empresaId,
                 out var ticketJson, out var sig, out var error))
             {
                 if (LicenseValidator.VerifySignature(ticketJson, sig))
@@ -196,9 +209,10 @@ namespace DigitalPlus.Licensing
         {
             var companyName = ConfigurationManager.AppSettings["NombreEmpresa"] ?? "Unknown";
             var machineId = MachineIdProvider.GetMachineId();
+            var empresaId = GetEmpresaIdFromConfig();
 
             var client = new LicenseClient(_apiKey);
-            if (client.TryActivate(null, companyName, machineId, "local",
+            if (client.TryActivate(null, companyName, machineId, "local", empresaId,
                 out var ticketJson, out var sig, out var error))
             {
                 if (LicenseValidator.VerifySignature(ticketJson, sig))
@@ -227,12 +241,17 @@ namespace DigitalPlus.Licensing
 
             try
             {
+                var empresaId = _currentTicket.EmpresaId > 0
+                    ? _currentTicket.EmpresaId
+                    : GetEmpresaIdFromConfig();
+
                 var client = new LicenseClient(_apiKey);
                 if (client.TryHeartbeat(
                     _currentTicket.CompanyId,
                     _currentTicket.MachineId,
                     _appName,
                     currentLegajos,
+                    empresaId,
                     out var ticketJson,
                     out var sig,
                     out _))

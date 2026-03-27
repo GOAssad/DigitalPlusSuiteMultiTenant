@@ -18,6 +18,9 @@ public class LicenseActivateRequest
 
     [JsonPropertyName("installType")]
     public string InstallType { get; set; } = string.Empty;  // "cloud" or "local"
+
+    [JsonPropertyName("empresaId")]
+    public int? EmpresaId { get; set; }    // Preferido sobre companyName para lookup
 }
 
 // ============================================================
@@ -36,6 +39,9 @@ public class LicenseHeartbeatRequest
 
     [JsonPropertyName("activeLegajos")]
     public int ActiveLegajos { get; set; }
+
+    [JsonPropertyName("empresaId")]
+    public int? EmpresaId { get; set; }    // Preferido sobre companyId para lookup
 }
 
 // ============================================================
@@ -57,6 +63,9 @@ public class LicenseTicket
 {
     [JsonPropertyName("v")]
     public int Version { get; set; } = 1;
+
+    [JsonPropertyName("empresaId")]
+    public int? EmpresaId { get; set; }
 
     [JsonPropertyName("companyId")]
     public string CompanyId { get; set; } = string.Empty;

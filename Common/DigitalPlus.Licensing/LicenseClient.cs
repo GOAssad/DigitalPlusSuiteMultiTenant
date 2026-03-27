@@ -20,6 +20,9 @@ namespace DigitalPlus.Licensing
 
         [DataMember(Name = "installType")]
         public string InstallType { get; set; }
+
+        [DataMember(Name = "empresaId")]
+        public int EmpresaId { get; set; }
     }
 
     [DataContract]
@@ -36,6 +39,9 @@ namespace DigitalPlus.Licensing
 
         [DataMember(Name = "activeLegajos")]
         public int ActiveLegajos { get; set; }
+
+        [DataMember(Name = "empresaId")]
+        public int EmpresaId { get; set; }
     }
 
     [DataContract]
@@ -60,7 +66,7 @@ namespace DigitalPlus.Licensing
         }
 
         public bool TryActivate(string activationCode, string companyName, string machineId,
-            string installType, out string ticketJson, out string signature, out string error)
+            string installType, int empresaId, out string ticketJson, out string signature, out string error)
         {
             ticketJson = null;
             signature = null;
@@ -73,7 +79,8 @@ namespace DigitalPlus.Licensing
                     ActivationCode = activationCode,
                     CompanyName = companyName,
                     MachineId = machineId,
-                    InstallType = installType
+                    InstallType = installType,
+                    EmpresaId = empresaId
                 };
 
                 var json = JsonHelper.Serialize(req);
@@ -98,7 +105,7 @@ namespace DigitalPlus.Licensing
         }
 
         public bool TryHeartbeat(string companyId, string machineId, string app, int activeLegajos,
-            out string ticketJson, out string signature, out string error)
+            int empresaId, out string ticketJson, out string signature, out string error)
         {
             ticketJson = null;
             signature = null;
@@ -111,7 +118,8 @@ namespace DigitalPlus.Licensing
                     CompanyId = companyId,
                     MachineId = machineId,
                     App = app,
-                    ActiveLegajos = activeLegajos
+                    ActiveLegajos = activeLegajos,
+                    EmpresaId = empresaId
                 };
 
                 var json = JsonHelper.Serialize(req);
