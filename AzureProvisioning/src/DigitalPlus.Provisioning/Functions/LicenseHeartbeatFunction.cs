@@ -13,16 +13,13 @@ public class LicenseHeartbeatFunction
 {
     private readonly LicenseService _licenseService;
     private readonly ILogger<LicenseHeartbeatFunction> _logger;
-    private readonly string? _apiKey;
 
     public LicenseHeartbeatFunction(
         LicenseService licenseService,
-        IConfiguration config,
         ILogger<LicenseHeartbeatFunction> logger)
     {
         _licenseService = licenseService;
         _logger = logger;
-        _apiKey = config["ProvisioningApiKey"];
     }
 
     [Function("LicenseHeartbeat")]
@@ -30,17 +27,7 @@ public class LicenseHeartbeatFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "license/heartbeat")]
         HttpRequest req)
     {
-        // --- API Key validation ---
-        if (!string.IsNullOrEmpty(_apiKey))
-        {
-            var authHeader = req.Headers["X-Api-Key"].FirstOrDefault();
-            if (authHeader != _apiKey)
-            {
-                _logger.LogWarning("License heartbeat: invalid API key from {IP}",
-                    req.HttpContext.Connection.RemoteIpAddress);
-                return new UnauthorizedResult();
-            }
-        }
+        // Endpoint publico — los Fichadores no tienen API key
 
         // --- Parse request ---
         LicenseHeartbeatRequest? request;

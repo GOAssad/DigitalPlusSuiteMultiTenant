@@ -13,16 +13,13 @@ public class LicenseActivateFunction
 {
     private readonly LicenseService _licenseService;
     private readonly ILogger<LicenseActivateFunction> _logger;
-    private readonly string? _apiKey;
 
     public LicenseActivateFunction(
         LicenseService licenseService,
-        IConfiguration config,
         ILogger<LicenseActivateFunction> logger)
     {
         _licenseService = licenseService;
         _logger = logger;
-        _apiKey = config["ProvisioningApiKey"];
     }
 
     [Function("LicenseActivate")]
@@ -30,17 +27,7 @@ public class LicenseActivateFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "license/activate")]
         HttpRequest req)
     {
-        // --- API Key validation ---
-        if (!string.IsNullOrEmpty(_apiKey))
-        {
-            var authHeader = req.Headers["X-Api-Key"].FirstOrDefault();
-            if (authHeader != _apiKey)
-            {
-                _logger.LogWarning("License activate: invalid API key from {IP}",
-                    req.HttpContext.Connection.RemoteIpAddress);
-                return new UnauthorizedResult();
-            }
-        }
+        // Endpoint publico — los Fichadores no tienen API key
 
         // --- Parse request ---
         LicenseActivateRequest? request;
