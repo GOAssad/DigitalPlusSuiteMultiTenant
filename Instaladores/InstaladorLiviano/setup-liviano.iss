@@ -14,7 +14,7 @@
 
 ; --- Identidad del instalador liviano ---
 #define AppName       "DigitalPlus Suite (Cloud)"
-#define AppVersion    "1.0.0-202603241544"
+#define AppVersion    "1.0.2-202603262200"
 #define AppPublisher  "DigitalOnePlus"
 #define AppId         "{{A1B2C3D4-5E6F-7A8B-9C0D-E1F2A3B4C5D6}"
 

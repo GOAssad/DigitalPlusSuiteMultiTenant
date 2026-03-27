@@ -55,7 +55,25 @@ public class LicenseService
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        // Determinar plan y limites
+        // ── Buscar licencia existente con MachineId="pending" (creada desde Portal Licencias/pagos) ──
+        // El Portal usa CompanyId directo (ej: "new-family"), el Fichador sanitiza a "DP_New_Family".
+        // Intentamos vincular la licencia existente al MachineId real.
+        var pendingLicId = await TryClaimPendingLicenseAsync(conn, request.CompanyName, companyId, request.MachineId);
+        if (pendingLicId.HasValue)
+        {
+            _logger.LogInformation(
+                "License activate: claimed pending license {LicId} for company={Company}, machine={Machine}",
+                pendingLicId.Value, request.CompanyName, request.MachineId);
+
+            var pendingTicket = await BuildTicketFromDbAsync(conn, pendingLicId.Value, now);
+            if (pendingTicket != null)
+            {
+                var pendingResp = SignTicket(pendingTicket);
+                return (pendingResp, null, 200);
+            }
+        }
+
+        // ── Flujo original: crear o recuperar licencia via SP ──
         string plan;
         int maxLegajos;
         DateTime? expiresAt;
@@ -268,6 +286,59 @@ public class LicenseService
         var durationDays = pDuration.Value is int dd ? dd : 365;
 
         return (result, plan, maxLegajos, durationDays);
+    }
+
+    /// <summary>
+    /// Busca una licencia con MachineId="pending" que pertenezca a esta empresa.
+    /// Si la encuentra, actualiza el MachineId al real y retorna el Id.
+    /// Busca por: CompanyId exacto en Empresas que matchee con Licencias.CompanyId.
+    /// </summary>
+    private async Task<int?> TryClaimPendingLicenseAsync(
+        SqlConnection conn, string companyName, string sanitizedCompanyId, string machineId)
+    {
+        try
+        {
+            // Buscar en Empresas por nombre (case-insensitive) para obtener el CompanyId real
+            await using var cmdFind = new SqlCommand(
+                @"SELECT TOP 1 l.Id
+                  FROM Licencias l
+                  INNER JOIN Empresas e ON l.CompanyId = e.CompanyId
+                  WHERE (e.Nombre LIKE @CompanyName OR e.CompanyId = @SanitizedId)
+                    AND l.MachineId = 'pending'
+                    AND l.LicenseType = 'active'", conn);
+            cmdFind.Parameters.AddWithValue("@CompanyName", companyName);
+            cmdFind.Parameters.AddWithValue("@SanitizedId", sanitizedCompanyId);
+            var result = await cmdFind.ExecuteScalarAsync();
+
+            if (result is not int licId)
+                return null;
+
+            // Vincular: actualizar MachineId de "pending" al real + registrar heartbeat
+            await using var cmdClaim = new SqlCommand(
+                @"UPDATE Licencias SET MachineId = @MachineId, LastHeartbeat = SYSUTCDATETIME(), UpdatedAt = SYSUTCDATETIME()
+                  WHERE Id = @Id AND MachineId = 'pending'", conn);
+            cmdClaim.Parameters.AddWithValue("@MachineId", machineId);
+            cmdClaim.Parameters.AddWithValue("@Id", licId);
+            var rows = await cmdClaim.ExecuteNonQueryAsync();
+
+            if (rows > 0)
+            {
+                // Log
+                await using var cmdLog = new SqlCommand(
+                    @"INSERT INTO LicenciasLog (LicenciaId, Action, App, Details, Timestamp)
+                      VALUES (@Id, 'claim_pending', 'Fichador', @Details, SYSUTCDATETIME())", conn);
+                cmdLog.Parameters.AddWithValue("@Id", licId);
+                cmdLog.Parameters.AddWithValue("@Details", $"MachineId vinculado: {machineId}");
+                await cmdLog.ExecuteNonQueryAsync();
+
+                return licId;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "TryClaimPendingLicense failed for {CompanyName}", companyName);
+        }
+        return null;
     }
 
     private static string SanitizeCompanyId(string companyName)
