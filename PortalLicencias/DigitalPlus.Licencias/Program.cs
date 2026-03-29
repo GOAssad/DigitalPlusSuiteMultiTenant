@@ -246,6 +246,67 @@ app.MapPost("/api/activar", async (ActivarRequest req,
     });
 });
 
+// API para generar archivo de activacion offline (.dpactivation)
+// Reutiliza la misma logica de /api/activar pero devuelve un archivo descargable
+app.MapGet("/api/activar-offline/{codigo}", async (string codigo,
+    RepositorioLicencias repo, DatabaseProvisioningService provisioning,
+    MultiTenantProvisioningService mtProvisioning, IConfiguration config) =>
+{
+    if (string.IsNullOrWhiteSpace(codigo))
+        return Results.BadRequest(new { error = "Codigo requerido" });
+
+    var empresa = await repo.BuscarEmpresaPorCodigoActivacionAsync(codigo.Trim());
+    if (empresa == null)
+        return Results.NotFound(new { error = "Codigo invalido o empresa inactiva" });
+
+    var multiTenantDbName = config["MultiTenant:DatabaseName"] ?? "DigitalPlusMultiTenant";
+    var tenantConnectionString = provisioning.BuildClientConnectionString(multiTenantDbName);
+    var adminConnectionString = config.GetConnectionString("DefaultConnection") ?? "";
+    var tenantEmpresaId = await mtProvisioning.BuscarEmpresaIdPorCodigoAsync(empresa.CompanyId);
+
+    string? adminEmail = null;
+    if (tenantEmpresaId.HasValue)
+        adminEmail = await mtProvisioning.BuscarAdminEmailPorEmpresaIdAsync(tenantEmpresaId.Value);
+
+    // Obtener sucursales
+    var sucursales = new List<object>();
+    if (tenantEmpresaId.HasValue && !string.IsNullOrEmpty(tenantConnectionString))
+    {
+        try
+        {
+            using var conn = new Microsoft.Data.SqlClient.SqlConnection(tenantConnectionString);
+            await conn.OpenAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT Id, Nombre FROM Sucursal WHERE EmpresaId = @EmpresaId ORDER BY Nombre";
+            cmd.Parameters.AddWithValue("@EmpresaId", tenantEmpresaId.Value);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                sucursales.Add(new { id = reader.GetInt32(0), nombre = reader.GetString(1) });
+        }
+        catch { }
+    }
+
+    var data = new
+    {
+        connectionString = tenantConnectionString,
+        adminConnectionString,
+        empresaId = tenantEmpresaId ?? 0,
+        adminEmpresaId = empresa.Id,
+        companyId = empresa.CompanyId,
+        nombreEmpresa = empresa.Nombre,
+        urlPortal = empresa.UrlPortal ?? "",
+        email = adminEmail ?? "",
+        password = "Admin123",
+        sucursales
+    };
+
+    var json = System.Text.Json.JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+    var fileName = $"{empresa.CompanyId}.dpactivation";
+
+    return Results.File(bytes, "application/json", fileName);
+});
+
 // API para desktop apps: verificar si la empresa esta activa
 app.MapPost("/api/verificar-estado", async (VerificarEstadoRequest req, RepositorioLicencias repo) =>
 {

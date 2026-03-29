@@ -2,6 +2,7 @@
 -- SP: License_Activate
 -- Crea o recupera licencia. Soporta trial (sin codigo) y activacion con codigo.
 -- Acepta @EmpresaId (preferido) o @CompanyId (fallback para clientes viejos).
+-- Si la empresa ya tiene una licencia activa, la nueva PC hereda el mismo plan.
 -- Ejecutar en: Ferozo (DigitalPlusAdmin)
 -- ============================================================
 
@@ -23,6 +24,12 @@ BEGIN
     DECLARE @Now DATETIME2(7) = SYSUTCDATETIME();
     DECLARE @ExistingId INT;
     DECLARE @ExistingType NVARCHAR(20);
+
+    -- Variables para herencia de plan
+    DECLARE @InheritPlan NVARCHAR(50);
+    DECLARE @InheritMaxLegajos INT;
+    DECLARE @InheritExpiresAt DATETIME2(7);
+    DECLARE @InheritType NVARCHAR(20);
 
     BEGIN TRANSACTION;
 
@@ -84,15 +91,70 @@ BEGIN
     END
 
     -- No existe: crear nueva
+    -- Primero, buscar si la empresa ya tiene una licencia activa para heredar el plan
+    IF @ActivationCode IS NULL AND @EmpresaId IS NOT NULL
+    BEGIN
+        SELECT TOP 1
+            @InheritType = [LicenseType],
+            @InheritPlan = [Plan],
+            @InheritMaxLegajos = [MaxLegajos],
+            @InheritExpiresAt = [ExpiresAt]
+        FROM [dbo].[Licencias]
+        WHERE [EmpresaId] = @EmpresaId
+          AND [LicenseType] = 'active'
+          AND [MachineId] <> 'pending'
+        ORDER BY [CreatedAt] DESC;
+    END
+
+    -- Si no encontro por EmpresaId, buscar por CompanyId (empresas con slug distinto)
+    IF @InheritPlan IS NULL AND @ActivationCode IS NULL
+    BEGIN
+        SELECT TOP 1
+            @InheritType = [LicenseType],
+            @InheritPlan = [Plan],
+            @InheritMaxLegajos = [MaxLegajos],
+            @InheritExpiresAt = [ExpiresAt]
+        FROM [dbo].[Licencias]
+        WHERE [EmpresaId] = @EmpresaId
+          AND [LicenseType] = 'active'
+          AND [MachineId] <> 'pending'
+        ORDER BY [CreatedAt] DESC;
+    END
+
     IF @ActivationCode IS NULL
     BEGIN
-        -- Trial
-        INSERT INTO [dbo].[Licencias]
-            ([CompanyId], [MachineId], [LicenseType], [Plan], [MaxLegajos],
-             [TrialStartedAt], [TrialEndsAt], [LastHeartbeat], [EmpresaId])
-        VALUES
-            (@CompanyId, @MachineId, 'trial', 'free', 5,
-             @Now, DATEADD(DAY, 14, @Now), @Now, @EmpresaId);
+        IF @InheritPlan IS NOT NULL
+        BEGIN
+            -- Heredar plan de licencia existente de la empresa
+            INSERT INTO [dbo].[Licencias]
+                ([CompanyId], [MachineId], [LicenseType], [Plan], [MaxLegajos],
+                 [ExpiresAt], [LastHeartbeat], [EmpresaId])
+            VALUES
+                (@CompanyId, @MachineId, 'active', @InheritPlan, @InheritMaxLegajos,
+                 @InheritExpiresAt, @Now, @EmpresaId);
+
+            SET @LicenciaId = SCOPE_IDENTITY();
+
+            INSERT INTO [dbo].[LicenciasLog] ([LicenciaId], [Action], [Details])
+            VALUES (@LicenciaId, 'inherit_plan',
+                'Heredado de empresa: Plan=' + @InheritPlan + ', MaxLegajos=' + CAST(@InheritMaxLegajos AS NVARCHAR(10)));
+        END
+        ELSE
+        BEGIN
+            -- Trial (no hay licencia existente de la empresa)
+            INSERT INTO [dbo].[Licencias]
+                ([CompanyId], [MachineId], [LicenseType], [Plan], [MaxLegajos],
+                 [TrialStartedAt], [TrialEndsAt], [LastHeartbeat], [EmpresaId])
+            VALUES
+                (@CompanyId, @MachineId, 'trial', 'free', 5,
+                 @Now, DATEADD(DAY, 14, @Now), @Now, @EmpresaId);
+
+            SET @LicenciaId = SCOPE_IDENTITY();
+
+            INSERT INTO [dbo].[LicenciasLog] ([LicenciaId], [Action], [Details])
+            VALUES (@LicenciaId, 'trial_start',
+                'Plan: free, MaxLegajos: 5');
+        END
     END
     ELSE
     BEGIN
@@ -103,14 +165,13 @@ BEGIN
         VALUES
             (@CompanyId, @MachineId, 'active', @Plan, @MaxLegajos,
              @ActivationCode, @ExpiresAt, @Now, @EmpresaId);
-    END
 
-    SET @LicenciaId = SCOPE_IDENTITY();
+        SET @LicenciaId = SCOPE_IDENTITY();
 
-    INSERT INTO [dbo].[LicenciasLog] ([LicenciaId], [Action], [Details])
-    VALUES (@LicenciaId,
-            CASE WHEN @ActivationCode IS NULL THEN 'trial_start' ELSE 'activate' END,
+        INSERT INTO [dbo].[LicenciasLog] ([LicenciaId], [Action], [Details])
+        VALUES (@LicenciaId, 'activate',
             'Plan: ' + ISNULL(@Plan, 'free') + ', MaxLegajos: ' + CAST(ISNULL(@MaxLegajos, 5) AS NVARCHAR(10)));
+    END
 
     SET @Result = 0;
 

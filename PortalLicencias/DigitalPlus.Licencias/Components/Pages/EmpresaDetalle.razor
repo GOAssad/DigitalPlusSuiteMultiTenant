@@ -503,6 +503,12 @@ else
                         {
                             <small class="text-success">Copiado al portapapeles</small>
                         }
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <a href="/api/activar-offline/@empresa.CodigoActivacion" class="btn btn-sm btn-outline-primary" download>
+                                <span class="bi bi-download"></span> Descargar archivo offline
+                            </a>
+                            <small class="text-muted">Para instalar en PCs sin acceso a Azure</small>
+                        </div>
                         <hr />
                         <button class="btn btn-sm btn-outline-warning" @onclick="RegenerarCodigo">
                             Regenerar codigo

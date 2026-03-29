@@ -346,6 +346,7 @@ var
   sUrlPortal:             String;    // URL del portal web de la empresa
   sAdminEmail:            String;    // Email del admin (viene del portal)
   sAdminPassword:         String;    // Password del admin (viene del portal)
+  sLastActivationError:   String;    // Ultimo error de activacion (para diagnostico)
   bModoFree:              Boolean;   // True si eligio plan Free
   nFreePaisId:            Integer;   // PaisId seleccionado en combo Free
   sFreeValidacion:        String;    // Resultado de validacion previa
@@ -369,8 +370,213 @@ begin
 end;
 
 // ============================================================
+// ACTIVACION OFFLINE (archivo .dpactivation)
+// ============================================================
+
+// Busca un archivo .dpactivation junto al instalador y carga la config
+function TryLoadOfflineActivation: Boolean;
+var
+  sDir, sFile, sContent: String;
+  FindRec: TFindRec;
+  Lines: TArrayOfString;
+  i: Integer;
+  iPos, iEnd: Integer;
+  iIdPos, iIdEnd, iNomPos, iNomEnd, n: Integer;
+begin
+  Result := False;
+  sDir := ExtractFileDir(ExpandConstant('{srcexe}'));
+
+  if not FindFirst(sDir + '\*.dpactivation', FindRec) then Exit;
+  try
+    sFile := sDir + '\' + FindRec.Name;
+  finally
+    FindClose(FindRec);
+  end;
+
+  if not LoadStringsFromFile(sFile, Lines) then Exit;
+
+  // Unir todas las lineas en un solo string
+  sContent := '';
+  for i := 0 to GetArrayLength(Lines) - 1 do
+    sContent := sContent + Lines[i];
+
+  if sContent = '' then Exit;
+
+  // Parsear connectionString
+  iPos := Pos('connectionString":"', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('connectionString":"');
+    iEnd := PosEx('"', sContent, iPos);
+    if iEnd > iPos then
+      sConnectionString := Copy(sContent, iPos, iEnd - iPos);
+  end;
+
+  // Parsear adminConnectionString
+  iPos := Pos('adminConnectionString":"', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('adminConnectionString":"');
+    iEnd := PosEx('"', sContent, iPos);
+    if iEnd > iPos then
+      sAdminConnectionString := Copy(sContent, iPos, iEnd - iPos);
+  end;
+
+  // Parsear empresaId
+  iPos := Pos('"empresaId":', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('"empresaId":');
+    iEnd := PosEx(',', sContent, iPos);
+    if iEnd = 0 then iEnd := PosEx('}', sContent, iPos);
+    if iEnd > iPos then
+      sEmpresaId := Trim(Copy(sContent, iPos, iEnd - iPos));
+  end;
+
+  // Parsear adminEmpresaId
+  iPos := Pos('adminEmpresaId":', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('adminEmpresaId":');
+    iEnd := PosEx(',', sContent, iPos);
+    if iEnd = 0 then iEnd := PosEx('}', sContent, iPos);
+    if iEnd > iPos then
+      sAdminEmpresaId := Trim(Copy(sContent, iPos, iEnd - iPos));
+  end;
+
+  // Parsear nombreEmpresa
+  iPos := Pos('nombreEmpresa":"', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('nombreEmpresa":"');
+    iEnd := PosEx('"', sContent, iPos);
+    if iEnd > iPos then
+      sNombreEmpresa := Copy(sContent, iPos, iEnd - iPos);
+  end;
+
+  // Parsear urlPortal
+  iPos := Pos('urlPortal":"', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('urlPortal":"');
+    iEnd := PosEx('"', sContent, iPos);
+    if iEnd > iPos then
+      sUrlPortal := Copy(sContent, iPos, iEnd - iPos);
+  end;
+
+  // Parsear email
+  iPos := Pos('"email":"', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('"email":"');
+    iEnd := PosEx('"', sContent, iPos);
+    if iEnd > iPos then
+      sAdminEmail := Copy(sContent, iPos, iEnd - iPos);
+  end;
+
+  // Parsear password
+  iPos := Pos('"password":"', sContent);
+  if iPos > 0 then
+  begin
+    iPos := iPos + Length('"password":"');
+    iEnd := PosEx('"', sContent, iPos);
+    if iEnd > iPos then
+      sAdminPassword := Copy(sContent, iPos, iEnd - iPos);
+  end;
+
+  // Parsear sucursales
+  iPos := Pos('"sucursales":[', sContent);
+  if iPos > 0 then
+  begin
+    SetArrayLength(sucursalIds, 0);
+    cmbSucursal.Items.Clear;
+    iPos := iPos + Length('"sucursales":[');
+    while iPos < Length(sContent) do
+    begin
+      iIdPos := PosEx('"id":', sContent, iPos);
+      if iIdPos = 0 then Break;
+      iIdPos := iIdPos + Length('"id":');
+      iIdEnd := PosEx(',', sContent, iIdPos);
+      if iIdEnd = 0 then iIdEnd := PosEx('}', sContent, iIdPos);
+
+      iNomPos := PosEx('"nombre":"', sContent, iIdEnd);
+      if iNomPos = 0 then Break;
+      iNomPos := iNomPos + Length('"nombre":"');
+      iNomEnd := PosEx('"', sContent, iNomPos);
+
+      if (iIdEnd > iIdPos) and (iNomEnd > iNomPos) then
+      begin
+        n := GetArrayLength(sucursalIds);
+        SetArrayLength(sucursalIds, n + 1);
+        sucursalIds[n] := StrToIntDef(Trim(Copy(sContent, iIdPos, iIdEnd - iIdPos)), 0);
+        cmbSucursal.Items.Add(Copy(sContent, iNomPos, iNomEnd - iNomPos));
+      end;
+
+      iPos := iNomEnd + 1;
+      if PosEx(']', sContent, iPos) < PosEx('{', sContent, iPos) then Break;
+      if PosEx('{', sContent, iPos) = 0 then Break;
+    end;
+
+    if cmbSucursal.Items.Count > 0 then
+    begin
+      lblSucursal.Visible := True;
+      cmbSucursal.Visible := True;
+      if cmbSucursal.Items.Count = 1 then
+        cmbSucursal.ItemIndex := 0;
+    end;
+  end;
+
+  if (sConnectionString <> '') and (sEmpresaId <> '') then
+    Result := True;
+end;
+
+// ============================================================
 // ACTIVACION VIA PORTAL DE LICENCIAS
 // ============================================================
+
+// Llama a la API usando PowerShell (fallback para Windows 7 donde WinHttp falla)
+function HttpPostViaPowerShell(const sUrl, sBody: String): String;
+var
+  sTempFile, sPsScript, sPsFile: String;
+  ResultCode: Integer;
+  Lines: TArrayOfString;
+  i: Integer;
+begin
+  Result := '';
+  sTempFile := ExpandConstant('{tmp}\api_response.txt');
+  sPsFile := ExpandConstant('{tmp}\api_call.ps1');
+
+  // Crear script PowerShell
+  sPsScript :=
+    '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;' + #13#10 +
+    'try {' + #13#10 +
+    '  $r = Invoke-WebRequest -Uri "' + sUrl + '" -Method POST -ContentType "application/json" -Body ''' + sBody + ''' -UseBasicParsing -TimeoutSec 120;' + #13#10 +
+    '  $r.Content | Out-File -FilePath "' + sTempFile + '" -Encoding UTF8 -NoNewline' + #13#10 +
+    '} catch {' + #13#10 +
+    '  "ERROR:" + $_.Exception.Message | Out-File -FilePath "' + sTempFile + '" -Encoding UTF8 -NoNewline' + #13#10 +
+    '}';
+
+  SaveStringToFile(sPsFile, sPsScript, False);
+
+  if Exec('powershell.exe',
+      '-NoProfile -ExecutionPolicy Bypass -File "' + sPsFile + '"',
+      '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    if LoadStringsFromFile(sTempFile, Lines) then
+    begin
+      for i := 0 to GetArrayLength(Lines) - 1 do
+      begin
+        if i > 0 then
+          Result := Result + Lines[i]
+        else
+          Result := Lines[i];
+      end;
+    end;
+  end;
+
+  DeleteFile(sTempFile);
+  DeleteFile(sPsFile);
+end;
 
 // Llama al portal DigitalPlus Licencias para validar el codigo
 // y obtener la connection string y datos de empresa
@@ -379,6 +585,7 @@ var
   WinHttpReq: Variant;
   sUrl, sBody, sResponse: String;
   StatusCode: Integer;
+  bUsePowerShell: Boolean;
   iPos, iEnd: Integer;
   iIdPos, iIdEnd, iNomPos, iNomEnd, n: Integer;
 begin
@@ -395,6 +602,12 @@ begin
   sUrl := '{#PortalApiUrl}';
   sBody := '{"Codigo":"' + sCodigo + '"}';
 
+  sLastActivationError := '';
+  bUsePowerShell := False;
+  sResponse := '';
+  StatusCode := 0;
+
+  // Intento 1: WinHttp (rapido, funciona en Windows 10+)
   try
     WinHttpReq := CreateOleObject('WinHttp.WinHttpRequest.5.1');
     WinHttpReq.Option(9) := $0A80;
@@ -405,9 +618,40 @@ begin
 
     StatusCode := WinHttpReq.Status;
     sResponse := WinHttpReq.ResponseText;
+  except
+    // WinHttp fallo (comun en Windows 7) — intentar con PowerShell
+    bUsePowerShell := True;
+  end;
 
-    if StatusCode = 200 then
+  // Intento 2: PowerShell (fallback para Windows 7)
+  if bUsePowerShell then
+  begin
+    Log('WinHttp fallo, intentando con PowerShell...');
+    sResponse := HttpPostViaPowerShell(sUrl, sBody);
+
+    if (sResponse <> '') and (Pos('ERROR:', sResponse) = 0) then
+      StatusCode := 200
+    else
     begin
+      if Pos('ERROR:', sResponse) > 0 then
+        sLastActivationError := 'Error PowerShell: ' + Copy(sResponse, 7, Length(sResponse) - 6)
+      else
+        sLastActivationError := 'No se pudo conectar al servidor (WinHttp y PowerShell fallaron).';
+      StatusCode := 0;
+    end;
+  end;
+
+  if (StatusCode <> 200) and (not bUsePowerShell) then
+  begin
+    sLastActivationError := 'Error HTTP ' + IntToStr(StatusCode);
+    if StatusCode = 404 then
+      sLastActivationError := 'Codigo no encontrado (HTTP 404)'
+    else if StatusCode = 0 then
+      sLastActivationError := 'No se pudo conectar al servidor. Verifique su conexion a internet.';
+  end;
+
+  if StatusCode = 200 then
+  begin
       // Extraer connectionString del JSON (BD DigitalPlusMultiTenant)
       iPos := Pos('connectionString":"', sResponse);
       if iPos > 0 then
@@ -539,11 +783,10 @@ begin
       end;
 
       if (sConnectionString <> '') and (sEmpresaId <> '') then
-        Result := True;
+        Result := True
+      else
+        sLastActivationError := 'Respuesta incompleta del servidor (connectionString o empresaId vacio)';
     end;
-  except
-    // Error de conexion
-  end;
 end;
 
 // Carga la lista de paises desde la API
@@ -792,7 +1035,21 @@ begin
     Exit;
   end;
 
-  lblActivResult.Caption := 'Validando codigo...';
+  // Intento 1: Archivo offline (.dpactivation junto al instalador)
+  lblActivResult.Caption := 'Buscando archivo de activacion offline...';
+  lblActivResult.Font.Color := clWindowText;
+  WizardForm.Update;
+
+  if TryLoadOfflineActivation then
+  begin
+    bActivacionOK := True;
+    lblActivResult.Caption := 'Activado offline. Empresa: ' + sNombreEmpresa + ' (ID: ' + sEmpresaId + ')';
+    lblActivResult.Font.Color := clGreen;
+    Exit;
+  end;
+
+  // Intento 2: API online (WinHttp -> PowerShell)
+  lblActivResult.Caption := 'Validando codigo en linea...';
   lblActivResult.Font.Color := clWindowText;
   WizardForm.Update;
 
@@ -805,7 +1062,11 @@ begin
   else
   begin
     bActivacionOK := False;
-    lblActivResult.Caption := 'Codigo invalido o expirado. Intente nuevamente.';
+    if sLastActivationError <> '' then
+      lblActivResult.Caption := sLastActivationError + #13#10 +
+        'Alternativa: coloque un archivo .dpactivation junto al instalador.'
+    else
+      lblActivResult.Caption := 'Codigo invalido o expirado. Intente nuevamente.';
     lblActivResult.Font.Color := clRed;
   end;
 end;
@@ -1052,14 +1313,86 @@ begin
 end;
 
 // ============================================================
+// TLS 1.2 PARA WINDOWS 7
+// ============================================================
+
+// Verifica si WinHttp ya tiene TLS 1.2 habilitado en el registro
+function IsTls12EnabledInWinHttp: Boolean;
+var
+  Value: Cardinal;
+begin
+  Result := False;
+  if RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\WinHttp',
+      'DefaultSecureProtocols', Value) then
+  begin
+    // $0800 = TLS 1.2
+    Result := (Value and $0800) <> 0;
+  end;
+end;
+
+// Aplica el fix de TLS 1.2 en WinHttp para Windows 7/8
+// Retorna True si se aplico o si no era necesario
+function EnsureTls12: Boolean;
+var
+  Version: TWindowsVersion;
+begin
+  Result := True;
+  GetWindowsVersionEx(Version);
+
+  // Solo necesario en Windows 7 (6.1) y Windows 8 (6.2/6.3)
+  // Windows 10+ (10.0) ya soporta TLS 1.2 nativamente
+  if Version.Major > 6 then Exit;
+  if (Version.Major = 6) and (Version.Minor >= 4) then Exit;
+  if Version.Major < 6 then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  // Verificar si ya esta habilitado
+  if IsTls12EnabledInWinHttp then Exit;
+
+  // Aplicar fix: habilitar TLS 1.0 + 1.1 + 1.2 en WinHttp
+  // $0800 = TLS 1.2, $0200 = TLS 1.1, $0080 = TLS 1.0
+  if RegWriteDWordValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\WinHttp',
+      'DefaultSecureProtocols', $0A80) then
+  begin
+    Log('TLS 1.2 habilitado en WinHttp (DefaultSecureProtocols = 0x0A80)');
+    // Tambien para procesos 32-bit en SO 64-bit
+    if IsWin64 then
+      RegWriteDWordValue(HKLM, 'SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Internet Settings\WinHttp',
+          'DefaultSecureProtocols', $0A80);
+  end
+  else
+  begin
+    Log('No se pudo escribir DefaultSecureProtocols en registro');
+    Result := False;
+  end;
+end;
+
+// ============================================================
 // EVENTOS DEL WIZARD
 // ============================================================
 
 function InitializeSetup: Boolean;
 var
   Version: TWindowsVersion;
+  bTlsOk: Boolean;
 begin
   Result := True;
+
+  // Habilitar TLS 1.2 en Windows 7/8 antes de cualquier llamada HTTPS
+  bTlsOk := EnsureTls12;
+  if not bTlsOk then
+  begin
+    GetWindowsVersionEx(Version);
+    if Version.Major < 6 then
+    begin
+      MsgBox('Este instalador requiere Windows 7 o superior.', mbError, MB_OK);
+      Result := False;
+      Exit;
+    end;
+  end;
 
   // Verificar 64 bits
   if not IsWin64 then
@@ -1084,6 +1417,7 @@ begin
   sEmpresaId := '';
   sAdminEmpresaId := '';
   sUrlPortal := '';
+  sLastActivationError := '';
 
   CreateModoPage;
   CreateActivacionPage;
