@@ -9,7 +9,6 @@
 
 @inject IJSRuntime JS
 @inject ITenantService Tenant
-@inject ILicenciaService LicenciaService
 @using DigitalPlusMultiTenant.Web.Helpers
 @using Microsoft.AspNetCore.Components.Forms
 
@@ -245,11 +244,6 @@
                                 <span class="badge bg-secondary fs-6 px-3 py-2"><i class="bi bi-skip-forward me-1"></i>@skipped ya existentes</span>
                             }
                         </div>
-
-                        @if (importLicenciaMsg != null)
-                        {
-                            <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i>@importLicenciaMsg</div>
-                        }
 
                         @if (importResultado != null)
                         {
@@ -595,7 +589,6 @@
     private bool cargandoArchivo;
     private bool importando;
     private string? importError;
-    private string? importLicenciaMsg;
     private string? importResultado;
     private List<ImportRow>? importRows;
 
@@ -616,7 +609,6 @@
         importError = null;
         importRows = null;
         importResultado = null;
-        importLicenciaMsg = null;
         cargandoArchivo = true;
         StateHasChanged();
 
@@ -655,31 +647,6 @@
                 return;
             }
 
-            // Check license limit
-            var validRows = importRows.Where(r => r.IsValid).ToList();
-            if (validRows.Count > 0)
-            {
-                var totalActual = existentes.Count;
-                var licInfo = await LicenciaService.GetLicenciaInfoAsync(Tenant.EmpresaId);
-                if (!licInfo.EsIlimitado(licInfo.MaxLegajos))
-                {
-                    var disponibles = Math.Max(0, licInfo.MaxLegajos - totalActual);
-                    if (disponibles == 0)
-                    {
-                        importLicenciaMsg = $"No se puede importar: el plan {licInfo.PlanDisplay} permite un maximo de {licInfo.MaxLegajos} legajos y ya tiene {totalActual}.";
-                    }
-                    else if (validRows.Count > disponibles)
-                    {
-                        // Marcar excedentes como invalidos
-                        var excedentes = validRows.Skip(disponibles).ToList();
-                        foreach (var row in excedentes)
-                        {
-                            row.Errores.Add($"Excede limite del plan ({licInfo.MaxLegajos} legajos)");
-                        }
-                        importLicenciaMsg = $"El plan {licInfo.PlanDisplay} permite {licInfo.MaxLegajos} legajos (tiene {totalActual}). Solo se importaran los primeros {disponibles} de {disponibles + excedentes.Count} validos.";
-                    }
-                }
-            }
         }
         catch (Exception ex)
         {
@@ -749,7 +716,6 @@
         importRows = null;
         importError = null;
         importResultado = null;
-        importLicenciaMsg = null;
     }
 
     private void CerrarImportar()

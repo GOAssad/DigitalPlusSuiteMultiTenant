@@ -261,12 +261,6 @@
     <Compile Include="Generales\FrmLoginAdmin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Generales\FrmLicencia.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Generales\FrmLicencia.Designer.cs">
-      <DependentUpon>FrmLicencia.cs</DependentUpon>
-    </Compile>
     <Compile Include="Generales\FrmMainMenu.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -393,10 +387,6 @@
     <ProjectReference Include="..\..\Common\Global.Funciones\Global.Funciones.csproj">
       <Project>{0537b069-50b9-4336-9e5c-ff3eef6a1334}</Project>
       <Name>Global.Funciones</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Common\DigitalPlus.Licensing\DigitalPlus.Licensing.csproj">
-      <Project>{E7F8A9B0-1C2D-3E4F-5A6B-7C8D9E0F1A2B}</Project>
-      <Name>DigitalPlus.Licensing</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

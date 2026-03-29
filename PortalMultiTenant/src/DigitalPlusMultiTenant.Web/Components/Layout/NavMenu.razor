@@ -1,17 +1,12 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject DigitalPlusMultiTenant.Application.Interfaces.ITenantService Tenant
-@inject DigitalPlusMultiTenant.Application.Interfaces.ILicenciaService LicenciaService
 @inject IDbContextFactory<DigitalPlusMultiTenant.Persistence.ApplicationDbContext> DbFactory
 @using Microsoft.EntityFrameworkCore
 
 <div class="sidebar-brand">
     <i class="bi bi-fingerprint"></i>
     <span>DIGITAL ONE</span>
-    @if (licenciaInfo != null)
-    {
-        <a href="/configuracion/planes" class="badge ms-2 @PlanBadgeClass text-decoration-none" style="font-size: 0.65rem; vertical-align: middle;">@licenciaInfo.PlanDisplay</a>
-    }
 </div>
 
 <nav class="sidebar-nav">
@@ -137,9 +132,6 @@
                         <NavLink class="sidebar-link sub" href="configuracion/empresa">
                             <i class="bi bi-building-gear"></i> Empresa
                         </NavLink>
-                        <NavLink class="sidebar-link sub" href="configuracion/planes">
-                            <i class="bi bi-gem"></i> Planes
-                        </NavLink>
                         <NavLink class="sidebar-link sub" href="usuarios">
                             <i class="bi bi-person-lock"></i> Usuarios
                         </NavLink>
@@ -175,18 +167,8 @@
 @code {
     private string? currentUrl;
     private HashSet<string> openGroups = new();
-    private DigitalPlusMultiTenant.Application.Interfaces.LicenciaInfo? licenciaInfo;
     private bool mobileHab;
     private bool kioskoHab;
-
-    private string PlanBadgeClass => licenciaInfo?.Plan switch
-    {
-        "free" => "bg-secondary",
-        "basic" => "bg-info",
-        "pro" => "bg-primary",
-        "enterprise" => "bg-warning text-dark",
-        _ => "bg-secondary"
-    };
 
     // Mapa de rutas a grupos para auto-expandir
     private static readonly Dictionary<string, string> routeToGroup = new()
@@ -211,7 +193,6 @@
         ["noticias"] = "operacion",
         ["usuarios"] = "admin",
         ["configuracion/empresa"] = "admin",
-        ["configuracion/planes"] = "admin",
         ["configuracion/qr-movil"] = "admin",
         ["configuracion"] = "admin",
         ["auditoria"] = "admin",
@@ -225,9 +206,6 @@
 
         if (Tenant.EmpresaId > 0)
         {
-            try { licenciaInfo = await LicenciaService.GetLicenciaInfoAsync(Tenant.EmpresaId); }
-            catch { /* no bloquear si falla */ }
-
             try
             {
                 await using var db = await DbFactory.CreateDbContextAsync();

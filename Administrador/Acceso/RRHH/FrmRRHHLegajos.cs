@@ -421,26 +421,6 @@ namespace Acceso.RRHH
                 return false;
             }
 
-            if (!olegajo.Existe)
-            {
-                // Alta nueva: verificar limite de legajos de la licencia
-                var ticket = Program.LicMgr?.CurrentTicket;
-                if (ticket != null)
-                {
-                    int legajosActuales = Program.ContarLegajos();
-                    if (legajosActuales >= ticket.MaxLegajos)
-                    {
-                        MessageBox.Show(
-                            "No se pueden agregar mas legajos.\n" +
-                            "Su licencia permite hasta " + ticket.MaxLegajos + " legajos y actualmente tiene " + legajosActuales + ".\n\n" +
-                            "Contacte a su proveedor para ampliar su plan.",
-                            "Limite de licencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return false;
-                    }
-                }
-            }
-
-
             if (!base.ClickGuardar())
             {
                 return false;

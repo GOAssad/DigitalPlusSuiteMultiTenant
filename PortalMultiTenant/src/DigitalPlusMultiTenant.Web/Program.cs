@@ -101,9 +101,6 @@ public class Program
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
         builder.Services.AddMemoryCache();
 
-        // Licencias (validacion de limites)
-        builder.Services.AddScoped<ILicenciaService, LicenciaService>();
-
         // HttpClient para Portal Licencias API
         builder.Services.AddHttpClient("PortalLicencias", client =>
         {
@@ -161,39 +158,6 @@ public class Program
             {
                 context.Response.Redirect("/Account/ForceChangePassword");
                 return;
-            }
-            await next();
-        });
-
-        // Jaula por suscripción expirada: solo permite acceder a /configuracion/planes
-        app.Use(async (context, next) =>
-        {
-            if (context.User.Identity?.IsAuthenticated == true)
-            {
-                var path = context.Request.Path;
-                var esRutaPermitida =
-                    path.StartsWithSegments("/configuracion/planes") ||
-                    path.StartsWithSegments("/Account") ||
-                    path.StartsWithSegments("/_blazor") ||
-                    path.StartsWithSegments("/_framework") ||
-                    path.StartsWithSegments("/mobile") ||
-                    path.StartsWithSegments("/kiosko") ||
-                    path.StartsWithSegments("/api");
-
-                if (!esRutaPermitida)
-                {
-                    var empresaIdStr = context.User.FindFirst("EmpresaId")?.Value;
-                    if (int.TryParse(empresaIdStr, out var empresaId) && empresaId > 0)
-                    {
-                        var licenciaService = context.RequestServices.GetRequiredService<DigitalPlusMultiTenant.Application.Interfaces.ILicenciaService>();
-                        var licencia = await licenciaService.GetLicenciaInfoAsync(empresaId);
-                        if (licencia.SuscripcionExpirada)
-                        {
-                            context.Response.Redirect("/configuracion/planes");
-                            return;
-                        }
-                    }
-                }
             }
             await next();
         });

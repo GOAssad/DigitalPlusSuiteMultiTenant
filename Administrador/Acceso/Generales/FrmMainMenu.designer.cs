@@ -64,9 +64,7 @@ namespace Acceso.Ventas
             this.panelMenu.AutoScroll = true;
             this.panelMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(11)))), ((int)(((byte)(17)))), ((int)(((byte)(32)))));
             this.btnConfiguracion = new FontAwesome.Sharp.IconButton();
-            this.btnLicencias = new FontAwesome.Sharp.IconButton();
             this.btnCambiarClave = new FontAwesome.Sharp.IconButton();
-            this.lblLicenciaStatus = new System.Windows.Forms.Label();
             this.panelBranding = new System.Windows.Forms.Panel();
             this.picLogoIntegraIA = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.picLogoIntegraIA)).BeginInit();
@@ -75,7 +73,6 @@ namespace Acceso.Ventas
             this.panelMenu.Controls.Add(this.btnLogout);
             this.panelMenu.Controls.Add(this.panelSocialLinks);
             this.panelMenu.Controls.Add(this.btnCambiarClave);
-            this.panelMenu.Controls.Add(this.btnLicencias);
             this.panelMenu.Controls.Add(this.btnConfiguracion);
             this.panelMenu.Controls.Add(this.btnLegajos);
             this.panelMenu.Controls.Add(this.panel1);
@@ -164,27 +161,6 @@ namespace Acceso.Ventas
             this.btnConfiguracion.UseVisualStyleBackColor = true;
             this.btnConfiguracion.Click += new System.EventHandler(this.btnConfiguracion_Click);
             //
-            // btnLicencias
-            //
-            this.btnLicencias.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnLicencias.FlatAppearance.BorderSize = 0;
-            this.btnLicencias.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLicencias.ForeColor = System.Drawing.Color.Gainsboro;
-            this.btnLicencias.IconChar = FontAwesome.Sharp.IconChar.Key;
-            this.btnLicencias.IconColor = System.Drawing.Color.Gainsboro;
-            this.btnLicencias.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnLicencias.IconSize = 32;
-            this.btnLicencias.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnLicencias.Name = "btnLicencias";
-            this.btnLicencias.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
-            this.btnLicencias.Size = new System.Drawing.Size(173, 60);
-            this.btnLicencias.TabIndex = 10;
-            this.btnLicencias.Text = "Licencias";
-            this.btnLicencias.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnLicencias.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.btnLicencias.UseVisualStyleBackColor = true;
-            this.btnLicencias.Click += new System.EventHandler(this.btnLicencias_Click);
-            //
             // btnCambiarClave
             //
             this.btnCambiarClave.Dock = System.Windows.Forms.DockStyle.Top;
@@ -227,19 +203,6 @@ namespace Acceso.Ventas
             this.picLogoIntegraIA.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(235)))));
             this.picLogoIntegraIA.Cursor = System.Windows.Forms.Cursors.Hand;
             this.picLogoIntegraIA.Click += new System.EventHandler(this.picLogoIntegraIA_Click);
-            //
-            // lblLicenciaStatus
-            //
-            this.lblLicenciaStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.lblLicenciaStatus.Font = new System.Drawing.Font("Segoe UI", 7.5F);
-            this.lblLicenciaStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(120)))));
-            this.lblLicenciaStatus.Location = new System.Drawing.Point(0, 780);
-            this.lblLicenciaStatus.Name = "lblLicenciaStatus";
-            this.lblLicenciaStatus.Size = new System.Drawing.Size(991, 20);
-            this.lblLicenciaStatus.TabIndex = 10;
-            this.lblLicenciaStatus.Text = "";
-            this.lblLicenciaStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.lblLicenciaStatus.Padding = new System.Windows.Forms.Padding(0, 0, 10, 0);
             //
             // panel1
             // 
@@ -400,7 +363,6 @@ namespace Acceso.Ventas
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1150, 800);
-            this.Controls.Add(this.lblLicenciaStatus);
             this.Controls.Add(this.panelDesktop);
             this.Controls.Add(this.panelShadow);
             this.Controls.Add(this.panelTitleBar);
@@ -446,9 +408,7 @@ namespace Acceso.Ventas
         private FontAwesome.Sharp.IconButton btnLogout;
         private System.Windows.Forms.FlowLayoutPanel panelSocialLinks;
         private FontAwesome.Sharp.IconButton btnConfiguracion;
-        private FontAwesome.Sharp.IconButton btnLicencias;
         private FontAwesome.Sharp.IconButton btnCambiarClave;
-        private System.Windows.Forms.Label lblLicenciaStatus;
         private Global.Controles.Reloj reloj1;
         private System.Windows.Forms.Label lblUsuario;
         private System.Windows.Forms.Panel panelBranding;

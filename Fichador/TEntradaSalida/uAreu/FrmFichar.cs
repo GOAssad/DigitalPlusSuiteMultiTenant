@@ -2,7 +2,6 @@ using Acceso.Clases.Datos.Generales;
 using Acceso.Clases.Datos.RRHH;
 using AForge.Video;
 using AForge.Video.DirectShow;
-using DigitalPlus.Licensing;
 using System;
 using System.Configuration;
 using System.Data;
@@ -29,9 +28,6 @@ namespace Acceso.uAreu
         private string sNombre;
         private string sBienVenidaAux;
         private string sCadenaEntraSale;
-
-        private LicenseManager _licenseManager;
-        private System.Windows.Forms.Timer _licenseTimer;
 
         private enum ModoFichada { Huella, Pin, Demo, QR }
         private ModoFichada _modoActual;
@@ -69,28 +65,6 @@ namespace Acceso.uAreu
             lblBuild.Location = new System.Drawing.Point(this.ClientSize.Width - 175, this.ClientSize.Height - 16);
             this.Controls.Add(lblBuild);
             lblBuild.BringToFront();
-        }
-
-        public FrmFichar(LicenseManager licenseManager) : this()
-        {
-            _licenseManager = licenseManager;
-            _licenseTimer = new System.Windows.Forms.Timer();
-            _licenseTimer.Interval = 4 * 60 * 60 * 1000; // 4 horas
-            _licenseTimer.Tick += LicenseTimer_Tick;
-            _licenseTimer.Start();
-        }
-
-        private void LicenseTimer_Tick(object sender, EventArgs e)
-        {
-            if (_licenseManager == null) return;
-            int legajos = Program.ContarLegajos();
-            var result = _licenseManager.PeriodicCheck(legajos);
-            if (result.IsBlocked)
-            {
-                _licenseTimer.Stop();
-                MessageBox.Show(result.UserMessage, "Licencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                Application.Exit();
-            }
         }
 
         protected virtual void Init()
@@ -217,12 +191,6 @@ namespace Acceso.uAreu
                 lblEstado.Text = "No se detecto lector de huellas.";
                 lblEstado.ForeColor = Color.DarkOrange;
             }
-        }
-
-        private bool EsTrialActivo()
-        {
-            return _licenseManager?.CurrentTicket != null
-                && _licenseManager.CurrentTicket.LicenseType == "trial";
         }
 
         private void CambiarModo(ModoFichada modo)
@@ -955,13 +923,6 @@ namespace Acceso.uAreu
             Init();
             DetectarModoInicial();
             timerHora.Enabled = true;
-
-            // Mostrar info de licencia en barra inferior
-            if (_licenseManager != null && _licenseManager.CurrentTicket != null)
-            {
-                etiquetaSucursal.Text = _licenseManager.GetStatusBarText();
-                etiquetaSucursal.Font = new Font("Segoe UI", 9F);
-            }
 
             // Permitir Enter en campos PIN
             txtPin.KeyDown += (s, ev) => { if (ev.KeyCode == Keys.Enter) { FicharConPin(); ev.SuppressKeyPress = true; } };

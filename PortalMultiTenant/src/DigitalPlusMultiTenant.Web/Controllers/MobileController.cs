@@ -22,20 +22,17 @@ public class MobileController : ControllerBase
     private readonly ApplicationDbContext _db;
     private readonly UbicacionService _ubicacionService;
     private readonly IConfiguration _config;
-    private readonly ILicenciaService _licenciaService;
     private readonly IAuditService _auditService;
 
     public MobileController(
         ApplicationDbContext db,
         UbicacionService ubicacionService,
         IConfiguration config,
-        ILicenciaService licenciaService,
         IAuditService auditService)
     {
         _db = db;
         _ubicacionService = ubicacionService;
         _config = config;
-        _licenciaService = licenciaService;
         _auditService = auditService;
     }
 
@@ -265,14 +262,6 @@ public class MobileController : ControllerBase
         if (codigo.LegajoId != legajoId)
             return BadRequest(new { ok = false, mensaje = "El código no corresponde a este empleado." });
 
-        // Validar limite de terminales moviles del plan
-        var terminalesActivas = await _db.TerminalesMoviles
-            .IgnoreQueryFilters()
-            .CountAsync(t => t.EmpresaId == empresaId && t.Activo);
-        var (tmPermitido, tmMensaje) = await _licenciaService.PuedeRegistrarTerminalMovilAsync(empresaId, terminalesActivas);
-        if (!tmPermitido)
-            return StatusCode(403, new { ok = false, codigo = "LIMITE_TERMINALES", mensaje = tmMensaje });
-
         // Desactivar dispositivos anteriores del mismo legajo
         var anteriores = await _db.TerminalesMoviles
             .IgnoreQueryFilters()
@@ -406,16 +395,7 @@ public class MobileController : ControllerBase
             tipo = string.Equals(tipo, "Salida", StringComparison.OrdinalIgnoreCase) ? "S" : "E";
         }
 
-        // 7. Validar limite de fichadas del plan
-        var hace30d = Clock.Now.AddDays(-30);
-        var fichadasUlt30d = await _db.Fichadas
-            .IgnoreQueryFilters()
-            .CountAsync(f => f.EmpresaId == empresaId && f.FechaHora >= hace30d);
-        var (ficPermitido, ficMensaje) = await _licenciaService.PuedeRegistrarFichadaAsync(empresaId, fichadasUlt30d);
-        if (!ficPermitido)
-            return StatusCode(403, new { ok = false, codigo = "LIMITE_FICHADAS", mensaje = ficMensaje });
-
-        // 8. Insertar fichada (FechaHora en hora local Argentina, consistente con desktop)
+        // 7. Insertar fichada (FechaHora en hora local Argentina, consistente con desktop)
         var fichada = new Fichada
         {
             EmpresaId = empresaId,
@@ -572,16 +552,7 @@ public class MobileController : ControllerBase
 
             var tipo = ultimaFichada?.Tipo == "E" ? "S" : "E";
 
-            // 7. Validar limite de fichadas del plan
-            var hace30d = DateTime.UtcNow.AddDays(-30);
-            var fichadasUlt30d = await _db.Fichadas
-                .IgnoreQueryFilters()
-                .CountAsync(f => f.EmpresaId == legajo.EmpresaId && f.FechaHora >= hace30d);
-            var (ficPermitido, ficMensaje) = await _licenciaService.PuedeRegistrarFichadaAsync(legajo.EmpresaId, fichadasUlt30d);
-            if (!ficPermitido)
-                return StatusCode(403, new { ok = false, codigo = "LIMITE_FICHADAS", mensaje = ficMensaje });
-
-            // 8. Insertar fichada
+            // 7. Insertar fichada
             var fichada = new Fichada
             {
                 EmpresaId = legajo.EmpresaId,

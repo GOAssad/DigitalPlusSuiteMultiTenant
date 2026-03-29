@@ -25,7 +25,6 @@
         '/usuarios': '#portal-usuarios',
         '/auditoria': '#portal-auditoria',
         '/configuracion/empresa': '#portal',
-        '/configuracion/planes': '#licencias',
         '/configuracion': '#portal',
         '/noticias': '#portal'
     };

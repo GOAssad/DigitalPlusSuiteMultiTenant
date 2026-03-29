@@ -120,7 +120,6 @@ Source: "{#FichBin}\Global.Datos.dll";               DestDir: "{app}\Fichadas"; 
 Source: "{#FichBin}\Global.Datos.dll.config";        DestDir: "{app}\Fichadas"; Flags: ignoreversion
 Source: "{#FichBin}\Global.Funciones.dll";           DestDir: "{app}\Fichadas"; Flags: ignoreversion
 Source: "{#FichBin}\Global.Funciones.dll.config";    DestDir: "{app}\Fichadas"; Flags: ignoreversion
-Source: "{#FichBin}\DigitalPlus.Licensing.dll";      DestDir: "{app}\Fichadas"; Flags: ignoreversion
 
 ; --- NuGet ---
 Source: "{#FichBin}\FontAwesome.Sharp.dll";          DestDir: "{app}\Fichadas"; Flags: ignoreversion
@@ -216,7 +215,6 @@ Source: "{#AdminBin}\Common.Logging.Core.dll";              DestDir: "{app}\Admi
 Source: "{#AdminBin}\DocumentFormat.OpenXml.dll";           DestDir: "{app}\Administrador"; Flags: ignoreversion
 Source: "{#AdminBin}\FontAwesome.Sharp.dll";                DestDir: "{app}\Administrador"; Flags: ignoreversion
 Source: "{#AdminBin}\SpreadsheetLight.dll";                 DestDir: "{app}\Administrador"; Flags: ignoreversion
-Source: "{#AdminBin}\DigitalPlus.Licensing.dll";            DestDir: "{app}\Administrador"; Flags: ignoreversion
 
 ; --- Recursos de idiomas ---
 Source: "{#AdminBin}\de\*";     DestDir: "{app}\Administrador\de";     Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist

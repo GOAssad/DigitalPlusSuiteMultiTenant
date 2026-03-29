@@ -12,8 +12,6 @@ using System.Linq;
 using Acceso.Generales;
 using Acceso.RRHH;
 using System.Data.SqlClient;
-using DigitalPlus.Licensing;
-
 namespace Acceso.Ventas
 {
     public partial class FrmMainMenu : Form
@@ -214,25 +212,6 @@ namespace Acceso.Ventas
             //lblUsuario.Text = ObjGlobal.oUsuario.sApellido + ", " + ObjGlobal.oUsuario.sNombre ;
             string empresa = ConfigurationManager.AppSettings["NombreEmpresa"];
             lblUsuario.Text = !string.IsNullOrEmpty(empresa) ? empresa : "Bienvenido...";
-
-            // Mostrar info de licencia en barra inferior con nombre real de empresa
-            if (Program.LicMgr != null && Program.LicMgr.CurrentTicket != null)
-            {
-                var t = Program.LicMgr.CurrentTicket;
-                var plan = string.IsNullOrEmpty(t.Plan) ? "" : t.Plan.Substring(0, 1).ToUpper() + t.Plan.Substring(1);
-                DateTime? vence = t.LicenseType == "trial" ? t.TrialEndsAt : t.ExpiresAt;
-                if (vence.HasValue)
-                {
-                    var dias = (int)(vence.Value - DateTime.UtcNow).TotalDays;
-                    if (dias < 0) dias = 0;
-                    lblLicenciaStatus.Text = string.Format("{0} | {1} | Vence: {2} ({3}d)",
-                        empresa, plan, vence.Value.ToLocalTime().ToString("dd/MM/yyyy"), dias);
-                }
-                else
-                {
-                    lblLicenciaStatus.Text = string.Format("{0} | {1}", empresa, plan);
-                }
-            }
 
             CargarLogos();
 
@@ -513,12 +492,6 @@ namespace Acceso.Ventas
         {
             ActivateButton(sender, RGBColors.colorConf);
             OpenChildForm(new FrmConfiguracion());
-        }
-
-        private void btnLicencias_Click(object sender, EventArgs e)
-        {
-            ActivateButton(sender, RGBColors.colorConf);
-            OpenChildForm(new FrmLicencia());
         }
 
         private void btnCambiarClave_Click(object sender, EventArgs e)

@@ -12,7 +12,6 @@
 
 @inject NavigationManager Nav
 @inject ITenantService Tenant
-@inject ILicenciaService LicenciaService
 @inject IJSRuntime JS
 
 <PageTitle>@(IsEdit ? "Editar" : "Nueva") Sucursal - DigitalPlus</PageTitle>
@@ -332,15 +331,6 @@
         {
             if (!IsEdit)
             {
-                // Validar limite de licencia
-                var totalSucursales = await Db.Sucursales.CountAsync();
-                var (permitido, mensaje) = await LicenciaService.PuedeCrearSucursalAsync(Tenant.EmpresaId, totalSucursales);
-                if (!permitido)
-                {
-                    errorMessage = mensaje;
-                    return;
-                }
-
                 Db.Sucursales.Add(model);
                 await Db.SaveChangesAsync();
             }
